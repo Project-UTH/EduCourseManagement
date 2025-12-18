@@ -1,102 +1,84 @@
-import { useEffect, useState } from 'react';
-import { healthApi } from './services/api/healthApi';
-import './App.css';
-
-interface HealthData {
-  status: string;
-  message: string;
-  timestamp: string;
-  database: string;
-}
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from './store/authStore';
+import Login from './pages/auth/Login';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
+import StudentDashboard from './pages/student/StudentDashboard';
+import NotFound from './pages/NotFound';
+import ProtectedRoute from './components/common/ProtectedRoute';
 
 function App() {
-  const [health, setHealth] = useState<HealthData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const checkHealth = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await healthApi.check();
-        console.log('Health check response:', response);
-        setHealth(response.data);
-      } catch (err: unknown) {
-        console.error('Failed to fetch health:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Failed to connect to backend';
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkHealth();
-  }, []);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#282c34',
-      color: 'white',
-      padding: '20px',
-    }}>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>
-        Education Course Management System
-      </h1>
-      
-      <h2 style={{ fontSize: '1.5rem', marginBottom: '40px', color: '#61dafb' }}>
-        Frontend + Backend Integration Test
-      </h2>
-      
-      {loading && (
-        <div style={{ fontSize: '1.2rem' }}>
-          Loading...
-        </div>
-      )}
+    <BrowserRouter>
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path="/login"
+          element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+        />
 
-      {error && (
-        <div style={{
-          padding: '20px',
-          backgroundColor: '#ff4444',
-          borderRadius: '8px',
-          marginTop: '20px',
-        }}>
-          <h3>❌ Cannot connect to Backend</h3>
-          <p>Make sure backend is running on http://localhost:8080</p>
-          <p style={{ fontSize: '0.9rem', marginTop: '10px' }}>
-            Error: {error}
-          </p>
-        </div>
-      )}
+        {/* Root - Redirect to appropriate dashboard */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <RoleBasedRedirect />
+            </ProtectedRoute>
+          }
+        />
 
-      {health && !loading && (
-        <div style={{
-          padding: '30px',
-          backgroundColor: '#44ff44',
-          color: '#000',
-          borderRadius: '8px',
-          marginTop: '20px',
-          maxWidth: '600px',
-        }}>
-          <h3>✅ Backend Connected!</h3>
-          <pre style={{
-            backgroundColor: '#f4f4f4',
-            padding: '15px',
-            borderRadius: '4px',
-            overflow: 'auto',
-            textAlign: 'left',
-          }}>
-            {JSON.stringify(health, null, 2)}
-          </pre>
-        </div>
-      )}
-    </div>
+        {/* Admin Routes */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Teacher Routes */}
+        <Route
+          path="/teacher/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['TEACHER']}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Student Routes */}
+        <Route
+          path="/student/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['STUDENT']}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 404 Not Found */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
+
+// Helper component to redirect based on role
+const RoleBasedRedirect = () => {
+  const user = useAuthStore((state) => state.user);
+
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin/dashboard" replace />;
+  } else if (user?.role === 'TEACHER') {
+    return <Navigate to="/teacher/dashboard" replace />;
+  } else if (user?.role === 'STUDENT') {
+    return <Navigate to="/student/dashboard" replace />;
+  }
+
+  return <Navigate to="/login" replace />;
+};
 
 export default App;
