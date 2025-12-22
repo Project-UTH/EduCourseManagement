@@ -1,103 +1,178 @@
-import { useAuthStore } from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
-import './Dashboard.css';
+import './AdminDashboard.css';
 
 const AdminDashboard = () => {
-  const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  // Mock statistics - will be replaced with real API calls
+  const statistics = [
+    { 
+      label: 'Tổng sinh viên', 
+      value: '1,234', 
+      icon: '👨‍🎓', 
+      color: 'blue',
+      change: '+12%',
+      changeType: 'increase'
+    },
+    { 
+      label: 'Tổng giảng viên', 
+      value: '156', 
+      icon: '👨‍🏫', 
+      color: 'green',
+      change: '+5%',
+      changeType: 'increase'
+    },
+    { 
+      label: 'Tổng lớp học', 
+      value: '89', 
+      icon: '🏫', 
+      color: 'purple',
+      change: '+8%',
+      changeType: 'increase'
+    },
+    { 
+      label: 'Tổng môn học', 
+      value: '245', 
+      icon: '📚', 
+      color: 'orange',
+      change: '+3%',
+      changeType: 'increase'
+    },
+  ];
+
+  const recentActivities = [
+    {
+      id: 1,
+      type: 'registration',
+      message: 'Có 15 sinh viên mới đăng ký học phần',
+      time: '5 phút trước',
+      icon: '✏️'
+    },
+    {
+      id: 2,
+      type: 'proposal',
+      message: 'GV Nguyễn Văn A đã gửi đề xuất giảng dạy môn Lập trình Web',
+      time: '1 giờ trước',
+      icon: '📝'
+    },
+    {
+      id: 3,
+      type: 'class',
+      message: 'Lớp IT101-01 đã đủ sĩ số',
+      time: '2 giờ trước',
+      icon: '✅'
+    },
+    {
+      id: 4,
+      type: 'system',
+      message: 'Import thành công 50 sinh viên mới',
+      time: 'Hôm qua',
+      icon: '📥'
+    },
+  ];
+
+  const quickActions = [
+    {
+      title: 'Import Sinh viên',
+      description: 'Nhập danh sách sinh viên từ Excel',
+      icon: '📥',
+      color: 'blue',
+      path: '/admin/import'
+    },
+    {
+      title: 'Import Giảng viên',
+      description: 'Nhập danh sách giảng viên từ Excel',
+      icon: '📥',
+      color: 'green',
+      path: '/admin/import'
+    },
+    {
+      title: 'Tạo Lớp học',
+      description: 'Tạo lớp học mới cho học kỳ',
+      icon: '➕',
+      color: 'purple',
+      path: '/admin/classes'
+    },
+    {
+      title: 'Quản lý Học kỳ',
+      description: 'Cấu hình học kỳ và đăng ký',
+      icon: '📅',
+      color: 'orange',
+      path: '/admin/semesters'
+    },
+  ];
 
   return (
-    <div className="dashboard-container">
+    <div className="admin-dashboard">
       <div className="dashboard-header">
-        <div className="header-content">
-          <div className="logo-section">
-            <svg className="logo-icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <h1>ECMS - Admin</h1>
-          </div>
-          <div className="user-section">
-            <div className="user-info">
-              <div className="user-avatar">
-                {user?.fullName.charAt(0).toUpperCase()}
-              </div>
-              <div className="user-details">
-                <p className="user-name">{user?.fullName}</p>
-                <p className="user-role">Administrator</p>
-              </div>
-            </div>
-            <button onClick={handleLogout} className="btn-logout">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Đăng xuất
-            </button>
-          </div>
+        <div>
+          <h1>Dashboard</h1>
+          <p>Chào mừng trở lại! Đây là tổng quan về hệ thống.</p>
         </div>
+        <button className="refresh-btn">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Làm mới
+        </button>
       </div>
 
-      <div className="dashboard-body">
-        <div className="welcome-card">
-          <div className="welcome-icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+      {/* Statistics Cards */}
+      <div className="stats-grid">
+        {statistics.map((stat, index) => (
+          <div key={index} className={`stat-card ${stat.color}`}>
+            <div className="stat-icon">{stat.icon}</div>
+            <div className="stat-content">
+              <p className="stat-label">{stat.label}</p>
+              <h3 className="stat-value">{stat.value}</h3>
+              <div className={`stat-change ${stat.changeType}`}>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                <span>{stat.change} so với tháng trước</span>
+              </div>
+            </div>
           </div>
-          <h2>Chào mừng, {user?.fullName}!</h2>
-          <p>Bạn đã đăng nhập thành công với vai trò <strong>Administrator</strong></p>
-          <p className="info-text">
-            Phase 1 - Authentication đã hoàn thành. Dashboard và các tính năng quản lý sẽ được phát triển ở Phase 2.
-          </p>
+        ))}
+      </div>
+
+      <div className="dashboard-content">
+        {/* Recent Activities */}
+        <div className="activity-section">
+          <div className="section-header">
+            <h2>Hoạt động gần đây</h2>
+            <button className="view-all-link">Xem tất cả</button>
+          </div>
+          <div className="activity-list">
+            {recentActivities.map(activity => (
+              <div key={activity.id} className="activity-item">
+                <div className="activity-icon">{activity.icon}</div>
+                <div className="activity-content">
+                  <p className="activity-message">{activity.message}</p>
+                  <span className="activity-time">{activity.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon admin">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </div>
-            <h3>Quản lý người dùng</h3>
-            <p>Quản lý giảng viên và sinh viên</p>
-            <span className="badge coming-soon">Coming Soon</span>
+        {/* Quick Actions */}
+        <div className="quick-actions-section">
+          <div className="section-header">
+            <h2>Thao tác nhanh</h2>
           </div>
-
-          <div className="feature-card">
-            <div className="feature-icon admin">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <h3>Quản lý khoa/ngành</h3>
-            <p>Thêm, sửa, xóa khoa và chuyên ngành</p>
-            <span className="badge coming-soon">Coming Soon</span>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon admin">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <h3>Quản lý môn học</h3>
-            <p>Quản lý danh sách môn học</p>
-            <span className="badge coming-soon">Coming Soon</span>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon admin">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <h3>Quản lý lớp học</h3>
-            <p>Mở lớp và phân công giảng viên</p>
-            <span className="badge coming-soon">Coming Soon</span>
+          <div className="quick-actions-grid">
+            {quickActions.map((action, index) => (
+              <button
+                key={index}
+                className={`quick-action-card ${action.color}`}
+                onClick={() => navigate(action.path)}
+              >
+                <div className="action-icon">{action.icon}</div>
+                <h3>{action.title}</h3>
+                <p>{action.description}</p>
+              </button>
+            ))}
           </div>
         </div>
       </div>

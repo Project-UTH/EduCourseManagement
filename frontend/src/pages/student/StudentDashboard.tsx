@@ -1,109 +1,272 @@
-import { useAuthStore } from '@/store/authStore';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../admin/Dashboard.css';
+import './StudentDashboard.css';
+
+interface CourseCard {
+  id: number;
+  subjectName: string;
+  classCode: string;
+  teacherName: string;
+  schedule: string;
+  room: string;
+  progress: number;
+  grade?: string;
+  nextClassDate: string;
+}
 
 const StudentDashboard = () => {
-  const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const [selectedSemester, setSelectedSemester] = useState('current');
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  // Mock data - will be replaced with real API calls
+  const stats = [
+    { label: 'Tín chỉ đã đăng ký', value: '18', icon: '📚', color: 'blue' },
+    { label: 'Bài tập hoàn thành', value: '12/15', icon: '✅', color: 'green' },
+    { label: 'Bài tập chưa nộp', value: '3', icon: '📝', color: 'orange' },
+    { label: 'Điểm TB tích lũy', value: '3.45', icon: '📊', color: 'purple' },
+  ];
+
+  const myCourses: CourseCard[] = [
+    {
+      id: 1,
+      subjectName: 'Lập trình Web',
+      classCode: 'IT101-01',
+      teacherName: 'TS. Nguyễn Văn A',
+      schedule: 'Thứ 2, Ca 1 (06:45-09:15)',
+      room: 'A201',
+      progress: 60,
+      grade: 'A',
+      nextClassDate: '25/12/2024'
+    },
+    {
+      id: 2,
+      subjectName: 'Cơ sở dữ liệu',
+      classCode: 'IT202-02',
+      teacherName: 'ThS. Trần Thị B',
+      schedule: 'Thứ 3, Ca 2 (09:25-11:55)',
+      room: 'B105',
+      progress: 75,
+      nextClassDate: '26/12/2024'
+    },
+    {
+      id: 3,
+      subjectName: 'Mạng máy tính',
+      classCode: 'IT303-01',
+      teacherName: 'TS. Lê Văn C',
+      schedule: 'Thứ 4, Ca 3 (12:10-14:40)',
+      room: 'C302',
+      progress: 45,
+      grade: 'B+',
+      nextClassDate: '27/12/2024'
+    },
+    {
+      id: 4,
+      subjectName: 'Lập trình Mobile',
+      classCode: 'IT404-01',
+      teacherName: 'ThS. Phạm Thị D',
+      schedule: 'Thứ 5, Ca 4 (14:50-17:20)',
+      room: 'A301',
+      progress: 55,
+      nextClassDate: '28/12/2024'
+    },
+  ];
+
+  const pendingAssignments = [
+    { 
+      id: 1,
+      title: 'Bài tập tuần 5 - ReactJS',
+      course: 'Lập trình Web',
+      dueDate: '25/12/2024 23:59',
+      timeLeft: 'Còn 2 ngày',
+      status: 'pending'
+    },
+    { 
+      id: 2,
+      title: 'Thiết kế Database cho hệ thống',
+      course: 'Cơ sở dữ liệu',
+      dueDate: '28/12/2024 23:59',
+      timeLeft: 'Còn 5 ngày',
+      status: 'pending'
+    },
+    { 
+      id: 3,
+      title: 'Phân tích giao thức TCP/IP',
+      course: 'Mạng máy tính',
+      dueDate: '30/12/2024 23:59',
+      timeLeft: 'Còn 7 ngày',
+      status: 'pending'
+    },
+  ];
 
   return (
-    <div className="dashboard-container">
+    <div className="student-dashboard">
       <div className="dashboard-header">
-        <div className="header-content">
-          <div className="logo-section">
-            <svg className="logo-icon-small" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        <div>
+          <h1>Khóa học của tôi</h1>
+          <p>Theo dõi tiến độ học tập và các khóa học bạn đang tham gia</p>
+        </div>
+        <div className="header-actions">
+          <select 
+            className="semester-select"
+            value={selectedSemester}
+            onChange={(e) => setSelectedSemester(e.target.value)}
+          >
+            <option value="current">Học kỳ hiện tại</option>
+            <option value="2024-1">Học kỳ 1 (2024-2025)</option>
+            <option value="2023-2">Học kỳ 2 (2023-2024)</option>
+          </select>
+          <button 
+            className="register-btn"
+            onClick={() => navigate('/student/registration')}
+          >
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            <h1>ECMS - Sinh viên</h1>
-          </div>
-          <div className="user-section">
-            <div className="user-info">
-              <div className="user-avatar student">
-                {user?.fullName.charAt(0).toUpperCase()}
-              </div>
-              <div className="user-details">
-                <p className="user-name">{user?.fullName}</p>
-                <p className="user-role">Sinh viên</p>
-              </div>
-            </div>
-            <button onClick={handleLogout} className="btn-logout">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Đăng xuất
-            </button>
-          </div>
+            Đăng ký học phần
+          </button>
         </div>
       </div>
 
-      <div className="dashboard-body">
-        <div className="welcome-card student-card">
-          <div className="welcome-icon student">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h2>Chào mừng, {user?.fullName}!</h2>
-          <p>Bạn đã đăng nhập thành công với vai trò <strong>Sinh viên</strong></p>
-          {user?.isFirstLogin && (
-            <div className="first-login-notice">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p>Đây là lần đăng nhập đầu tiên. Vui lòng đổi mật khẩu!</p>
+      {/* Quick Stats */}
+      <div className="stats-grid">
+        {stats.map((stat, index) => (
+          <div key={index} className={`stat-card ${stat.color}`}>
+            <div className="stat-icon">{stat.icon}</div>
+            <div className="stat-content">
+              <p className="stat-label">{stat.label}</p>
+              <h3 className="stat-value">{stat.value}</h3>
             </div>
-          )}
+          </div>
+        ))}
+      </div>
+
+      <div className="dashboard-content">
+        {/* Courses Grid */}
+        <div className="courses-section">
+          <div className="section-header">
+            <h2>Khóa học đã đăng ký ({myCourses.length})</h2>
+            <div className="view-options">
+              <button className="view-btn active">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button className="view-btn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div className="courses-grid">
+            {myCourses.map((course) => (
+              <div key={course.id} className="course-card">
+                <div className="course-header">
+                  <div className="course-info">
+                    <h3>{course.subjectName}</h3>
+                    <span className="course-code">{course.classCode}</span>
+                  </div>
+                  {course.grade && (
+                    <div className="course-grade">{course.grade}</div>
+                  )}
+                </div>
+
+                <div className="course-teacher">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{course.teacherName}</span>
+                </div>
+
+                <div className="course-details">
+                  <div className="detail-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>{course.schedule}</span>
+                  </div>
+                  <div className="detail-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <span>Phòng {course.room}</span>
+                  </div>
+                </div>
+
+                <div className="course-progress">
+                  <div className="progress-header">
+                    <span className="progress-label">Tiến độ học tập</span>
+                    <span className="progress-value">{course.progress}%</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill" 
+                      style={{ width: `${course.progress}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="course-footer">
+                  <span className="next-class">
+                    Lớp tiếp theo: {course.nextClassDate}
+                  </span>
+                  <div className="course-actions">
+                    <button 
+                      className="action-btn secondary"
+                      onClick={() => navigate(`/student/assignments?course=${course.id}`)}
+                    >
+                      Bài tập
+                    </button>
+                    <button 
+                      className="action-btn primary"
+                      onClick={() => navigate(`/student/grades?course=${course.id}`)}
+                    >
+                      Xem điểm
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon student">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-            </div>
-            <h3>Đăng ký học phần</h3>
-            <p>Đăng ký các môn học trong kỳ</p>
-            <span className="badge coming-soon">Coming Soon</span>
+        {/* Pending Assignments Sidebar */}
+        <div className="assignments-section">
+          <div className="section-header">
+            <h2>Bài tập cần làm</h2>
+            <button 
+              className="view-all-link"
+              onClick={() => navigate('/student/assignments')}
+            >
+              Xem tất cả
+            </button>
+          </div>
+          <div className="assignments-list">
+            {pendingAssignments.map(assignment => (
+              <div key={assignment.id} className="assignment-item">
+                <div className="assignment-icon">📝</div>
+                <div className="assignment-content">
+                  <h4>{assignment.title}</h4>
+                  <p className="assignment-course">{assignment.course}</p>
+                  <div className="assignment-details">
+                    <span className="assignment-due">Hạn nộp: {assignment.dueDate}</span>
+                    <span className="assignment-time-left urgent">{assignment.timeLeft}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="feature-card">
-            <div className="feature-icon student">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h3>Lịch học</h3>
-            <p>Xem thời khóa biểu của bạn</p>
-            <span className="badge coming-soon">Coming Soon</span>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon student">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3>Bài tập</h3>
-            <p>Xem và nộp bài tập</p>
-            <span className="badge coming-soon">Coming Soon</span>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon student">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h3>Xem điểm</h3>
-            <p>Xem điểm số và bảng điểm</p>
-            <span className="badge coming-soon">Coming Soon</span>
-          </div>
+          <button 
+            className="view-schedule-btn"
+            onClick={() => navigate('/student/schedule')}
+          >
+            Xem lịch học
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
