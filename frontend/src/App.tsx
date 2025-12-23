@@ -9,6 +9,8 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 
+import DepartmentList from './pages/admin/departments/DepartmentList';
+
 // Placeholder cho các trang chưa phát triển
 const Placeholder = ({ title }: { title: string }) => (
   <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -118,6 +120,7 @@ function App() {
           <Route path="students" element={<Placeholder title="Quản lý Sinh viên" />} />
           <Route path="import" element={<Placeholder title="Import từ Excel" />} />
           <Route path="departments" element={<Placeholder title="Quản lý Khoa" />} />
+          <Route path="/admin/departments" element={<DepartmentList />} />
           <Route path="majors" element={<Placeholder title="Quản lý Chuyên ngành" />} />
           <Route path="subjects" element={<Placeholder title="Quản lý Môn học" />} />
           <Route path="semesters" element={<Placeholder title="Quản lý Học kỳ" />} />
