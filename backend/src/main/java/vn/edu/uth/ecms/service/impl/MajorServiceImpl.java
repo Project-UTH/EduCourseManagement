@@ -33,7 +33,9 @@ public class MajorServiceImpl implements MajorService {
     private final MajorRepository majorRepository;
     private final DepartmentRepository departmentRepository;
 
+
     @Override
+    @Transactional(timeout = 30)  // ← THÊM timeout
     public MajorResponse createMajor(MajorCreateRequest request) {
         log.info("Creating major with code: {}", request.getMajorCode());
 
@@ -58,10 +60,24 @@ public class MajorServiceImpl implements MajorService {
                 .description(request.getDescription())
                 .build();
 
+        log.info("🔍 [createMajor] About to save major...");
         Major savedMajor = majorRepository.save(major);
-        log.info("Major created successfully with ID: {}", savedMajor.getMajorId());
 
-        return mapToResponse(savedMajor);
+        log.info("✅ [createMajor] Major saved with ID: {}", savedMajor.getMajorId());
+
+        // Force flush to database
+        majorRepository.flush();
+        log.info("✅ [createMajor] Flush completed");
+
+        // Force load department to avoid lazy loading issues
+        String deptName = savedMajor.getDepartment().getDepartmentName();
+        log.info("✅ [createMajor] Department pre-loaded: {}", deptName);
+
+        log.info("🔍 [createMajor] About to map to response...");
+        MajorResponse response = mapToResponse(savedMajor);
+
+        log.info("✅ [createMajor] Major created successfully: {}", response.getMajorName());
+        return response;
     }
 
     @Override
@@ -181,18 +197,34 @@ public class MajorServiceImpl implements MajorService {
      * Map Major entity to MajorResponse DTO
      */
     private MajorResponse mapToResponse(Major major) {
-        return MajorResponse.builder()
-                .majorId(major.getMajorId())
-                .majorCode(major.getMajorCode())
-                .majorName(major.getMajorName())
-                .description(major.getDescription())
-                // Department info
-                .departmentId(major.getDepartment().getDepartmentId())
-                .departmentCode(major.getDepartment().getDepartmentCode())
-                .departmentName(major.getDepartment().getDepartmentName())
-                .createdAt(major.getCreatedAt())
-                .updatedAt(major.getUpdatedAt())
-                // TODO: Add statistics (totalStudents, totalTeachers) later
-                .build();
+        log.info("🔍 [mapToResponse] START - Major ID: {}", major.getMajorId());
+
+        try {
+            log.info("🔍 [mapToResponse] Getting department...");
+            Department dept = major.getDepartment();
+
+            log.info("✅ [mapToResponse] Department loaded: {} - {}",
+                    dept.getDepartmentCode(), dept.getDepartmentName());
+
+            MajorResponse response = MajorResponse.builder()
+                    .majorId(major.getMajorId())
+                    .majorCode(major.getMajorCode())
+                    .majorName(major.getMajorName())
+                    .description(major.getDescription())
+                    // Department info
+                    .departmentId(dept.getDepartmentId())
+                    .departmentCode(dept.getDepartmentCode())
+                    .departmentName(dept.getDepartmentName())
+                    .createdAt(major.getCreatedAt())
+                    .updatedAt(major.getUpdatedAt())
+                    .build();
+
+            log.info("✅ [mapToResponse] DONE - Response built successfully");
+            return response;
+
+        } catch (Exception e) {
+            log.error("❌ [mapToResponse] ERROR: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 }

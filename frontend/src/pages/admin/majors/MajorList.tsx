@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import majorApi, { MajorResponse } from '../../../services/api/majorApi';
-import departmentApi, { DepartmentResponse } from '../../../services/api/departmentApi';
+import majorApi, { Major } from '../../../services/api/majorApi';
+import departmentApi, { Department } from '../../../services/api/departmentApi';
 import MajorModal from './MajorModal';
 import './MajorList.css';
 
 /**
  * Major List Page
- * Phase 3 Sprint 3.1
+ * Phase 3 Sprint 3.1 - Fixed Version
  */
 
 const MajorList: React.FC = () => {
-  const [majors, setMajors] = useState<MajorResponse[]>([]);
-  const [departments, setDepartments] = useState<DepartmentResponse[]>([]);
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -29,7 +29,7 @@ const MajorList: React.FC = () => {
   
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingMajor, setEditingMajor] = useState<MajorResponse | null>(null);
+  const [editingMajor, setEditingMajor] = useState<Major | null>(null);
   
   // Delete confirmation
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -40,10 +40,12 @@ const MajorList: React.FC = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const data = await departmentApi.getAllDepartmentsNoPaging();
-        setDepartments(data);
+        // ✅ FIX 1: Use getAll() method
+        const response = await departmentApi.getAll(0, 100, 'departmentName', 'asc');
+        const departments = Array.isArray(response.data) ? response.data : [];
+        setDepartments(departments);
       } catch (err) {
-        console.error('Error fetching departments:', err);
+        console.error('❌ [MajorList] Error fetching departments:', err);
       }
     };
     fetchDepartments();
@@ -61,40 +63,37 @@ const MajorList: React.FC = () => {
       
       // Filter by department
       if (selectedDepartmentId) {
-        const data = await majorApi.getMajorsByDepartment(selectedDepartmentId);
-        // Convert to paginated response format
-        response = {
-          success: true,
-          data: data,
-          currentPage: 0,
-          totalPages: 1,
-          totalItems: data.length,
-        };
+        response = await majorApi.getByDepartment(selectedDepartmentId);
       }
       // Search by keyword
       else if (searchKeyword.trim()) {
-        response = await majorApi.searchMajors(searchKeyword, {
-          page: currentPage,
-          size: pageSize,
-        });
+        response = await majorApi.search(searchKeyword, currentPage, pageSize);
       }
       // Get all with pagination
       else {
-        response = await majorApi.getAllMajors({
-          page: currentPage,
-          size: pageSize,
-          sortBy,
-          sortDir,
-        });
+        response = await majorApi.getAll(currentPage, pageSize, sortBy, sortDir);
       }
       
-      setMajors(response.data);
-      setTotalPages(response.totalPages);
-      setTotalItems(response.totalItems);
+      console.log('📊 [MajorList] Response:', response);
+      
+      // ✅ FIX 2: Handle flat response structure
+      if (response) {
+        setMajors(Array.isArray(response.data) ? response.data : []);
+        setTotalPages(response.totalPages || 0);
+        setTotalItems(response.totalItems || 0);
+      } else {
+        setMajors([]);
+        setTotalPages(0);
+        setTotalItems(0);
+      }
     } catch (err) {
-      console.error('Error fetching majors:', err);
+      console.error('❌ [MajorList] Error fetching majors:', err);
       const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách chuyên ngành';
       setError(errorMessage);
+      
+      setMajors([]);
+      setTotalPages(0);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
@@ -110,8 +109,7 @@ const MajorList: React.FC = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(0);
-    setSelectedDepartmentId(null); // Clear department filter when searching
-    fetchMajors();
+    setSelectedDepartmentId(null);
   };
 
   /**
@@ -119,7 +117,7 @@ const MajorList: React.FC = () => {
    */
   const handleDepartmentFilter = (departmentId: number | null) => {
     setSelectedDepartmentId(departmentId);
-    setSearchKeyword(''); // Clear search when filtering
+    setSearchKeyword('');
     setCurrentPage(0);
   };
 
@@ -134,7 +132,7 @@ const MajorList: React.FC = () => {
   /**
    * Handle edit
    */
-  const handleEdit = (major: MajorResponse) => {
+  const handleEdit = (major: Major) => {
     setEditingMajor(major);
     setIsModalOpen(true);
   };
@@ -149,12 +147,13 @@ const MajorList: React.FC = () => {
     
     try {
       setDeletingId(id);
-      await majorApi.deleteMajor(id);
+      // ✅ FIX 3: Use delete() method
+      await majorApi.delete(id);
       
       alert('Xóa chuyên ngành thành công!');
       fetchMajors();
     } catch (err) {
-      console.error('Error deleting major:', err);
+      console.error('❌ [MajorList] Error deleting major:', err);
       const errorMessage = err instanceof Error ? err.message : 'Không thể xóa chuyên ngành';
       alert(errorMessage);
     } finally {
@@ -258,19 +257,19 @@ const MajorList: React.FC = () => {
       {/* Error Message */}
       {error && (
         <div className="error-message">
-          {error}
+          ❌ {error}
         </div>
       )}
 
       {/* Table */}
       <div className="table-container">
         {loading ? (
-          <div className="loading">Đang tải...</div>
-        ) : majors.length === 0 ? (
+          <div className="loading">⏳ Đang tải...</div>
+        ) : !majors || majors.length === 0 ? (
           <div className="no-data">
             {searchKeyword || selectedDepartmentId 
-              ? 'Không tìm thấy kết quả' 
-              : 'Chưa có chuyên ngành nào'}
+              ? '🔍 Không tìm thấy kết quả' 
+              : '📭 Chưa có chuyên ngành nào'}
           </div>
         ) : (
           <>
@@ -316,7 +315,7 @@ const MajorList: React.FC = () => {
                         disabled={deletingId === major.majorId}
                         title="Xóa"
                       >
-                        {deletingId === major.majorId ? '...' : '🗑️'}
+                        {deletingId === major.majorId ? '⏳' : '🗑️'}
                       </button>
                     </td>
                   </tr>
@@ -351,14 +350,14 @@ const MajorList: React.FC = () => {
                   <button
                     className="btn-page"
                     onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage >= totalPages - 1}
+                    disabled={currentPage >= totalPages - 1 || totalPages === 0}
                   >
                     ›
                   </button>
                   <button
                     className="btn-page"
                     onClick={() => setCurrentPage(totalPages - 1)}
-                    disabled={currentPage >= totalPages - 1}
+                    disabled={currentPage >= totalPages - 1 || totalPages === 0}
                   >
                     »»
                   </button>

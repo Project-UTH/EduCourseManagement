@@ -5,7 +5,7 @@ import './DepartmentList.css';
 
 /**
  * Department List Page
- * Phase 3 Sprint 3.1 - Fixed Version
+ * Phase 3 Sprint 3.1 - Fixed Version with Null Checks
  */
 
 const DepartmentList: React.FC = () => {
@@ -41,21 +41,34 @@ const DepartmentList: React.FC = () => {
       
       let response;
       if (searchKeyword.trim()) {
-        // ✅ FIX: Use search() method
         response = await departmentApi.search(searchKeyword, currentPage, pageSize);
       } else {
-        // ✅ FIX: Use getAll() method
         response = await departmentApi.getAll(currentPage, pageSize, sortBy, sortDir);
       }
       
-      // ✅ FIX: Access response.data.content (PageResponse structure)
-      setDepartments(response.data.content);
-      setTotalPages(response.data.totalPages);
-      setTotalItems(response.data.totalElements);
+      console.log('📊 [DepartmentList] Response:', response);
+
+      console.log('📊 [DepartmentList] Response:', response);
+
+      // ✅ FIX: Backend trả flat structure, data là array trực tiếp
+      if (response) {
+        setDepartments(Array.isArray(response.data) ? response.data : []);
+        setTotalPages(response.totalPages || 0);
+        setTotalItems(response.totalItems || 0);
+      } else {
+        setDepartments([]);
+        setTotalPages(0);
+        setTotalItems(0);
+      }
     } catch (err) {
-      console.error('Error fetching departments:', err);
+      console.error('❌ [DepartmentList] Error fetching departments:', err);
       const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách khoa';
       setError(errorMessage);
+      
+      // ✅ Set empty data on error
+      setDepartments([]);
+      setTotalPages(0);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
@@ -70,8 +83,7 @@ const DepartmentList: React.FC = () => {
    */
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(0); // Reset to first page
-    fetchDepartments();
+    setCurrentPage(0);
   };
 
   /**
@@ -100,16 +112,12 @@ const DepartmentList: React.FC = () => {
     
     try {
       setDeletingId(id);
-      // ✅ FIX: Use delete() method
       await departmentApi.delete(id);
       
-      // Show success message
       alert('Xóa khoa thành công!');
-      
-      // Refresh list
       fetchDepartments();
     } catch (err) {
-      console.error('Error deleting department:', err);
+      console.error('❌ [DepartmentList] Error deleting department:', err);
       const errorMessage = err instanceof Error ? err.message : 'Không thể xóa khoa';
       alert(errorMessage);
     } finally {
@@ -151,8 +159,8 @@ const DepartmentList: React.FC = () => {
    */
   const getKnowledgeTypeLabel = (type: string): string => {
     const labels: { [key: string]: string } = {
-      NATURAL_SCIENCE: 'Khoa học Tự nhiên',
-      SOCIAL_SCIENCE: 'Khoa học Xã hội',
+      GENERAL: 'Đại cương',
+      SPECIALIZED: 'Chuyên ngành',
     };
     return labels[type] || type;
   };
@@ -197,7 +205,6 @@ const DepartmentList: React.FC = () => {
                 onClick={() => {
                   setSearchKeyword('');
                   setCurrentPage(0);
-                  setTimeout(fetchDepartments, 0);
                 }}
               >
                 Xóa
@@ -210,17 +217,17 @@ const DepartmentList: React.FC = () => {
       {/* Error Message */}
       {error && (
         <div className="error-message">
-          {error}
+          ❌ {error}
         </div>
       )}
 
       {/* Table */}
       <div className="table-container">
         {loading ? (
-          <div className="loading">Đang tải...</div>
-        ) : departments.length === 0 ? (
+          <div className="loading">⏳ Đang tải...</div>
+        ) : !departments || departments.length === 0 ? (
           <div className="no-data">
-            {searchKeyword ? 'Không tìm thấy kết quả' : 'Chưa có khoa nào'}
+            {searchKeyword ? '🔍 Không tìm thấy kết quả' : '📭 Chưa có khoa nào'}
           </div>
         ) : (
           <>
@@ -265,7 +272,7 @@ const DepartmentList: React.FC = () => {
                         disabled={deletingId === dept.departmentId}
                         title="Xóa"
                       >
-                        {deletingId === dept.departmentId ? '...' : '🗑️'}
+                        {deletingId === dept.departmentId ? '⏳' : '🗑️'}
                       </button>
                     </td>
                   </tr>
@@ -299,14 +306,14 @@ const DepartmentList: React.FC = () => {
                 <button
                   className="btn-page"
                   onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage >= totalPages - 1}
+                  disabled={currentPage >= totalPages - 1 || totalPages === 0}
                 >
                   ›
                 </button>
                 <button
                   className="btn-page"
                   onClick={() => setCurrentPage(totalPages - 1)}
-                  disabled={currentPage >= totalPages - 1}
+                  disabled={currentPage >= totalPages - 1 || totalPages === 0}
                 >
                   »»
                 </button>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import departmentApi, { 
+  Department,
   DepartmentCreateRequest, 
-  DepartmentUpdateRequest, 
-  DepartmentResponse 
+  DepartmentUpdateRequest
 } from '../../../services/api/departmentApi';
 import './DepartmentModal.css';
 
@@ -12,7 +12,7 @@ import './DepartmentModal.css';
  */
 
 interface DepartmentModalProps {
-  department: DepartmentResponse | null;
+  department: Department | null;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -35,7 +35,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
   const [formData, setFormData] = useState({
     departmentCode: '',
     departmentName: '',
-    knowledgeType: 'TECHNOLOGY' as const,
+    knowledgeType: 'GENERAL' as 'GENERAL' | 'SPECIALIZED',
     description: '',
   });
 
@@ -51,7 +51,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
       setFormData({
         departmentCode: department.departmentCode,
         departmentName: department.departmentName,
-        knowledgeType: department.knowledgeType as 'TECHNOLOGY',
+        knowledgeType: department.knowledgeType,
         description: department.description || '',
       });
     }
@@ -116,21 +116,21 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
       setLoading(true);
 
       if (isEditMode) {
-        // Update existing department
-        await departmentApi.updateDepartment(
+        // ✅ FIX: Use update() method
+        await departmentApi.update(
           department.departmentId,
-          formData as DepartmentUpdateRequest
+          formData as unknown as DepartmentUpdateRequest
         );
         alert('Cập nhật khoa thành công!');
       } else {
-        // Create new department
-        await departmentApi.createDepartment(formData as DepartmentCreateRequest);
+        // ✅ FIX: Use create() method
+        await departmentApi.create(formData as unknown as DepartmentCreateRequest);
         alert('Thêm khoa thành công!');
       }
 
       onSuccess();
     } catch (err) {
-      console.error('Error saving department:', err);
+      console.error('❌ [DepartmentModal] Error saving department:', err);
       
       // Handle specific errors
       if (err && typeof err === 'object' && 'response' in err) {
@@ -155,15 +155,11 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
   };
 
   /**
-   * Knowledge type options
+   * Knowledge type options (only 2 types from backend)
    */
   const knowledgeTypes = [
-    { value: 'TECHNOLOGY', label: 'Công nghệ' },
-    { value: 'SOCIAL_SCIENCE', label: 'Khoa học Xã hội' },
-    { value: 'NATURAL_SCIENCE', label: 'Khoa học Tự nhiên' },
-    { value: 'ENGINEERING', label: 'Kỹ thuật' },
-    { value: 'MEDICAL', label: 'Y học' },
-    { value: 'ARTS', label: 'Nghệ thuật' },
+    { value: 'GENERAL', label: 'Đại cương' },
+    { value: 'SPECIALIZED', label: 'Chuyên ngành' },
   ];
 
   return (
@@ -193,7 +189,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
               placeholder="VD: IT, BUS, ENG"
               className={errors.departmentCode ? 'error' : ''}
               maxLength={10}
-              disabled={loading}
+              disabled={loading || isEditMode}
             />
             {errors.departmentCode && (
               <span className="error-text">{errors.departmentCode}</span>

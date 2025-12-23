@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import majorApi, { 
+  Major,                    // ← ADD
   MajorCreateRequest, 
-  MajorUpdateRequest, 
-  MajorResponse 
+  MajorUpdateRequest
+  // REMOVE: MajorResponse
 } from '../../../services/api/majorApi';
-import { DepartmentResponse } from '../../../services/api/departmentApi';
+import { Department } from '../../../services/api/departmentApi';
 import './MajorModal.css';
 
 /**
@@ -13,8 +14,8 @@ import './MajorModal.css';
  */
 
 interface MajorModalProps {
-  major: MajorResponse | null;
-  departments: DepartmentResponse[];
+  major: Major | null;          // ← CHANGE
+  departments: Department[];    // ← CHANGE
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -128,14 +129,14 @@ const MajorModal: React.FC<MajorModalProps> = ({
 
       if (isEditMode) {
         // Update existing major
-        await majorApi.updateMajor(
+        await majorApi.update(
           major.majorId,
           formData as MajorUpdateRequest
         );
         alert('Cập nhật chuyên ngành thành công!');
       } else {
         // Create new major
-        await majorApi.createMajor(formData as MajorCreateRequest);
+        await majorApi.create(formData as MajorCreateRequest);
         alert('Thêm chuyên ngành thành công!');
       }
 

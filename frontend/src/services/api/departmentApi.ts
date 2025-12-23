@@ -4,7 +4,7 @@ export interface Department {
   departmentId: number;
   departmentCode: string;
   departmentName: string;
-  knowledgeType: 'NATURAL_SCIENCE' | 'SOCIAL_SCIENCE';
+  knowledgeType: 'GENERAL' | 'SPECIALIZED';
   description?: string;
   createdAt: string;
   updatedAt: string;
@@ -13,13 +13,13 @@ export interface Department {
 export interface DepartmentCreateRequest {
   departmentCode: string;
   departmentName: string;
-  knowledgeType: 'NATURAL_SCIENCE' | 'SOCIAL_SCIENCE';
+  knowledgeType: 'GENERAL' | 'SPECIALIZED';
   description?: string;
 }
 
 export interface DepartmentUpdateRequest {
   departmentName: string;
-  knowledgeType: 'NATURAL_SCIENCE' | 'SOCIAL_SCIENCE';
+  knowledgeType: 'GENERAL' | 'SPECIALIZED';
   description?: string;
 }
 
@@ -32,6 +32,8 @@ export interface PageResponse<T> {
 }
 
 export interface ApiResponse<T> {
+  totalItems: number;
+  totalPages: number;
   success: boolean;
   message: string;
   data: T;
