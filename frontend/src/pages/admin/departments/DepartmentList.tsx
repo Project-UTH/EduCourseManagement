@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import departmentApi, { DepartmentResponse } from '../../../services/api/departmentApi';
+import departmentApi, { Department } from '../../../services/api/departmentApi';
 import DepartmentModal from './DepartmentModal';
 import './DepartmentList.css';
 
@@ -9,7 +9,7 @@ import './DepartmentList.css';
  */
 
 const DepartmentList: React.FC = () => {
-  const [departments, setDepartments] = useState<DepartmentResponse[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -26,7 +26,7 @@ const DepartmentList: React.FC = () => {
   
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState<DepartmentResponse | null>(null);
+  const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   
   // Delete confirmation
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -41,22 +41,17 @@ const DepartmentList: React.FC = () => {
       
       let response;
       if (searchKeyword.trim()) {
-        response = await departmentApi.searchDepartments(searchKeyword, {
-          page: currentPage,
-          size: pageSize,
-        });
+        // ✅ FIX: Use search() method
+        response = await departmentApi.search(searchKeyword, currentPage, pageSize);
       } else {
-        response = await departmentApi.getAllDepartments({
-          page: currentPage,
-          size: pageSize,
-          sortBy,
-          sortDir,
-        });
+        // ✅ FIX: Use getAll() method
+        response = await departmentApi.getAll(currentPage, pageSize, sortBy, sortDir);
       }
       
-      setDepartments(response.data);
-      setTotalPages(response.totalPages);
-      setTotalItems(response.totalItems);
+      // ✅ FIX: Access response.data.content (PageResponse structure)
+      setDepartments(response.data.content);
+      setTotalPages(response.data.totalPages);
+      setTotalItems(response.data.totalElements);
     } catch (err) {
       console.error('Error fetching departments:', err);
       const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách khoa';
@@ -90,7 +85,7 @@ const DepartmentList: React.FC = () => {
   /**
    * Handle edit
    */
-  const handleEdit = (department: DepartmentResponse) => {
+  const handleEdit = (department: Department) => {
     setEditingDepartment(department);
     setIsModalOpen(true);
   };
@@ -105,7 +100,8 @@ const DepartmentList: React.FC = () => {
     
     try {
       setDeletingId(id);
-      await departmentApi.deleteDepartment(id);
+      // ✅ FIX: Use delete() method
+      await departmentApi.delete(id);
       
       // Show success message
       alert('Xóa khoa thành công!');
@@ -155,12 +151,8 @@ const DepartmentList: React.FC = () => {
    */
   const getKnowledgeTypeLabel = (type: string): string => {
     const labels: { [key: string]: string } = {
-      TECHNOLOGY: 'Công nghệ',
-      SOCIAL_SCIENCE: 'Khoa học Xã hội',
       NATURAL_SCIENCE: 'Khoa học Tự nhiên',
-      ENGINEERING: 'Kỹ thuật',
-      MEDICAL: 'Y học',
-      ARTS: 'Nghệ thuật',
+      SOCIAL_SCIENCE: 'Khoa học Xã hội',
     };
     return labels[type] || type;
   };

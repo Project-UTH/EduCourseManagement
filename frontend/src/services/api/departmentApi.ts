@@ -1,140 +1,173 @@
-import apiClient from './apiClient.ts';
+import apiClient from './apiClient';
 
-/**
- * Department API Service
- * Phase 3 Sprint 3.1
- */
+export interface Department {
+  departmentId: number;
+  departmentCode: string;
+  departmentName: string;
+  knowledgeType: 'NATURAL_SCIENCE' | 'SOCIAL_SCIENCE';
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface DepartmentCreateRequest {
   departmentCode: string;
   departmentName: string;
-  knowledgeType: 'TECHNOLOGY' | 'SOCIAL_SCIENCE' | 'NATURAL_SCIENCE' | 'ENGINEERING' | 'MEDICAL' | 'ARTS';
+  knowledgeType: 'NATURAL_SCIENCE' | 'SOCIAL_SCIENCE';
   description?: string;
 }
 
 export interface DepartmentUpdateRequest {
-  departmentCode: string;
   departmentName: string;
-  knowledgeType: 'TECHNOLOGY' | 'SOCIAL_SCIENCE' | 'NATURAL_SCIENCE' | 'ENGINEERING' | 'MEDICAL' | 'ARTS';
+  knowledgeType: 'NATURAL_SCIENCE' | 'SOCIAL_SCIENCE';
   description?: string;
 }
 
-export interface DepartmentResponse {
-  departmentId: number;
-  departmentCode: string;
-  departmentName: string;
-  knowledgeType: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-  totalMajors?: number;
-  totalTeachers?: number;
-  totalStudents?: number;
-}
-
-export interface PaginatedResponse<T> {
-  success: boolean;
-  data: T[];
-  currentPage: number;
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
   totalPages: number;
-  totalItems: number;
+  currentPage: number;
+  pageSize: number;
 }
 
 export interface ApiResponse<T> {
   success: boolean;
-  message?: string;
-  data?: T;
+  message: string;
+  data: T;
+}
+
+interface ApiError {
+  response?: {
+    data?: unknown;
+  };
+  message: string;
 }
 
 const departmentApi = {
-  /**
-   * Create a new department
-   */
-  createDepartment: async (data: DepartmentCreateRequest): Promise<DepartmentResponse> => {
-    const response = await apiClient.post<ApiResponse<DepartmentResponse>>(
-      '/api/admin/departments',
-      data
-    );
-    return response.data.data!;
+  // Get all departments with pagination
+  getAll: async (
+    page: number = 0,
+    size: number = 10,
+    sortBy: string = 'departmentName',
+    sortDir: string = 'asc'
+  ): Promise<ApiResponse<PageResponse<Department>>> => {
+    console.log(`🏢 [departmentApi] Fetching departments - page: ${page}, size: ${size}`);
+    
+    try {
+      const response = await apiClient.get<ApiResponse<PageResponse<Department>>>(
+        '/api/admin/departments',
+        {
+          params: { page, size, sortBy, sortDir }
+        }
+      );
+      
+      console.log('✅ [departmentApi] Departments fetched:', response.data.data.totalElements, 'total');
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('❌ [departmentApi] Failed to fetch departments:', apiError.response?.data || apiError.message);
+      throw error;
+    }
   },
 
-  /**
-   * Update an existing department
-   */
-  updateDepartment: async (id: number, data: DepartmentUpdateRequest): Promise<DepartmentResponse> => {
-    const response = await apiClient.put<ApiResponse<DepartmentResponse>>(
-      `/api/admin/departments/${id}`,
-      data
-    );
-    return response.data.data!;
+  // Get department by ID
+  getById: async (id: number): Promise<ApiResponse<Department>> => {
+    console.log(`🏢 [departmentApi] Fetching department ID: ${id}`);
+    
+    try {
+      const response = await apiClient.get<ApiResponse<Department>>(
+        `/api/admin/departments/${id}`
+      );
+      
+      console.log('✅ [departmentApi] Department fetched:', response.data.data.departmentName);
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('❌ [departmentApi] Failed to fetch department:', apiError.response?.data || apiError.message);
+      throw error;
+    }
   },
 
-  /**
-   * Delete a department
-   */
-  deleteDepartment: async (id: number): Promise<void> => {
-    await apiClient.delete(`/api/admin/departments/${id}`);
+  // Create department
+  create: async (data: DepartmentCreateRequest): Promise<ApiResponse<Department>> => {
+    console.log('🏢 [departmentApi] Creating department:', data.departmentName);
+    
+    try {
+      const response = await apiClient.post<ApiResponse<Department>>(
+        '/api/admin/departments',
+        data
+      );
+      
+      console.log('✅ [departmentApi] Department created:', response.data.data.departmentName);
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('❌ [departmentApi] Failed to create department:', apiError.response?.data || apiError.message);
+      throw error;
+    }
   },
 
-  /**
-   * Get department by ID
-   */
-  getDepartmentById: async (id: number): Promise<DepartmentResponse> => {
-    const response = await apiClient.get<ApiResponse<DepartmentResponse>>(
-      `/api/admin/departments/${id}`
-    );
-    return response.data.data!;
+  // Update department
+  update: async (id: number, data: DepartmentUpdateRequest): Promise<ApiResponse<Department>> => {
+    console.log(`🏢 [departmentApi] Updating department ID: ${id}`);
+    
+    try {
+      const response = await apiClient.put<ApiResponse<Department>>(
+        `/api/admin/departments/${id}`,
+        data
+      );
+      
+      console.log('✅ [departmentApi] Department updated:', response.data.data.departmentName);
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('❌ [departmentApi] Failed to update department:', apiError.response?.data || apiError.message);
+      throw error;
+    }
   },
 
-  /**
-   * Get all departments with pagination
-   */
-  getAllDepartments: async (params: {
-    page?: number;
-    size?: number;
-    sortBy?: string;
-    sortDir?: 'asc' | 'desc';
-  } = {}): Promise<PaginatedResponse<DepartmentResponse>> => {
-    const response = await apiClient.get<PaginatedResponse<DepartmentResponse>>(
-      '/api/admin/departments',
-      { params }
-    );
-    return response.data;
+  // Delete department
+  delete: async (id: number): Promise<ApiResponse<null>> => {
+    console.log(`🏢 [departmentApi] Deleting department ID: ${id}`);
+    
+    try {
+      const response = await apiClient.delete<ApiResponse<null>>(
+        `/api/admin/departments/${id}`
+      );
+      
+      console.log('✅ [departmentApi] Department deleted');
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('❌ [departmentApi] Failed to delete department:', apiError.response?.data || apiError.message);
+      throw error;
+    }
   },
 
-  /**
-   * Get all departments without pagination (for dropdown)
-   */
-  getAllDepartmentsNoPaging: async (): Promise<DepartmentResponse[]> => {
-    const response = await apiClient.get<ApiResponse<DepartmentResponse[]>>(
-      '/api/admin/departments/all'
-    );
-    return response.data.data!;
-  },
-
-  /**
-   * Search departments by keyword
-   */
-  searchDepartments: async (keyword: string, params: {
-    page?: number;
-    size?: number;
-  } = {}): Promise<PaginatedResponse<DepartmentResponse>> => {
-    const response = await apiClient.get<PaginatedResponse<DepartmentResponse>>(
-      '/api/admin/departments/search',
-      { params: { keyword, ...params } }
-    );
-    return response.data;
-  },
-
-  /**
-   * Check if department code exists
-   */
-  checkDepartmentCode: async (code: string): Promise<boolean> => {
-    const response = await apiClient.get<{ exists: boolean }>(
-      '/api/admin/departments/check-code',
-      { params: { code } }
-    );
-    return response.data.exists;
+  // Search departments
+  search: async (
+    keyword: string,
+    page: number = 0,
+    size: number = 10
+  ): Promise<ApiResponse<PageResponse<Department>>> => {
+    console.log(`🏢 [departmentApi] Searching departments: "${keyword}"`);
+    
+    try {
+      const response = await apiClient.get<ApiResponse<PageResponse<Department>>>(
+        '/api/admin/departments/search',
+        {
+          params: { keyword, page, size }
+        }
+      );
+      
+      console.log('✅ [departmentApi] Search results:', response.data.data.totalElements, 'found');
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('❌ [departmentApi] Search failed:', apiError.response?.data || apiError.message);
+      throw error;
+    }
   },
 };
 
