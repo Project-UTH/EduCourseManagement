@@ -1,0 +1,36 @@
+package vn.edu.uth.ecms.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+/**
+ * DTO for Major response (includes department information)
+ * Phase 3 Sprint 3.1
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class MajorResponse {
+
+    private Long majorId;
+    private String majorCode;
+    private String majorName;
+    private String description;
+
+    // Department information
+    private Long departmentId;
+    private String departmentCode;
+    private String departmentName;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // Statistics (optional - for list view)
+    private Integer totalStudents;
+    private Integer totalTeachers;
+}
