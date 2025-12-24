@@ -60,23 +60,23 @@ public class MajorServiceImpl implements MajorService {
                 .description(request.getDescription())
                 .build();
 
-        log.info("🔍 [createMajor] About to save major...");
+        log.info("[createMajor] About to save major...");
         Major savedMajor = majorRepository.save(major);
 
-        log.info("✅ [createMajor] Major saved with ID: {}", savedMajor.getMajorId());
+        log.info("[createMajor] Major saved with ID: {}", savedMajor.getMajorId());
 
         // Force flush to database
         majorRepository.flush();
-        log.info("✅ [createMajor] Flush completed");
+        log.info("[createMajor] Flush completed");
 
         // Force load department to avoid lazy loading issues
         String deptName = savedMajor.getDepartment().getDepartmentName();
-        log.info("✅ [createMajor] Department pre-loaded: {}", deptName);
+        log.info("[createMajor] Department pre-loaded: {}", deptName);
 
-        log.info("🔍 [createMajor] About to map to response...");
+        log.info("[createMajor] About to map to response...");
         MajorResponse response = mapToResponse(savedMajor);
 
-        log.info("✅ [createMajor] Major created successfully: {}", response.getMajorName());
+        log.info("[createMajor] Major created successfully: {}", response.getMajorName());
         return response;
     }
 
@@ -197,13 +197,13 @@ public class MajorServiceImpl implements MajorService {
      * Map Major entity to MajorResponse DTO
      */
     private MajorResponse mapToResponse(Major major) {
-        log.info("🔍 [mapToResponse] START - Major ID: {}", major.getMajorId());
+        log.info("[mapToResponse] START - Major ID: {}", major.getMajorId());
 
         try {
-            log.info("🔍 [mapToResponse] Getting department...");
+            log.info("[mapToResponse] Getting department...");
             Department dept = major.getDepartment();
 
-            log.info("✅ [mapToResponse] Department loaded: {} - {}",
+            log.info("[mapToResponse] Department loaded: {} - {}",
                     dept.getDepartmentCode(), dept.getDepartmentName());
 
             MajorResponse response = MajorResponse.builder()
@@ -219,11 +219,11 @@ public class MajorServiceImpl implements MajorService {
                     .updatedAt(major.getUpdatedAt())
                     .build();
 
-            log.info("✅ [mapToResponse] DONE - Response built successfully");
+            log.info("[mapToResponse] DONE - Response built successfully");
             return response;
 
         } catch (Exception e) {
-            log.error("❌ [mapToResponse] ERROR: {}", e.getMessage(), e);
+            log.error("[mapToResponse] ERROR: {}", e.getMessage(), e);
             throw e;
         }
     }
