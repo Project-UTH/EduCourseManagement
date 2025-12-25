@@ -204,6 +204,43 @@ const subjectApi = {
       throw error;
     }
   },
+
+  // Add to subjectApi object:
+
+  addPrerequisite: async (subjectId: number, prerequisiteId: number) => {
+    console.log(`[subjectApi] Adding prerequisite ${prerequisiteId} to subject ${subjectId}`);
+    
+    const response = await apiClient.post(
+      `/api/admin/subjects/${subjectId}/prerequisites`,
+      null,
+      { params: { prerequisiteId } }
+    );
+    
+    console.log('[subjectApi] Prerequisite added');
+    return response.data;
+  },
+
+  removePrerequisite: async (subjectId: number, prerequisiteId: number) => {
+    console.log(`[subjectApi] Removing prerequisite ${prerequisiteId} from subject ${subjectId}`);
+    
+    const response = await apiClient.delete(
+      `/api/admin/subjects/${subjectId}/prerequisites/${prerequisiteId}`
+    );
+    
+    console.log('[subjectApi] Prerequisite removed');
+    return response.data;
+  },
+
+  getPrerequisites: async (subjectId: number) => {
+    console.log(`[subjectApi] Fetching prerequisites for subject ${subjectId}`);
+    
+    const response = await apiClient.get<ApiResponse<Subject[]>>(
+      `/api/admin/subjects/${subjectId}/prerequisites`
+    );
+    
+    console.log('[subjectApi] Prerequisites fetched:', response.data.data.length);
+    return response.data;
+  },
 };
 
 export default subjectApi;
