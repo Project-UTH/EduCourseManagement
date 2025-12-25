@@ -58,4 +58,14 @@ public interface SubjectService {
      * Check if subject code exists
      */
     boolean existsBySubjectCode(String subjectCode);
+
+    // Prerequisites
+    // Add these to SubjectService interface:
+    void addPrerequisite(Long subjectId, Long prerequisiteId);
+
+    void removePrerequisite(Long subjectId, Long prerequisiteId);
+
+    List<SubjectResponse> getPrerequisites(Long subjectId);
+
+    boolean hasPrerequisites(Long subjectId);
 }

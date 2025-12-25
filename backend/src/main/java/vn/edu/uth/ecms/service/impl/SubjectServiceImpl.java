@@ -13,11 +13,17 @@ import vn.edu.uth.ecms.entity.Department;
 import vn.edu.uth.ecms.entity.Major;
 import vn.edu.uth.ecms.entity.Subject;
 import vn.edu.uth.ecms.exception.DuplicateResourceException;
+import vn.edu.uth.ecms.exception.InvalidRequestException;
 import vn.edu.uth.ecms.exception.ResourceNotFoundException;
 import vn.edu.uth.ecms.repository.DepartmentRepository;
 import vn.edu.uth.ecms.repository.MajorRepository;
+import vn.edu.uth.ecms.repository.SubjectPrerequisiteRepository;
 import vn.edu.uth.ecms.repository.SubjectRepository;
 import vn.edu.uth.ecms.service.SubjectService;
+import vn.edu.uth.ecms.entity.SubjectPrerequisite;
+import vn.edu.uth.ecms.repository.SubjectPrerequisiteRepository;
+import java.util.HashSet;
+import java.util.Set;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,6 +46,7 @@ public class SubjectServiceImpl implements SubjectService {
     private final SubjectRepository subjectRepository;
     private final DepartmentRepository departmentRepository;
     private final MajorRepository majorRepository;
+    private final SubjectPrerequisiteRepository prerequisiteRepository;
 
     @Override
     @Transactional(timeout = 30)
@@ -258,6 +265,121 @@ public class SubjectServiceImpl implements SubjectService {
     }
 
     /**
+     * Add prerequisite to subject
+     */
+    @Override
+    @Transactional
+    public void addPrerequisite(Long subjectId, Long prerequisiteId) {
+        log.info("[SubjectService] Adding prerequisite {} to subject {}", prerequisiteId, subjectId);
+
+        if (subjectId.equals(prerequisiteId)) {
+            throw new InvalidRequestException("Subject cannot be its own prerequisite");
+        }
+
+        Subject subject = findSubjectById(subjectId);
+        Subject prerequisite = findSubjectById(prerequisiteId);
+
+        if (prerequisiteRepository.existsBySubject_SubjectIdAndPrerequisiteSubject_SubjectId(
+                subjectId, prerequisiteId)) {
+            throw new DuplicateResourceException("Prerequisite already exists");
+        }
+
+        if (wouldCreateCircularDependency(subjectId, prerequisiteId)) {
+            throw new InvalidRequestException(
+                    "Cannot add prerequisite: Would create circular dependency");
+        }
+
+        SubjectPrerequisite sp = new SubjectPrerequisite();
+        sp.setSubject(subject);
+        sp.setPrerequisiteSubject(prerequisite);
+
+        prerequisiteRepository.save(sp);
+        log.info("[SubjectService] Added prerequisite successfully");
+    }
+
+    /**
+     * Remove prerequisite from subject
+     */
+    @Override
+    @Transactional
+    public void removePrerequisite(Long subjectId, Long prerequisiteId) {
+        log.info("[SubjectService] Removing prerequisite {} from subject {}", prerequisiteId, subjectId);
+
+        if (!prerequisiteRepository.existsBySubject_SubjectIdAndPrerequisiteSubject_SubjectId(
+                subjectId, prerequisiteId)) {
+            throw new ResourceNotFoundException("Prerequisite relationship not found");
+        }
+
+        prerequisiteRepository.deleteBySubject_SubjectIdAndPrerequisiteSubject_SubjectId(
+                subjectId, prerequisiteId);
+
+        log.info("[SubjectService] Removed prerequisite successfully");
+    }
+
+    /**
+     * Get all prerequisites for a subject
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<SubjectResponse> getPrerequisites(Long subjectId) {
+        log.info("[SubjectService] Getting prerequisites for subject {}", subjectId);
+
+        findSubjectById(subjectId);
+
+        List<SubjectPrerequisite> prerequisites = prerequisiteRepository
+                .findBySubject_SubjectId(subjectId);
+
+        return prerequisites.stream()
+                .map(sp -> mapToResponse(sp.getPrerequisiteSubject()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Check if subject has prerequisites
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasPrerequisites(Long subjectId) {
+        List<SubjectPrerequisite> prerequisites = prerequisiteRepository
+                .findBySubject_SubjectId(subjectId);
+        return !prerequisites.isEmpty();
+    }
+
+    /**
+     * Helper: Check if adding prerequisite would create circular dependency
+     */
+    private boolean wouldCreateCircularDependency(Long subjectId, Long newPrerequisiteId) {
+        Set<Long> visited = new HashSet<>();
+        return hasPath(newPrerequisiteId, subjectId, visited);
+    }
+
+    /**
+     * Helper: DFS to detect cycle
+     */
+    private boolean hasPath(Long from, Long to, Set<Long> visited) {
+        if (from.equals(to)) {
+            return true;
+        }
+
+        if (visited.contains(from)) {
+            return false;
+        }
+
+        visited.add(from);
+
+        List<SubjectPrerequisite> prerequisites = prerequisiteRepository
+                .findBySubject_SubjectId(from);
+
+        for (SubjectPrerequisite sp : prerequisites) {
+            if (hasPath(sp.getPrerequisiteSubject().getSubjectId(), to, visited)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Map Subject entity to SubjectResponse DTO
      */
     private SubjectResponse mapToResponse(Subject subject) {
@@ -309,6 +431,16 @@ public class SubjectServiceImpl implements SubjectService {
             log.error("mapToResponse ERROR: {}", e.getMessage(), e);
             throw e;
         }
+    }
+
+    /**
+     * Helper method: Find subject by ID or throw exception
+     */
+    private Subject findSubjectById(Long subjectId) {
+        return subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Subject not found with ID: " + subjectId
+                ));
     }
 
     /**

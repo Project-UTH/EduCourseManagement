@@ -1,4 +1,10 @@
 package vn.edu.uth.ecms.entity;
 
-public class SemesterStatus {
+/**
+ * Semester Status Enum
+ */
+public enum SemesterStatus {
+    UPCOMING,    // Sắp tới
+    ACTIVE,      // Đang diễn ra
+    COMPLETED    // Đã kết thúc
 }
