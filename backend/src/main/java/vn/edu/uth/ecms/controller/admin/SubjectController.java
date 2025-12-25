@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.uth.ecms.dto.request.SubjectCreateRequest;
 import vn.edu.uth.ecms.dto.request.SubjectUpdateRequest;
+import vn.edu.uth.ecms.dto.response.ApiResponse;
 import vn.edu.uth.ecms.dto.response.SubjectResponse;
 import vn.edu.uth.ecms.service.SubjectService;
 
@@ -203,6 +204,50 @@ public class SubjectController {
         result.put("totalItems", subjects.getTotalElements());
 
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/{id}/prerequisites")
+    public ResponseEntity<ApiResponse<Void>> addPrerequisite(
+            @PathVariable Long id,
+            @RequestParam Long prerequisiteId) {
+        log.info("[SubjectController] POST /api/admin/subjects/{}/prerequisites - prerequisiteId: {}",
+                id, prerequisiteId);
+
+        subjectService.addPrerequisite(id, prerequisiteId);
+
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .success(true)
+                .message("Prerequisite added successfully")
+                .build());
+    }
+
+    @DeleteMapping("/{id}/prerequisites/{prerequisiteId}")
+    public ResponseEntity<ApiResponse<Void>> removePrerequisite(
+            @PathVariable Long id,
+            @PathVariable Long prerequisiteId) {
+        log.info("[SubjectController] DELETE /api/admin/subjects/{}/prerequisites/{}",
+                id, prerequisiteId);
+
+        subjectService.removePrerequisite(id, prerequisiteId);
+
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .success(true)
+                .message("Prerequisite removed successfully")
+                .build());
+    }
+
+    @GetMapping("/{id}/prerequisites")
+    public ResponseEntity<ApiResponse<List<SubjectResponse>>> getPrerequisites(
+            @PathVariable Long id) {
+        log.info("[SubjectController] GET /api/admin/subjects/{}/prerequisites", id);
+
+        List<SubjectResponse> prerequisites = subjectService.getPrerequisites(id);
+
+        return ResponseEntity.ok(ApiResponse.<List<SubjectResponse>>builder()
+                .success(true)
+                .message("Prerequisites retrieved successfully")
+                .data(prerequisites)
+                .build());
     }
 
     /**
