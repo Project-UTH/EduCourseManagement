@@ -5,9 +5,7 @@
  * KẾT HỢP CSS cũ + CSS mới
  */
 
-/* ========== IMPORT SHARED CSS FIRST ========== */
-@import './styles/admin-common.css';
-@import './styles/admin-components.css';
+
 
 /* ========== KEEP OLD CUSTOM VARIABLES ========== */
 :root {

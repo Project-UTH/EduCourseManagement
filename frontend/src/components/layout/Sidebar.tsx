@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useState } from 'react';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -186,15 +187,12 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
         key={index}
         to={item.path}
         className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
+        data-label={item.label} // ⭐ For tooltip
       >
         <span className="sidebar-icon">{item.icon}</span>
-        {!collapsed && (
-          <>
-            <span className="sidebar-label">{item.label}</span>
-            {item.badge && (
-              <span className="sidebar-badge">{item.badge}</span>
-            )}
-          </>
+        <span className="sidebar-label">{item.label}</span>
+        {item.badge && (
+          <span className="sidebar-badge">{item.badge}</span>
         )}
       </NavLink>
     );
@@ -209,46 +207,44 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
   );
 };
 
-// Submenu component for nested items
+// Submenu component
 interface SidebarSubmenuProps {
   item: MenuItem;
   collapsed: boolean;
 }
 
-const SidebarSubmenu = ({ item, collapsed }: SidebarSubmenuProps) => {
-  const [expanded, setExpanded] = React.useState(false);
+const SidebarSubmenu = ({ item }: SidebarSubmenuProps) => {
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div className="sidebar-submenu">
       <button
         className={`sidebar-item submenu-trigger ${expanded ? 'expanded' : ''}`}
         onClick={() => setExpanded(!expanded)}
+        data-label={item.label} // ⭐ For tooltip
       >
         <span className="sidebar-icon">{item.icon}</span>
-        {!collapsed && (
-          <>
-            <span className="sidebar-label">{item.label}</span>
-            <svg 
-              className="submenu-arrow" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </>
-        )}
+        <span className="sidebar-label">{item.label}</span>
+        <svg 
+          className="submenu-arrow" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
       
-      {!collapsed && expanded && item.children && (
+      {expanded && item.children && (
         <div className="submenu-items">
           {item.children.map((child, idx) => (
             <NavLink
               key={idx}
               to={child.path}
               className={({ isActive }) => `sidebar-item submenu-item ${isActive ? 'active' : ''}`}
+              data-label={child.label} // ⭐ For tooltip
             >
               <span className="sidebar-icon">{child.icon}</span>
               <span className="sidebar-label">{child.label}</span>
@@ -262,8 +258,5 @@ const SidebarSubmenu = ({ item, collapsed }: SidebarSubmenuProps) => {
     </div>
   );
 };
-
-// Add React import for useState
-import React from 'react';
 
 export default Sidebar;

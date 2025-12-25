@@ -2,14 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import subjectApi, { Subject } from '../../../services/api/subjectApi';
 import departmentApi, { Department } from '../../../services/api/departmentApi';
 import SubjectModal from './SubjectModal';
+import PrerequisiteManager from './PrerequisiteManager';
 import './SubjectList.css';
 
-/**
- * Subject List V2 - Hiển thị Khoa, Chuyên ngành, Số buổi
- */
+interface SubjectWithPrerequisites extends Subject {
+  prerequisitesList?: Subject[];
+  prerequisitesLoading?: boolean;
+}
 
 const SubjectList: React.FC = () => {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [subjects, setSubjects] = useState<SubjectWithPrerequisites[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +30,25 @@ const SubjectList: React.FC = () => {
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [isPrerequisiteModalOpen, setIsPrerequisiteModalOpen] = useState(false);
+
+  // Description tooltip state
+  const [descriptionTooltip, setDescriptionTooltip] = useState<{
+    show: boolean;
+    content: string;
+    x: number;
+    y: number;
+  }>({ show: false, content: '', x: 0, y: 0 });
+
+  // ⭐ Prerequisite tooltip state
+  const [prereqTooltip, setPrereqTooltip] = useState<{
+    show: boolean;
+    content: string;
+    x: number;
+    y: number;
+  }>({ show: false, content: '', x: 0, y: 0 });
+
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
@@ -40,6 +61,30 @@ const SubjectList: React.FC = () => {
     };
     fetchDepartments();
   }, []);
+
+  const fetchPrerequisitesForSubjects = async (subjectList: Subject[]) => {
+    const subjectsWithPrereqs: SubjectWithPrerequisites[] = await Promise.all(
+      subjectList.map(async (subject) => {
+        try {
+          const prereqsRes = await subjectApi.getPrerequisites(subject.subjectId);
+          const prereqList = Array.isArray(prereqsRes.data) ? prereqsRes.data : [];
+          return {
+            ...subject,
+            prerequisitesList: prereqList,
+            prerequisitesLoading: false
+          };
+        } catch (err) {
+          console.error(`[SubjectList] Failed to fetch prerequisites for ${subject.subjectCode}:`, err);
+          return {
+            ...subject,
+            prerequisitesList: [],
+            prerequisitesLoading: false
+          };
+        }
+      })
+    );
+    return subjectsWithPrereqs;
+  };
 
   const fetchSubjects = useCallback(async () => {
     try {
@@ -57,7 +102,10 @@ const SubjectList: React.FC = () => {
       }
       
       if (response) {
-        setSubjects(Array.isArray(response.data) ? response.data : []);
+        const baseSubjects = Array.isArray(response.data) ? response.data : [];
+        const subjectsWithPrereqs = await fetchPrerequisitesForSubjects(baseSubjects);
+        
+        setSubjects(subjectsWithPrereqs);
         setTotalPages(response.totalPages || 0);
         setTotalItems(response.totalItems || 0);
       } else {
@@ -133,6 +181,20 @@ const SubjectList: React.FC = () => {
     setEditingSubject(null);
   };
 
+  const handleOpenPrerequisites = (subject: Subject) => {
+    setSelectedSubject(subject);
+    setIsPrerequisiteModalOpen(true);
+  };
+
+  const handleClosePrerequisites = () => {
+    setIsPrerequisiteModalOpen(false);
+    setSelectedSubject(null);
+  };
+
+  const handlePrerequisiteSuccess = () => {
+    fetchSubjects();
+  };
+
   const handleSort = (field: string) => {
     if (sortBy === field) {
       setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
@@ -147,11 +209,43 @@ const SubjectList: React.FC = () => {
     return date.toLocaleDateString('vi-VN');
   };
 
+  const showDescription = (description: string | undefined, event: React.MouseEvent) => {
+    if (!description) return;
+    const button = event.currentTarget as HTMLElement;
+    const rect = button.getBoundingClientRect();
+    setDescriptionTooltip({
+      show: true,
+      content: description,
+      x: rect.left,
+      y: rect.bottom + 5
+    });
+  };
+
+  const hideDescription = () => {
+    setDescriptionTooltip({ show: false, content: '', x: 0, y: 0 });
+  };
+
+  // ⭐ PREREQUISITE TOOLTIP HANDLERS
+  const showPrereqTooltip = (prereqName: string, event: React.MouseEvent) => {
+    const element = event.currentTarget as HTMLElement;
+    const rect = element.getBoundingClientRect();
+    setPrereqTooltip({
+      show: true,
+      content: prereqName,
+      x: rect.left,
+      y: rect.bottom + 5
+    });
+  };
+
+  const hidePrereqTooltip = () => {
+    setPrereqTooltip({ show: false, content: '', x: 0, y: 0 });
+  };
+
   return (
-    <div className="subject-list-container">
+    <div className="page-container">
       <div className="page-header">
         <h1>Quản lý Môn học</h1>
-        <button className="btn-primary" onClick={handleCreate}>
+        <button className="btn btn-primary" onClick={handleCreate}>
           <span className="icon">+</span>
           Thêm Môn học
         </button>
@@ -216,19 +310,19 @@ const SubjectList: React.FC = () => {
               <thead>
                 <tr>
                   <th onClick={() => handleSort('subjectCode')} className="sortable">
-                    Mã MH {sortBy === 'subjectCode' && (sortDir === 'asc' ? '↑' : '↓')}
+                    Mã
                   </th>
                   <th onClick={() => handleSort('subjectName')} className="sortable">
-                    Tên Môn học {sortBy === 'subjectName' && (sortDir === 'asc' ? '↑' : '↓')}
+                    Tên Môn học
                   </th>
                   <th>Khoa</th>
-                  <th>Chuyên ngành</th>
-                  <th>Tín chỉ</th>
-                  <th>Tổng buổi</th>
-                  <th>E-Learning</th>
-                  <th>Trực tiếp</th>
-                  <th>Mô tả</th>
-                  <th>Ngày tạo</th>
+                  <th>Ngành</th>
+                  <th>TC</th>
+                  <th>Tổng</th>
+                  <th>E-L</th>
+                  <th>TT</th>
+                  <th>Môn ĐK</th>
+                  <th>Ngày</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
@@ -238,7 +332,6 @@ const SubjectList: React.FC = () => {
                     <td className="code">{subject.subjectCode}</td>
                     <td className="name">{subject.subjectName}</td>
                     
-                    {/* KHOA */}
                     <td>
                       <span className="badge badge-department">
                         {subject.departmentCode}
@@ -246,7 +339,6 @@ const SubjectList: React.FC = () => {
                       <div className="dept-name">{subject.departmentName}</div>
                     </td>
                     
-                    {/* CHUYÊN NGÀNH */}
                     <td>
                       {subject.majorName ? (
                         <>
@@ -261,29 +353,69 @@ const SubjectList: React.FC = () => {
                     </td>
                     
                     <td className="center">{subject.credits}</td>
-                    
-                    {/* SỐ BUỔI */}
                     <td className="center highlight">{subject.totalSessions}</td>
                     <td className="center text-blue">{subject.elearningSessions}</td>
                     <td className="center text-green">{subject.inpersonSessions}</td>
                     
-                    <td className="description">{subject.description || '—'}</td>
-                    <td>{formatDate(subject.createdAt)}</td>
+                    {/* ⭐ MÔN ĐIỀU KIỆN - WITH TOOLTIP */}
+                    <td className="prerequisites-cell">
+                      {subject.prerequisitesLoading ? (
+                        <span className="text-muted">...</span>
+                      ) : subject.prerequisitesList && subject.prerequisitesList.length > 0 ? (
+                        <div className="prerequisites-compact">
+                          {subject.prerequisitesList.map((prereq, index) => (
+                            <span 
+                              key={prereq.subjectId} 
+                              className="prereq-code"
+                              onMouseEnter={(e) => showPrereqTooltip(prereq.subjectName, e)}
+                              onMouseLeave={hidePrereqTooltip}
+                            >
+                              {prereq.subjectCode}
+                              {index < subject.prerequisitesList!.length - 1 && ', '}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </td>
+                    
+                    <td className="date-cell">{formatDate(subject.createdAt)}</td>
+                    
+                    {/* THAO TÁC */}
                     <td className="actions">
+                      {subject.description && (
+                        <button
+                          className="btn-action btn-info"
+                          onMouseEnter={(e) => showDescription(subject.description, e)}
+                          onMouseLeave={hideDescription}
+                          title="Xem mô tả"
+                        >
+                          ℹ️
+                        </button>
+                      )}
+                      
+                      <button
+                        className="btn-action btn-prereq"
+                        onClick={() => handleOpenPrerequisites(subject)}
+                        title="Quản lý môn điều kiện"
+                      >
+                        📚
+                      </button>
+                      
                       <button
                         className="btn-edit"
                         onClick={() => handleEdit(subject)}
-                        title="Sửa"
                       >
                         Sửa
                       </button>
+                      
                       <button
                         className="btn-delete"
                         onClick={() => handleDelete(subject.subjectId)}
                         disabled={deletingId === subject.subjectId}
-                        title="Xóa"
                       >
-                        {deletingId === subject.subjectId ? 'Đang xóa...' : 'Xóa'}
+                        {deletingId === subject.subjectId ? '...' : 'Xóa'}
                       </button>
                     </td>
                   </tr>
@@ -335,12 +467,46 @@ const SubjectList: React.FC = () => {
         )}
       </div>
 
+      {/* DESCRIPTION TOOLTIP */}
+      {descriptionTooltip.show && (
+        <div
+          className="description-tooltip"
+          style={{
+            left: `${descriptionTooltip.x}px`,
+            top: `${descriptionTooltip.y}px`
+          }}
+        >
+          {descriptionTooltip.content}
+        </div>
+      )}
+
+      {/* ⭐ PREREQUISITE TOOLTIP */}
+      {prereqTooltip.show && (
+        <div
+          className="prereq-tooltip"
+          style={{
+            left: `${prereqTooltip.x}px`,
+            top: `${prereqTooltip.y}px`
+          }}
+        >
+          {prereqTooltip.content}
+        </div>
+      )}
+
       {isModalOpen && (
         <SubjectModal
           subject={editingSubject}
           departments={departments}
           onClose={handleModalClose}
           onSuccess={handleModalSuccess}
+        />
+      )}
+
+      {isPrerequisiteModalOpen && selectedSubject && (
+        <PrerequisiteManager
+          subject={selectedSubject}
+          onClose={handleClosePrerequisites}
+          onSuccess={handlePrerequisiteSuccess}
         />
       )}
     </div>

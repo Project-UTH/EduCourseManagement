@@ -10,18 +10,20 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout = ({ userRole }: DashboardLayoutProps) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // ⭐ KHÔNG CẦN STATE - Sidebar tự động collapsed bằng CSS
+  // Chỉ cần state cho mobile
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
     <div className="dashboard-layout">
       <Header 
         userRole={userRole}
-        onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)} 
       />
       
       <div className="dashboard-body">
         <Sidebar 
-          collapsed={sidebarCollapsed} 
+          collapsed={true} // ⭐ LUÔN TRUE - CSS sẽ xử lý hover
           userRole={userRole}
         />
         

@@ -9,9 +9,11 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 
+// Admin Pages
 import DepartmentList from './pages/admin/departments/DepartmentList';
 import MajorList from './pages/admin/majors/MajorList';
 import SubjectList from './pages/admin/subjects/SubjectList';
+import SemesterList from './pages/admin/semesters/SemesterList'; // ← THÊM DÒNG NÀY
 
 // Placeholder cho các trang chưa phát triển
 const Placeholder = ({ title }: { title: string }) => (
@@ -124,7 +126,7 @@ function App() {
           <Route path="departments" element={<DepartmentList />} />
           <Route path="majors" element={<MajorList />} />
           <Route path="subjects" element={<SubjectList />} />
-          <Route path="semesters" element={<Placeholder title="Quản lý Học kỳ" />} />
+          <Route path="semesters" element={<SemesterList />} /> {/* ← SỬA DÒNG NÀY */}
           <Route path="classes" element={<Placeholder title="Quản lý Lớp học" />} />
           <Route path="assignments" element={<Placeholder title="Phân công giảng dạy" />} />
           <Route path="proposals" element={<Placeholder title="Đề xuất giảng dạy" />} />
