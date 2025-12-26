@@ -8,6 +8,9 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "teacher")
@@ -59,6 +62,10 @@ public class Teacher extends BaseEntity {
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
+    /**
+     * Major field - represents teacher's primary specialization (administrative info)
+     * This is different from the subjects they can actually teach
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "major_id")
     private Major major;
@@ -78,4 +85,59 @@ public class Teacher extends BaseEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+    /**
+     * Many-to-many relationship with Subject through TeacherSubject
+     * Represents the subjects this teacher CAN TEACH
+     */
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<TeacherSubject> teacherSubjects = new ArrayList<>();
+
+    /**
+     * Helper method to add a subject to this teacher
+     */
+    public void addSubject(Subject subject, Boolean isPrimary, Integer yearsOfExperience) {
+        TeacherSubject teacherSubject = TeacherSubject.builder()
+                .teacher(this)
+                .subject(subject)
+                .isPrimary(isPrimary != null ? isPrimary : false)
+                .yearsOfExperience(yearsOfExperience)
+                .build();
+        teacherSubjects.add(teacherSubject);
+    }
+
+    /**
+     * Helper method to remove a subject from this teacher
+     */
+    public void removeSubject(Subject subject) {
+        teacherSubjects.removeIf(ts -> ts.getSubject().equals(subject));
+    }
+
+    /**
+     * Get all subjects this teacher can teach
+     */
+    public List<Subject> getSubjects() {
+        return teacherSubjects.stream()
+                .map(TeacherSubject::getSubject)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get primary subjects only
+     */
+    public List<Subject> getPrimarySubjects() {
+        return teacherSubjects.stream()
+                .filter(ts -> Boolean.TRUE.equals(ts.getIsPrimary()))
+                .map(TeacherSubject::getSubject)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Check if teacher can teach a specific subject
+     */
+    public boolean canTeach(Subject subject) {
+        return teacherSubjects.stream()
+                .anyMatch(ts -> ts.getSubject().equals(subject));
+    }
 }

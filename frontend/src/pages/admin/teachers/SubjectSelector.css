@@ -1,0 +1,241 @@
+/* SubjectSelector.css */
+
+.subject-selector {
+  margin-bottom: 20px;
+}
+
+.subject-selector-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--gray-700);
+}
+
+.selected-count {
+  color: var(--primary-600);
+  font-size: 0.9rem;
+  margin-left: 8px;
+}
+
+.info-message {
+  padding: 12px;
+  background-color: var(--gray-100);
+  border-radius: var(--border-radius-md);
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+/* Selected subjects list */
+.selected-subjects-list {
+  margin-bottom: 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.selected-subject-item {
+  padding: 12px;
+  border-bottom: 1px solid var(--gray-200);
+  background-color: #fff;
+}
+
+.selected-subject-item:last-child {
+  border-bottom: none;
+}
+
+.subject-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.subject-code {
+  font-weight: 600;
+  color: var(--primary-600);
+  font-size: 0.9rem;
+}
+
+.subject-name {
+  flex: 1;
+  color: var(--gray-700);
+}
+
+.subject-credits {
+  color: var(--gray-500);
+  font-size: 0.85rem;
+}
+
+.subject-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 24px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.experience-input {
+  width: 180px;
+  padding: 6px 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.85rem;
+}
+
+.experience-input:focus {
+  outline: none;
+  border-color: var(--primary-600);
+}
+
+.btn-remove-subject {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background-color: var(--red-100);
+  color: var(--red-600);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.btn-remove-subject:hover {
+  background-color: var(--red-200);
+}
+
+/* Add subject section */
+.add-subject-section {
+  position: relative;
+}
+
+.btn-add-subject {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background-color: var(--primary-50);
+  color: var(--primary-700);
+  border: 1px dashed var(--primary-400);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn-add-subject:hover:not(:disabled) {
+  background-color: var(--primary-100);
+  border-color: var(--primary-600);
+}
+
+.btn-add-subject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-add-subject .icon {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Subject dropdown */
+.subject-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background-color: #fff;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.loading-message,
+.empty-message {
+  padding: 16px;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.9rem;
+}
+
+.subject-list {
+  padding: 4px;
+}
+
+.subject-option {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s;
+}
+
+.subject-option:hover {
+  background-color: var(--gray-100);
+}
+
+.subject-option.selected {
+  background-color: var(--primary-50);
+}
+
+.subject-option .subject-code {
+  font-weight: 600;
+  color: var(--primary-600);
+  font-size: 0.85rem;
+  min-width: 80px;
+}
+
+.subject-option .subject-name {
+  flex: 1;
+  color: var(--gray-700);
+  font-size: 0.9rem;
+}
+
+.subject-option .subject-credits {
+  color: var(--gray-500);
+  font-size: 0.8rem;
+}
+
+.checkmark {
+  color: var(--primary-600);
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+/* Scrollbar styling */
+.subject-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.subject-dropdown::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 3px;
+}
+
+.subject-dropdown::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: 3px;
+}
+
+.subject-dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}

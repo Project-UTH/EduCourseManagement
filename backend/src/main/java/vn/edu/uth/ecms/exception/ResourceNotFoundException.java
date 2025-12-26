@@ -1,27 +1,15 @@
-
 package vn.edu.uth.ecms.exception;
 
-import lombok.Getter;
-
-@Getter
+/**
+ * Exception thrown when a specific resource is not found
+ * Alternative to NotFoundException with more specific context
+ */
 public class ResourceNotFoundException extends RuntimeException {
 
-    // Getters
-    private String resourceName;
-    private String fieldName;
-    private Object fieldValue;
+    private final String resourceName;
+    private final String fieldName;
+    private final Object fieldValue;
 
-    // Constructor hiện tại (1 param)
-    public ResourceNotFoundException(String message) {
-        super(message);
-    }
-
-    // Constructor hiện tại (2 params)
-    public ResourceNotFoundException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    // ✅ THÊM CONSTRUCTOR MỚI (3 params)
     public ResourceNotFoundException(String resourceName, String fieldName, Object fieldValue) {
         super(String.format("%s not found with %s: '%s'", resourceName, fieldName, fieldValue));
         this.resourceName = resourceName;
@@ -29,4 +17,22 @@ public class ResourceNotFoundException extends RuntimeException {
         this.fieldValue = fieldValue;
     }
 
+    public ResourceNotFoundException(String message) {
+        super(message);
+        this.resourceName = null;
+        this.fieldName = null;
+        this.fieldValue = null;
+    }
+
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    public Object getFieldValue() {
+        return fieldValue;
+    }
 }

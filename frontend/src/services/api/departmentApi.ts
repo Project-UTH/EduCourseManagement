@@ -23,20 +23,14 @@ export interface DepartmentUpdateRequest {
   description?: string;
 }
 
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  currentPage: number;
-  pageSize: number;
-}
-
+// Backend actual response structure
 export interface ApiResponse<T> {
-  totalItems: number;
-  totalPages: number;
   success: boolean;
   message: string;
-  data: T;
+  totalItems?: number;
+  totalPages?: number;
+  currentPage?: number;
+  data: T;  // Can be array or single object
 }
 
 interface ApiError {
@@ -48,23 +42,24 @@ interface ApiError {
 
 const departmentApi = {
   // Get all departments with pagination
+  // Backend returns: { success, totalItems, totalPages, currentPage, data: Department[] }
   getAll: async (
     page: number = 0,
     size: number = 10,
     sortBy: string = 'departmentName',
     sortDir: string = 'asc'
-  ): Promise<ApiResponse<PageResponse<Department>>> => {
+  ): Promise<ApiResponse<Department[]>> => {
     console.log(`🏢 [departmentApi] Fetching departments - page: ${page}, size: ${size}`);
     
     try {
-      const response = await apiClient.get<ApiResponse<PageResponse<Department>>>(
+      const response = await apiClient.get<ApiResponse<Department[]>>(
         '/api/admin/departments',
         {
           params: { page, size, sortBy, sortDir }
         }
       );
       
-      console.log('✅ [departmentApi] Departments fetched:', response.data.data.totalElements, 'total');
+      console.log('✅ [departmentApi] Departments fetched:', response.data.totalItems || response.data.data.length, 'total');
       return response.data;
     } catch (error) {
       const apiError = error as ApiError;
@@ -152,18 +147,18 @@ const departmentApi = {
     keyword: string,
     page: number = 0,
     size: number = 10
-  ): Promise<ApiResponse<PageResponse<Department>>> => {
+  ): Promise<ApiResponse<Department[]>> => {
     console.log(`🏢 [departmentApi] Searching departments: "${keyword}"`);
     
     try {
-      const response = await apiClient.get<ApiResponse<PageResponse<Department>>>(
+      const response = await apiClient.get<ApiResponse<Department[]>>(
         '/api/admin/departments/search',
         {
           params: { keyword, page, size }
         }
       );
       
-      console.log('✅ [departmentApi] Search results:', response.data.data.totalElements, 'found');
+      console.log('✅ [departmentApi] Search results:', response.data.totalItems || response.data.data.length, 'found');
       return response.data;
     } catch (error) {
       const apiError = error as ApiError;
