@@ -1,0 +1,189 @@
+/**
+ * Student List CSS - NO CONFLICT
+ * File: frontend/src/pages/admin/students/StudentList.css
+ * 
+ * Uses .student-* prefix to avoid conflicts
+ */
+
+/* ================================================================
+   STUDENT TABLE - 12 COLUMNS
+   ================================================================ */
+
+.student-table-container {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.student-data-table {
+  width: 100%;
+  min-width: 1500px; /* 12 cột */
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  table-layout: fixed;
+}
+
+.student-data-table th,
+.student-data-table td {
+  padding: 0.5rem 0.3rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-data-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.student-data-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* COLUMN WIDTHS - 12 cột */
+.student-data-table th:nth-child(1),
+.student-data-table td:nth-child(1) {
+  width: 100px; /* MSSV */
+  min-width: 100px;
+}
+
+.student-data-table th:nth-child(2),
+.student-data-table td:nth-child(2) {
+  width: 150px; /* Họ tên */
+  min-width: 150px;
+}
+
+.student-data-table th:nth-child(3),
+.student-data-table td:nth-child(3) {
+  width: 70px; /* Giới tính */
+  min-width: 70px;
+  text-align: center;
+}
+
+.student-data-table th:nth-child(4),
+.student-data-table td:nth-child(4) {
+  width: 90px; /* Ngày sinh */
+  min-width: 90px;
+}
+
+.student-data-table th:nth-child(5),
+.student-data-table td:nth-child(5) {
+  width: 60px; /* Khóa */
+  min-width: 60px;
+  text-align: center;
+}
+
+.student-data-table th:nth-child(6),
+.student-data-table td:nth-child(6) {
+  width: 100px; /* Trình độ */
+  min-width: 100px;
+}
+
+.student-data-table th:nth-child(7),
+.student-data-table td:nth-child(7) {
+  width: 110px; /* Hình thức */
+  min-width: 110px;
+}
+
+.student-data-table th:nth-child(8),
+.student-data-table td:nth-child(8) {
+  width: 150px; /* Chuyên ngành */
+  min-width: 150px;
+}
+
+.student-data-table th:nth-child(9),
+.student-data-table td:nth-child(9) {
+  width: 150px; /* Email */
+  min-width: 150px;
+  font-size: 0.7rem;
+}
+
+.student-data-table th:nth-child(10),
+.student-data-table td:nth-child(10) {
+  width: 100px; /* SĐT */
+  min-width: 100px;
+}
+
+.student-data-table th:nth-child(11),
+.student-data-table td:nth-child(11) {
+  width: 90px; /* Trạng thái */
+  min-width: 90px;
+  text-align: center;
+}
+
+.student-data-table th:nth-child(12),
+.student-data-table td:nth-child(12) {
+  width: 120px; /* Thao tác */
+  min-width: 120px;
+}
+
+/* Badge variations for Student */
+.badge-education {
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.badge-training {
+  background-color: #fef3c7;
+  color: #92400e;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 1600px) {
+  .student-data-table th:nth-child(9),
+  .student-data-table td:nth-child(9) {
+    width: 120px;
+  }
+}
+
+@media (max-width: 1400px) {
+  .student-data-table th:nth-child(10),
+  .student-data-table td:nth-child(10) {
+    display: none;
+  }
+  
+  .student-data-table {
+    min-width: 1400px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .student-data-table th:nth-child(9),
+  .student-data-table td:nth-child(9) {
+    display: none;
+  }
+  
+  .student-data-table {
+    min-width: 1250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-data-table th:nth-child(6),
+  .student-data-table td:nth-child(6),
+  .student-data-table th:nth-child(7),
+  .student-data-table td:nth-child(7) {
+    display: none;
+  }
+  
+  .student-data-table {
+    min-width: 900px;
+  }
+}

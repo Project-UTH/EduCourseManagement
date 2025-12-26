@@ -38,8 +38,6 @@ public class DataSeeder implements CommandLineRunner {
         // Seed Teacher
         seedTeacher(department, major);
 
-        // Seed Student
-        seedStudent(major);
 
         logger.info("Data seeding completed!");
     }
@@ -113,31 +111,6 @@ public class DataSeeder implements CommandLineRunner {
 
             teacherRepository.save(teacher);
             logger.info("Created teacher: citizenId=123456789012, password={}", defaultPassword);
-        }
-    }
-
-    private void seedStudent(Major major) {
-        if (studentRepository.count() == 0) {
-            LocalDate dob = LocalDate.of(2003, 1, 1);
-            String defaultPassword = "01012003"; // ddMMyyyy format
-
-            Student student = Student.builder()
-                    .studentCode("210101234567")
-                    .password(passwordEncoder.encode(defaultPassword))
-                    .fullName("Trần Thị B")
-                    .gender(Gender.FEMALE)
-                    .dateOfBirth(dob)
-                    .academicYear("2021-2025")
-                    .educationLevel("Đại học")
-                    .placeOfBirth("TP. Hồ Chí Minh")
-                    .trainingType("Chính quy")
-                    .major(major)
-                    .isFirstLogin(true)
-                    .isActive(true)
-                    .build();
-
-            studentRepository.save(student);
-            logger.info("Created student: studentCode=210101234567, password={}", defaultPassword);
         }
     }
 }

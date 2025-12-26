@@ -1,11 +1,7 @@
 package vn.edu.uth.ecms.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -31,7 +27,7 @@ public class Student extends BaseEntity {
     private String studentCode;
 
     @NotBlank(message = "Password is required")
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @NotBlank(message = "Full name is required")
@@ -41,39 +37,55 @@ public class Student extends BaseEntity {
 
     @NotNull(message = "Gender is required")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 10)
     private Gender gender;
 
     @NotNull(message = "Date of birth is required")
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Size(max = 10, message = "Academic year must not exceed 10 characters")
-    @Column(name = "academic_year", length = 10)
-    private String academicYear;
+    // Academic info
+    @NotNull(message = "Academic year is required")
+    @Column(name = "academic_year", nullable = false)
+    private Integer academicYear;
 
-    @Size(max = 50, message = "Education level must not exceed 50 characters")
-    @Column(name = "education_level", length = 50)
-    private String educationLevel;
+    @NotNull(message = "Education level is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "education_level", nullable = false, length = 20)
+    private EducationLevel educationLevel;
 
-    @Size(max = 100, message = "Place of birth must not exceed 100 characters")
-    @Column(name = "place_of_birth", length = 100)
+    @NotNull(message = "Training type is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "training_type", nullable = false, length = 20)
+    private TrainingType trainingType;
+
+    // Contact info
+    @Email(message = "Invalid email format")
+    @Size(max = 100, message = "Email must not exceed 100 characters")
+    @Column(length = 100)
+    private String email;
+
+    @Size(max = 20, message = "Phone must not exceed 20 characters")
+    @Column(length = 20)
+    private String phone;
+
+    @Size(max = 200, message = "Place of birth must not exceed 200 characters")
+    @Column(name = "place_of_birth", length = 200)
     private String placeOfBirth;
 
-    @Size(max = 50, message = "Training type must not exceed 50 characters")
-    @Column(name = "training_type", length = 50)
-    private String trainingType;
-
+    // Relationships
     @NotNull(message = "Major is required")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "major_id", nullable = false)
     private Major major;
 
+    // Academic performance
     @DecimalMin(value = "0.00", message = "GPA must be at least 0.00")
     @DecimalMax(value = "4.00", message = "GPA must not exceed 4.00")
     @Column(precision = 3, scale = 2)
     private BigDecimal gpa = BigDecimal.ZERO;
 
+    // Additional info
     @Column(name = "avatar_url")
     private String avatarUrl;
 
@@ -82,4 +94,6 @@ public class Student extends BaseEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+    // Note: BaseEntity provides createdAt and updatedAt
 }
