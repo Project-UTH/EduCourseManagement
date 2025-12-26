@@ -1,111 +1,145 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import semesterApi, { Semester, SemesterStatus } from '../../../services/api/semesterApi';
+import React, { useState, useEffect } from 'react';
+import semesterApi, { SemesterResponse } from '../../../services/api/semesterApi';
 import SemesterModal from './SemesterModal';
-import RegistrationModal from './RegistrationModal';
 import './SemesterList.css';
 
 const SemesterList: React.FC = () => {
-  const [semesters, setSemesters] = useState<Semester[]>([]);
+  // State
+  const [semesters, setSemesters] = useState<SemesterResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSemester, setEditingSemester] = useState<Semester | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  
-  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
-  const [selectedSemester, setSelectedSemester] = useState<Semester | null>(null);
+  const [editingSemester, setEditingSemester] = useState<SemesterResponse | null>(null);
 
-  // ⭐ TOOLTIP STATE
-  const [descriptionTooltip, setDescriptionTooltip] = useState<{
-    show: boolean;
-    content: string;
-    x: number;
-    y: number;
-  }>({ show: false, content: '', x: 0, y: 0 });
+  // Fetch semesters when page or search changes
+  useEffect(() => {
+    fetchSemesters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, searchKeyword]);
 
-  const fetchSemesters = useCallback(async () => {
+  const fetchSemesters = async () => {
     try {
       setLoading(true);
-      setError(null);
-      
-      const response = await semesterApi.getAll();
-      setSemesters(Array.isArray(response.data) ? response.data : []);
-    } catch (err) {
-      console.error('[SemesterList] Lỗi tải danh sách học kỳ:', err);
-      setError('Không thể tải danh sách học kỳ');
-      setSemesters([]);
+      let response;
+
+      if (searchKeyword.trim()) {
+        // Search mode
+        response = await semesterApi.search(searchKeyword, currentPage, 10);
+      } else {
+        // Get all with pagination
+        response = await semesterApi.getAll(currentPage, 10, 'startDate', 'desc');
+      }
+
+      const pageData = response.data;
+      setSemesters(pageData.content || []);
+      setTotalPages(pageData.totalPages || 0);
+      setTotalElements(pageData.totalElements || 0);
+    } catch (error) {
+      console.error('Error fetching semesters:', error);
+      alert('Lỗi tải danh sách học kỳ');
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    fetchSemesters();
-  }, [fetchSemesters]);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(0);
+  };
 
   const handleCreate = () => {
     setEditingSemester(null);
     setIsModalOpen(true);
   };
 
-  const handleEdit = (semester: Semester) => {
+  const handleEdit = (semester: SemesterResponse) => {
+    if (semester.status === 'COMPLETED') {
+      alert('Không thể sửa học kỳ đã hoàn thành!');
+      return;
+    }
     setEditingSemester(semester);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa học kỳ này?')) {
+  const handleDelete = async (id: number, semesterName: string, status: string) => {
+    if (status === 'ACTIVE') {
+      alert('Không thể xóa học kỳ đang diễn ra! Hãy hoàn thành nó trước.');
       return;
     }
-    
+
+    if (!window.confirm(`Xác nhận xóa học kỳ "${semesterName}"?`)) {
+      return;
+    }
+
     try {
-      setDeletingId(id);
       await semesterApi.delete(id);
       alert('Xóa học kỳ thành công!');
       fetchSemesters();
-    } catch (err: unknown) {
-      console.error('[SemesterList] Lỗi xóa học kỳ:', err);
-      const errorMessage = (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Không thể xóa học kỳ';
-      alert(errorMessage);
-    } finally {
-      setDeletingId(null);
+    } catch (error) {
+      console.error('Error deleting semester:', error);
+      alert('Lỗi xóa học kỳ');
     }
   };
 
-  const handleActivate = async (id: number) => {
-    if (!window.confirm('Kích hoạt học kỳ này? (Học kỳ đang hoạt động sẽ bị kết thúc)')) {
+  const handleActivate = async (id: number, semesterName: string) => {
+    if (!window.confirm(
+      `Kích hoạt học kỳ "${semesterName}"?\n\n` +
+      `Lưu ý: Học kỳ ĐANG HOẠT ĐỘNG hiện tại sẽ tự động chuyển sang HOÀN THÀNH.`
+    )) {
       return;
     }
-    
+
     try {
       await semesterApi.activate(id);
       alert('Kích hoạt học kỳ thành công!');
       fetchSemesters();
-    } catch (err: unknown) {
-      console.error('[SemesterList] Lỗi kích hoạt học kỳ:', err);
-      alert((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Không thể kích hoạt học kỳ');
+    } catch (error) {
+      console.error('Error activating semester:', error);
+      alert('Lỗi kích hoạt học kỳ');
     }
   };
 
-  const handleComplete = async (id: number) => {
-    if (!window.confirm('Kết thúc học kỳ này?')) {
+  const handleComplete = async (id: number, semesterName: string) => {
+    if (!window.confirm(`Hoàn thành học kỳ "${semesterName}"?`)) {
       return;
     }
-    
+
     try {
       await semesterApi.complete(id);
-      alert('Kết thúc học kỳ thành công!');
+      alert('Hoàn thành học kỳ thành công!');
       fetchSemesters();
-    } catch (err: unknown) {
-      console.error('[SemesterList] Lỗi kết thúc học kỳ:', err);
-      alert((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Không thể kết thúc học kỳ');
+    } catch (error) {
+      console.error('Error completing semester:', error);
+      alert('Lỗi hoàn thành học kỳ');
     }
   };
 
-  const handleManageRegistration = (semester: Semester) => {
-    setSelectedSemester(semester);
-    setIsRegistrationModalOpen(true);
+  const handleToggleRegistration = async (semester: SemesterResponse) => {
+    try {
+      if (semester.registrationEnabled) {
+        await semesterApi.disableRegistration(semester.semesterId);
+        alert('Đã tắt đăng ký!');
+      } else {
+        if (!semester.registrationStartDate || !semester.registrationEndDate) {
+          alert('Vui lòng đặt thời gian đăng ký trước!');
+          return;
+        }
+        await semesterApi.enableRegistration(semester.semesterId);
+        alert('Đã bật đăng ký!');
+      }
+      fetchSemesters();
+    } catch (error) {
+      console.error('Error toggling registration:', error);
+      alert('Lỗi thay đổi trạng thái đăng ký');
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setEditingSemester(null);
   };
 
   const handleModalSuccess = () => {
@@ -114,208 +148,218 @@ const SemesterList: React.FC = () => {
     fetchSemesters();
   };
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setEditingSemester(null);
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 0 && newPage < totalPages) {
+      setCurrentPage(newPage);
+    }
   };
 
-  const handleRegistrationModalClose = () => {
-    setIsRegistrationModalOpen(false);
-    setSelectedSemester(null);
-  };
-
-  const handleRegistrationSuccess = () => {
-    setIsRegistrationModalOpen(false);
-    setSelectedSemester(null);
-    fetchSemesters();
-  };
-
-  const formatDate = (dateString: string): string => {
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'Chưa đặt';
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN');
   };
 
-  const getStatusBadge = (status: SemesterStatus) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
-      case SemesterStatus.UPCOMING:
-        return <span className="badge status-upcoming">Sắp tới</span>;
-      case SemesterStatus.ACTIVE:
-        return <span className="badge status-active">Đang diễn ra</span>;
-      case SemesterStatus.COMPLETED:
-        return <span className="badge status-completed">Đã kết thúc</span>;
-      default:
-        return <span className="badge">{status}</span>;
+      case 'UPCOMING': return 'Sắp diễn ra';
+      case 'ACTIVE': return 'Đang diễn ra';
+      case 'COMPLETED': return 'Đã hoàn thành';
+      default: return status;
     }
   };
 
-  const getRegistrationBadge = (semester: Semester) => {
-    if (!semester.registrationEnabled) {
-      return <span className="badge registration-disabled">Đã khóa</span>;
+  const getRegistrationLabel = (semester: SemesterResponse) => {
+    if (semester.isRegistrationOpen) {
+      return 'Đang mở ĐK';
+    } else if (semester.registrationEnabled) {
+      return 'ĐK đã bật';
+    } else {
+      return 'ĐK đã tắt';
     }
-    return <span className="badge registration-enabled">Đang mở</span>;
-  };
-
-  const getRegistrationPeriod = (semester: Semester) => {
-    if (!semester.registrationEnabled || !semester.registrationStartDate || !semester.registrationEndDate) {
-      return '—';
-    }
-    return `${formatDate(semester.registrationStartDate)} - ${formatDate(semester.registrationEndDate)}`;
-  };
-
-  // ⭐ TOOLTIP HANDLERS
-  const showDescription = (description: string | undefined, event: React.MouseEvent) => {
-    if (!description) return;
-    const button = event.currentTarget as HTMLElement;
-    const rect = button.getBoundingClientRect();
-    setDescriptionTooltip({
-      show: true,
-      content: description,
-      x: rect.left,
-      y: rect.bottom + 5
-    });
-  };
-
-  const hideDescription = () => {
-    setDescriptionTooltip({ show: false, content: '', x: 0, y: 0 });
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1>Quản lý Học kỳ</h1>
-        <button className="btn btn-primary" onClick={handleCreate}>
-          <span className="icon">+</span>
+    <div className="semester-page-container">
+      {/* HEADER */}
+      <div className="semester-page-header">
+        <h1>📅 Quản lý Học kỳ</h1>
+        <button className="semester-btn-primary" onClick={handleCreate}>
+          <span className="semester-icon">+</span>
           Thêm Học kỳ
         </button>
       </div>
 
-      {error && (
-        <div className="error-message">Lỗi: {error}</div>
-      )}
+      {/* FILTERS */}
+      <div className="semester-filters-bar">
+        <form className="semester-search-form" onSubmit={handleSearch}>
+          <input
+            type="text"
+            className="semester-search-input"
+            placeholder="Tìm theo mã hoặc tên học kỳ (VD: 2024-1)..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+          />
+          <button type="submit" className="semester-btn-search">
+            🔍 Tìm kiếm
+          </button>
+        </form>
+      </div>
 
-      <div className="table-container">
+      {/* TABLE */}
+      <div className="semester-table-container">
         {loading ? (
-          <div className="loading">Đang tải...</div>
-        ) : !semesters || semesters.length === 0 ? (
-          <div className="no-data">Chưa có học kỳ nào</div>
+          <div className="semester-loading">Đang tải dữ liệu...</div>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Mã HK</th>
-                <th>Tên Học kỳ</th>
-                <th>Ngày BĐ</th>
-                <th>Ngày KT</th>
-                <th>TT</th>
-                <th>ĐK</th>
-                <th>Thời gian ĐK</th>
-                <th className="center">MT</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {semesters.map((semester) => (
-                <tr key={semester.semesterId}>
-                  <td className="code">{semester.semesterCode}</td>
-                  <td>{semester.semesterName}</td>
-                  <td className="date-cell">{formatDate(semester.startDate)}</td>
-                  <td className="date-cell">{formatDate(semester.endDate)}</td>
-                  <td>{getStatusBadge(semester.status)}</td>
-                  <td>{getRegistrationBadge(semester)}</td>
-                  <td className="date-cell">
-                    {getRegistrationPeriod(semester)}
-                  </td>
-                  {/* ⭐ MÔ TẢ - TOOLTIP BUTTON */}
-                  <td className="center">
-                    {semester.description ? (
-                      <button
-                        className="btn-icon-info"
-                        onMouseEnter={(e) => showDescription(semester.description, e)}
-                        onMouseLeave={hideDescription}
-                        title="Xem mô tả"
-                      >
-                        ℹ️
-                      </button>
-                    ) : (
-                      <span className="text-muted">—</span>
-                    )}
-                  </td>
-                  <td className="actions">
-                    {semester.status === SemesterStatus.UPCOMING && (
-                      <button
-                        className="btn-action btn-activate"
-                        onClick={() => handleActivate(semester.semesterId)}
-                      >
-                        KH
-                      </button>
-                    )}
-                    
-                    {semester.status === SemesterStatus.ACTIVE && (
-                      <>
-                        <button
-                          className="btn-action btn-toggle-registration"
-                          onClick={() => handleManageRegistration(semester)}
-                        >
-                          ĐK
-                        </button>
-                        <button
-                          className="btn-action btn-complete"
-                          onClick={() => handleComplete(semester.semesterId)}
-                        >
-                          KT
-                        </button>
-                      </>
-                    )}
-                    
-                    <button
-                      className="btn-edit"
-                      onClick={() => handleEdit(semester)}
-                      disabled={semester.status === SemesterStatus.COMPLETED}
-                    >
-                      Sửa
-                    </button>
-                    
-                    <button
-                      className="btn-delete"
-                      onClick={() => handleDelete(semester.semesterId)}
-                      disabled={deletingId === semester.semesterId || semester.status === SemesterStatus.ACTIVE}
-                    >
-                      {deletingId === semester.semesterId ? '...' : 'Xóa'}
-                    </button>
-                  </td>
+          <>
+            <table className="semester-data-table">
+              <thead>
+                <tr>
+                  <th>Mã học kỳ</th>
+                  <th>Tên học kỳ</th>
+                  <th>Thời gian học kỳ</th>
+                  <th>Đăng ký</th>
+                  <th>Trạng thái</th>
+                  <th>Đăng ký</th>
+                  <th>Thời lượng</th>
+                  <th>Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {semesters.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="semester-no-data">
+                      Không có dữ liệu
+                    </td>
+                  </tr>
+                ) : (
+                  semesters.map((semester) => (
+                    <tr key={semester.semesterId}>
+                      <td className="semester-code">{semester.semesterCode}</td>
+                      <td className="semester-font-semibold">{semester.semesterName}</td>
+                      <td>
+                        <div className="semester-date-range">
+                          <div>{formatDate(semester.startDate)}</div>
+                          <div className="semester-arrow">→</div>
+                          <div>{formatDate(semester.endDate)}</div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="semester-date-range semester-small">
+                          <div>{formatDate(semester.registrationStartDate)}</div>
+                          <div className="semester-arrow">→</div>
+                          <div>{formatDate(semester.registrationEndDate)}</div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`semester-badge semester-badge-${semester.status.toLowerCase()}`}>
+                          {getStatusLabel(semester.status)}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`semester-badge semester-badge-reg-${
+                          semester.isRegistrationOpen ? 'open' : 
+                          semester.registrationEnabled ? 'enabled' : 'closed'
+                        }`}>
+                          {getRegistrationLabel(semester)}
+                        </span>
+                      </td>
+                      <td className="semester-center">
+                        {semester.durationInWeeks} tuần ({semester.durationInDays} ngày)
+                      </td>
+                      <td>
+                        <div className="semester-actions">
+                          {semester.status === 'UPCOMING' && (
+                            <>
+                              <button
+                                className="semester-btn-activate"
+                                onClick={() => handleActivate(semester.semesterId, semester.semesterName)}
+                                title="Kích hoạt"
+                              >
+                                ▶️
+                              </button>
+                              <button
+                                className={semester.registrationEnabled ? 'semester-btn-reg-on' : 'semester-btn-reg-off'}
+                                onClick={() => handleToggleRegistration(semester)}
+                                title={semester.registrationEnabled ? 'Tắt đăng ký' : 'Bật đăng ký'}
+                              >
+                                {semester.registrationEnabled ? '🔓' : '🔒'}
+                              </button>
+                            </>
+                          )}
+                          
+                          {semester.status === 'ACTIVE' && (
+                            <button
+                              className="semester-btn-complete"
+                              onClick={() => handleComplete(semester.semesterId, semester.semesterName)}
+                              title="Hoàn thành"
+                            >
+                              ✅
+                            </button>
+                          )}
+                          
+                          {semester.status !== 'COMPLETED' && (
+                            <button
+                              className="semester-btn-edit"
+                              onClick={() => handleEdit(semester)}
+                              title="Sửa"
+                            >
+                              ✏️
+                            </button>
+                          )}
+                          
+                          {semester.status !== 'ACTIVE' && (
+                            <button
+                              className="semester-btn-delete"
+                              onClick={() => handleDelete(semester.semesterId, semester.semesterName, semester.status)}
+                              title="Xóa"
+                            >
+                              🗑️
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+
+            {/* PAGINATION */}
+            <div className="semester-pagination">
+              <div className="semester-pagination-info">
+                Hiển thị {semesters.length} / {totalElements} học kỳ
+              </div>
+              <div className="semester-pagination-controls">
+                <button
+                  className="semester-btn-page"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 0}
+                >
+                  « Trước
+                </button>
+                <span className="semester-page-info">
+                  Trang {currentPage + 1} / {totalPages || 1}
+                </span>
+                <button
+                  className="semester-btn-page"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages - 1}
+                >
+                  Sau »
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 
-      {/* ⭐ DESCRIPTION TOOLTIP */}
-      {descriptionTooltip.show && (
-        <div
-          className="description-tooltip"
-          style={{
-            left: `${descriptionTooltip.x}px`,
-            top: `${descriptionTooltip.y}px`
-          }}
-        >
-          {descriptionTooltip.content}
-        </div>
-      )}
-
+      {/* MODAL */}
       {isModalOpen && (
         <SemesterModal
           semester={editingSemester}
           onClose={handleModalClose}
           onSuccess={handleModalSuccess}
-        />
-      )}
-
-      {isRegistrationModalOpen && selectedSemester && (
-        <RegistrationModal
-          semester={selectedSemester}
-          onClose={handleRegistrationModalClose}
-          onSuccess={handleRegistrationSuccess}
         />
       )}
     </div>
