@@ -1,8 +1,6 @@
 /**
- * QUICK FIX - Sidebar CSS
+ * Sidebar CSS - With Scrolling Support
  * File: frontend/src/components/layout/Sidebar.css
- * 
- * Force sidebar to be 70px and collapsed by default
  */
 
 .sidebar {
@@ -10,12 +8,35 @@
   left: 0 !important;
   top: 64px !important;
   bottom: 0 !important;
-  width: 70px !important;  /* Force 70px */
+  width: 70px !important;
   background: white !important;
   border-right: 1px solid #e5e7eb !important;
   z-index: 100 !important;
-  overflow: visible !important;
+  overflow-y: auto !important;  /* ⭐ Enable vertical scroll */
+  overflow-x: hidden !important;
   transition: width 0.3s ease !important;
+  
+  /* Custom scrollbar */
+  scrollbar-width: thin !important;
+  scrollbar-color: #d1d5db transparent !important;
+}
+
+/* Webkit scrollbar styling */
+.sidebar::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #d1d5db !important;
+  border-radius: 3px !important;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af !important;
 }
 
 /* Khi hover thì mở rộng */
@@ -48,6 +69,12 @@
   padding: 0.75rem 1.25rem !important;
 }
 
+/* Sidebar navigation container */
+.sidebar-nav {
+  padding: 0.5rem 0 !important;
+  min-height: min-content !important;
+}
+
 .sidebar-item {
   display: flex;
   align-items: center;
@@ -63,6 +90,7 @@
   position: relative;
   white-space: nowrap;
   transition: all 0.2s;
+  width: calc(100% - 1.5rem) !important;
 }
 
 .sidebar-item:hover {
@@ -87,4 +115,48 @@
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Submenu styling */
+.sidebar-submenu {
+  margin: 0.25rem 0 !important;
+}
+
+.submenu-trigger {
+  width: 100% !important;
+  text-align: left !important;
+}
+
+.submenu-items {
+  padding-left: 0 !important;
+  margin-top: 0.25rem !important;
+}
+
+.submenu-item {
+  padding-left: 2.5rem !important;
+  font-size: 0.8125rem !important;
+}
+
+.sidebar:not(:hover) .submenu-item {
+  padding-left: 0.75rem !important;
+}
+
+.submenu-arrow {
+  margin-left: auto !important;
+  transition: transform 0.2s !important;
+  flex-shrink: 0 !important;
+}
+
+.submenu-trigger.expanded .submenu-arrow {
+  transform: rotate(180deg) !important;
+}
+
+.sidebar-badge {
+  background: #ef4444 !important;
+  color: white !important;
+  font-size: 0.625rem !important;
+  padding: 0.125rem 0.375rem !important;
+  border-radius: 9999px !important;
+  font-weight: 600 !important;
+  margin-left: auto !important;
 }
