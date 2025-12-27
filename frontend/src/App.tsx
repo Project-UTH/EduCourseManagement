@@ -16,6 +16,7 @@ import SubjectList from './pages/admin/subjects/SubjectList';
 import SemesterList from './pages/admin/semesters/SemesterList';
 import TeacherList from './pages/admin/teachers/TeacherList';
 import StudentList from './pages/admin/students/StudentList';
+import ClassList from './pages/admin/classes/ClassList';
 
 // Placeholder cho các trang chưa phát triển
 const Placeholder = ({ title }: { title: string }) => (
@@ -128,8 +129,8 @@ function App() {
           <Route path="departments" element={<DepartmentList />} />
           <Route path="majors" element={<MajorList />} />
           <Route path="subjects" element={<SubjectList />} />
-          <Route path="semesters" element={<SemesterList />} /> {/* ← SỬA DÒNG NÀY */}
-          <Route path="classes" element={<Placeholder title="Quản lý Lớp học" />} />
+          <Route path="semesters" element={<SemesterList />} />
+          <Route path="classes" element={<ClassList />} />
           <Route path="assignments" element={<Placeholder title="Phân công giảng dạy" />} />
           <Route path="proposals" element={<Placeholder title="Đề xuất giảng dạy" />} />
           <Route path="registration-settings" element={<Placeholder title="Cài đặt Đăng ký" />} />

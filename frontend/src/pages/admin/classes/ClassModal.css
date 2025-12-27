@@ -1,0 +1,101 @@
+/* ClassModal.css - Create/Edit Class Modal */
+
+/* Modal specific styles for class creation/editing */
+
+.class-modal-content {
+  max-width: 800px;
+}
+
+.class-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Form layout */
+.class-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.class-form-row-single {
+  margin-bottom: 16px;
+}
+
+/* Schedule section */
+.schedule-section {
+  background: var(--gray-50);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.schedule-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: var(--gray-900);
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+/* Time slot select */
+.timeslot-select {
+  position: relative;
+}
+
+.timeslot-display {
+  font-size: 12px;
+  color: var(--gray-600);
+  margin-top: 4px;
+}
+
+/* Conflict warning */
+.conflict-warning {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: start;
+  gap: 8px;
+}
+
+.conflict-warning-icon {
+  color: #f59e0b;
+  font-size: 18px;
+}
+
+.conflict-warning-text {
+  flex: 1;
+  font-size: 13px;
+  color: #92400e;
+}
+
+/* Success info */
+.success-info {
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #065f46;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .class-form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .schedule-grid {
+    grid-template-columns: 1fr;
+  }
+}
