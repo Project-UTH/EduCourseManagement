@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import vn.edu.uth.ecms.dto.request.SubjectCreateRequest;
 import vn.edu.uth.ecms.dto.request.SubjectUpdateRequest;
 import vn.edu.uth.ecms.dto.response.SubjectResponse;
+import vn.edu.uth.ecms.dto.response.TeacherResponse;
 
 import java.util.List;
 
@@ -68,4 +69,13 @@ public interface SubjectService {
     List<SubjectResponse> getPrerequisites(Long subjectId);
 
     boolean hasPrerequisites(Long subjectId);
+
+    /**
+     * Get teachers who can teach this subject
+     * Queries teacher_subject table to find assigned teachers
+     *
+     * @param subjectId Subject ID
+     * @return List of teachers who can teach this subject
+     */
+    List<TeacherResponse> getTeachersForSubject(Long subjectId);
 }

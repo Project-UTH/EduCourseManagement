@@ -73,4 +73,17 @@ public interface TeacherSubjectRepository extends JpaRepository<TeacherSubject, 
      * Count teachers who can teach subject
      */
     long countBySubjectSubjectId(Long subjectId);
+
+    /**
+     * Get list of Teacher entities who can teach a subject
+     * Returns actual Teacher objects (not TeacherSubject)
+     *
+     * @param subjectId Subject ID
+     * @return List of Teacher entities
+     */
+    @Query("SELECT ts.teacher FROM TeacherSubject ts " +
+            "WHERE ts.subject.subjectId = :subjectId " +
+            "AND ts.teacher.isActive = true " +
+            "ORDER BY ts.isPrimary DESC, ts.yearsOfExperience DESC")
+    List<Teacher> findTeachersBySubjectId(@Param("subjectId") Long subjectId);
 }

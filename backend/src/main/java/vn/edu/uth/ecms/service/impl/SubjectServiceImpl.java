@@ -9,18 +9,14 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.request.SubjectCreateRequest;
 import vn.edu.uth.ecms.dto.request.SubjectUpdateRequest;
 import vn.edu.uth.ecms.dto.response.SubjectResponse;
-import vn.edu.uth.ecms.entity.Department;
-import vn.edu.uth.ecms.entity.Major;
-import vn.edu.uth.ecms.entity.Subject;
+import vn.edu.uth.ecms.dto.response.TeacherResponse;
+import vn.edu.uth.ecms.entity.*;
 import vn.edu.uth.ecms.exception.DuplicateResourceException;
 import vn.edu.uth.ecms.exception.InvalidRequestException;
+import vn.edu.uth.ecms.exception.NotFoundException;
 import vn.edu.uth.ecms.exception.ResourceNotFoundException;
-import vn.edu.uth.ecms.repository.DepartmentRepository;
-import vn.edu.uth.ecms.repository.MajorRepository;
-import vn.edu.uth.ecms.repository.SubjectPrerequisiteRepository;
-import vn.edu.uth.ecms.repository.SubjectRepository;
+import vn.edu.uth.ecms.repository.*;
 import vn.edu.uth.ecms.service.SubjectService;
-import vn.edu.uth.ecms.entity.SubjectPrerequisite;
 import vn.edu.uth.ecms.repository.SubjectPrerequisiteRepository;
 import java.util.HashSet;
 import java.util.Set;
@@ -47,6 +43,7 @@ public class SubjectServiceImpl implements SubjectService {
     private final DepartmentRepository departmentRepository;
     private final MajorRepository majorRepository;
     private final SubjectPrerequisiteRepository prerequisiteRepository;
+    private final TeacherSubjectRepository teacherSubjectRepository;
 
     @Override
     @Transactional(timeout = 30)
@@ -481,5 +478,40 @@ public class SubjectServiceImpl implements SubjectService {
             this.elearning = elearning;
             this.inperson = inperson;
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherResponse> getTeachersForSubject(Long subjectId) {
+        log.info("🔍 Finding teachers for subject ID: {}", subjectId);
+
+        Subject subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new NotFoundException("Subject not found"));
+
+        List<Teacher> teachers = teacherSubjectRepository.findTeachersBySubjectId(subjectId);
+
+        log.info("✅ Found {} teachers for subject {}", teachers.size(), subject.getSubjectCode());
+
+        return teachers.stream()
+                .map(this::mapTeacherToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private TeacherResponse mapTeacherToResponse(Teacher teacher) {
+        TeacherResponse.TeacherResponseBuilder builder = TeacherResponse.builder()
+                .teacherId(teacher.getTeacherId())
+                .fullName(teacher.getFullName())
+                .email(teacher.getEmail())
+                .phone(teacher.getPhone())
+                .degree(teacher.getDegree())
+                .departmentId(teacher.getDepartment().getDepartmentId())
+                .departmentName(teacher.getDepartment().getDepartmentName());
+
+        if (teacher.getMajor() != null) {
+            builder.majorId(teacher.getMajor().getMajorId())
+                    .majorName(teacher.getMajor().getMajorName());
+        }
+
+        return builder.build();
     }
 }

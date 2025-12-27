@@ -79,4 +79,9 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      * Count students by academic year
      */
     Long countByAcademicYearAndIsActiveTrue(Integer academicYear);
+
+    // Students from department
+    @Query("SELECT s FROM Student s WHERE s.major.department.departmentId = :departmentId")
+    List<Student> findByMajorDepartmentDepartmentId(@Param("departmentId") Long departmentId);
+
 }

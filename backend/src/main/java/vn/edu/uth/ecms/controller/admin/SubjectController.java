@@ -16,6 +16,8 @@ import vn.edu.uth.ecms.dto.request.SubjectUpdateRequest;
 import vn.edu.uth.ecms.dto.response.ApiResponse;
 import vn.edu.uth.ecms.dto.response.SubjectResponse;
 import vn.edu.uth.ecms.service.SubjectService;
+import vn.edu.uth.ecms.dto.response.TeacherResponse;
+import java.util.List;
 
 import java.util.HashMap;
 import java.util.List;
@@ -264,5 +266,41 @@ public class SubjectController {
         result.put("exists", exists);
 
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Get teachers who can teach this subject
+     */
+    @GetMapping("/{subjectId}/teachers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<TeacherResponse>>> getTeachersForSubject(
+            @PathVariable Long subjectId) {
+
+        log.info("📚 Fetching teachers for subject ID: {}", subjectId);
+
+        try {
+            List<TeacherResponse> teachers = subjectService.getTeachersForSubject(subjectId);
+
+            log.info("✅ Found {} teachers who can teach subject {}", teachers.size(), subjectId);
+
+            return ResponseEntity.ok(
+                    ApiResponse.<List<TeacherResponse>>builder()
+                            .success(true)
+                            .message(teachers.isEmpty()
+                                    ? "No teachers assigned to this subject"
+                                    : "Teachers retrieved successfully")
+                            .data(teachers)
+                            .build()
+            );
+        } catch (Exception e) {
+            log.error("❌ Error fetching teachers for subject {}: {}", subjectId, e.getMessage());
+
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.<List<TeacherResponse>>builder()
+                            .success(false)
+                            .message("Failed to fetch teachers: " + e.getMessage())
+                            .build()
+            );
+        }
     }
 }
