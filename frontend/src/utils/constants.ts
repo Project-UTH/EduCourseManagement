@@ -1,5 +1,5 @@
 // constants.ts - Days of week, time slots, etc.
-// ⭐ UPDATED: Added schedule validation helpers
+// ✅ FIXED: Removed extra/elearning validation (backend handles automatically)
 
 // ==================== DAYS OF WEEK ====================
 
@@ -105,12 +105,6 @@ export const validateClassCode = (code: string): string | null => {
   return null;
 };
 
-export const validateRoom = (room: string): string | null => {
-  if (!room) return 'Phòng không được để trống';
-  if (room.length > 50) return 'Tên phòng không quá 50 ký tự';
-  return null;
-};
-
 export const validateMaxStudents = (max: number): string | null => {
   if (!max) return 'Sĩ số tối đa không được để trống';
   if (max < 1) return 'Sĩ số tối đa phải ít nhất 1';
@@ -118,117 +112,107 @@ export const validateMaxStudents = (max: number): string | null => {
   return null;
 };
 
-// ==================== SCHEDULE VALIDATION (NEW) ====================
+// ==================== SCHEDULE INFO (Display Only) ====================
 
 /**
- * Check if subject requires extra schedule
- * @param inpersonSessions - Number of in-person sessions
- * @returns true if > 10 sessions
+ * ⭐ CRITICAL UNDERSTANDING:
+ * 
+ * Backend AUTO-SCHEDULE logic:
+ * 1. Admin creates class → Only needs dayOfWeek + timeSlot (fixed schedule)
+ * 2. Backend generates:
+ *    - 10 FIXED sessions (with dates)
+ *    - 5 EXTRA sessions (isPending=true, NO schedule)
+ *    - 5 E_LEARNING sessions (NO schedule)
+ * 3. Admin activates semester → ExtraSessionScheduler auto-schedules PENDING
+ * 
+ * → Frontend DOES NOT need extra/elearning input fields!
+ * → Just display info to user about what will happen
  */
-export const requiresExtraSchedule = (inpersonSessions: number): boolean => {
-  return inpersonSessions > 10;
-};
 
 /**
- * ⭐ FIXED: Check if subject requires elearning schedule
- * @param elearningSessions - Number of e-learning sessions
- * @returns true if > 0 sessions (CÓ THỂ BẰNG 0!)
+ * Get schedule information for display
+ * Shows user what backend will do automatically
  */
-export const requiresElearningSchedule = (elearningSessions: number): boolean => {
-  return elearningSessions > 0;  // Only show if > 0
-};
-
-/**
- * Calculate extra sessions count
- * @param inpersonSessions - Number of in-person sessions
- * @returns Number of extra sessions (sessions - 10), or 0 if ≤ 10
- */
-export const calculateExtraSessions = (inpersonSessions: number): number => {
-  if (inpersonSessions <= 10) return 0;
-  return inpersonSessions - 10;
-};
-
-/**
- * Get validation messages for missing schedules
- * Returns array of error messages
- */
-export const getScheduleValidationErrors = (
+export const getScheduleInfo = (
   inpersonSessions: number,
-  elearningSessions: number,
-  hasExtraDay: boolean,
-  hasExtraSlot: boolean,
-  hasExtraRoom: boolean,
-  hasElearningDay: boolean,
-  hasElearningSlot: boolean
-): string[] => {
-  const errors: string[] = [];
+  elearningSessions: number
+): { 
+  hasExtra: boolean; 
+  hasElearning: boolean; 
+  extraCount: number;
+  fixedCount: number;
+  info: string;
+} => {
+  const fixedCount = Math.min(10, inpersonSessions);
+  const extraCount = Math.max(0, inpersonSessions - 10);
+  const hasExtra = extraCount > 0;
+  const hasElearning = elearningSessions > 0;
   
-  // Check extra schedule
-  if (requiresExtraSchedule(inpersonSessions)) {
-    const extraCount = calculateExtraSessions(inpersonSessions);
+  let info = '';
+  
+  if (inpersonSessions > 0) {
+    info += `📌 ${fixedCount} buổi cố định (Thứ + Ca bạn chọn)\n`;
     
-    if (!hasExtraDay || !hasExtraSlot || !hasExtraRoom) {
-      errors.push(
-        `Môn học có ${inpersonSessions} buổi trực tiếp (${extraCount} buổi bổ sung). ` +
-        `Cần nhập đầy đủ lịch học bổ sung (Thứ, Ca, Phòng).`
-      );
+    if (hasExtra) {
+      info += `📅 ${extraCount} buổi bổ sung (tự động lên lịch khi kích hoạt học kỳ)\n`;
     }
   }
   
-  // ⭐ Check elearning schedule - ONLY IF > 0
-  if (requiresElearningSchedule(elearningSessions)) {
-    if (!hasElearningDay || !hasElearningSlot) {
-      errors.push(
-        `Môn học có ${elearningSessions} buổi E-learning. ` +
-        `Cần nhập lịch học trực tuyến (Thứ, Ca).`
-      );
-    }
+  if (hasElearning) {
+    info += `💻 ${elearningSessions} buổi E-learning (tự động tạo)`;
   }
-  // ✅ If elearningSessions = 0 → KHÔNG CẦN lịch E-learning
   
-  return errors;
+  return { 
+    hasExtra, 
+    hasElearning, 
+    extraCount, 
+    fixedCount,
+    info: info.trim()
+  };
 };
 
 /**
  * Format schedule display for UI
- * Example: "Thứ 2, Ca 1 (06:45 - 09:15), Phòng A201"
  */
 export const formatScheduleDisplay = (
   day: string | null,
   slot: string | null,
   room: string | null
 ): string => {
-  if (!day || !slot || !room) return '-';
+  if (!day || !slot) return '-';
   
   const dayLabel = getDayOfWeekLabel(day);
   const slotDisplay = getTimeSlotDisplay(slot);
   
-  return `${dayLabel}, ${slotDisplay}, ${room}`;
+  if (room) {
+    return `${dayLabel}, ${slotDisplay}, ${room}`;
+  }
+  
+  return `${dayLabel}, ${slotDisplay}`;
 };
 
 /**
  * Format schedule short
- * Example: "T2 Ca1 A201"
  */
 export const formatScheduleShort = (
   day: string | null,
   slot: string | null,
   room: string | null
 ): string => {
-  if (!day || !slot || !room) return '-';
+  if (!day || !slot) return '-';
   
   const dayShort = getDayOfWeekShort(day);
   const slotLabel = getTimeSlotLabel(slot);
   
-  return `${dayShort} ${slotLabel} ${room}`;
+  if (room) {
+    return `${dayShort} ${slotLabel} ${room}`;
+  }
+  
+  return `${dayShort} ${slotLabel}`;
 };
 
 // ==================== HELPERS ====================
 
-/**
- * Format date to display
- * "2024-10-15" → "15/10/2024"
- */
 export const formatDate = (dateStr: string): string => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
@@ -238,19 +222,12 @@ export const formatDate = (dateStr: string): string => {
   return `${day}/${month}/${year}`;
 };
 
-/**
- * Format date to input value
- * "15/10/2024" → "2024-10-15"
- */
 export const formatDateForInput = (dateStr: string): string => {
   if (!dateStr) return '';
   const [day, month, year] = dateStr.split('/');
   return `${year}-${month}-${day}`;
 };
 
-/**
- * Check if date is in the past
- */
 export const isPastDate = (dateStr: string): boolean => {
   if (!dateStr) return false;
   const date = new Date(dateStr);
@@ -259,10 +236,6 @@ export const isPastDate = (dateStr: string): boolean => {
   return date < today;
 };
 
-/**
- * Get class capacity display
- * "45/50" with percentage
- */
 export const getCapacityDisplay = (enrolled: number, max: number) => {
   const percentage = Math.round((enrolled / max) * 100);
   return {

@@ -3,7 +3,10 @@ import apiClient from './apiClient';
 // ==================== INTERFACES ====================
 
 /**
- * ✅ UPDATED: Added extra and elearning schedule fields
+ * ✅ Class creation with schedule
+ * - Fixed schedule: Required (admin chooses day + slot)
+ * - E-learning schedule: Optional (only if subject has e-learning sessions)
+ * - Backend auto-assigns rooms
  */
 export interface ClassCreateRequest {
   classCode: string;
@@ -12,24 +15,21 @@ export interface ClassCreateRequest {
   semesterId: number;
   maxStudents: number;
   
-  // Fixed schedule (required)
+  // Fixed schedule (required for in-person sessions)
   dayOfWeek: string;  // "MONDAY", "TUESDAY", etc.
   timeSlot: string;   // "CA1", "CA2", etc.
-  room: string;
   
-  // ⭐ NEW: Extra schedule (required if subject has > 10 in-person sessions)
-  extraDayOfWeek?: string | null;
-  extraTimeSlot?: string | null;
-  extraRoom?: string | null;
+  // ⭐ E-learning schedule (required if subject has e-learning sessions)
+  elearningDayOfWeek?: string;  // "MONDAY", "TUESDAY", etc.
+  elearningTimeSlot?: string;   // "CA1", "CA2", etc.
   
-  // ⭐ NEW: E-learning schedule (required if subject has e-learning sessions)
-  elearningDayOfWeek?: string | null;
-  elearningTimeSlot?: string | null;
-  // elearningRoom is always "ONLINE" (auto-set by backend)
+  // ⭐ Backend auto-assigns rooms:
+  // - Fixed sessions: Physical room (4-tier fallback)
+  // - E-learning sessions: ONLINE room (no conflict check!)
 }
 
 /**
- * ✅ UPDATED: Added extra and elearning schedule fields
+ * ✅ Class update
  */
 export interface ClassUpdateRequest {
   teacherId: number;
@@ -38,20 +38,16 @@ export interface ClassUpdateRequest {
   // Fixed schedule
   dayOfWeek: string;
   timeSlot: string;
-  room: string;
   
-  // ⭐ NEW: Extra schedule
-  extraDayOfWeek?: string | null;
-  extraTimeSlot?: string | null;
-  extraRoom?: string | null;
+  // E-learning schedule (if subject has e-learning)
+  elearningDayOfWeek?: string;
+  elearningTimeSlot?: string;
   
-  // ⭐ NEW: E-learning schedule
-  elearningDayOfWeek?: string | null;
-  elearningTimeSlot?: string | null;
+  // ⚠️ Changing schedule regenerates ALL sessions!
 }
 
 /**
- * ✅ UPDATED: Added extra and elearning schedule fields
+ * Class response with all schedule info (display only)
  */
 export interface ClassResponse {
   classId: number;
@@ -88,26 +84,19 @@ export interface ClassResponse {
   canRegister: boolean;
   isFull: boolean;
   
-  // Fixed schedule
+  // Fixed schedule (from backend)
   dayOfWeek: string;
   dayOfWeekDisplay: string;
   timeSlot: string;
   timeSlotDisplay: string;
-  room: string;
+  fixedRoom: string;  // ⭐ Auto-assigned by backend
   
-  // ⭐ NEW: Extra schedule
-  extraDayOfWeek: string | null;
-  extraDayOfWeekDisplay: string | null;
-  extraTimeSlot: string | null;
-  extraTimeSlotDisplay: string | null;
-  extraRoom: string | null;
-  
-  // ⭐ NEW: E-learning schedule
-  elearningDayOfWeek: string | null;
-  elearningDayOfWeekDisplay: string | null;
-  elearningTimeSlot: string | null;
-  elearningTimeSlotDisplay: string | null;
-  elearningRoom: string | null;  // Always "ONLINE"
+  // E-learning schedule (if applicable)
+  elearningDayOfWeek?: string;
+  elearningDayOfWeekDisplay?: string;
+  elearningTimeSlot?: string;
+  elearningTimeSlotDisplay?: string;
+  elearningRoom?: string;  // Always "ONLINE"
   
   // Dates
   startDate: string;
@@ -137,29 +126,46 @@ const classApi = {
   
   /**
    * Create a new class
-   * Auto-generates sessions based on subject
    * 
-   * ⭐ VALIDATION:
-   * - If subject.inpersonSessions > 10 → extraDayOfWeek, extraTimeSlot, extraRoom REQUIRED
-   * - If subject.elearningSessions > 0 → elearningDayOfWeek, elearningTimeSlot REQUIRED
+   * ⭐ AUTO-MAGIC:
+   * 1. Backend auto-assigns rooms:
+   *    - Fixed: Physical room (4-tier fallback, conflict check)
+   *    - E-learning: ONLINE room (NO conflict check!)
+   * 2. Backend auto-generates sessions:
+   *    - 10 FIXED (with dates + physical room)
+   *    - Extra (PENDING, no schedule yet)
+   *    - E-learning (with dates + ONLINE room)
+   * 3. Admin activates semester → Extra auto-scheduled
    */
   createClass: async (data: ClassCreateRequest): Promise<ClassResponse> => {
     console.log('[classApi] Creating class:', data.classCode);
-    console.log('[classApi] Extra schedule:', data.extraDayOfWeek, data.extraTimeSlot, data.extraRoom);
-    console.log('[classApi] E-learning schedule:', data.elearningDayOfWeek, data.elearningTimeSlot);
+    console.log('[classApi] Fixed schedule:', data.dayOfWeek, data.timeSlot);
+    
+    if (data.elearningDayOfWeek && data.elearningTimeSlot) {
+      console.log('[classApi] E-learning schedule:', data.elearningDayOfWeek, data.elearningTimeSlot);
+      console.log('[classApi] ℹ️ E-learning: ONLINE room, NO conflict check');
+    }
+    
+    console.log('[classApi] 🎯 Backend will auto-assign rooms & generate sessions');
     
     try {
       const response = await apiClient.post('/api/admin/classes', data);
-      console.log('[classApi] Class created successfully');
-      console.log('[classApi] Sessions generated:', response.data.data.totalSessionsGenerated);
+      console.log('[classApi] ✅ Class created successfully');
+      console.log('[classApi] 🏠 Fixed room:', response.data.data.fixedRoom);
+      
+      if (response.data.data.elearningRoom) {
+        console.log('[classApi] 💻 E-learning room:', response.data.data.elearningRoom);
+      }
+      
+      console.log('[classApi] 📅 Sessions generated:', response.data.data.totalSessionsGenerated);
       return response.data.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('[classApi] Failed to create class:', error);
+      console.error('[classApi] ❌ Failed to create class:', error);
       
       // Log specific validation errors
       if (error.response?.data?.message) {
-        console.error('[classApi] Validation error:', error.response.data.message);
+        console.error('[classApi] Error:', error.response.data.message);
       }
       
       throw error;
@@ -169,23 +175,20 @@ const classApi = {
   /**
    * Update an existing class
    * 
-   * ⚠️ WARNING: Changing ANY schedule will regenerate ALL sessions!
-   * - Changing fixed schedule → regenerate all
-   * - Changing extra schedule → regenerate all
-   * - Changing elearning schedule → regenerate all
+   * ⚠️ WARNING: Changing schedule regenerates ALL sessions!
    */
   updateClass: async (id: number, data: ClassUpdateRequest): Promise<ClassResponse> => {
     console.log('[classApi] Updating class ID:', id);
-    console.log('[classApi] ⚠️ WARNING: Schedule changes will regenerate all sessions!');
+    console.log('[classApi] ⚠️ WARNING: Schedule changes regenerate all sessions!');
     
     try {
       const response = await apiClient.put(`/api/admin/classes/${id}`, data);
-      console.log('[classApi] Class updated successfully');
-      console.log('[classApi] Sessions regenerated:', response.data.data.totalSessionsGenerated);
+      console.log('[classApi] ✅ Class updated successfully');
+      console.log('[classApi] 📅 Sessions regenerated:', response.data.data.totalSessionsGenerated);
       return response.data.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('[classApi] Failed to update class:', error);
+      console.error('[classApi] ❌ Failed to update class:', error);
       throw error;
     }
   },
@@ -198,10 +201,10 @@ const classApi = {
     console.log('[classApi] Deleting class ID:', id);
     try {
       await apiClient.delete(`/api/admin/classes/${id}`);
-      console.log('[classApi] Class deleted successfully');
+      console.log('[classApi] ✅ Class deleted successfully');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('[classApi] Failed to delete class:', error);
+      console.error('[classApi] ❌ Failed to delete class:', error);
       throw error;
     }
   },
@@ -216,7 +219,7 @@ const classApi = {
       return response.data.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('[classApi] Failed to fetch class:', error);
+      console.error('[classApi] ❌ Failed to fetch class:', error);
       throw error;
     }
   },
@@ -235,11 +238,11 @@ const classApi = {
       const response = await apiClient.get('/api/admin/classes', {
         params: { page, size, sortBy, sortDir }
       });
-      console.log(`[classApi] Classes fetched: ${response.data.data.totalElements} total`);
+      console.log(`[classApi] ✅ Classes fetched: ${response.data.data.totalElements} total`);
       return response.data.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('[classApi] Failed to fetch classes:', error);
+      console.error('[classApi] ❌ Failed to fetch classes:', error);
       throw error;
     }
   },
@@ -251,11 +254,11 @@ const classApi = {
     console.log('[classApi] Fetching classes for semester:', semesterId);
     try {
       const response = await apiClient.get(`/api/admin/classes/semester/${semesterId}`);
-      console.log(`[classApi] Semester classes fetched: ${response.data.data.length}`);
+      console.log(`[classApi] ✅ Semester classes fetched: ${response.data.data.length}`);
       return response.data.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('[classApi] Failed to fetch semester classes:', error);
+      console.error('[classApi] ❌ Failed to fetch semester classes:', error);
       throw error;
     }
   },
@@ -267,11 +270,11 @@ const classApi = {
     console.log('[classApi] Fetching classes for teacher:', teacherId);
     try {
       const response = await apiClient.get(`/api/admin/classes/teacher/${teacherId}`);
-      console.log(`[classApi] Teacher classes fetched: ${response.data.data.length}`);
+      console.log(`[classApi] ✅ Teacher classes fetched: ${response.data.data.length}`);
       return response.data.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('[classApi] Failed to fetch teacher classes:', error);
+      console.error('[classApi] ❌ Failed to fetch teacher classes:', error);
       throw error;
     }
   },
@@ -283,11 +286,11 @@ const classApi = {
     console.log('[classApi] Fetching classes for subject:', subjectId);
     try {
       const response = await apiClient.get(`/api/admin/classes/subject/${subjectId}`);
-      console.log(`[classApi] Subject classes fetched: ${response.data.data.length}`);
+      console.log(`[classApi] ✅ Subject classes fetched: ${response.data.data.length}`);
       return response.data.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('[classApi] Failed to fetch subject classes:', error);
+      console.error('[classApi] ❌ Failed to fetch subject classes:', error);
       throw error;
     }
   },
@@ -305,11 +308,11 @@ const classApi = {
       const response = await apiClient.get('/api/admin/classes/search', {
         params: { keyword, page, size }
       });
-      console.log(`[classApi] Search results: ${response.data.data.totalElements} found`);
+      console.log(`[classApi] ✅ Search results: ${response.data.data.totalElements} found`);
       return response.data.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('[classApi] Failed to search classes:', error);
+      console.error('[classApi] ❌ Failed to search classes:', error);
       throw error;
     }
   },

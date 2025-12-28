@@ -9,32 +9,27 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.request.SemesterCreateRequest;
 import vn.edu.uth.ecms.dto.request.SemesterUpdateRequest;
 import vn.edu.uth.ecms.dto.response.SemesterResponse;
-import vn.edu.uth.ecms.entity.ClassSession;
-import vn.edu.uth.ecms.entity.Semester;
-import vn.edu.uth.ecms.entity.SemesterStatus;
+import vn.edu.uth.ecms.entity.*;
 import vn.edu.uth.ecms.exception.BadRequestException;
 import vn.edu.uth.ecms.exception.DuplicateException;
 import vn.edu.uth.ecms.exception.NotFoundException;
-import vn.edu.uth.ecms.repository.ClassSessionRepository;
-import vn.edu.uth.ecms.repository.SemesterRepository;
+import vn.edu.uth.ecms.repository.*;
+import vn.edu.uth.ecms.service.EnrollmentService;
 import vn.edu.uth.ecms.service.ExtraSessionScheduler;
 import vn.edu.uth.ecms.service.SemesterService;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Implementation of SemesterService
+ * ✅ FIXED VERSION - SemesterServiceImpl
  *
- * CRITICAL BUSINESS LOGIC IMPLEMENTED:
- * 1. Only ONE ACTIVE semester at any time
- * 2. Auto-complete previous ACTIVE when activating new one
- * 3. Registration period validation
- * 4. Cannot edit COMPLETED semesters
- * 5. Registration control only for UPCOMING semesters
- * 6. ⭐ Auto-schedule PENDING extra sessions when activating semester
+ * FIXES:
+ * 1. Filter E_LEARNING sessions when creating extra schedules (Line 391)
+ * 2. Only create schedules for IN_PERSON EXTRA sessions
  */
 @Service
 @RequiredArgsConstructor
@@ -44,13 +39,14 @@ public class SemesterServiceImpl implements SemesterService {
 
     private final SemesterRepository semesterRepository;
     private final ClassSessionRepository sessionRepository;
-    private final ExtraSessionScheduler extraSessionScheduler;  // ⭐ Injected
+    private final ExtraSessionScheduler extraSessionScheduler;
+
+    private final ClassRepository classRepository;
+    private final CourseRegistrationRepository registrationRepository;
+    private final StudentScheduleRepository studentScheduleRepository;
 
     // ==================== HELPER METHODS ====================
 
-    /**
-     * Map Semester entity to SemesterResponse DTO
-     */
     private SemesterResponse mapToResponse(Semester semester) {
         return SemesterResponse.builder()
                 .semesterId(semester.getSemesterId())
@@ -78,24 +74,19 @@ public class SemesterServiceImpl implements SemesterService {
     public SemesterResponse createSemester(SemesterCreateRequest request) {
         log.info("Creating semester: {}", request.getSemesterCode());
 
-        // 1. Validate semester code is unique
         if (semesterRepository.existsBySemesterCode(request.getSemesterCode())) {
             throw new DuplicateException("Semester code already exists: " + request.getSemesterCode());
         }
 
-        // 2. Parse dates
         LocalDate startDate = LocalDate.parse(request.getStartDate());
         LocalDate endDate = LocalDate.parse(request.getEndDate());
 
-        // 3. Validate semester dates
         validateSemesterDates(startDate, endDate);
 
-        // 4. Check for overlaps (warning, not blocking)
         if (hasDateOverlap(startDate, endDate, null)) {
             log.warn("Semester dates overlap with existing semester: {} to {}", startDate, endDate);
         }
 
-        // 5. Parse registration dates (optional)
         LocalDate regStartDate = null;
         LocalDate regEndDate = null;
 
@@ -107,25 +98,22 @@ public class SemesterServiceImpl implements SemesterService {
             regEndDate = LocalDate.parse(request.getRegistrationEndDate());
         }
 
-        // 6. Validate registration period if provided
         if (regStartDate != null && regEndDate != null) {
             validateRegistrationPeriod(startDate, regStartDate, regEndDate);
         }
 
-        // 7. Build semester entity
         Semester semester = Semester.builder()
                 .semesterCode(request.getSemesterCode())
                 .semesterName(request.getSemesterName())
                 .startDate(startDate)
                 .endDate(endDate)
                 .status(request.getStatus())
-                .registrationEnabled(false)  // Default: disabled
+                .registrationEnabled(false)
                 .registrationStartDate(regStartDate)
                 .registrationEndDate(regEndDate)
                 .description(request.getDescription())
                 .build();
 
-        // 8. Save semester
         Semester saved = semesterRepository.save(semester);
 
         log.info("Semester created successfully: {}", saved.getSemesterCode());
@@ -137,23 +125,18 @@ public class SemesterServiceImpl implements SemesterService {
     public SemesterResponse updateSemester(Long id, SemesterUpdateRequest request) {
         log.info("Updating semester ID: {}", id);
 
-        // 1. Find semester
         Semester semester = semesterRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Semester not found with ID: " + id));
 
-        // 2. Cannot edit COMPLETED semesters
         if (semester.getStatus() == SemesterStatus.COMPLETED) {
             throw new BadRequestException("Cannot edit COMPLETED semester");
         }
 
-        // 3. Parse dates
         LocalDate startDate = LocalDate.parse(request.getStartDate());
         LocalDate endDate = LocalDate.parse(request.getEndDate());
 
-        // 4. Validate dates
         validateSemesterDates(startDate, endDate);
 
-        // 5. Parse registration dates
         LocalDate regStartDate = null;
         LocalDate regEndDate = null;
 
@@ -165,12 +148,10 @@ public class SemesterServiceImpl implements SemesterService {
             regEndDate = LocalDate.parse(request.getRegistrationEndDate());
         }
 
-        // 6. Validate registration period
         if (regStartDate != null && regEndDate != null) {
             validateRegistrationPeriod(startDate, regStartDate, regEndDate);
         }
 
-        // 7. Update semester
         semester.setSemesterName(request.getSemesterName());
         semester.setStartDate(startDate);
         semester.setEndDate(endDate);
@@ -178,7 +159,6 @@ public class SemesterServiceImpl implements SemesterService {
         semester.setRegistrationEndDate(regEndDate);
         semester.setDescription(request.getDescription());
 
-        // 8. Save
         Semester updated = semesterRepository.save(semester);
 
         log.info("Semester updated successfully: {}", updated.getSemesterCode());
@@ -193,15 +173,9 @@ public class SemesterServiceImpl implements SemesterService {
         Semester semester = semesterRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Semester not found with ID: " + id));
 
-        // Cannot delete ACTIVE semester
         if (semester.getStatus() == SemesterStatus.ACTIVE) {
             throw new BadRequestException("Cannot delete ACTIVE semester. Complete it first.");
         }
-
-        // TODO: Check if semester has classes (Phase 3 Sprint 3.6)
-        // if (classRepository.existsBySemester(semester)) {
-        //     throw new BadRequestException("Cannot delete semester with classes");
-        // }
 
         semesterRepository.delete(semester);
 
@@ -239,32 +213,34 @@ public class SemesterServiceImpl implements SemesterService {
     }
 
     // ==================== STATUS MANAGEMENT ====================
-
+    /**
+     * FIX #3: IDEMPOTENT ACTIVATION
+     * Prevents multiple scheduling if called multiple times
+     */
     @Override
     public SemesterResponse activateSemester(Long id) {
         log.info("🔄 Activating semester ID: {}", id);
 
-        // 1. Find semester to activate
         Semester semesterToActivate = semesterRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Semester not found with ID: " + id));
 
-        // 2. Cannot activate if already COMPLETED
+        // ✅ FIX #3: If already ACTIVE, return early (don't re-schedule)
+        if (semesterToActivate.getStatus() == SemesterStatus.ACTIVE) {
+            log.warn("⚠️ Semester {} is already ACTIVE. Skipping re-activation and scheduling.",
+                    semesterToActivate.getSemesterCode());
+            return mapToResponse(semesterToActivate);
+        }
+
+        // Cannot activate COMPLETED
         if (semesterToActivate.getStatus() == SemesterStatus.COMPLETED) {
             throw new BadRequestException("Cannot activate COMPLETED semester");
         }
 
-        // 3. Find current ACTIVE semester (if exists)
+        // Find current ACTIVE semester
         Optional<Semester> currentActiveOpt = semesterRepository.findByStatus(SemesterStatus.ACTIVE);
 
-        // 4. Complete current ACTIVE semester
         if (currentActiveOpt.isPresent()) {
             Semester currentActive = currentActiveOpt.get();
-
-            // Don't activate if already active
-            if (currentActive.getSemesterId().equals(id)) {
-                log.info("Semester is already ACTIVE: {}", currentActive.getSemesterCode());
-                return mapToResponse(currentActive);
-            }
 
             // Complete previous active semester
             currentActive.setStatus(SemesterStatus.COMPLETED);
@@ -274,44 +250,29 @@ public class SemesterServiceImpl implements SemesterService {
             log.info("Completed previous ACTIVE semester: {}", currentActive.getSemesterCode());
         }
 
-        // 5. Activate new semester
+        // Activate new semester
         semesterToActivate.setStatus(SemesterStatus.ACTIVE);
         Semester saved = semesterRepository.save(semesterToActivate);
 
         log.info("✅ Activated semester: {}", saved.getSemesterCode());
 
-        // 6. ⭐ AUTO SCHEDULE ALL PENDING EXTRA SESSIONS ⭐
+        // ⭐ AUTO SCHEDULE EXTRA SESSIONS (only once!)
         try {
             schedulePendingExtraSessions(id);
+            createStudentSchedulesForExtraSessions(id);
         } catch (Exception e) {
             log.error("❌ Failed to auto-schedule extra sessions: {}", e.getMessage(), e);
-            // Don't fail activation, just log error
-            // Admin can manually schedule later if needed
         }
 
         return mapToResponse(saved);
     }
 
-    /**
-     * ⭐ AUTO SCHEDULE ALL PENDING EXTRA SESSIONS
-     *
-     * Called when admin activates semester
-     * Uses ExtraSessionScheduler with 4-tier fallback strategy:
-     * 1. Ideal slot (Mon-Sat, physical room, no conflicts)
-     * 2. Sunday ONLINE (no student conflicts)
-     * 3. Any day ONLINE (no student conflicts)
-     * 4. Force ONLINE (ignore conflicts)
-     *
-     * @param semesterId Semester ID to schedule sessions for
-     */
     private void schedulePendingExtraSessions(Long semesterId) {
         log.info("📅 Scheduling all pending extra sessions for semester {}", semesterId);
 
-        // Get semester
         Semester semester = semesterRepository.findById(semesterId)
                 .orElseThrow(() -> new NotFoundException("Semester not found"));
 
-        // Get all pending extra sessions
         List<ClassSession> pendingSessions = sessionRepository.findPendingSessionsBySemester(semesterId);
 
         if (pendingSessions.isEmpty()) {
@@ -324,13 +285,11 @@ public class SemesterServiceImpl implements SemesterService {
         int successCount = 0;
         int failCount = 0;
 
-        // Schedule each session using 4-tier strategy
         for (ClassSession session : pendingSessions) {
             try {
                 boolean scheduled = extraSessionScheduler.scheduleExtraSession(session, semester);
 
                 if (scheduled) {
-                    // Save the updated session
                     sessionRepository.save(session);
                     successCount++;
 
@@ -359,9 +318,105 @@ public class SemesterServiceImpl implements SemesterService {
                 successCount, failCount);
 
         if (failCount > 0) {
-            log.warn("⚠️ {} sessions could not be scheduled automatically. " +
-                    "Admin should manually schedule these sessions.", failCount);
+            log.warn("⚠️ {} sessions could not be scheduled automatically", failCount);
         }
+    }
+
+    /**
+     * ✅ FIX #1 + FIX #2: Filter E_LEARNING + Check existing schedules
+     */
+    private void createStudentSchedulesForExtraSessions(Long semesterId) {
+        log.info("📅 Creating student schedules for extra sessions in semester {}", semesterId);
+
+        List<ClassEntity> classes = classRepository.findBySemester(semesterId);
+
+        if (classes.isEmpty()) {
+            log.info("ℹ️ No classes found in semester {}", semesterId);
+            return;
+        }
+
+        int totalSchedulesCreated = 0;
+        int totalSkipped = 0;
+
+        for (ClassEntity classEntity : classes) {
+            // ✅ FIX #1: Filter ONLY IN_PERSON EXTRA sessions
+            // Excludes E_LEARNING (already created during enrollment)
+            List<ClassSession> extraSessions = sessionRepository
+                    .findByClass(classEntity.getClassId())
+                    .stream()
+                    .filter(s -> !s.getIsPending()
+                            && s.getSessionNumber() > 10
+                            && s.getSessionType() == SessionType.IN_PERSON)
+                    .toList();
+
+            if (extraSessions.isEmpty()) {
+                log.debug("  No extra IN_PERSON sessions for class {}", classEntity.getClassCode());
+                continue;
+            }
+
+            log.info("  Class {}: Found {} extra IN_PERSON sessions",
+                    classEntity.getClassCode(), extraSessions.size());
+
+            List<CourseRegistration> registrations = registrationRepository
+                    .findByClassEntityClassIdAndStatus(
+                            classEntity.getClassId(),
+                            RegistrationStatus.REGISTERED
+                    );
+
+            if (registrations.isEmpty()) {
+                log.debug("  No enrolled students in class {}", classEntity.getClassCode());
+                continue;
+            }
+
+            List<StudentSchedule> schedules = new ArrayList<>();
+
+            for (CourseRegistration reg : registrations) {
+                for (ClassSession session : extraSessions) {
+
+                    // ✅ FIX #2: Check if schedule already exists
+                    long existingCount = studentScheduleRepository.countByStudentAndSession(
+                            reg.getStudent().getStudentId(),
+                            session.getSessionId()
+                    );
+
+                    if (existingCount > 0) {
+                        log.debug("    Skip: Schedule already exists for student {} session {}",
+                                reg.getStudent().getStudentCode(), session.getSessionNumber());
+                        totalSkipped++;
+                        continue;
+                    }
+
+                    // Create new schedule
+                    StudentSchedule schedule = StudentSchedule.builder()
+                            .student(reg.getStudent())
+                            .classSession(session)
+                            .classEntity(classEntity)
+                            .sessionDate(session.getEffectiveDate())
+                            .dayOfWeek(session.getEffectiveDayOfWeek())
+                            .timeSlot(session.getEffectiveTimeSlot())
+                            .room(session.getEffectiveRoom())
+                            .attendanceStatus(AttendanceStatus.ABSENT)
+                            .build();
+
+                    schedules.add(schedule);
+                }
+            }
+
+            if (!schedules.isEmpty()) {
+                studentScheduleRepository.saveAll(schedules);
+                totalSchedulesCreated += schedules.size();
+
+                log.info("  ✅ Created {} new schedules for {} students",
+                        schedules.size(), registrations.size());
+            }
+        }
+
+        if (totalSkipped > 0) {
+            log.info("ℹ️ Skipped {} schedules (already exist)", totalSkipped);
+        }
+
+        log.info("✅ Total {} student schedules created for extra IN_PERSON sessions",
+                totalSchedulesCreated);
     }
 
     @Override
@@ -371,14 +426,12 @@ public class SemesterServiceImpl implements SemesterService {
         Semester semester = semesterRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Semester not found with ID: " + id));
 
-        // Only ACTIVE semesters can be completed
         if (semester.getStatus() != SemesterStatus.ACTIVE) {
             throw new BadRequestException("Only ACTIVE semesters can be completed");
         }
 
-        // Complete semester
         semester.setStatus(SemesterStatus.COMPLETED);
-        semester.setRegistrationEnabled(false);  // Auto-disable registration
+        semester.setRegistrationEnabled(false);
 
         Semester saved = semesterRepository.save(semester);
 
@@ -431,24 +484,20 @@ public class SemesterServiceImpl implements SemesterService {
         Semester semester = semesterRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Semester not found with ID: " + id));
 
-        // ✅ FIXED: Must be UPCOMING (not ACTIVE)
         if (semester.getStatus() != SemesterStatus.UPCOMING) {
             throw new BadRequestException("Can only enable registration for UPCOMING semester");
         }
 
-        // Registration period must be set
         if (semester.getRegistrationStartDate() == null || semester.getRegistrationEndDate() == null) {
             throw new BadRequestException("Registration period must be set first");
         }
 
-        // Validate registration period
         validateRegistrationPeriod(
                 semester.getStartDate(),
                 semester.getRegistrationStartDate(),
                 semester.getRegistrationEndDate()
         );
 
-        // Enable registration
         semester.setRegistrationEnabled(true);
         Semester saved = semesterRepository.save(semester);
 
@@ -466,7 +515,6 @@ public class SemesterServiceImpl implements SemesterService {
         Semester semester = semesterRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Semester not found with ID: " + id));
 
-        // ✅ FIXED: Check if UPCOMING (optional validation)
         if (semester.getStatus() != SemesterStatus.UPCOMING) {
             throw new BadRequestException("Can only disable registration for UPCOMING semester");
         }
@@ -490,10 +538,8 @@ public class SemesterServiceImpl implements SemesterService {
         Semester semester = semesterRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Semester not found with ID: " + id));
 
-        // Validate
         validateRegistrationPeriod(semester.getStartDate(), registrationStartDate, registrationEndDate);
 
-        // Update
         semester.setRegistrationStartDate(registrationStartDate);
         semester.setRegistrationEndDate(registrationEndDate);
 
@@ -517,15 +563,12 @@ public class SemesterServiceImpl implements SemesterService {
 
     @Override
     public void validateSemesterDates(LocalDate startDate, LocalDate endDate) {
-        // End date must be after start date
         if (!endDate.isAfter(startDate)) {
             throw new BadRequestException("End date must be after start date");
         }
 
-        // Calculate duration
         long days = ChronoUnit.DAYS.between(startDate, endDate);
 
-        // Recommended: 10 weeks = 70 days (±10 days acceptable)
         if (days < 60 || days > 80) {
             log.warn("Semester duration is {} days (recommended: 70 days for 10 weeks)", days);
         }
@@ -537,19 +580,16 @@ public class SemesterServiceImpl implements SemesterService {
             LocalDate registrationStart,
             LocalDate registrationEnd) {
 
-        // Registration start must be before registration end
         if (!registrationStart.isBefore(registrationEnd)) {
             throw new BadRequestException("Registration start date must be before end date");
         }
 
-        // Registration must end before or on semester start
         if (registrationEnd.isAfter(semesterStart)) {
             throw new BadRequestException(
                     "Registration must end before or on semester start date (" + semesterStart + ")"
             );
         }
 
-        // Registration period should be reasonable (1-4 weeks recommended)
         long days = ChronoUnit.DAYS.between(registrationStart, registrationEnd);
         if (days < 7 || days > 30) {
             log.warn("Registration period is {} days (recommended: 7-30 days)", days);
@@ -561,7 +601,6 @@ public class SemesterServiceImpl implements SemesterService {
     public boolean hasDateOverlap(LocalDate startDate, LocalDate endDate, Long excludeSemesterId) {
         List<Semester> overlapping = semesterRepository.findOverlappingSemesters(startDate, endDate);
 
-        // Remove excluded semester from results
         if (excludeSemesterId != null) {
             overlapping.removeIf(s -> s.getSemesterId().equals(excludeSemesterId));
         }

@@ -1,14 +1,18 @@
 package vn.edu.uth.ecms.service;
 
+import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.request.ManualEnrollRequest;
 import vn.edu.uth.ecms.dto.response.CourseRegistrationResponse;
 import vn.edu.uth.ecms.entity.ClassEntity;
+import vn.edu.uth.ecms.entity.Semester;
 import vn.edu.uth.ecms.entity.Student;
 
 import java.util.List;
 
 /**
  * Service interface for student enrollment management
+ *
+ * ✅ FIXED: Removed duplicate createStudentSchedule method
  */
 public interface EnrollmentService {
 
@@ -39,8 +43,6 @@ public interface EnrollmentService {
      */
     List<CourseRegistrationResponse> getStudentsInClass(Long classId);
 
-    void createStudentSchedule(Student student, ClassEntity classEntity);
-
     /**
      * Get all manual enrollments for audit
      *
@@ -55,4 +57,15 @@ public interface EnrollmentService {
      * @return Student count
      */
     long countStudentsInClass(Long classId);
+
+    /**
+     * ✅ FIXED: Single method with 3 parameters
+     * Create student schedule entries when enrolling
+     *
+     * @param student Student entity
+     * @param classEntity Class entity
+     * @param semester Semester entity
+     */
+    @Transactional
+    void createStudentSchedule(Student student, ClassEntity classEntity, Semester semester);
 }

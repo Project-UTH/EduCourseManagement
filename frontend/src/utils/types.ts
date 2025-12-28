@@ -1,5 +1,5 @@
 // types.ts - Shared types for Class Management
-// ⭐ UPDATED: Added extra and elearning schedule fields
+// ✅ SIMPLIFIED: Removed extra/elearning fields (backend auto-handles)
 
 export interface ClassItem {
   classId: number;
@@ -8,7 +8,7 @@ export interface ClassItem {
   subjectName: string;
   credits: number;
   
-  // ⭐ NEW: Session counts for validation
+  // Session counts (for display only)
   totalSessions: number;
   inPersonSessions: number;
   eLearningSessions: number;
@@ -21,26 +21,12 @@ export interface ClassItem {
   availableSeats: number;
   status: string;
   
-  // ⭐ Fixed schedule (always present)
+  // Fixed schedule (backend auto-assigned)
   dayOfWeekDisplay: string;
   timeSlotDisplay: string;
-  room: string;
-  dayOfWeek: string;        // Raw value for editing
-  timeSlot: string;         // Raw value for editing
-  
-  // ⭐ NEW: Extra schedule (only if inPersonSessions > 10)
-  extraDayOfWeek: string | null;
-  extraDayOfWeekDisplay: string | null;
-  extraTimeSlot: string | null;
-  extraTimeSlotDisplay: string | null;
-  extraRoom: string | null;
-  
-  // ⭐ NEW: E-learning schedule (only if eLearningSessions > 0)
-  elearningDayOfWeek: string | null;
-  elearningDayOfWeekDisplay: string | null;
-  elearningTimeSlot: string | null;
-  elearningTimeSlotDisplay: string | null;
-  elearningRoom: string | null;  // Always "ONLINE"
+  fixedRoom: string;         // ⭐ Auto-assigned by backend
+  dayOfWeek: string;         // Raw value for editing
+  timeSlot: string;          // Raw value for editing
   
   startDate: string;
   endDate: string;
@@ -52,18 +38,25 @@ export interface Session {
   sessionId: number;
   sessionNumber: number;
   sessionType: string;  // "IN_PERSON" or "E_LEARNING"
+  
+  // Original schedule
   originalDate: string | null;
   originalDayOfWeekDisplay: string | null;
   originalTimeSlotDisplay: string | null;
   originalRoom: string | null;
+  
+  // Actual schedule (if rescheduled)
   actualDate: string | null;
   actualDayOfWeekDisplay: string | null;
   actualTimeSlotDisplay: string | null;
   actualRoom: string | null;
+  
+  // Effective schedule (what to display)
   effectiveDate: string | null;
   effectiveDayOfWeekDisplay: string | null;
   effectiveTimeSlotDisplay: string | null;
   effectiveRoom: string | null;
+  
   isRescheduled: boolean;
   rescheduleReason: string | null;
   status: string;
@@ -103,10 +96,11 @@ export interface Semester {
   endDate: string;
 }
 
-// ==================== NEW TYPES (for form & validation) ====================
+// ==================== FORM DATA ====================
 
 /**
- * Form data for creating/updating class
+ * ✅ SIMPLIFIED: Form data for creating/updating class
+ * Only fixed schedule needed - backend handles rest
  */
 export interface ClassFormData {
   classCode: string;
@@ -115,19 +109,13 @@ export interface ClassFormData {
   semesterId: number | null;
   maxStudents: number;
   
-  // Fixed schedule
+  // Fixed schedule only
   dayOfWeek: string;
   timeSlot: string;
-  room: string;
   
-  // ⭐ Extra schedule (conditional)
-  extraDayOfWeek: string;
-  extraTimeSlot: string;
-  extraRoom: string;
-  
-  // ⭐ E-learning schedule (conditional)
-  elearningDayOfWeek: string;
-  elearningTimeSlot: string;
+  // ⭐ No room input - backend auto-assigns
+  // ⭐ No extra schedule - backend auto-schedules when semester activated
+  // ⭐ No elearning schedule - backend auto-creates
 }
 
 /**
@@ -141,12 +129,6 @@ export interface ValidationErrors {
   maxStudents?: string;
   dayOfWeek?: string;
   timeSlot?: string;
-  room?: string;
-  extraDayOfWeek?: string;
-  extraTimeSlot?: string;
-  extraRoom?: string;
-  elearningDayOfWeek?: string;
-  elearningTimeSlot?: string;
   general?: string;
 }
 

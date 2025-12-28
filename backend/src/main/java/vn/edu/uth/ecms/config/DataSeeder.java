@@ -9,8 +9,16 @@ import org.springframework.stereotype.Component;
 import vn.edu.uth.ecms.entity.*;
 import vn.edu.uth.ecms.repository.*;
 
-import java.time.LocalDate;
-
+/**
+ * DataSeeder - Seeds ONLY essential data
+ *
+ * SEEDS:
+ * 1. Admin account (username: admin, password: admin123)
+ * 2. ONLINE room (for E-learning sessions)
+ *
+ * NOTE: All other data (departments, majors, subjects, teachers, students)
+ * should be imported via Excel or created through the UI.
+ */
 @Component
 @RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
@@ -18,30 +26,25 @@ public class DataSeeder implements CommandLineRunner {
     private static final Logger logger = LoggerFactory.getLogger(DataSeeder.class);
 
     private final AdminRepository adminRepository;
-    private final DepartmentRepository departmentRepository;
-    private final MajorRepository majorRepository;
-    private final TeacherRepository teacherRepository;
-    private final StudentRepository studentRepository;
+    private final RoomRepository roomRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
-        logger.info("Starting data seeding...");
+        logger.info("🌱 Starting data seeding...");
 
         // Seed Admin
         seedAdmin();
 
-        // Seed Department and Major
-        Department department = seedDepartment();
-        Major major = seedMajor(department);
+        // Seed ONLINE room
+        seedOnlineRoom();
 
-        // Seed Teacher
-        seedTeacher(department, major);
-
-
-        logger.info("Data seeding completed!");
+        logger.info("✅ Data seeding completed!");
     }
 
+    /**
+     * Seed default admin account
+     */
     private void seedAdmin() {
         if (adminRepository.count() == 0) {
             Admin admin = Admin.builder()
@@ -52,65 +55,36 @@ public class DataSeeder implements CommandLineRunner {
                     .build();
 
             adminRepository.save(admin);
-            logger.info("Created admin account: username=admin, password=admin123");
+            logger.info("👤 Created admin account: username=admin, password=admin123");
+        } else {
+            logger.info("👤 Admin account already exists, skipping...");
         }
     }
 
-    private Department seedDepartment() {
-        if (departmentRepository.count() == 0) {
-            Department department = Department.builder()
-                    .departmentCode("CNTT")
-                    .departmentName("Công nghệ thông tin")
-                    .knowledgeType(KnowledgeType.SPECIALIZED)
-                    .description("Khoa Công nghệ thông tin")
-                    .build();
-
-            department = departmentRepository.save(department);
-            logger.info("Created department: {}", department.getDepartmentName());
-            return department;
-        }
-        return departmentRepository.findAll().get(0);
-    }
-
-    private Major seedMajor(Department department) {
-        if (majorRepository.count() == 0) {
-            Major major = Major.builder()
-                    .majorCode("CNPM")
-                    .majorName("Công nghệ phần mềm")
-                    .department(department)
-                    .description("Chuyên ngành Công nghệ phần mềm")
-                    .build();
-
-            major = majorRepository.save(major);
-            logger.info("Created major: {}", major.getMajorName());
-            return major;
-        }
-        return majorRepository.findAll().get(0);
-    }
-
-    private void seedTeacher(Department department, Major major) {
-        if (teacherRepository.count() == 0) {
-            LocalDate dob = LocalDate.of(1985, 5, 15);
-            String defaultPassword = "15051985"; // ddMMyyyy format
-
-            Teacher teacher = Teacher.builder()
-                    .citizenId("123456789012")
-                    .password(passwordEncoder.encode(defaultPassword))
-                    .fullName("Nguyễn Văn A")
-                    .gender(Gender.MALE)
-                    .dateOfBirth(dob)
-                    .email("nguyenvana@uth.edu.vn")
-                    .phone("0901234567")
-                    .department(department)
-                    .major(major)
-                    .degree("Tiến sĩ")
-                    .address("TP. Hồ Chí Minh")
-                    .isFirstLogin(true)
+    /**
+     * Seed ONLINE room for E-learning sessions
+     *
+     * IMPORTANT:
+     * - Only 1 ONLINE room is needed (no conflict checking)
+     * - All E-learning sessions use this same room
+     * - Capacity: 999 (unlimited, virtual room)
+     */
+    private void seedOnlineRoom() {
+        if (!roomRepository.existsByRoomCode("ONLINE")) {
+            Room onlineRoom = Room.builder()
+                    .roomCode("ONLINE")
+                    .roomName("Phòng học trực tuyến")
+                    .roomType(RoomType.ONLINE)
+                    .capacity(999)  // Unlimited capacity
+                    .building("VIRTUAL")
+                    .floor(0)
                     .isActive(true)
                     .build();
 
-            teacherRepository.save(teacher);
-            logger.info("Created teacher: citizenId=123456789012, password={}", defaultPassword);
+            roomRepository.save(onlineRoom);
+            logger.info("💻 Created ONLINE room for E-learning (capacity: 999, no conflict check)");
+        } else {
+            logger.info("💻 ONLINE room already exists, skipping...");
         }
     }
 }

@@ -34,6 +34,10 @@ public class StudentSchedule extends BaseEntity {
     @JoinColumn(name = "session_id", nullable = false)
     private ClassSession classSession;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "class_id", nullable = false)
+    private ClassEntity classEntity;
+
     // ==================== SCHEDULE INFO ====================
 
     @Column(name = "session_date")

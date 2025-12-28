@@ -5,10 +5,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import vn.edu.uth.ecms.entity.ClassSession;
-import vn.edu.uth.ecms.entity.SessionCategory;
-import vn.edu.uth.ecms.entity.SessionStatus;
-import vn.edu.uth.ecms.entity.SessionType;
+import vn.edu.uth.ecms.entity.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -83,98 +80,79 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             "AND cs.isPending = true")
     long countPendingByClass(@Param("classId") Long classId);
 
-    // ==================== CONFLICT DETECTION ====================
+    // ==================== CONFLICT DETECTION (ĐÃ FIX) ====================
 
     /**
-     * Check teacher conflict with specific date
-     *
-     * Logic: Check BOTH original and actual schedules
+     * ✅ FIXED: Đổi String -> TimeSlot enum
      */
     @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
             "FROM ClassSession cs " +
             "WHERE cs.classEntity.semester.semesterId = :semesterId " +
             "AND cs.classEntity.teacher.teacherId = :teacherId " +
+            "AND cs.sessionType != 'E_LEARNING' " +
             "AND cs.isPending = false " +
             "AND cs.status != 'CANCELLED' " +
             "AND (" +
-            "  (cs.isRescheduled = false " +
-            "   AND cs.originalDate = :date " +
-            "   AND cs.originalDayOfWeek = :dayOfWeek " +
-            "   AND cs.originalTimeSlot = :timeSlot) " +
+            "  (cs.isRescheduled = false AND cs.originalDate = :date AND cs.originalTimeSlot = :timeSlot) " +
             "  OR " +
-            "  (cs.isRescheduled = true " +
-            "   AND cs.actualDate = :date " +
-            "   AND cs.actualDayOfWeek = :dayOfWeek " +
-            "   AND cs.actualTimeSlot = :timeSlot)" +
+            "  (cs.isRescheduled = true AND cs.actualDate = :date AND cs.actualTimeSlot = :timeSlot)" +
             ") " +
-            "AND (:excludeSessionId IS NULL OR cs.sessionId != :excludeSessionId)")
+            "AND (:excludeClassId IS NULL OR cs.classEntity.classId != :excludeClassId)")
     boolean existsTeacherConflict(
             @Param("semesterId") Long semesterId,
             @Param("teacherId") Long teacherId,
             @Param("date") LocalDate date,
-            @Param("dayOfWeek") DayOfWeek dayOfWeek,
-            @Param("timeSlot") String timeSlot,
-            @Param("excludeSessionId") Long excludeSessionId
+            @Param("dayOfWeek") DayOfWeek dayOfWeek, // Spring JPA sẽ tự lấy từ date nếu cần, nhưng giữ để khớp Repo
+            @Param("timeSlot") TimeSlot timeSlot,   // ✅ Đổi sang Enum
+            @Param("excludeClassId") Long excludeClassId
     );
 
     /**
-     * Check student conflict
-     *
-     * Logic: Check via CourseRegistration join
+     * ✅ NEW: Kiểm tra xung đột cho NHÓM sinh viên (Batch check)
+     * Dùng cho ExtraSessionScheduler để tối ưu hiệu năng
      */
     @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
             "FROM ClassSession cs " +
             "JOIN CourseRegistration cr ON cr.classEntity.classId = cs.classEntity.classId " +
             "WHERE cs.classEntity.semester.semesterId = :semesterId " +
-            "AND cr.student.studentId = :studentId " +
+            "AND cr.student.studentId IN :studentIds " +
+            "AND cs.sessionType != 'E_LEARNING' " +
             "AND cr.status = 'REGISTERED' " +
             "AND cs.isPending = false " +
             "AND cs.status != 'CANCELLED' " +
             "AND (" +
-            "  (cs.isRescheduled = false " +
-            "   AND cs.originalDate = :date " +
-            "   AND cs.originalDayOfWeek = :dayOfWeek " +
-            "   AND cs.originalTimeSlot = :timeSlot) " +
+            "  (cs.isRescheduled = false AND cs.originalDate = :date AND cs.originalTimeSlot = :timeSlot) " +
             "  OR " +
-            "  (cs.isRescheduled = true " +
-            "   AND cs.actualDate = :date " +
-            "   AND cs.actualDayOfWeek = :dayOfWeek " +
-            "   AND cs.actualTimeSlot = :timeSlot)" +
+            "  (cs.isRescheduled = true AND cs.actualDate = :date AND cs.actualTimeSlot = :timeSlot)" +
             ") " +
-            "AND (:excludeSessionId IS NULL OR cs.sessionId != :excludeSessionId)")
-    boolean existsStudentConflict(
+            "AND (:excludeClassId IS NULL OR cs.classEntity.classId != :excludeClassId)")
+    boolean existsAnyStudentConflict(
             @Param("semesterId") Long semesterId,
-            @Param("studentId") Long studentId,
+            @Param("studentIds") List<Long> studentIds,
             @Param("date") LocalDate date,
             @Param("dayOfWeek") DayOfWeek dayOfWeek,
-            @Param("timeSlot") String timeSlot,
-            @Param("excludeSessionId") Long excludeSessionId
+            @Param("timeSlot") TimeSlot timeSlot,
+            @Param("excludeClassId") Long excludeClassId
     );
 
     /**
-     * ✅ FIXED: Check room conflict
-     *
-     * CANNOT use effectiveDate, effectiveDayOfWeek, effectiveTimeSlot
-     * → They are Java methods, not DB columns!
-     *
-     * MUST check BOTH original and actual separately
+     * ✅ FIXED: Kiểm tra xung đột phòng học
      */
     @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
             "FROM ClassSession cs " +
             "WHERE cs.classEntity.semester.semesterId = :semesterId " +
+            "AND cs.sessionType != 'E_LEARNING' " +
             "AND cs.isPending = false " +
             "AND cs.status != 'CANCELLED' " +
             "AND (" +
             "  (cs.isRescheduled = false " +
             "   AND cs.originalRoom.roomId = :roomId " +
             "   AND cs.originalDate = :date " +
-            "   AND cs.originalDayOfWeek = :dayOfWeek " +
             "   AND cs.originalTimeSlot = :timeSlot) " +
             "  OR " +
             "  (cs.isRescheduled = true " +
             "   AND cs.actualRoom.roomId = :roomId " +
             "   AND cs.actualDate = :date " +
-            "   AND cs.actualDayOfWeek = :dayOfWeek " +
             "   AND cs.actualTimeSlot = :timeSlot)" +
             ") " +
             "AND (:excludeSessionId IS NULL OR cs.sessionId != :excludeSessionId)")
@@ -183,7 +161,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             @Param("roomId") Long roomId,
             @Param("date") LocalDate date,
             @Param("dayOfWeek") DayOfWeek dayOfWeek,
-            @Param("timeSlot") String timeSlot,
+            @Param("timeSlot") TimeSlot timeSlot,
             @Param("excludeSessionId") Long excludeSessionId
     );
 
@@ -229,7 +207,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             "AND cs.status = :status")
     long countByStatus(
             @Param("classId") Long classId,
-            @Param("sessionStatus") SessionStatus status
+            @Param("status") SessionStatus status
     );
 
     // ==================== SEMESTER STATISTICS ====================

@@ -268,12 +268,12 @@ public class SessionServiceImpl implements SessionService {
 
         // Check teacher conflict
         boolean teacherConflict = sessionRepository.existsTeacherConflict(
-                semesterId, teacherId, date, dayOfWeek, timeSlot.name(), excludeSessionId
+                semesterId, teacherId, date, dayOfWeek, TimeSlot.valueOf(timeSlot.name()), excludeSessionId
         );
 
         // Check room conflict
         boolean roomConflict = sessionRepository.existsRoomConflict(
-                semesterId, roomId, date, dayOfWeek, timeSlot.name(), excludeSessionId
+                semesterId, roomId, date, dayOfWeek, TimeSlot.valueOf(timeSlot.name()), excludeSessionId
         );
 
         return teacherConflict || roomConflict;

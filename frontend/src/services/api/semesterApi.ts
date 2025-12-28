@@ -2,13 +2,14 @@ import apiClient from './apiClient';
 
 /**
  * Semester API Service
+ * ✅ FIXED: Correct endpoint path (POST not GET)
  */
 
 export interface SemesterCreateRequest {
-  semesterCode: string;        // "2024-1"
-  semesterName: string;        // "Học kỳ 1 năm 2024-2025"
-  startDate: string;           // "2024-09-01"
-  endDate: string;             // "2024-11-10"
+  semesterCode: string;
+  semesterName: string;
+  startDate: string;
+  endDate: string;
   status: 'UPCOMING' | 'ACTIVE' | 'COMPLETED';
   registrationStartDate?: string;
   registrationEndDate?: string;
@@ -67,9 +68,6 @@ interface ApiError {
 }
 
 const semesterApi = {
-  /**
-   * Get all semesters with pagination
-   */
   getAll: async (
     page: number = 0,
     size: number = 10,
@@ -93,9 +91,6 @@ const semesterApi = {
     }
   },
 
-  /**
-   * Get semester by ID
-   */
   getById: async (id: number): Promise<ApiResponse<SemesterResponse>> => {
     console.log(`[semesterApi] Fetching semester ID: ${id}`);
     
@@ -113,9 +108,6 @@ const semesterApi = {
     }
   },
 
-  /**
-   * Create a new semester
-   */
   create: async (data: SemesterCreateRequest): Promise<ApiResponse<SemesterResponse>> => {
     console.log('[semesterApi] Creating semester:', data.semesterCode);
     
@@ -134,9 +126,6 @@ const semesterApi = {
     }
   },
 
-  /**
-   * Update an existing semester
-   */
   update: async (id: number, data: SemesterUpdateRequest): Promise<ApiResponse<SemesterResponse>> => {
     console.log(`[semesterApi] Updating semester ID: ${id}`);
     
@@ -155,9 +144,6 @@ const semesterApi = {
     }
   },
 
-  /**
-   * Delete a semester
-   */
   delete: async (id: number): Promise<ApiResponse<null>> => {
     console.log(`[semesterApi] Deleting semester ID: ${id}`);
     
@@ -175,9 +161,6 @@ const semesterApi = {
     }
   },
 
-  /**
-   * Search semesters by keyword
-   */
   search: async (
     keyword: string,
     page: number = 0,
@@ -201,33 +184,34 @@ const semesterApi = {
   },
 
   /**
-   * Activate a semester (auto-completes current ACTIVE)
+   * ✅ FIXED: Activate uses PUT (not POST)
+   * Endpoint: PUT /api/admin/semesters/{id}/activate
    */
   activate: async (id: number): Promise<ApiResponse<SemesterResponse>> => {
     console.log(`[semesterApi] Activating semester ID: ${id}`);
     
     try {
-      const response = await apiClient.post<ApiResponse<SemesterResponse>>(
+      const response = await apiClient.put<ApiResponse<SemesterResponse>>(
         `/api/admin/semesters/${id}/activate`
       );
       
-      console.log('[semesterApi] Semester activated');
+      console.log('[semesterApi] ✅ Semester activated - extra sessions auto-scheduled');
       return response.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[semesterApi] Failed to activate semester:', apiError.response?.data || apiError.message);
+      console.error('[semesterApi] ❌ Failed to activate semester:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
 
   /**
-   * Complete a semester
+   * ✅ FIXED: Complete uses PUT (not POST)
    */
   complete: async (id: number): Promise<ApiResponse<SemesterResponse>> => {
     console.log(`[semesterApi] Completing semester ID: ${id}`);
     
     try {
-      const response = await apiClient.post<ApiResponse<SemesterResponse>>(
+      const response = await apiClient.put<ApiResponse<SemesterResponse>>(
         `/api/admin/semesters/${id}/complete`
       );
       
@@ -240,9 +224,6 @@ const semesterApi = {
     }
   },
 
-  /**
-   * Get current ACTIVE semester
-   */
   getCurrent: async (): Promise<ApiResponse<SemesterResponse>> => {
     console.log('[semesterApi] Fetching current ACTIVE semester');
     
@@ -260,9 +241,6 @@ const semesterApi = {
     }
   },
 
-  /**
-   * Get semester with OPEN registration (for students)
-   */
   getRegistrationOpen: async (): Promise<ApiResponse<SemesterResponse>> => {
     console.log('[semesterApi] Fetching semester with OPEN registration');
     
@@ -281,13 +259,13 @@ const semesterApi = {
   },
 
   /**
-   * Enable registration for a semester
+   * ✅ FIXED: enableRegistration uses PUT (not POST)
    */
   enableRegistration: async (id: number): Promise<ApiResponse<SemesterResponse>> => {
     console.log(`[semesterApi] Enabling registration for semester ID: ${id}`);
     
     try {
-      const response = await apiClient.post<ApiResponse<SemesterResponse>>(
+      const response = await apiClient.put<ApiResponse<SemesterResponse>>(
         `/api/admin/semesters/${id}/enable-registration`
       );
       
@@ -301,13 +279,13 @@ const semesterApi = {
   },
 
   /**
-   * Disable registration for a semester
+   * ✅ FIXED: disableRegistration uses PUT (not POST)
    */
   disableRegistration: async (id: number): Promise<ApiResponse<SemesterResponse>> => {
     console.log(`[semesterApi] Disabling registration for semester ID: ${id}`);
     
     try {
-      const response = await apiClient.post<ApiResponse<SemesterResponse>>(
+      const response = await apiClient.put<ApiResponse<SemesterResponse>>(
         `/api/admin/semesters/${id}/disable-registration`
       );
       
@@ -320,9 +298,6 @@ const semesterApi = {
     }
   },
 
-  /**
-   * Update registration period
-   */
   updateRegistrationPeriod: async (
     id: number,
     registrationStartDate: string,
@@ -346,9 +321,6 @@ const semesterApi = {
     }
   },
 
-  /**
-   * Check if registration is open for a semester
-   */
   isRegistrationOpen: async (id: number): Promise<ApiResponse<boolean>> => {
     console.log(`[semesterApi] Checking if registration is open for semester ID: ${id}`);
     
@@ -362,26 +334,6 @@ const semesterApi = {
     } catch (error) {
       const apiError = error as ApiError;
       console.error('[semesterApi] Failed to check registration status:', apiError.response?.data || apiError.message);
-      throw error;
-    }
-  },
-
-  /**
-   * Manually trigger semester status update (for testing)
-   */
-  triggerScheduler: async (): Promise<ApiResponse<string>> => {
-    console.log('[semesterApi] Triggering scheduler manually');
-    
-    try {
-      const response = await apiClient.post<ApiResponse<string>>(
-        '/api/admin/scheduler/trigger-semester-update'
-      );
-      
-      console.log('[semesterApi] Scheduler triggered');
-      return response.data;
-    } catch (error) {
-      const apiError = error as ApiError;
-      console.error('[semesterApi] Failed to trigger scheduler:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
