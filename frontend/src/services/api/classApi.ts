@@ -2,25 +2,57 @@ import apiClient from './apiClient';
 
 // ==================== INTERFACES ====================
 
+/**
+ * ✅ UPDATED: Added extra and elearning schedule fields
+ */
 export interface ClassCreateRequest {
   classCode: string;
   subjectId: number;
   teacherId: number;
   semesterId: number;
   maxStudents: number;
+  
+  // Fixed schedule (required)
   dayOfWeek: string;  // "MONDAY", "TUESDAY", etc.
   timeSlot: string;   // "CA1", "CA2", etc.
   room: string;
+  
+  // ⭐ NEW: Extra schedule (required if subject has > 10 in-person sessions)
+  extraDayOfWeek?: string | null;
+  extraTimeSlot?: string | null;
+  extraRoom?: string | null;
+  
+  // ⭐ NEW: E-learning schedule (required if subject has e-learning sessions)
+  elearningDayOfWeek?: string | null;
+  elearningTimeSlot?: string | null;
+  // elearningRoom is always "ONLINE" (auto-set by backend)
 }
 
+/**
+ * ✅ UPDATED: Added extra and elearning schedule fields
+ */
 export interface ClassUpdateRequest {
   teacherId: number;
   maxStudents: number;
+  
+  // Fixed schedule
   dayOfWeek: string;
   timeSlot: string;
   room: string;
+  
+  // ⭐ NEW: Extra schedule
+  extraDayOfWeek?: string | null;
+  extraTimeSlot?: string | null;
+  extraRoom?: string | null;
+  
+  // ⭐ NEW: E-learning schedule
+  elearningDayOfWeek?: string | null;
+  elearningTimeSlot?: string | null;
 }
 
+/**
+ * ✅ UPDATED: Added extra and elearning schedule fields
+ */
 export interface ClassResponse {
   classId: number;
   classCode: string;
@@ -56,12 +88,26 @@ export interface ClassResponse {
   canRegister: boolean;
   isFull: boolean;
   
-  // Schedule
+  // Fixed schedule
   dayOfWeek: string;
   dayOfWeekDisplay: string;
   timeSlot: string;
   timeSlotDisplay: string;
   room: string;
+  
+  // ⭐ NEW: Extra schedule
+  extraDayOfWeek: string | null;
+  extraDayOfWeekDisplay: string | null;
+  extraTimeSlot: string | null;
+  extraTimeSlotDisplay: string | null;
+  extraRoom: string | null;
+  
+  // ⭐ NEW: E-learning schedule
+  elearningDayOfWeek: string | null;
+  elearningDayOfWeekDisplay: string | null;
+  elearningTimeSlot: string | null;
+  elearningTimeSlotDisplay: string | null;
+  elearningRoom: string | null;  // Always "ONLINE"
   
   // Dates
   startDate: string;
@@ -92,29 +138,50 @@ const classApi = {
   /**
    * Create a new class
    * Auto-generates sessions based on subject
+   * 
+   * ⭐ VALIDATION:
+   * - If subject.inpersonSessions > 10 → extraDayOfWeek, extraTimeSlot, extraRoom REQUIRED
+   * - If subject.elearningSessions > 0 → elearningDayOfWeek, elearningTimeSlot REQUIRED
    */
   createClass: async (data: ClassCreateRequest): Promise<ClassResponse> => {
     console.log('[classApi] Creating class:', data.classCode);
+    console.log('[classApi] Extra schedule:', data.extraDayOfWeek, data.extraTimeSlot, data.extraRoom);
+    console.log('[classApi] E-learning schedule:', data.elearningDayOfWeek, data.elearningTimeSlot);
+    
     try {
       const response = await apiClient.post('/api/admin/classes', data);
       console.log('[classApi] Class created successfully');
+      console.log('[classApi] Sessions generated:', response.data.data.totalSessionsGenerated);
       return response.data.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('[classApi] Failed to create class:', error);
+      
+      // Log specific validation errors
+      if (error.response?.data?.message) {
+        console.error('[classApi] Validation error:', error.response.data.message);
+      }
+      
       throw error;
     }
   },
   
   /**
    * Update an existing class
-   * WARNING: Changing schedule will regenerate all sessions!
+   * 
+   * ⚠️ WARNING: Changing ANY schedule will regenerate ALL sessions!
+   * - Changing fixed schedule → regenerate all
+   * - Changing extra schedule → regenerate all
+   * - Changing elearning schedule → regenerate all
    */
   updateClass: async (id: number, data: ClassUpdateRequest): Promise<ClassResponse> => {
     console.log('[classApi] Updating class ID:', id);
+    console.log('[classApi] ⚠️ WARNING: Schedule changes will regenerate all sessions!');
+    
     try {
       const response = await apiClient.put(`/api/admin/classes/${id}`, data);
       console.log('[classApi] Class updated successfully');
+      console.log('[classApi] Sessions regenerated:', response.data.data.totalSessionsGenerated);
       return response.data.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './ClassModal.css';
+import { 
+  DAYS_OF_WEEK, 
+  TIME_SLOTS,
+  requiresExtraSchedule,
+  requiresElearningSchedule,
+  getScheduleValidationErrors,
+  calculateExtraSessions
+} from '../../../utils/constants';
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -42,9 +50,25 @@ interface ClassData {
   teacherId: number;
   semesterId: number;
   maxStudents: number;
+  
+  // Fixed schedule
   dayOfWeek: string;
   timeSlot: string;
   room: string;
+  
+  // Extra schedule (if exists)
+  extraDayOfWeek?: string | null;
+  extraTimeSlot?: string | null;
+  extraRoom?: string | null;
+  
+  // E-learning schedule (if exists)
+  elearningDayOfWeek?: string | null;
+  elearningTimeSlot?: string | null;
+  
+  // Session counts
+  totalSessions?: number;
+  inPersonSessions?: number;
+  eLearningSessions?: number;
 }
 
 interface Props {
@@ -53,25 +77,6 @@ interface Props {
   onSuccess: () => void;
   classData?: ClassData;
 }
-
-// ==================== CONSTANTS ====================
-
-const DAYS = [
-  { value: 'MONDAY', label: 'Thứ 2' },
-  { value: 'TUESDAY', label: 'Thứ 3' },
-  { value: 'WEDNESDAY', label: 'Thứ 4' },
-  { value: 'THURSDAY', label: 'Thứ 5' },
-  { value: 'FRIDAY', label: 'Thứ 6' },
-  { value: 'SATURDAY', label: 'Thứ 7' },
-];
-
-const SLOTS = [
-  { value: 'CA1', label: 'Ca 1 (06:45 - 09:15)' },
-  { value: 'CA2', label: 'Ca 2 (09:25 - 11:55)' },
-  { value: 'CA3', label: 'Ca 3 (12:10 - 14:40)' },
-  { value: 'CA4', label: 'Ca 4 (14:50 - 17:20)' },
-  { value: 'CA5', label: 'Ca 5 (17:30 - 20:00)' },
-];
 
 // ==================== COMPONENT ====================
 
@@ -85,14 +90,29 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
     teacherId: 0,
     semesterId: 0,
     maxStudents: 50,
+    
+    // Fixed schedule
     dayOfWeek: '',
     timeSlot: '',
     room: '',
+    
+    // Extra schedule
+    extraDayOfWeek: '',
+    extraTimeSlot: '',
+    extraRoom: '',
+    
+    // E-learning schedule
+    elearningDayOfWeek: '',
+    elearningTimeSlot: '',
   });
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
+  
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [showExtra, setShowExtra] = useState(false);
+  const [showElearning, setShowElearning] = useState(false);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -116,7 +136,20 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
           dayOfWeek: classData.dayOfWeek,
           timeSlot: classData.timeSlot,
           room: classData.room,
+          extraDayOfWeek: classData.extraDayOfWeek || '',
+          extraTimeSlot: classData.extraTimeSlot || '',
+          extraRoom: classData.extraRoom || '',
+          elearningDayOfWeek: classData.elearningDayOfWeek || '',
+          elearningTimeSlot: classData.elearningTimeSlot || '',
         });
+        
+        // Check if need extra/elearning when editing
+        if (classData.inPersonSessions) {
+          setShowExtra(requiresExtraSchedule(classData.inPersonSessions));
+        }
+        if (classData.eLearningSessions) {
+          setShowElearning(requiresElearningSchedule(classData.eLearningSessions));
+        }
       }
     } else {
       reset();
@@ -133,11 +166,20 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
       const subData = await subRes.json();
       setSubjects(subData.data?.content || subData.data || []);
 
-      // Load semesters
+      // Load semesters - ONLY UPCOMING (for create) or ACTIVE/UPCOMING (for edit)
       const semRes = await fetch('/api/admin/semesters?page=0&size=100', { headers });
       const semData = await semRes.json();
       const semList = semData.data?.content || semData.data || [];
-      setSemesters(semList.filter((s: Semester) => s.status === 'ACTIVE' || s.status === 'UPCOMING'));
+      
+      if (isEdit) {
+        // Edit: Show current semester + UPCOMING
+        setSemesters(semList.filter((s: Semester) => 
+          s.semesterId === classData?.semesterId || s.status === 'UPCOMING'
+        ));
+      } else {
+        // Create: Only UPCOMING
+        setSemesters(semList.filter((s: Semester) => s.status === 'UPCOMING'));
+      }
 
     } catch (err) {
       console.error('Load failed:', err);
@@ -184,14 +226,57 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
     }
   };
 
-  const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSubjectChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const subjectId = Number(e.target.value);
     
     setForm(prev => ({ ...prev, subjectId, teacherId: 0 }));
     
     if (subjectId) {
+      // Load subject details
+      try {
+        const res = await fetch(`/api/admin/subjects/${subjectId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const subject: Subject = data.data;
+          setSelectedSubject(subject);
+          
+          // ⭐ AUTO-DETECT if need extra/elearning schedules
+          const needsExtra = requiresExtraSchedule(subject.inpersonSessions);
+          const needsElearning = requiresElearningSchedule(subject.elearningSessions);
+          
+          setShowExtra(needsExtra);
+          setShowElearning(needsElearning);
+          
+          // Show warning if extra schedule needed
+          if (needsExtra) {
+            const extraCount = calculateExtraSessions(subject.inpersonSessions);
+            alert(
+              `⚠️ Môn này có ${subject.inpersonSessions} buổi trực tiếp.\n` +
+              `Cần thêm ${extraCount} buổi bổ sung ngoài lịch cố định.\n\n` +
+              `Vui lòng nhập lịch học bổ sung bên dưới.`
+            );
+          }
+          
+          if (needsElearning) {
+            console.log(
+              `ℹ️ Môn này có ${subject.elearningSessions} buổi E-learning. ` +
+              `Vui lòng nhập lịch học trực tuyến.`
+            );
+          }
+        }
+      } catch (err) {
+        console.error('Load subject details failed:', err);
+      }
+      
+      // Load teachers for this subject
       loadTeachers(subjectId);
     } else {
+      setSelectedSubject(null);
+      setShowExtra(false);
+      setShowElearning(false);
       setTeachers([]);
     }
 
@@ -203,6 +288,7 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
 
+    // Basic validation
     if (!form.classCode.trim()) errs.classCode = 'Mã lớp không được trống';
     if (form.classCode.length > 20) errs.classCode = 'Mã lớp tối đa 20 ký tự';
     if (!form.subjectId) errs.subjectId = 'Chọn môn học';
@@ -210,9 +296,28 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
     if (!form.semesterId) errs.semesterId = 'Chọn học kỳ';
     if (form.maxStudents < 1) errs.maxStudents = 'Sĩ số phải > 0';
     if (form.maxStudents > 200) errs.maxStudents = 'Sĩ số tối đa 200';
-    if (!form.dayOfWeek) errs.dayOfWeek = 'Chọn thứ';
-    if (!form.timeSlot) errs.timeSlot = 'Chọn ca học';
-    if (!form.room.trim()) errs.room = 'Nhập phòng học';
+    
+    // Fixed schedule
+    if (!form.dayOfWeek) errs.dayOfWeek = 'Chọn thứ (lịch cố định)';
+    if (!form.timeSlot) errs.timeSlot = 'Chọn ca học (lịch cố định)';
+    if (!form.room.trim()) errs.room = 'Nhập phòng học (lịch cố định)';
+
+    // ⭐ VALIDATE EXTRA/ELEARNING schedules using helper function
+    if (selectedSubject) {
+      const scheduleErrors = getScheduleValidationErrors(
+        selectedSubject.inpersonSessions,
+        selectedSubject.elearningSessions,
+        !!form.extraDayOfWeek,
+        !!form.extraTimeSlot,
+        !!form.extraRoom,
+        !!form.elearningDayOfWeek,
+        !!form.elearningTimeSlot
+      );
+      
+      if (scheduleErrors.length > 0) {
+        errs.general = scheduleErrors.join('\n');
+      }
+    }
 
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -221,7 +326,13 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validate()) return;
+    if (!validate()) {
+      // Show general error if exists
+      if (errors.general) {
+        alert(`❌ Lỗi:\n\n${errors.general}`);
+      }
+      return;
+    }
 
     setLoading(true);
 
@@ -231,25 +342,53 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
         'Content-Type': 'application/json'
       };
 
+      // ⭐ BUILD REQUEST DATA
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const requestData: any = {
+        dayOfWeek: form.dayOfWeek,
+        timeSlot: form.timeSlot,
+        room: form.room,
+      };
+      
+      // Add extra schedule if provided
+      if (form.extraDayOfWeek && form.extraTimeSlot && form.extraRoom) {
+        requestData.extraDayOfWeek = form.extraDayOfWeek;
+        requestData.extraTimeSlot = form.extraTimeSlot;
+        requestData.extraRoom = form.extraRoom;
+      }
+      
+      // Add elearning schedule if provided
+      if (form.elearningDayOfWeek && form.elearningTimeSlot) {
+        requestData.elearningDayOfWeek = form.elearningDayOfWeek;
+        requestData.elearningTimeSlot = form.elearningTimeSlot;
+      }
+
       let res;
 
       if (isEdit) {
+        // UPDATE
         res = await fetch(`/api/admin/classes/${classData.classId}`, {
           method: 'PUT',
           headers,
           body: JSON.stringify({
             teacherId: form.teacherId,
             maxStudents: form.maxStudents,
-            dayOfWeek: form.dayOfWeek,
-            timeSlot: form.timeSlot,
-            room: form.room,
+            ...requestData
           })
         });
       } else {
+        // CREATE
         res = await fetch('/api/admin/classes', {
           method: 'POST',
           headers,
-          body: JSON.stringify(form)
+          body: JSON.stringify({
+            classCode: form.classCode,
+            subjectId: form.subjectId,
+            teacherId: form.teacherId,
+            semesterId: form.semesterId,
+            maxStudents: form.maxStudents,
+            ...requestData
+          })
         });
       }
 
@@ -279,20 +418,26 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
       dayOfWeek: '',
       timeSlot: '',
       room: '',
+      extraDayOfWeek: '',
+      extraTimeSlot: '',
+      extraRoom: '',
+      elearningDayOfWeek: '',
+      elearningTimeSlot: '',
     });
     setErrors({});
     setTeachers([]);
+    setSelectedSubject(null);
+    setShowExtra(false);
+    setShowElearning(false);
   };
 
   if (!isOpen) return null;
-
-  const subject = subjects.find(s => s.subjectId === form.subjectId);
 
   // ===== RENDER =====
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
         
         {/* HEADER */}
         <div className="modal-header">
@@ -308,8 +453,8 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
             <strong>ℹ️ Lưu ý:</strong>
             <ul>
               <li>Chọn môn học trước để tải giảng viên</li>
-              <li>Chỉ hiển thị GV được phân công dạy môn</li>
-              <li>Số SV đăng ký tự động tăng</li>
+              <li>Lịch học bổ sung & E-learning sẽ tự động hiển thị nếu cần</li>
+              <li>Chỉ tạo lớp cho học kỳ <strong>UPCOMING</strong> (sắp diễn ra)</li>
             </ul>
           </div>
 
@@ -324,6 +469,7 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
               disabled={isEdit}
             />
             {errors.classCode && <span className="error-text">{errors.classCode}</span>}
+            {isEdit && <span className="form-hint">⚠️ Mã lớp không thể sửa</span>}
           </div>
 
           {/* SUBJECT */}
@@ -343,10 +489,29 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
               ))}
             </select>
             {errors.subjectId && <span className="error-text">{errors.subjectId}</span>}
-            {subject && (
-              <span className="form-hint">
-                📚 {subject.totalSessions} buổi ({subject.inpersonSessions} TT + {subject.elearningSessions} EL)
-              </span>
+            {isEdit && <span className="form-hint">⚠️ Môn học không thể sửa</span>}
+            
+            {/* SUBJECT INFO BOX */}
+            {selectedSubject && (
+              <div className="subject-info-box">
+                <div className="subject-info-row">
+                  <span className="label">📚 Tổng số buổi:</span>
+                  <span className="value">{selectedSubject.totalSessions} buổi</span>
+                </div>
+                <div className="subject-info-row">
+                  <span className="label">🏫 Trực tiếp:</span>
+                  <span className="value value-tt">{selectedSubject.inpersonSessions} buổi</span>
+                  {requiresExtraSchedule(selectedSubject.inpersonSessions) && (
+                    <span className="badge badge-warning">
+                      +{calculateExtraSessions(selectedSubject.inpersonSessions)} buổi bổ sung
+                    </span>
+                  )}
+                </div>
+                <div className="subject-info-row">
+                  <span className="label">💻 E-learning:</span>
+                  <span className="value value-el">{selectedSubject.elearningSessions} buổi</span>
+                </div>
+              </div>
             )}
           </div>
 
@@ -407,6 +572,12 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
               ))}
             </select>
             {errors.semesterId && <span className="error-text">{errors.semesterId}</span>}
+            {isEdit && <span className="form-hint">⚠️ Học kỳ không thể sửa</span>}
+            {!isEdit && semesters.length === 0 && (
+              <span className="form-hint" style={{color: '#ef4444'}}>
+                ⚠️ Không có học kỳ UPCOMING. Vui lòng tạo học kỳ mới!
+              </span>
+            )}
           </div>
 
           {/* MAX STUDENTS */}
@@ -424,9 +595,12 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
             <span className="form-hint">💡 Số SV đăng ký tự động cập nhật</span>
           </div>
 
-          {/* SCHEDULE */}
-          <div className="schedule-section">
-            <h3>📅 Lịch học cố định</h3>
+          {/* ⭐ FIXED SCHEDULE - ALWAYS SHOW */}
+          <div className="schedule-section schedule-fixed">
+            <h3>📅 Lịch học cố định (10 buổi)</h3>
+            <p className="schedule-description">
+              Lịch học hàng tuần, áp dụng cho 10 tuần đầu học kỳ
+            </p>
 
             <div className="form-row">
               {/* DAY */}
@@ -434,7 +608,7 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
                 <label>Thứ <span className="required">*</span></label>
                 <select name="dayOfWeek" value={form.dayOfWeek} onChange={handleChange}>
                   <option value="">-- Chọn --</option>
-                  {DAYS.map(d => (
+                  {DAYS_OF_WEEK.map(d => (
                     <option key={d.value} value={d.value}>{d.label}</option>
                   ))}
                 </select>
@@ -446,26 +620,117 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
                 <label>Ca học <span className="required">*</span></label>
                 <select name="timeSlot" value={form.timeSlot} onChange={handleChange}>
                   <option value="">-- Chọn --</option>
-                  {SLOTS.map(s => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
+                  {TIME_SLOTS.map(s => (
+                    <option key={s.value} value={s.value}>
+                      {s.label} ({s.time})
+                    </option>
                   ))}
                 </select>
                 {errors.timeSlot && <span className="error-text">{errors.timeSlot}</span>}
               </div>
-            </div>
 
-            {/* ROOM */}
-            <div className="form-group">
-              <label>Phòng <span className="required">*</span></label>
-              <input
-                name="room"
-                value={form.room}
-                onChange={handleChange}
-                placeholder="VD: A201"
-              />
-              {errors.room && <span className="error-text">{errors.room}</span>}
+              {/* ROOM */}
+              <div className="form-group">
+                <label>Phòng <span className="required">*</span></label>
+                <input
+                  name="room"
+                  value={form.room}
+                  onChange={handleChange}
+                  placeholder="VD: A201"
+                />
+                {errors.room && <span className="error-text">{errors.room}</span>}
+              </div>
             </div>
           </div>
+
+          {/* ⭐ EXTRA SCHEDULE - CONDITIONAL */}
+          {showExtra && selectedSubject && (
+            <div className="schedule-section schedule-extra">
+              <h3>📚 Lịch học bổ sung ({calculateExtraSessions(selectedSubject.inpersonSessions)} buổi)</h3>
+              <p className="schedule-description">
+                Môn này có {selectedSubject.inpersonSessions} buổi trực tiếp, 
+                cần {calculateExtraSessions(selectedSubject.inpersonSessions)} buổi bổ sung 
+                ngoài 10 buổi cố định
+              </p>
+
+              <div className="form-row">
+                {/* DAY */}
+                <div className="form-group">
+                  <label>Thứ <span className="required">*</span></label>
+                  <select name="extraDayOfWeek" value={form.extraDayOfWeek} onChange={handleChange}>
+                    <option value="">-- Chọn --</option>
+                    {DAYS_OF_WEEK.map(d => (
+                      <option key={d.value} value={d.value}>{d.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* SLOT */}
+                <div className="form-group">
+                  <label>Ca học <span className="required">*</span></label>
+                  <select name="extraTimeSlot" value={form.extraTimeSlot} onChange={handleChange}>
+                    <option value="">-- Chọn --</option>
+                    {TIME_SLOTS.map(s => (
+                      <option key={s.value} value={s.value}>
+                        {s.label} ({s.time})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* ROOM */}
+                <div className="form-group">
+                  <label>Phòng <span className="required">*</span></label>
+                  <input
+                    name="extraRoom"
+                    value={form.extraRoom}
+                    onChange={handleChange}
+                    placeholder="VD: B105"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ⭐ E-LEARNING SCHEDULE - CONDITIONAL */}
+          {showElearning && selectedSubject && (
+            <div className="schedule-section schedule-elearning">
+              <h3>💻 Lịch học trực tuyến ({selectedSubject.elearningSessions} buổi)</h3>
+              <p className="schedule-description">
+                Các buổi E-learning sẽ được lên lịch theo thời gian cố định hàng tuần
+              </p>
+
+              <div className="form-row form-row-2col">
+                {/* DAY */}
+                <div className="form-group">
+                  <label>Thứ <span className="required">*</span></label>
+                  <select name="elearningDayOfWeek" value={form.elearningDayOfWeek} onChange={handleChange}>
+                    <option value="">-- Chọn --</option>
+                    {DAYS_OF_WEEK.map(d => (
+                      <option key={d.value} value={d.value}>{d.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* SLOT */}
+                <div className="form-group">
+                  <label>Ca học <span className="required">*</span></label>
+                  <select name="elearningTimeSlot" value={form.elearningTimeSlot} onChange={handleChange}>
+                    <option value="">-- Chọn --</option>
+                    {TIME_SLOTS.map(s => (
+                      <option key={s.value} value={s.value}>
+                        {s.label} ({s.time})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="form-hint">
+                💡 E-learning không cần phòng học (sẽ tự động gán "ONLINE")
+              </div>
+            </div>
+          )}
 
           {/* FOOTER */}
           <div className="modal-footer">

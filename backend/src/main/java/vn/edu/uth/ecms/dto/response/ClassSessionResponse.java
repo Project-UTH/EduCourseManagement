@@ -9,12 +9,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Response DTO for ClassSession entity
+ * ClassSessionResponse - UPDATED
  *
- * IMPORTANT FIELDS:
- * - original*: Auto-generated schedule
- * - actual*: Admin-rescheduled schedule
- * - effective*: What to display (actual if rescheduled, original otherwise)
+ * CHANGES:
+ * - Add category (FIXED/EXTRA/ELEARNING)
+ * - Add isPending (for extra sessions)
+ * - Add room display names (originalRoomName, actualRoomName, effectiveRoomName)
  */
 @Data
 @Builder
@@ -22,40 +22,73 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ClassSessionResponse {
 
-    // ==================== BASIC INFO ====================
-
     private Long sessionId;
     private Long classId;
     private String classCode;
-    private Integer sessionNumber;  // 1-20
+    private Integer sessionNumber;
     private String sessionType;  // IN_PERSON, E_LEARNING
 
-    // ==================== ORIGINAL SCHEDULE (Auto-generated) ====================
+    // ==================== NEW FIELDS ====================
+
+    /**
+     * ✅ NEW: Session category
+     * FIXED: First 10 in-person sessions
+     * EXTRA: Additional in-person sessions (11+)
+     * ELEARNING: E-learning sessions
+     */
+    private String category;
+
+    /**
+     * ✅ NEW: Is this session pending?
+     * true: Extra session not yet scheduled (waiting for activation)
+     * false: Session has been scheduled
+     */
+    private Boolean isPending;
+
+    // ==================== ORIGINAL SCHEDULE ====================
 
     private LocalDate originalDate;
-    private String originalDayOfWeek;  // MONDAY
-    private String originalDayOfWeekDisplay;  // "Thứ 2"
-    private String originalTimeSlot;  // CA1
-    private String originalTimeSlotDisplay;  // "Ca 1 (06:45 - 09:15)"
-    private String originalRoom;  // A201
+    private String originalDayOfWeek;
+    private String originalDayOfWeekDisplay;
+    private String originalTimeSlot;
+    private String originalTimeSlotDisplay;
+    private String originalRoom;  // Room code: "A201"
 
-    // ==================== ACTUAL SCHEDULE (Admin rescheduled) ====================
+    /**
+     * ✅ NEW: Original room display name
+     * Example: "A201 - Giảng đường lớn"
+     */
+    private String originalRoomName;
+
+    // ==================== ACTUAL SCHEDULE (if rescheduled) ====================
 
     private LocalDate actualDate;
     private String actualDayOfWeek;
     private String actualDayOfWeekDisplay;
     private String actualTimeSlot;
     private String actualTimeSlotDisplay;
-    private String actualRoom;
+    private String actualRoom;  // Room code: "B105"
 
-    // ==================== EFFECTIVE SCHEDULE (What to display) ====================
+    /**
+     * ✅ NEW: Actual room display name
+     * Example: "B105 - Phòng học nhỏ"
+     */
+    private String actualRoomName;
+
+    // ==================== EFFECTIVE SCHEDULE (final computed) ====================
 
     private LocalDate effectiveDate;
     private String effectiveDayOfWeek;
     private String effectiveDayOfWeekDisplay;
     private String effectiveTimeSlot;
     private String effectiveTimeSlotDisplay;
-    private String effectiveRoom;
+    private String effectiveRoom;  // Room code
+
+    /**
+     * ✅ NEW: Effective room display name
+     * This is what students see in their timetable
+     */
+    private String effectiveRoomName;
 
     // ==================== RESCHEDULE INFO ====================
 

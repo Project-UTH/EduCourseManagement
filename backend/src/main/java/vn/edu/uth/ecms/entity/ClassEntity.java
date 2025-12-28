@@ -1,27 +1,33 @@
 package vn.edu.uth.ecms.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 /**
- * Class Entity - Represents a class for a subject in a semester
+ * ClassEntity - UPDATED with Room FK instead of String
  *
- * IMPORTANT: This entity stores the FIXED schedule configuration
- * - dayOfWeek: Admin-selected fixed day (e.g., MONDAY)
- * - timeSlot: Admin-selected fixed time slot (e.g., CA1)
- * - room: Admin-selected fixed room (e.g., A201)
+ * CHANGES:
+ * 1. room (String) → fixedRoom (Room FK)
+ * 2. Removed: extraRoom, extraDayOfWeek, extraTimeSlot
+ * 3. E-learning keeps same structure
  *
- * ClassSession entities are auto-generated based on this configuration
+ * LOGIC:
+ * - Admin only inputs: dayOfWeek, timeSlot
+ * - System auto-assigns: fixedRoom
+ * - Extra sessions: Created as PENDING, scheduled on activation
  */
 @Entity
-@Table(name = "class")
-@Data
+@Table(name = "class", indexes = {
+        @Index(name = "idx_class_code", columnList = "class_code", unique = true),
+        @Index(name = "idx_semester", columnList = "semester_id"),
+        @Index(name = "idx_teacher", columnList = "teacher_id"),
+        @Index(name = "idx_subject", columnList = "subject_id")
+})
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -54,43 +60,60 @@ public class ClassEntity extends BaseEntity {
     @Column(name = "max_students", nullable = false)
     private Integer maxStudents;
 
-    @Column(name = "enrolled_count")
+    @Column(name = "enrolled_count", nullable = false)
     @Builder.Default
     private Integer enrolledCount = 0;
 
-    // ==================== STATUS ====================
-
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
     private ClassStatus status = ClassStatus.OPEN;
 
-    // ==================== FIXED SCHEDULE (Admin-selected) ====================
+    // ==================== FIXED SCHEDULE (10 sessions) ====================
 
     /**
-     * Fixed day of week for regular sessions
-     * Example: MONDAY → Every Monday
+     * Day of week for FIXED sessions (10 sessions)
+     * Admin inputs this
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "day_of_week", nullable = false)
+    @Column(name = "day_of_week", nullable = false, length = 10)
     private DayOfWeek dayOfWeek;
 
     /**
-     * Fixed time slot for regular sessions
-     * Example: CA1 → 06:45-09:15
+     * Time slot for FIXED sessions
+     * Admin inputs this
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "time_slot", nullable = false)
+    @Column(name = "time_slot", nullable = false, length = 10)
     private TimeSlot timeSlot;
 
     /**
-     * Fixed room for regular sessions
-     * Example: A201
+     * ✅ NEW: Room FK for FIXED sessions
+     * System auto-assigns this (finds available room)
      */
-    @Column(name = "room", nullable = false, length = 50)
-    private String room;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fixed_room_id", nullable = false)
+    private Room fixedRoom;
 
-    // ==================== SEMESTER DATES ====================
+    // ==================== E-LEARNING SCHEDULE ====================
+
+    /**
+     * Day of week for E-LEARNING sessions
+     * Optional - NULL if no e-learning
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "elearning_day_of_week", length = 10)
+    private DayOfWeek elearningDayOfWeek;
+
+    /**
+     * Time slot for E-LEARNING sessions
+     * Optional - NULL if no e-learning
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "elearning_time_slot", length = 10)
+    private TimeSlot elearningTimeSlot;
+
+    // ==================== DATES ====================
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
@@ -100,30 +123,18 @@ public class ClassEntity extends BaseEntity {
 
     // ==================== HELPER METHODS ====================
 
-    /**
-     * Check if class is full
-     */
-    public boolean isFull() {
-        return enrolledCount >= maxStudents;
-    }
-
-    /**
-     * Get available seats
-     */
     public int getAvailableSeats() {
         return maxStudents - enrolledCount;
     }
 
-    /**
-     * Check if can register (open and not full)
-     */
+    public boolean isFull() {
+        return enrolledCount >= maxStudents;
+    }
+
     public boolean canRegister() {
         return status == ClassStatus.OPEN && !isFull();
     }
 
-    /**
-     * Increment enrolled count
-     */
     public void incrementEnrolled() {
         this.enrolledCount++;
         if (this.enrolledCount >= this.maxStudents) {
@@ -131,9 +142,6 @@ public class ClassEntity extends BaseEntity {
         }
     }
 
-    /**
-     * Decrement enrolled count
-     */
     public void decrementEnrolled() {
         if (this.enrolledCount > 0) {
             this.enrolledCount--;
@@ -141,5 +149,26 @@ public class ClassEntity extends BaseEntity {
                 this.status = ClassStatus.OPEN;
             }
         }
+    }
+
+    public boolean hasElearningSchedule() {
+        return elearningDayOfWeek != null && elearningTimeSlot != null;
+    }
+
+    @Override
+    public String toString() {
+        return "ClassEntity{" +
+                "classId=" + classId +
+                ", classCode='" + classCode + '\'' +
+                ", subject=" + (subject != null ? subject.getSubjectCode() : null) +
+                ", teacher=" + (teacher != null ? teacher.getFullName() : null) +
+                ", semester=" + (semester != null ? semester.getSemesterCode() : null) +
+                ", fixedRoom=" + (fixedRoom != null ? fixedRoom.getRoomCode() : null) +
+                ", dayOfWeek=" + dayOfWeek +
+                ", timeSlot=" + timeSlot +
+                ", maxStudents=" + maxStudents +
+                ", enrolledCount=" + enrolledCount +
+                ", status=" + status +
+                '}';
     }
 }

@@ -13,51 +13,39 @@ import java.util.List;
 /**
  * Service interface for Class management
  *
+ * ✅ UPDATED FOR NEW LOGIC:
+ * - Extra schedule conflict detection
+ * - E-learning schedule conflict detection
+ * - New session generation (fixed + extra + elearning)
+ *
  * MAIN RESPONSIBILITIES:
  * 1. CRUD operations for classes
  * 2. Auto-generate sessions when creating/updating class
- * 3. Conflict detection (teacher, room)
+ * 3. Conflict detection (teacher, room) for ALL schedules
  * 4. Enrollment management
  * 5. Search & filter
  */
 public interface ClassService {
 
     // ==================== CRUD OPERATIONS ====================
-
-    /**
-     * Create a new class
-     *
-     * LOGIC:
-     * 1. Validate: subject, teacher, semester exist
-     * 2. Check class code unique
-     * 3. Check teacher schedule conflict
-     * 4. Check room conflict
-     * 5. Create class entity
-     * 6. Auto-generate sessions based on subject's inPersonSessions & eLearningSessions
-     * 7. Return response
-     *
-     * @param request Class creation data
-     * @return Created class with generated sessions
-     * @throws DuplicateException if class code exists
-     * @throws ConflictException if teacher/room has conflict
-     */
     ClassResponse createClass(ClassCreateRequest request);
 
     /**
      * Update an existing class
      *
-     * WARNING: Updating schedule (day/time/room) will DELETE and REGENERATE all sessions!
+     * WARNING: Updating ANY schedule will DELETE and REGENERATE all sessions!
      *
-     * LOGIC:
+     * ✅ UPDATED LOGIC:
      * 1. Find class
      * 2. Check if has enrolled students (if yes, warn)
-     * 3. Check new teacher/room conflicts
-     * 4. Update class fields
-     * 5. If schedule changed: DELETE old sessions, GENERATE new sessions
-     * 6. Return response
+     * 3. Validate extra & e-learning schedules (same as create)
+     * 4. Check conflicts for ALL schedules (fixed, extra, e-learning)
+     * 5. Update class fields (including extra & e-learning)
+     * 6. If ANY schedule changed: DELETE old sessions, GENERATE new sessions
+     * 7. Return response
      *
      * @param id Class ID
-     * @param request Update data
+     * @param request Update data (includes all schedules)
      * @return Updated class
      */
     ClassResponse updateClass(Long id, ClassUpdateRequest request);
@@ -104,45 +92,6 @@ public interface ClassService {
      * Search classes by keyword
      */
     Page<ClassResponse> searchClasses(String keyword, Pageable pageable);
-
-    // ==================== CONFLICT DETECTION ====================
-
-    /**
-     * Check if teacher has schedule conflict
-     *
-     * Conflict occurs when:
-     * - Same teacher
-     * - Same semester
-     * - Same day of week
-     * - Same time slot
-     *
-     * @param semesterId Semester to check
-     * @param teacherId Teacher to check
-     * @param dayOfWeek Day of week
-     * @param timeSlot Time slot
-     * @param excludeClassId Exclude this class (for update)
-     * @return true if conflict exists
-     */
-    boolean hasTeacherConflict(
-            Long semesterId,
-            Long teacherId,
-            DayOfWeek dayOfWeek,
-            TimeSlot timeSlot,
-            Long excludeClassId
-    );
-
-    /**
-     * Check if room has schedule conflict
-     */
-    boolean hasRoomConflict(
-            Long semesterId,
-            String room,
-            DayOfWeek dayOfWeek,
-            TimeSlot timeSlot,
-            Long excludeClassId
-    );
-
-    // ==================== ENROLLMENT MANAGEMENT ====================
 
     /**
      * Increment enrolled count

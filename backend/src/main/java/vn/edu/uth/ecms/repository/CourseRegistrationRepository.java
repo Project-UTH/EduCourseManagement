@@ -1,94 +1,107 @@
 package vn.edu.uth.ecms.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.CourseRegistration;
 import vn.edu.uth.ecms.entity.RegistrationStatus;
+import vn.edu.uth.ecms.entity.Student;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository for CourseRegistration
+ * Repository for CourseRegistration entity - CORRECTED
  *
- * NOTE: Schedule conflict detection now uses StudentScheduleRepository
- * for more accurate results (checks actual sessions, not just fixed schedule)
+ * ✅ FIXES:
+ * - Added existsByStudentStudentIdAndClassEntityClassId()
+ * - Added findByStudentStudentIdAndClassEntityClassId()
+ * - Added findByClassEntityClassIdAndStatus()
+ * - Added findAllManualEnrollments()
+ * - Added countActiveStudents()
+ * - Added findActiveStudentsByClass()
  */
 @Repository
 public interface CourseRegistrationRepository extends JpaRepository<CourseRegistration, Long> {
 
-    // ==================== BASIC QUERIES ====================
+    // ==================== EXISTING METHODS (Keep these) ====================
 
     /**
-     * Check if student already registered for this class
-     */
-    boolean existsByStudentStudentIdAndClassEntityClassId(Long studentId, Long classId);
-
-    /**
-     * Find registration by student and class
-     */
-    Optional<CourseRegistration> findByStudentStudentIdAndClassEntityClassId(
-            Long studentId, Long classId
-    );
-
-    /**
-     * Find all registrations for a student
-     */
-    List<CourseRegistration> findByStudentStudentId(Long studentId);
-
-    /**
-     * Find all registrations for a class
-     */
-    List<CourseRegistration> findByClassEntityClassId(Long classId);
-
-    /**
-     * Find all ACTIVE registrations for a class
-     */
-    List<CourseRegistration> findByClassEntityClassIdAndStatus(
-            Long classId, RegistrationStatus status
-    );
-
-    /**
-     * Count ACTIVE students in a class
+     * Count active enrollments in a class
      */
     @Query("SELECT COUNT(cr) FROM CourseRegistration cr " +
             "WHERE cr.classEntity.classId = :classId " +
             "AND cr.status = 'REGISTERED'")
-    long countActiveStudents(@Param("classId") Long classId);
-
-    // ==================== STUDENT QUERIES ====================
+    long countActiveEnrollmentsByClassId(@Param("classId") Long classId);
 
     /**
-     * Get all active registrations for a student in a semester
+     * Find registrations by student and semester
      */
     @Query("SELECT cr FROM CourseRegistration cr " +
             "WHERE cr.student.studentId = :studentId " +
-            "AND cr.semester.semesterId = :semesterId " +
-            "AND cr.status = 'REGISTERED'")
-    List<CourseRegistration> findActiveRegistrations(
+            "AND cr.classEntity.semester.semesterId = :semesterId")
+    List<CourseRegistration> findByStudentAndSemester(
             @Param("studentId") Long studentId,
             @Param("semesterId") Long semesterId
     );
 
     /**
-     * Count total credits registered by student in semester
+     * Delete dropped registrations for a class
+     *
+     * @return
      */
-    @Query("SELECT SUM(cr.classEntity.subject.credits) " +
+    @Modifying
+    @Query("DELETE FROM CourseRegistration cr " +
+            "WHERE cr.classEntity.classId = :classId " +
+            "AND cr.status = 'DROPPED'")
+    int deleteDroppedByClassId(@Param("classId") Long classId);
+
+    // ==================== ✅ NEW METHODS (Fix compilation errors) ====================
+
+    /**
+     * ✅ FIX 1: Check if student is already registered in a class
+     * Used by: EligibleStudentServiceImpl, EnrollmentServiceImpl
+     */
+    @Query("SELECT CASE WHEN COUNT(cr) > 0 THEN true ELSE false END " +
             "FROM CourseRegistration cr " +
             "WHERE cr.student.studentId = :studentId " +
-            "AND cr.semester.semesterId = :semesterId " +
+            "AND cr.classEntity.classId = :classId " +
             "AND cr.status = 'REGISTERED'")
-    Integer sumCreditsRegistered(
+    boolean existsByStudentStudentIdAndClassEntityClassId(
             @Param("studentId") Long studentId,
-            @Param("semesterId") Long semesterId
+            @Param("classId") Long classId
     );
 
-    // ==================== ADMIN QUERIES ====================
+    /**
+     * ✅ FIX 2: Find registration by student and class
+     * Used by: EnrollmentServiceImpl (manualEnroll, dropout)
+     */
+    @Query("SELECT cr FROM CourseRegistration cr " +
+            "WHERE cr.student.studentId = :studentId " +
+            "AND cr.classEntity.classId = :classId")
+    Optional<CourseRegistration> findByStudentStudentIdAndClassEntityClassId(
+            @Param("studentId") Long studentId,
+            @Param("classId") Long classId
+    );
 
     /**
-     * Get all manual enrollments
+     * ✅ FIX 3: Find all registrations in a class with specific status
+     * Used by: EligibleStudentServiceImpl, EnrollmentServiceImpl
+     */
+    @Query("SELECT cr FROM CourseRegistration cr " +
+            "WHERE cr.classEntity.classId = :classId " +
+            "AND cr.status = :status " +
+            "ORDER BY cr.registeredAt DESC")
+    List<CourseRegistration> findByClassEntityClassIdAndStatus(
+            @Param("classId") Long classId,
+            @Param("status") RegistrationStatus status
+    );
+
+    /**
+     * ✅ FIX 4: Find all manual enrollments
+     * Used by: EnrollmentServiceImpl (viewManualEnrollments)
      */
     @Query("SELECT cr FROM CourseRegistration cr " +
             "WHERE cr.enrollmentType = 'MANUAL' " +
@@ -96,17 +109,77 @@ public interface CourseRegistrationRepository extends JpaRepository<CourseRegist
     List<CourseRegistration> findAllManualEnrollments();
 
     /**
-     * Get manual enrollments by admin
+     * ✅ FIX 5: Count active students in a class
+     * Used by: EnrollmentServiceImpl
+     * Note: This is same as countActiveEnrollmentsByClassId but with different name
      */
-    List<CourseRegistration> findByEnrolledByAdminAdminId(Long adminId);
+    @Query("SELECT COUNT(cr) FROM CourseRegistration cr " +
+            "WHERE cr.classEntity.classId = :classId " +
+            "AND cr.status = 'REGISTERED'")
+    long countActiveStudents(@Param("classId") Long classId);
 
     /**
-     * Get registrations by semester
+     * ✅ FIX 6: Find all active students in a class
+     * Used by: EnrollmentServiceImpl (createStudentSchedule)
+     * Returns Student entities for schedule conflict checking
      */
-    List<CourseRegistration> findBySemesterSemesterId(Long semesterId);
+    @Query("SELECT cr.student FROM CourseRegistration cr " +
+            "WHERE cr.classEntity.classId = :classId " +
+            "AND cr.status = 'REGISTERED'")
+    List<Student> findActiveStudentsByClass(@Param("classId") Long classId);
 
-    // ==================== NOTES ====================
-    // The old hasScheduleConflict() method has been REMOVED
-    // Now using StudentScheduleRepository.existsConflict() for accurate detection
-    // ==================== NOTES ====================
+    // ==================== ADDITIONAL USEFUL METHODS ====================
+
+    /**
+     * Find all registrations for a class (any status)
+     */
+    @Query("SELECT cr FROM CourseRegistration cr " +
+            "WHERE cr.classEntity.classId = :classId " +
+            "ORDER BY cr.status, cr.registeredAt DESC")
+    List<CourseRegistration> findByClassEntityClassId(@Param("classId") Long classId);
+
+    /**
+     * Check if student has schedule conflict
+     */
+    @Query("SELECT CASE WHEN COUNT(cr) > 0 THEN true ELSE false END " +
+            "FROM CourseRegistration cr " +
+            "JOIN cr.classEntity ce " +
+            "WHERE cr.student.studentId = :studentId " +
+            "AND cr.status = 'REGISTERED' " +
+            "AND ce.semester.semesterId = :semesterId " +
+            "AND ce.dayOfWeek = :dayOfWeek " +
+            "AND ce.timeSlot = :timeSlot " +
+            "AND ce.classId != :excludeClassId")
+    boolean hasStudentScheduleConflict(
+            @Param("studentId") Long studentId,
+            @Param("semesterId") Long semesterId,
+            @Param("dayOfWeek") String dayOfWeek,
+            @Param("timeSlot") String timeSlot,
+            @Param("excludeClassId") Long excludeClassId
+    );
+
+    /**
+     * Count total registrations by student and semester
+     */
+    @Query("SELECT COUNT(cr) FROM CourseRegistration cr " +
+            "WHERE cr.student.studentId = :studentId " +
+            "AND cr.classEntity.semester.semesterId = :semesterId " +
+            "AND cr.status = 'REGISTERED'")
+    long countByStudentAndSemester(
+            @Param("studentId") Long studentId,
+            @Param("semesterId") Long semesterId
+    );
+
+    /**
+     * Sum total credits registered by student in semester
+     */
+    @Query("SELECT COALESCE(SUM(cr.classEntity.subject.credits), 0) " +
+            "FROM CourseRegistration cr " +
+            "WHERE cr.student.studentId = :studentId " +
+            "AND cr.classEntity.semester.semesterId = :semesterId " +
+            "AND cr.status = 'REGISTERED'")
+    int sumCreditsByStudentAndSemester(
+            @Param("studentId") Long studentId,
+            @Param("semesterId") Long semesterId
+    );
 }

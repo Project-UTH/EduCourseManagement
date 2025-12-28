@@ -1,4 +1,5 @@
 // constants.ts - Days of week, time slots, etc.
+// ⭐ UPDATED: Added schedule validation helpers
 
 // ==================== DAYS OF WEEK ====================
 
@@ -115,6 +116,111 @@ export const validateMaxStudents = (max: number): string | null => {
   if (max < 1) return 'Sĩ số tối đa phải ít nhất 1';
   if (max > 200) return 'Sĩ số tối đa không quá 200';
   return null;
+};
+
+// ==================== SCHEDULE VALIDATION (NEW) ====================
+
+/**
+ * Check if subject requires extra schedule
+ * @param inpersonSessions - Number of in-person sessions
+ * @returns true if > 10 sessions
+ */
+export const requiresExtraSchedule = (inpersonSessions: number): boolean => {
+  return inpersonSessions > 10;
+};
+
+/**
+ * ⭐ FIXED: Check if subject requires elearning schedule
+ * @param elearningSessions - Number of e-learning sessions
+ * @returns true if > 0 sessions (CÓ THỂ BẰNG 0!)
+ */
+export const requiresElearningSchedule = (elearningSessions: number): boolean => {
+  return elearningSessions > 0;  // Only show if > 0
+};
+
+/**
+ * Calculate extra sessions count
+ * @param inpersonSessions - Number of in-person sessions
+ * @returns Number of extra sessions (sessions - 10), or 0 if ≤ 10
+ */
+export const calculateExtraSessions = (inpersonSessions: number): number => {
+  if (inpersonSessions <= 10) return 0;
+  return inpersonSessions - 10;
+};
+
+/**
+ * Get validation messages for missing schedules
+ * Returns array of error messages
+ */
+export const getScheduleValidationErrors = (
+  inpersonSessions: number,
+  elearningSessions: number,
+  hasExtraDay: boolean,
+  hasExtraSlot: boolean,
+  hasExtraRoom: boolean,
+  hasElearningDay: boolean,
+  hasElearningSlot: boolean
+): string[] => {
+  const errors: string[] = [];
+  
+  // Check extra schedule
+  if (requiresExtraSchedule(inpersonSessions)) {
+    const extraCount = calculateExtraSessions(inpersonSessions);
+    
+    if (!hasExtraDay || !hasExtraSlot || !hasExtraRoom) {
+      errors.push(
+        `Môn học có ${inpersonSessions} buổi trực tiếp (${extraCount} buổi bổ sung). ` +
+        `Cần nhập đầy đủ lịch học bổ sung (Thứ, Ca, Phòng).`
+      );
+    }
+  }
+  
+  // ⭐ Check elearning schedule - ONLY IF > 0
+  if (requiresElearningSchedule(elearningSessions)) {
+    if (!hasElearningDay || !hasElearningSlot) {
+      errors.push(
+        `Môn học có ${elearningSessions} buổi E-learning. ` +
+        `Cần nhập lịch học trực tuyến (Thứ, Ca).`
+      );
+    }
+  }
+  // ✅ If elearningSessions = 0 → KHÔNG CẦN lịch E-learning
+  
+  return errors;
+};
+
+/**
+ * Format schedule display for UI
+ * Example: "Thứ 2, Ca 1 (06:45 - 09:15), Phòng A201"
+ */
+export const formatScheduleDisplay = (
+  day: string | null,
+  slot: string | null,
+  room: string | null
+): string => {
+  if (!day || !slot || !room) return '-';
+  
+  const dayLabel = getDayOfWeekLabel(day);
+  const slotDisplay = getTimeSlotDisplay(slot);
+  
+  return `${dayLabel}, ${slotDisplay}, ${room}`;
+};
+
+/**
+ * Format schedule short
+ * Example: "T2 Ca1 A201"
+ */
+export const formatScheduleShort = (
+  day: string | null,
+  slot: string | null,
+  room: string | null
+): string => {
+  if (!day || !slot || !room) return '-';
+  
+  const dayShort = getDayOfWeekShort(day);
+  const slotLabel = getTimeSlotLabel(slot);
+  
+  return `${dayShort} ${slotLabel} ${room}`;
 };
 
 // ==================== HELPERS ====================

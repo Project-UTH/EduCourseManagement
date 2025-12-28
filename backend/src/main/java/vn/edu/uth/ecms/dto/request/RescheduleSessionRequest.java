@@ -1,17 +1,16 @@
 package vn.edu.uth.ecms.dto.request;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Request DTO for rescheduling a session
+ * Request DTO for rescheduling a session - UPDATED
  *
- * VALIDATION:
- * - New date must be within semester range
- * - Cannot reschedule E_LEARNING sessions
- * - Must check teacher & room conflicts
+ * CHANGES:
+ * - Add newRoomId (Long) for Room entity lookup
+ * - Keep newRoom (String) for backward compatibility
  */
 @Data
 @NoArgsConstructor
@@ -19,24 +18,28 @@ import lombok.NoArgsConstructor;
 public class RescheduleSessionRequest {
 
     @NotBlank(message = "New date is required")
-    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$",
-            message = "Date must be in format YYYY-MM-DD")
-    private String newDate;
+    private String newDate;  // Format: "2024-09-15"
 
     @NotBlank(message = "New day of week is required")
-    @Pattern(regexp = "^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)$",
-            message = "Invalid day of week")
-    private String newDayOfWeek;
+    private String newDayOfWeek;  // "MONDAY", "TUESDAY", etc.
 
     @NotBlank(message = "New time slot is required")
-    @Pattern(regexp = "^(CA1|CA2|CA3|CA4|CA5)$",
-            message = "Invalid time slot")
-    private String newTimeSlot;
+    private String newTimeSlot;  // "CA1", "CA2", etc.
 
-    @NotBlank(message = "New room is required")
-    @Size(max = 50, message = "Room must not exceed 50 characters")
-    private String newRoom;
+    /**
+     * ✅ NEW: Room ID (preferred)
+     * Frontend should send this if available
+     */
+    private Long newRoomId;
 
-    @Size(max = 255, message = "Reason must not exceed 255 characters")
+    /**
+     * Room code (for backward compatibility)
+     * If newRoomId is null, system will lookup by this code
+     */
+    private String newRoom;  // "A201", "B105", etc.
+
+    /**
+     * Reason for rescheduling (optional)
+     */
     private String reason;
 }

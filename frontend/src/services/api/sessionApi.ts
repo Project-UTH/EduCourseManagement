@@ -7,7 +7,7 @@ export interface RescheduleSessionRequest {
   newDayOfWeek: string;  // "TUESDAY"
   newTimeSlot: string;   // "CA2"
   newRoom: string;       // "B105"
-  reason: string;        // Required (was optional)
+  reason: string;        // Required
 }
 
 export interface BatchRescheduleRequest {
@@ -58,6 +58,21 @@ export interface ClassSessionResponse {
   updatedAt: string;
 }
 
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message: string;
+}
+
 // ==================== API METHODS ====================
 
 const sessionApi = {
@@ -71,15 +86,21 @@ const sessionApi = {
     data: RescheduleSessionRequest
   ): Promise<ClassSessionResponse> => {
     console.log('[sessionApi] Rescheduling session ID:', sessionId);
+    console.log('[sessionApi] New schedule:', data.newDate, data.newDayOfWeek, data.newTimeSlot, data.newRoom);
+    console.log('[sessionApi] Reason:', data.reason);
+    
     try {
-      const response = await apiClient.put(
-        `/api/admin/sessions/${sessionId}/reschedule`,  // ✅ Fixed: Added /api prefix
+      const response = await apiClient.put<ApiResponse<ClassSessionResponse>>(
+        `/api/admin/sessions/${sessionId}/reschedule`,
         data
       );
-      console.log('[sessionApi] Session rescheduled successfully');
+      
+      console.log('[sessionApi] ✅ Session rescheduled successfully');
       return response.data.data;
     } catch (error) {
-      console.error('[sessionApi] Failed to reschedule session:', error);
+      const apiError = error as ApiError;
+      console.error('[sessionApi] ❌ Failed to reschedule session:', 
+        apiError.response?.data?.message || apiError.message);
       throw error;
     }
   },
@@ -92,12 +113,19 @@ const sessionApi = {
     data: BatchRescheduleRequest
   ): Promise<ClassSessionResponse[]> => {
     console.log('[sessionApi] Batch rescheduling:', data.sessionIds.length, 'sessions');
+    
     try {
-      const response = await apiClient.put('/api/admin/sessions/batch-reschedule', data);
-      console.log('[sessionApi] Batch reschedule completed:', response.data.data.length, 'success');
+      const response = await apiClient.put<ApiResponse<ClassSessionResponse[]>>(
+        '/api/admin/sessions/batch-reschedule',
+        data
+      );
+      
+      console.log('[sessionApi] ✅ Batch reschedule completed:', response.data.data.length, 'success');
       return response.data.data;
     } catch (error) {
-      console.error('[sessionApi] Failed to batch reschedule:', error);
+      const apiError = error as ApiError;
+      console.error('[sessionApi] ❌ Failed to batch reschedule:', 
+        apiError.response?.data?.message || apiError.message);
       throw error;
     }
   },
@@ -107,12 +135,18 @@ const sessionApi = {
    */
   resetToOriginal: async (sessionId: number): Promise<ClassSessionResponse> => {
     console.log('[sessionApi] Resetting session to original:', sessionId);
+    
     try {
-      const response = await apiClient.put(`/api/admin/sessions/${sessionId}/reset`);  // ✅ Fixed: Added /api prefix
-      console.log('[sessionApi] Session reset successfully');
+      const response = await apiClient.put<ApiResponse<ClassSessionResponse>>(
+        `/api/admin/sessions/${sessionId}/reset`
+      );
+      
+      console.log('[sessionApi] ✅ Session reset successfully');
       return response.data.data;
     } catch (error) {
-      console.error('[sessionApi] Failed to reset session:', error);
+      const apiError = error as ApiError;
+      console.error('[sessionApi] ❌ Failed to reset session:', 
+        apiError.response?.data?.message || apiError.message);
       throw error;
     }
   },
@@ -122,12 +156,18 @@ const sessionApi = {
    */
   getSessionsByClass: async (classId: number): Promise<ClassSessionResponse[]> => {
     console.log('[sessionApi] Fetching sessions for class:', classId);
+    
     try {
-      const response = await apiClient.get(`/api/admin/sessions/class/${classId}`);  // ✅ Fixed: Added /api prefix
-      console.log('[sessionApi] Sessions fetched:', response.data.data.length);
+      const response = await apiClient.get<ApiResponse<ClassSessionResponse[]>>(
+        `/api/admin/sessions/class/${classId}`
+      );
+      
+      console.log('[sessionApi] ✅ Sessions fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
-      console.error('[sessionApi] Failed to fetch sessions:', error);
+      const apiError = error as ApiError;
+      console.error('[sessionApi] ❌ Failed to fetch sessions:', 
+        apiError.response?.data?.message || apiError.message);
       throw error;
     }
   },
@@ -137,12 +177,18 @@ const sessionApi = {
    */
   getInPersonSessions: async (classId: number): Promise<ClassSessionResponse[]> => {
     console.log('[sessionApi] Fetching in-person sessions for class:', classId);
+    
     try {
-      const response = await apiClient.get(`/api/admin/sessions/class/${classId}/in-person`);  // ✅ Fixed: Added /api prefix
-      console.log('[sessionApi] In-person sessions fetched:', response.data.data.length);
+      const response = await apiClient.get<ApiResponse<ClassSessionResponse[]>>(
+        `/api/admin/sessions/class/${classId}/in-person`
+      );
+      
+      console.log('[sessionApi] ✅ In-person sessions fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
-      console.error('[sessionApi] Failed to fetch in-person sessions:', error);
+      const apiError = error as ApiError;
+      console.error('[sessionApi] ❌ Failed to fetch in-person sessions:', 
+        apiError.response?.data?.message || apiError.message);
       throw error;
     }
   },
@@ -152,12 +198,18 @@ const sessionApi = {
    */
   getELearningSessions: async (classId: number): Promise<ClassSessionResponse[]> => {
     console.log('[sessionApi] Fetching e-learning sessions for class:', classId);
+    
     try {
-      const response = await apiClient.get(`/api/admin/sessions/class/${classId}/e-learning`);  // ✅ Fixed: Added /api prefix
-      console.log('[sessionApi] E-learning sessions fetched:', response.data.data.length);
+      const response = await apiClient.get<ApiResponse<ClassSessionResponse[]>>(
+        `/api/admin/sessions/class/${classId}/e-learning`
+      );
+      
+      console.log('[sessionApi] ✅ E-learning sessions fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
-      console.error('[sessionApi] Failed to fetch e-learning sessions:', error);
+      const apiError = error as ApiError;
+      console.error('[sessionApi] ❌ Failed to fetch e-learning sessions:', 
+        apiError.response?.data?.message || apiError.message);
       throw error;
     }
   },
@@ -167,12 +219,18 @@ const sessionApi = {
    */
   getRescheduledSessions: async (classId: number): Promise<ClassSessionResponse[]> => {
     console.log('[sessionApi] Fetching rescheduled sessions for class:', classId);
+    
     try {
-      const response = await apiClient.get(`/api/admin/sessions/class/${classId}/rescheduled`);  // ✅ Fixed: Added /api prefix
-      console.log('[sessionApi] Rescheduled sessions fetched:', response.data.data.length);
+      const response = await apiClient.get<ApiResponse<ClassSessionResponse[]>>(
+        `/api/admin/sessions/class/${classId}/rescheduled`
+      );
+      
+      console.log('[sessionApi] ✅ Rescheduled sessions fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
-      console.error('[sessionApi] Failed to fetch rescheduled sessions:', error);
+      const apiError = error as ApiError;
+      console.error('[sessionApi] ❌ Failed to fetch rescheduled sessions:', 
+        apiError.response?.data?.message || apiError.message);
       throw error;
     }
   },
@@ -182,11 +240,18 @@ const sessionApi = {
    */
   getSessionById: async (sessionId: number): Promise<ClassSessionResponse> => {
     console.log('[sessionApi] Fetching session ID:', sessionId);
+    
     try {
-      const response = await apiClient.get(`/api/admin/sessions/${sessionId}`);  // ✅ Fixed: Added /api prefix
+      const response = await apiClient.get<ApiResponse<ClassSessionResponse>>(
+        `/api/admin/sessions/${sessionId}`
+      );
+      
+      console.log('[sessionApi] ✅ Session fetched');
       return response.data.data;
     } catch (error) {
-      console.error('[sessionApi] Failed to fetch session:', error);
+      const apiError = error as ApiError;
+      console.error('[sessionApi] ❌ Failed to fetch session:', 
+        apiError.response?.data?.message || apiError.message);
       throw error;
     }
   },
@@ -196,12 +261,18 @@ const sessionApi = {
    */
   markAsCompleted: async (sessionId: number): Promise<ClassSessionResponse> => {
     console.log('[sessionApi] Marking session as completed:', sessionId);
+    
     try {
-      const response = await apiClient.put(`/api/admin/sessions/${sessionId}/complete`);  // ✅ Fixed: Added /api prefix
-      console.log('[sessionApi] Session marked as completed');
+      const response = await apiClient.put<ApiResponse<ClassSessionResponse>>(
+        `/api/admin/sessions/${sessionId}/complete`
+      );
+      
+      console.log('[sessionApi] ✅ Session marked as completed');
       return response.data.data;
     } catch (error) {
-      console.error('[sessionApi] Failed to mark as completed:', error);
+      const apiError = error as ApiError;
+      console.error('[sessionApi] ❌ Failed to mark as completed:', 
+        apiError.response?.data?.message || apiError.message);
       throw error;
     }
   },
@@ -214,16 +285,23 @@ const sessionApi = {
     reason?: string
   ): Promise<ClassSessionResponse> => {
     console.log('[sessionApi] Marking session as cancelled:', sessionId);
+    if (reason) {
+      console.log('[sessionApi] Reason:', reason);
+    }
+    
     try {
-      const response = await apiClient.put(
-        `/api/admin/sessions/${sessionId}/cancel`,  // ✅ Fixed: Added /api prefix
+      const response = await apiClient.put<ApiResponse<ClassSessionResponse>>(
+        `/api/admin/sessions/${sessionId}/cancel`,
         null,
         { params: { reason } }
       );
-      console.log('[sessionApi] Session marked as cancelled');
+      
+      console.log('[sessionApi] ✅ Session marked as cancelled');
       return response.data.data;
     } catch (error) {
-      console.error('[sessionApi] Failed to mark as cancelled:', error);
+      const apiError = error as ApiError;
+      console.error('[sessionApi] ❌ Failed to mark as cancelled:', 
+        apiError.response?.data?.message || apiError.message);
       throw error;
     }
   },

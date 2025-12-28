@@ -4,7 +4,7 @@ import './SessionListModal.css';
 interface Session {
   sessionId: number;
   sessionNumber: number;
-  sessionType: string;
+  sessionType: string;  // "IN_PERSON" or "E_LEARNING"
   originalDate: string | null;
   originalDayOfWeekDisplay: string | null;
   originalTimeSlotDisplay: string | null;
@@ -37,6 +37,9 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Filter
+  const [filterType, setFilterType] = useState<string>('ALL');  // ALL, IN_PERSON, E_LEARNING
+  
   // Reschedule form
   const [editingSession, setEditingSession] = useState<number | null>(null);
   const [rescheduleForm, setRescheduleForm] = useState({
@@ -52,13 +55,14 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
+  // ⭐ FETCH ALL SESSIONS (not just in-person)
   const fetchSessions = async () => {
     try {
       setLoading(true);
       setError(null);
       
       const response = await fetch(
-        `/api/admin/sessions/class/${classData.classId}/in-person`,
+        `/api/admin/sessions/class/${classData.classId}`,  // ⭐ CHANGED: Get ALL sessions
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -79,6 +83,12 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
   };
   
   const handleStartEdit = (session: Session) => {
+    // ⭐ ONLY allow reschedule for IN_PERSON sessions
+    if (session.sessionType === 'E_LEARNING') {
+      alert('⚠️ Không thể đổi lịch cho buổi E-learning!\nBuổi E-learning không có lịch cụ thể.');
+      return;
+    }
+    
     setEditingSession(session.sessionId);
     setRescheduleForm({
       newDate: session.effectiveDate || '',
@@ -188,9 +198,31 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
     return date.toLocaleDateString('vi-VN');
   };
   
+  // ⭐ GET SESSION TYPE BADGE
+  const getSessionTypeBadge = (type: string) => {
+    if (type === 'IN_PERSON') {
+      return <span className="session-badge badge-inperson">🏫 Trực tiếp</span>;
+    }
+    return <span className="session-badge badge-elearning">💻 E-learning</span>;
+  };
+  
+  // ⭐ FILTER SESSIONS
+  const filteredSessions = sessions.filter(session => {
+    if (filterType === 'ALL') return true;
+    return session.sessionType === filterType;
+  });
+  
+  // ⭐ STATISTICS
+  const stats = {
+    total: sessions.length,
+    inPerson: sessions.filter(s => s.sessionType === 'IN_PERSON').length,
+    eLearning: sessions.filter(s => s.sessionType === 'E_LEARNING').length,
+    rescheduled: sessions.filter(s => s.isRescheduled).length,
+  };
+  
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+      <div className="modal-content modal-xlarge" onClick={e => e.stopPropagation()}>
         {/* HEADER */}
         <div className="modal-header">
           <div>
@@ -209,181 +241,274 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
           ) : error ? (
             <div className="error-message">❌ {error}</div>
           ) : (
-            <div className="sessions-table-wrapper">
-              <table className="sessions-table">
-                <thead>
-                  <tr>
-                    <th>Buổi</th>
-                    <th>Lịch gốc</th>
-                    <th>Lịch hiện tại</th>
-                    <th>Lý do đổi lịch</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map(session => (
-                    <tr 
-                      key={session.sessionId}
-                      className={session.isRescheduled ? 'rescheduled-row' : ''}
-                    >
-                      <td>
-                        <strong>Buổi {session.sessionNumber}</strong>
-                        {session.isRescheduled && (
-                          <div className="rescheduled-badge">🔄 Đã đổi</div>
-                        )}
-                      </td>
-                      
-                      <td>
-                        <div className="schedule-cell">
-                          <div className="date">{formatDate(session.originalDate)}</div>
-                          <div className="time">
-                            {session.originalDayOfWeekDisplay}, {session.originalTimeSlotDisplay}
-                          </div>
-                          <div className="room">📍 {session.originalRoom}</div>
-                        </div>
-                      </td>
-                      
-                      <td>
-                        {editingSession === session.sessionId ? (
-                          // EDIT MODE
-                          <div className="edit-form">
-                            <input
-                              type="date"
-                              className="form-input"
-                              value={rescheduleForm.newDate}
-                              onChange={e => setRescheduleForm({
-                                ...rescheduleForm,
-                                newDate: e.target.value
-                              })}
-                            />
-                            <select
-                              className="form-select"
-                              value={rescheduleForm.newDayOfWeek}
-                              onChange={e => setRescheduleForm({
-                                ...rescheduleForm,
-                                newDayOfWeek: e.target.value
-                              })}
-                            >
-                              <option value="MONDAY">Thứ 2</option>
-                              <option value="TUESDAY">Thứ 3</option>
-                              <option value="WEDNESDAY">Thứ 4</option>
-                              <option value="THURSDAY">Thứ 5</option>
-                              <option value="FRIDAY">Thứ 6</option>
-                              <option value="SATURDAY">Thứ 7</option>
-                            </select>
-                            <select
-                              className="form-select"
-                              value={rescheduleForm.newTimeSlot}
-                              onChange={e => setRescheduleForm({
-                                ...rescheduleForm,
-                                newTimeSlot: e.target.value
-                              })}
-                            >
-                              <option value="CA1">Ca 1 (06:45-09:15)</option>
-                              <option value="CA2">Ca 2 (09:25-11:55)</option>
-                              <option value="CA3">Ca 3 (12:10-14:40)</option>
-                              <option value="CA4">Ca 4 (14:50-17:20)</option>
-                              <option value="CA5">Ca 5 (17:30-20:00)</option>
-                            </select>
-                            <input
-                              type="text"
-                              className="form-input"
-                              placeholder="Phòng"
-                              value={rescheduleForm.newRoom}
-                              onChange={e => setRescheduleForm({
-                                ...rescheduleForm,
-                                newRoom: e.target.value
-                              })}
-                            />
-                          </div>
-                        ) : (
-                          // VIEW MODE
-                          <div className="schedule-cell">
-                            <div className="date">{formatDate(session.effectiveDate)}</div>
-                            <div className="time">
-                              {session.effectiveDayOfWeekDisplay}, {session.effectiveTimeSlotDisplay}
-                            </div>
-                            <div className="room">📍 {session.effectiveRoom}</div>
-                          </div>
-                        )}
-                      </td>
-                      
-                      <td>
-                        {editingSession === session.sessionId ? (
-                          <textarea
-                            className="form-textarea"
-                            placeholder="Nhập lý do đổi lịch (bắt buộc)"
-                            value={rescheduleForm.reason}
-                            onChange={e => setRescheduleForm({
-                              ...rescheduleForm,
-                              reason: e.target.value
-                            })}
-                            rows={2}
-                          />
-                        ) : (
-                          <div className="reason-text">
-                            {session.rescheduleReason || '—'}
-                          </div>
-                        )}
-                      </td>
-                      
-                      <td>
-                        {editingSession === session.sessionId ? (
-                          // EDIT MODE ACTIONS
-                          <div className="action-buttons">
-                            <button
-                              className="btn-save"
-                              onClick={() => handleReschedule(session.sessionId)}
-                            >
-                              💾 Lưu
-                            </button>
-                            <button
-                              className="btn-cancel"
-                              onClick={handleCancelEdit}
-                            >
-                              ✖️ Hủy
-                            </button>
-                          </div>
-                        ) : (
-                          // VIEW MODE ACTIONS
-                          <div className="action-buttons">
-                            <button
-                              className="btn-edit"
-                              onClick={() => handleStartEdit(session)}
-                            >
-                              🔄 Đổi lịch
-                            </button>
-                            {session.isRescheduled && (
-                              <button
-                                className="btn-reset"
-                                onClick={() => handleResetToOriginal(session.sessionId)}
-                              >
-                                ↩️ Reset
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              
-              <div className="sessions-summary">
-                <div className="summary-item">
-                  <strong>Tổng số buổi:</strong> {sessions.length}
+            <>
+              {/* ⭐ STATISTICS & FILTER */}
+              <div className="sessions-controls">
+                <div className="sessions-stats">
+                  <div className="stat-item">
+                    <span className="stat-label">Tổng số buổi:</span>
+                    <span className="stat-value">{stats.total}</span>
+                  </div>
+                  <div className="stat-item stat-inperson">
+                    <span className="stat-label">🏫 Trực tiếp:</span>
+                    <span className="stat-value">{stats.inPerson}</span>
+                  </div>
+                  <div className="stat-item stat-elearning">
+                    <span className="stat-label">💻 E-learning:</span>
+                    <span className="stat-value">{stats.eLearning}</span>
+                  </div>
+                  <div className="stat-item stat-rescheduled">
+                    <span className="stat-label">🔄 Đã đổi lịch:</span>
+                    <span className="stat-value">{stats.rescheduled}</span>
+                  </div>
                 </div>
-                <div className="summary-item">
-                  <strong>Đã đổi lịch:</strong> {sessions.filter(s => s.isRescheduled).length}
+                
+                <div className="sessions-filter">
+                  <label>Lọc theo loại:</label>
+                  <select 
+                    value={filterType} 
+                    onChange={(e) => setFilterType(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="ALL">Tất cả ({stats.total})</option>
+                    <option value="IN_PERSON">Trực tiếp ({stats.inPerson})</option>
+                    <option value="E_LEARNING">E-learning ({stats.eLearning})</option>
+                  </select>
                 </div>
               </div>
-            </div>
+              
+              {/* ⭐ TABLE */}
+              <div className="sessions-table-wrapper">
+                <table className="sessions-table">
+                  <thead>
+                    <tr>
+                      <th>Buổi</th>
+                      <th>Loại</th>
+                      <th>Lịch gốc</th>
+                      <th>Lịch hiện tại</th>
+                      <th>Lý do đổi lịch</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredSessions.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="no-data">
+                          Không có buổi học nào
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredSessions.map(session => (
+                        <tr 
+                          key={session.sessionId}
+                          className={`
+                            ${session.isRescheduled ? 'rescheduled-row' : ''}
+                            ${session.sessionType === 'E_LEARNING' ? 'elearning-row' : ''}
+                          `}
+                        >
+                          {/* BUỔI */}
+                          <td>
+                            <div className="session-number">
+                              <strong>Buổi {session.sessionNumber}</strong>
+                              {session.isRescheduled && (
+                                <div className="rescheduled-badge">🔄 Đã đổi</div>
+                              )}
+                            </div>
+                          </td>
+                          
+                          {/* LOẠI */}
+                          <td>
+                            {getSessionTypeBadge(session.sessionType)}
+                          </td>
+                          
+                          {/* LỊCH GỐC */}
+                          <td>
+                            {session.sessionType === 'E_LEARNING' ? (
+                              <div className="schedule-cell elearning-schedule">
+                                <div className="elearning-label">💻 E-learning</div>
+                                {session.originalDayOfWeekDisplay && session.originalTimeSlotDisplay ? (
+                                  <>
+                                    <div className="time">
+                                      {session.originalDayOfWeekDisplay}, {session.originalTimeSlotDisplay}
+                                    </div>
+                                    <div className="room">💻 ONLINE</div>
+                                  </>
+                                ) : (
+                                  <div className="no-schedule">Không có lịch cụ thể</div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="schedule-cell">
+                                <div className="date">{formatDate(session.originalDate)}</div>
+                                <div className="time">
+                                  {session.originalDayOfWeekDisplay}, {session.originalTimeSlotDisplay}
+                                </div>
+                                <div className="room">📍 {session.originalRoom}</div>
+                              </div>
+                            )}
+                          </td>
+                          
+                          {/* LỊCH HIỆN TẠI */}
+                          <td>
+                            {editingSession === session.sessionId ? (
+                              // ⭐ EDIT MODE
+                              <div className="edit-form">
+                                <input
+                                  type="date"
+                                  className="form-input"
+                                  value={rescheduleForm.newDate}
+                                  onChange={e => setRescheduleForm({
+                                    ...rescheduleForm,
+                                    newDate: e.target.value
+                                  })}
+                                />
+                                <select
+                                  className="form-select"
+                                  value={rescheduleForm.newDayOfWeek}
+                                  onChange={e => setRescheduleForm({
+                                    ...rescheduleForm,
+                                    newDayOfWeek: e.target.value
+                                  })}
+                                >
+                                  <option value="MONDAY">Thứ 2</option>
+                                  <option value="TUESDAY">Thứ 3</option>
+                                  <option value="WEDNESDAY">Thứ 4</option>
+                                  <option value="THURSDAY">Thứ 5</option>
+                                  <option value="FRIDAY">Thứ 6</option>
+                                  <option value="SATURDAY">Thứ 7</option>
+                                </select>
+                                <select
+                                  className="form-select"
+                                  value={rescheduleForm.newTimeSlot}
+                                  onChange={e => setRescheduleForm({
+                                    ...rescheduleForm,
+                                    newTimeSlot: e.target.value
+                                  })}
+                                >
+                                  <option value="CA1">Ca 1 (06:45-09:15)</option>
+                                  <option value="CA2">Ca 2 (09:25-11:55)</option>
+                                  <option value="CA3">Ca 3 (12:10-14:40)</option>
+                                  <option value="CA4">Ca 4 (14:50-17:20)</option>
+                                  <option value="CA5">Ca 5 (17:30-20:00)</option>
+                                </select>
+                                <input
+                                  type="text"
+                                  className="form-input"
+                                  placeholder="Phòng"
+                                  value={rescheduleForm.newRoom}
+                                  onChange={e => setRescheduleForm({
+                                    ...rescheduleForm,
+                                    newRoom: e.target.value
+                                  })}
+                                />
+                              </div>
+                            ) : (
+                              // ⭐ VIEW MODE
+                              session.sessionType === 'E_LEARNING' ? (
+                                <div className="schedule-cell elearning-schedule">
+                                  <div className="elearning-label">💻 E-learning</div>
+                                  {session.effectiveDayOfWeekDisplay && session.effectiveTimeSlotDisplay ? (
+                                    <>
+                                      <div className="time">
+                                        {session.effectiveDayOfWeekDisplay}, {session.effectiveTimeSlotDisplay}
+                                      </div>
+                                      <div className="room">💻 ONLINE</div>
+                                    </>
+                                  ) : (
+                                    <div className="no-schedule">Không có lịch cụ thể</div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="schedule-cell">
+                                  <div className="date">{formatDate(session.effectiveDate)}</div>
+                                  <div className="time">
+                                    {session.effectiveDayOfWeekDisplay}, {session.effectiveTimeSlotDisplay}
+                                  </div>
+                                  <div className="room">📍 {session.effectiveRoom}</div>
+                                </div>
+                              )
+                            )}
+                          </td>
+                          
+                          {/* LÝ DO ĐỔI LỊCH */}
+                          <td>
+                            {editingSession === session.sessionId ? (
+                              <textarea
+                                className="form-textarea"
+                                placeholder="Nhập lý do đổi lịch (bắt buộc)"
+                                value={rescheduleForm.reason}
+                                onChange={e => setRescheduleForm({
+                                  ...rescheduleForm,
+                                  reason: e.target.value
+                                })}
+                                rows={2}
+                              />
+                            ) : (
+                              <div className="reason-text">
+                                {session.rescheduleReason || '—'}
+                              </div>
+                            )}
+                          </td>
+                          
+                          {/* THAO TÁC */}
+                          <td>
+                            {session.sessionType === 'E_LEARNING' ? (
+                              // ⭐ E-LEARNING: NO RESCHEDULE
+                              <div className="no-action">
+                                <span className="hint">💡 E-learning không đổi lịch</span>
+                              </div>
+                            ) : (
+                              // ⭐ IN-PERSON: CAN RESCHEDULE
+                              editingSession === session.sessionId ? (
+                                // EDIT MODE ACTIONS
+                                <div className="action-buttons">
+                                  <button
+                                    className="btn-save"
+                                    onClick={() => handleReschedule(session.sessionId)}
+                                  >
+                                    💾 Lưu
+                                  </button>
+                                  <button
+                                    className="btn-cancel-action"
+                                    onClick={handleCancelEdit}
+                                  >
+                                    ✖️ Hủy
+                                  </button>
+                                </div>
+                              ) : (
+                                // VIEW MODE ACTIONS
+                                <div className="action-buttons">
+                                  <button
+                                    className="btn-edit"
+                                    onClick={() => handleStartEdit(session)}
+                                  >
+                                    🔄 Đổi lịch
+                                  </button>
+                                  {session.isRescheduled && (
+                                    <button
+                                      className="btn-reset"
+                                      onClick={() => handleResetToOriginal(session.sessionId)}
+                                    >
+                                      ↩️ Reset
+                                    </button>
+                                  )}
+                                </div>
+                              )
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
         
         {/* FOOTER */}
         <div className="modal-footer">
-          <button className="btn-cancel" onClick={onClose}>
+          <button className="btn-close-footer" onClick={onClose}>
             Đóng
           </button>
         </div>

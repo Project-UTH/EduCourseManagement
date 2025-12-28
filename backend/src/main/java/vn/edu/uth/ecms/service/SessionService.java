@@ -115,34 +115,6 @@ public interface SessionService {
      */
     ClassSessionResponse getSessionById(Long sessionId);
 
-    // ==================== CONFLICT DETECTION ====================
-
-    /**
-     * Check if rescheduling would cause conflict
-     *
-     * Checks BOTH:
-     * 1. Fixed schedules from ClassEntity
-     * 2. Rescheduled sessions from other classes
-     *
-     * @param semesterId Semester
-     * @param teacherId Teacher
-     * @param date New date
-     * @param dayOfWeek New day of week
-     * @param timeSlot New time slot
-     * @param room New room
-     * @param excludeSessionId Exclude this session (for update)
-     * @return true if conflict exists
-     */
-    boolean hasScheduleConflict(
-            Long semesterId,
-            Long teacherId,
-            LocalDate date,
-            DayOfWeek dayOfWeek,
-            TimeSlot timeSlot,
-            String room,
-            Long excludeSessionId
-    );
-
     // ==================== STATUS MANAGEMENT ====================
 
     /**

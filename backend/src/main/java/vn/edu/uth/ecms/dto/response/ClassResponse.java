@@ -9,14 +9,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Response DTO for Class entity
+ * Class Response DTO - UPDATED
  *
- * Contains:
- * - Class basic info
- * - Related entities (subject, teacher, semester)
- * - Capacity & enrollment
- * - Schedule info
- * - Session statistics
+ * NEW FIELDS:
+ * - fixedRoom (room code)
+ * - fixedRoomName (display name)
+ * - fixedRoomCapacity
+ * - pendingSessionsCount (extra sessions not yet scheduled)
+ *
+ * REMOVED FIELDS:
+ * - room (replaced by fixedRoom)
+ * - extraDayOfWeek, extraTimeSlot, extraRoom (no longer exist)
  */
 @Data
 @Builder
@@ -61,19 +64,36 @@ public class ClassResponse {
 
     // ==================== STATUS ====================
 
-    private String status;  // OPEN, FULL, CLOSED, IN_PROGRESS, COMPLETED
+    private String status;           // OPEN, FULL, CLOSED
     private Boolean canRegister;
     private Boolean isFull;
 
-    // ==================== SCHEDULE (FIXED) ====================
+    // ==================== FIXED SCHEDULE (for 10 sessions) ====================
 
-    private String dayOfWeek;  // MONDAY
-    private String dayOfWeekDisplay;  // "Thứ 2"
+    private String dayOfWeek;        // MONDAY, TUESDAY, etc.
+    private String dayOfWeekDisplay; // "Thứ 2", "Thứ 3", etc.
+    private String timeSlot;         // CA1, CA2, etc.
+    private String timeSlotDisplay;  // "Ca 1 (06:45-09:15)"
 
-    private String timeSlot;  // CA1
-    private String timeSlotDisplay;  // "Ca 1 (06:45 - 09:15)"
+    /**
+     * ✅ NEW: Fixed room (auto-assigned by system)
+     */
+    private String fixedRoom;        // Room code: "A201", "B105"
 
-    private String room;  // A201
+    /**
+     * ✅ NEW: Fixed room display name
+     */
+    private String fixedRoomName;    // "A201 - Giảng đường lớn"
+
+    /**
+     * ✅ NEW: Fixed room capacity
+     */
+    private Integer fixedRoomCapacity;
+
+    // ==================== E-LEARNING SCHEDULE (optional) ====================
+
+    private String elearningDayOfWeek;
+    private String elearningTimeSlot;
 
     // ==================== DATES ====================
 
@@ -82,8 +102,25 @@ public class ClassResponse {
 
     // ==================== SESSION STATISTICS ====================
 
+    /**
+     * Total sessions generated (fixed + extra + elearning)
+     */
     private Long totalSessionsGenerated;
+
+    /**
+     * ✅ NEW: Number of pending extra sessions
+     * (not yet scheduled, waiting for semester activation)
+     */
+    private Long pendingSessionsCount;
+
+    /**
+     * Number of completed sessions
+     */
     private Long completedSessions;
+
+    /**
+     * Number of rescheduled sessions
+     */
     private Long rescheduledSessionsCount;
 
     // ==================== METADATA ====================

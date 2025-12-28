@@ -14,11 +14,21 @@ import vn.edu.uth.ecms.service.EnrollmentService;
 import java.util.List;
 
 /**
- * Controller for enrollment management
- * Separate from ClassController for cleaner API structure
- * Handles: GET /api/admin/enrollments/class/{classId}
- *          POST /api/admin/enrollments/manual
- *          DELETE /api/admin/enrollments/class/{classId}/student/{studentId}
+ * EnrollmentController - Admin enrollment management
+ *
+ * PURPOSE: Separate controller for enrollment operations
+ * Cleaner API structure than mixing with ClassController
+ *
+ * ENDPOINTS:
+ * - POST   /api/admin/enrollments/manual             - Manually enroll student
+ * - DELETE /api/admin/enrollments/{registrationId}   - Drop student
+ * - GET    /api/admin/enrollments/class/{classId}    - Get students in class
+ * - GET    /api/admin/enrollments/manual             - Get all manual enrollments (audit)
+ *
+ * USE CASES:
+ * - Manual enrollment: Late registration, transfer student, makeup class
+ * - Drop student: Administrative withdrawal, disciplinary action
+ * - Audit: Track all manual interventions for compliance
  */
 @RestController
 @RequestMapping("/api/admin/enrollments")
@@ -29,140 +39,142 @@ public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
 
-    /**
-     * ✅ Get list of students enrolled in a class
-     *
-     * @param classId Class ID
-     * @return List of registrations
-     */
-    @GetMapping("/class/{classId}")
-    public ResponseEntity<ApiResponse<List<CourseRegistrationResponse>>> getStudentsInClass(
-            @PathVariable Long classId) {
-
-        log.info("📚 GET /api/admin/enrollments/class/{}", classId);
-
-        try {
-            List<CourseRegistrationResponse> students = enrollmentService.getStudentsInClass(classId);
-
-            return ResponseEntity.ok(
-                    ApiResponse.<List<CourseRegistrationResponse>>builder()
-                            .success(true)
-                            .message(students.size() + " students found in class")
-                            .data(students)
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error("❌ Error getting students in class {}: {}", classId, e.getMessage(), e);
-            return ResponseEntity.status(500).body(
-                    ApiResponse.<List<CourseRegistrationResponse>>builder()
-                            .success(false)
-                            .message("Error: " + e.getMessage())
-                            .build()
-            );
-        }
-    }
+    // ==================== ENROLLMENT MANAGEMENT ====================
 
     /**
-     * ✅ Manually enroll a student
+     * Manually enroll a student to a class
      *
-     * @param request Manual enrollment request
-     * @return Registration response
+     * USE CASES:
+     * - Student missed registration period (late enrollment)
+     * - Student transferring from another section
+     * - Student taking makeup class
+     * - Administrative override (prerequisite waiver)
+     *
+     * VALIDATIONS:
+     * - Student not already enrolled
+     * - Class not full (admin can override)
+     * - No schedule conflict (strict check)
+     * - Semester not COMPLETED
+     *
+     * @param request Manual enrollment request (classId, studentId, reason, note)
+     * @return Registration details
      */
     @PostMapping("/manual")
     public ResponseEntity<ApiResponse<CourseRegistrationResponse>> manualEnroll(
             @Valid @RequestBody ManualEnrollRequest request) {
 
-        log.info("📝 POST /api/admin/enrollments/manual - Class: {}, Student: {}",
-                request.getClassId(), request.getStudentId());
+        log.info("📝 Manual enrollment - Class: {}, Student: {}, Reason: {}",
+                request.getClassId(), request.getStudentId(), request.getReason());
 
-        try {
-            CourseRegistrationResponse result = enrollmentService.manuallyEnrollStudent(
-                    request.getClassId(),
-                    request
-            );
+        CourseRegistrationResponse result = enrollmentService.manuallyEnrollStudent(
+                request.getClassId(),
+                request
+        );
 
-            return ResponseEntity.ok(
-                    ApiResponse.<CourseRegistrationResponse>builder()
-                            .success(true)
-                            .message("Student enrolled successfully")
-                            .data(result)
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error("❌ Error enrolling student: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(
-                    ApiResponse.<CourseRegistrationResponse>builder()
-                            .success(false)
-                            .message("Error: " + e.getMessage())
-                            .build()
-            );
-        }
+        return ResponseEntity.ok(
+                ApiResponse.success("Student manually enrolled", result)
+        );
     }
 
     /**
-     * ✅ Remove student from class
+     * Drop student from class
+     *
+     * USE CASES:
+     * - Student request (within allowed period)
+     * - Administrative withdrawal
+     * - Disciplinary action
+     * - Transfer to another section
+     *
+     * ACTIONS:
+     * - Update registration status to DROPPED
+     * - Decrement class enrollment count
+     * - Delete student_schedule entries (cascade)
+     * - Log reason for audit trail
      *
      * @param classId Class ID
      * @param studentId Student ID
-     * @param reason Drop reason (optional)
-     * @return Success response
+     * @param reason Drop reason (optional, recommended for audit)
+     * @return Success message
      */
     @DeleteMapping("/class/{classId}/student/{studentId}")
-    public ResponseEntity<ApiResponse<Void>> removeStudent(
+    public ResponseEntity<ApiResponse<Void>> dropStudent(
             @PathVariable Long classId,
             @PathVariable Long studentId,
             @RequestParam(required = false) String reason) {
 
-        log.info("🗑️ DELETE /api/admin/enrollments/class/{}/student/{}", classId, studentId);
+        log.info("🗑️ Dropping student {} from class {} - Reason: {}",
+                studentId, classId, reason != null ? reason : "Not specified");
 
-        try {
-            enrollmentService.dropStudent(classId, studentId, reason);
+        enrollmentService.dropStudent(classId, studentId, reason);
 
-            return ResponseEntity.ok(
-                    ApiResponse.<Void>builder()
-                            .success(true)
-                            .message("Student removed from class successfully")
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error("❌ Error removing student: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(
-                    ApiResponse.<Void>builder()
-                            .success(false)
-                            .message("Error: " + e.getMessage())
-                            .build()
-            );
-        }
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("Student dropped from class")
+                        .build()
+        );
+    }
+
+    // ==================== QUERY ENDPOINTS ====================
+
+    /**
+     * Get list of students enrolled in a class
+     *
+     * RETURNS:
+     * - Student info (ID, code, name, email)
+     * - Major and department
+     * - Enrollment metadata (registered date, type, status)
+     * - Manual enrollment details (if applicable)
+     *
+     * @param classId Class ID
+     * @return List of active registrations
+     */
+    @GetMapping("/class/{classId}")
+    public ResponseEntity<ApiResponse<List<CourseRegistrationResponse>>> getStudentsInClass(
+            @PathVariable Long classId) {
+
+        log.debug("Getting students in class {}", classId);
+
+        List<CourseRegistrationResponse> students = enrollmentService.getStudentsInClass(classId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        students.size() + " student(s) enrolled",
+                        students
+                )
+        );
     }
 
     /**
-     * ✅ Get all manual enrollments (for audit)
+     * Get all manual enrollments across all classes
      *
-     * @return List of manual enrollments
+     * PURPOSE: Audit trail and compliance reporting
+     *
+     * RETURNS:
+     * - All enrollments with type = MANUAL
+     * - Includes: student, class, reason, admin who enrolled
+     * - Sorted by enrollment date (newest first)
+     *
+     * USE CASES:
+     * - Monthly audit report
+     * - Compliance review
+     * - Identify enrollment patterns
+     * - Verify admin actions
+     *
+     * @return List of all manual enrollments
      */
     @GetMapping("/manual")
     public ResponseEntity<ApiResponse<List<CourseRegistrationResponse>>> getManualEnrollments() {
 
-        log.info("📋 GET /api/admin/enrollments/manual");
+        log.info("📋 Getting all manual enrollments (audit)");
 
-        try {
-            List<CourseRegistrationResponse> enrollments = enrollmentService.getManualEnrollments();
+        List<CourseRegistrationResponse> enrollments = enrollmentService.getManualEnrollments();
 
-            return ResponseEntity.ok(
-                    ApiResponse.<List<CourseRegistrationResponse>>builder()
-                            .success(true)
-                            .message(enrollments.size() + " manual enrollments found")
-                            .data(enrollments)
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error("❌ Error getting manual enrollments: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(
-                    ApiResponse.<List<CourseRegistrationResponse>>builder()
-                            .success(false)
-                            .message("Error: " + e.getMessage())
-                            .build()
-            );
-        }
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        enrollments.size() + " manual enrollment(s) found",
+                        enrollments
+                )
+        );
     }
 }

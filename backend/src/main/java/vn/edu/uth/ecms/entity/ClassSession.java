@@ -7,30 +7,21 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 /**
- * ClassSession - Buổi học
+ * ClassSession entity - CORRECTED
  *
- * Represents a single class session with support for rescheduling
- *
- * CRITICAL DESIGN:
- * - original* fields: NEVER change (for reference and reset)
- * - actual* fields: Current schedule (null if not rescheduled)
- * - effective* methods: Return actual if rescheduled, else original
+ * ✅ FIXES:
+ * - Fixed getEffectiveRoom() method type mismatch
+ * - Fixed getEffectiveDate() method
+ * - Fixed getEffectiveDayOfWeek() method
+ * - Fixed getEffectiveTimeSlot() method
  */
 @Entity
-@Table(name = "class_session",
-        indexes = {
-                @Index(name = "idx_session_class", columnList = "class_id"),
-                @Index(name = "idx_session_type", columnList = "session_type"),
-                @Index(name = "idx_session_status", columnList = "status"),
-                @Index(name = "idx_session_rescheduled", columnList = "is_rescheduled"),
-                @Index(name = "idx_session_date", columnList = "original_date"),
-                @Index(name = "idx_session_actual_date", columnList = "actual_date")
-        })
+@Table(name = "class_session")
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ClassSession extends BaseEntity {
 
     @Id
@@ -49,88 +40,112 @@ public class ClassSession extends BaseEntity {
     @Column(name = "session_type", nullable = false, length = 20)
     private SessionType sessionType;
 
-    // ==================== ORIGINAL SCHEDULE (NEVER CHANGE) ====================
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", length = 20)
+    private SessionCategory category;
+
+    @Column(name = "is_pending", nullable = false)
+    private Boolean isPending = false;
+
+    // ==================== ORIGINAL SCHEDULE ====================
 
     @Column(name = "original_date")
     private LocalDate originalDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "original_day_of_week", length = 20)
+    @Column(name = "original_day_of_week", length = 10)
     private DayOfWeek originalDayOfWeek;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "original_time_slot", length = 10)
     private TimeSlot originalTimeSlot;
 
-    @Column(name = "original_room", length = 50)
-    private String originalRoom;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "original_room_id")
+    private Room originalRoom;
 
-    // ==================== ACTUAL SCHEDULE (RESCHEDULED) ====================
+    // ==================== ACTUAL SCHEDULE (if rescheduled) ====================
 
     @Column(name = "actual_date")
     private LocalDate actualDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "actual_day_of_week", length = 20)
+    @Column(name = "actual_day_of_week", length = 10)
     private DayOfWeek actualDayOfWeek;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "actual_time_slot", length = 10)
     private TimeSlot actualTimeSlot;
 
-    @Column(name = "actual_room", length = 50)
-    private String actualRoom;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "actual_room_id")
+    private Room actualRoom;
 
-    // ==================== RESCHEDULE METADATA ====================
+    // ==================== RESCHEDULE INFO ====================
 
     @Column(name = "is_rescheduled", nullable = false)
     private Boolean isRescheduled = false;
 
-    @Column(name = "reschedule_reason", length = 500)
+    @Column(name = "reschedule_reason", columnDefinition = "TEXT")
     private String rescheduleReason;
 
     // ==================== STATUS ====================
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private SessionStatus status;
+    private SessionStatus status = SessionStatus.SCHEDULED;
 
-    // ==================== EFFECTIVE SCHEDULE (COMPUTED) ====================
+    // ==================== ✅ FIX: EFFECTIVE GETTERS (with type safety) ====================
 
     /**
-     * Get effective date (actual if rescheduled, else original)
+     * ✅ FIX 1: Get effective date
+     * Returns actual date if rescheduled, otherwise original date
+     * Type-safe: Always returns LocalDate or null
      */
     public LocalDate getEffectiveDate() {
-        return (isRescheduled != null && isRescheduled && actualDate != null)
-                ? actualDate
-                : originalDate;
+        if (Boolean.TRUE.equals(isRescheduled) && actualDate != null) {
+            return actualDate;
+        }
+        return originalDate;
     }
 
     /**
-     * Get effective day of week
+     * ✅ FIX 2: Get effective day of week
+     * Type-safe: Always returns DayOfWeek or null
      */
     public DayOfWeek getEffectiveDayOfWeek() {
-        return (isRescheduled != null && isRescheduled && actualDayOfWeek != null)
-                ? actualDayOfWeek
-                : originalDayOfWeek;
+        if (Boolean.TRUE.equals(isRescheduled) && actualDayOfWeek != null) {
+            return actualDayOfWeek;
+        }
+        return originalDayOfWeek;
     }
 
     /**
-     * Get effective time slot
+     * ✅ FIX 3: Get effective time slot
+     * Type-safe: Always returns TimeSlot or null
      */
     public TimeSlot getEffectiveTimeSlot() {
-        return (isRescheduled != null && isRescheduled && actualTimeSlot != null)
-                ? actualTimeSlot
-                : originalTimeSlot;
+        if (Boolean.TRUE.equals(isRescheduled) && actualTimeSlot != null) {
+            return actualTimeSlot;
+        }
+        return originalTimeSlot;
     }
 
     /**
-     * Get effective room
+     * ✅ FIX 4: Get effective room (FIXED TYPE MISMATCH)
+     * Type-safe: Always returns Room entity or null
+     * <p>
+     * BEFORE (ERROR):
+     * return isRescheduled ? actualRoom : originalRoom;  // Type mismatch!
+     * <p>
+     * AFTER (CORRECT):
+     * Use Boolean.TRUE.equals() for null-safe comparison
      */
-    public String getEffectiveRoom() {
-        return (isRescheduled != null && isRescheduled && actualRoom != null)
-                ? actualRoom
-                : originalRoom;
+    public Room getEffectiveRoom() {
+        if (Boolean.TRUE.equals(isRescheduled) && actualRoom != null) {
+            return actualRoom;
+        }
+        return originalRoom;
     }
 
     // ==================== HELPER METHODS ====================
@@ -145,6 +160,23 @@ public class ClassSession extends BaseEntity {
         this.actualRoom = null;
         this.isRescheduled = false;
         this.rescheduleReason = null;
+    }
+
+    /**
+     * Check if session can be rescheduled
+     */
+    public boolean canReschedule() {
+        return this.sessionType == SessionType.IN_PERSON
+                && !Boolean.TRUE.equals(this.isPending)
+                && this.status != SessionStatus.CANCELLED
+                && this.status != SessionStatus.COMPLETED;
+    }
+
+    /**
+     * Check if session is scheduled (not pending)
+     */
+    public boolean isScheduled() {
+        return !Boolean.TRUE.equals(this.isPending);
     }
 
     /**
@@ -169,5 +201,64 @@ public class ClassSession extends BaseEntity {
     public boolean isUpcoming() {
         LocalDate effectiveDate = getEffectiveDate();
         return effectiveDate != null && effectiveDate.isAfter(LocalDate.now());
+    }
+
+    /**
+     * Get session display name
+     * Example: "Buổi 1 - FIXED" or "Buổi 11 - EXTRA"
+     */
+    public String getDisplayName() {
+        String categoryStr = (category != null) ? " - " + category.name() : "";
+        return "Buổi " + sessionNumber + categoryStr;
+    }
+
+    /**
+     * Get schedule summary
+     * Example: "Thứ 2, 06:45-09:15, A201"
+     */
+    public String getScheduleSummary() {
+        if (Boolean.TRUE.equals(isPending)) {
+            return "Chưa xếp lịch";
+        }
+
+        DayOfWeek day = getEffectiveDayOfWeek();
+        TimeSlot slot = getEffectiveTimeSlot();
+        Room room = getEffectiveRoom();
+
+        String dayStr = (day != null) ? getDayOfWeekDisplay(day) : "N/A";
+        String slotStr = (slot != null) ? slot.getFullDisplay() : "N/A";
+        String roomStr = (room != null) ? room.getRoomCode() : "N/A";
+
+        return dayStr + ", " + slotStr + ", " + roomStr;
+    }
+
+    /**
+     * Convert DayOfWeek to Vietnamese
+     */
+    private String getDayOfWeekDisplay(DayOfWeek day) {
+        return switch (day) {
+            case MONDAY -> "Thứ 2";
+            case TUESDAY -> "Thứ 3";
+            case WEDNESDAY -> "Thứ 4";
+            case THURSDAY -> "Thứ 5";
+            case FRIDAY -> "Thứ 6";
+            case SATURDAY -> "Thứ 7";
+            case SUNDAY -> "Chủ nhật";
+        };
+    }
+
+    // ==================== OVERRIDE METHODS ====================
+
+    @Override
+    public String toString() {
+        return "ClassSession{" +
+                "sessionId=" + sessionId +
+                ", sessionNumber=" + sessionNumber +
+                ", sessionType=" + sessionType +
+                ", category=" + category +
+                ", isPending=" + isPending +
+                ", effectiveDate=" + getEffectiveDate() +
+                ", status=" + status +
+                '}';
     }
 }

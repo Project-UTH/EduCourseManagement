@@ -10,8 +10,9 @@ import majorApi from '../../../services/api/majorApi';
 import './SubjectModal.css';
 
 /**
- * Subject Modal V2 - Vietnamese Version
- * Thêm Chuyên ngành và Số buổi học
+ * Subject Modal V4 - FINAL
+ * ⭐ HIDDEN totalSessions field (auto-calculated)
+ * User chỉ nhập: E-learning + Trực tiếp
  */
 
 interface SubjectModalProps {
@@ -25,7 +26,6 @@ interface FormErrors {
   subjectCode?: string;
   subjectName?: string;
   credits?: string;
-  totalSessions?: string;
   elearningSessions?: string;
   inpersonSessions?: string;
   departmentId?: string;
@@ -41,14 +41,12 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
 }) => {
   const isEditMode = subject !== null;
 
-  // Form state với sessions
   const [formData, setFormData] = useState({
     subjectCode: '',
     subjectName: '',
     credits: 3,
-    totalSessions: 15,
-    elearningSessions: 5,
-    inpersonSessions: 10,
+    elearningSessions: 0,   // User nhập
+    inpersonSessions: 15,   // User nhập
     departmentId: departments.length > 0 ? departments[0].departmentId : 0,
     majorId: 0,
     description: '',
@@ -58,6 +56,9 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
   const [loadingMajors, setLoadingMajors] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // ⭐ AUTO-CALCULATE totalSessions
+  const totalSessions = formData.elearningSessions + formData.inpersonSessions;
 
   /**
    * Load majors khi chọn department
@@ -71,7 +72,6 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
           const majorsList = Array.isArray(response.data) ? response.data : [];
           setMajors(majorsList);
           
-          // Reset majorId if not in new list
           if (formData.majorId > 0) {
             const majorExists = majorsList.some(m => m.majorId === formData.majorId);
             if (!majorExists) {
@@ -101,7 +101,6 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
         subjectCode: subject.subjectCode,
         subjectName: subject.subjectName,
         credits: subject.credits,
-        totalSessions: subject.totalSessions,
         elearningSessions: subject.elearningSessions,
         inpersonSessions: subject.inpersonSessions,
         departmentId: subject.departmentId,
@@ -117,35 +116,31 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
   }, [subject, departments]);
 
   /**
-   * Auto-calculate sessions dựa trên credits
-   * LƯU Ý: Backend cũng sẽ tự tính nếu frontend gửi sai
+   * ⭐ AUTO-CALCULATE sessions khi thay đổi credits
    */
   const autoCalculateSessions = (credits: number) => {
-    let total: number, elearning: number, inperson: number;
+    let elearning: number, inperson: number;
     
     switch (credits) {
       case 2:
-        total = 10;
-        elearning = 5;
-        inperson = 5;
-        break;
-      case 3:
-        total = 15;
-        elearning = 5;
+        elearning = 0;
         inperson = 10;
         break;
-      case 4:
-        total = 20;
-        elearning = 5;
+      case 3:
+        elearning = 0;
         inperson = 15;
         break;
+      case 4:
+        elearning = 0;
+        inperson = 20;
+        break;
       default:
-        total = credits * 5;
-        elearning = Math.max(1, Math.floor(total / 3));
-        inperson = total - elearning;
+        { const total = credits * 5;
+        elearning = 0;
+        inperson = total; }
     }
     
-    return { total, elearning, inperson };
+    return { elearning, inperson };
   };
 
   /**
@@ -155,7 +150,7 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    const numericFields = ['credits', 'totalSessions', 'elearningSessions', 'inpersonSessions', 'departmentId', 'majorId'];
+    const numericFields = ['credits', 'elearningSessions', 'inpersonSessions', 'departmentId', 'majorId'];
     const processedValue = numericFields.includes(name) ? Number(value) : value;
     
     // Auto-calculate sessions khi thay đổi credits
@@ -165,7 +160,6 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
       setFormData(prev => ({
         ...prev,
         credits,
-        totalSessions: sessions.total,
         elearningSessions: sessions.elearning,
         inpersonSessions: sessions.inperson,
       }));
@@ -206,14 +200,9 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
       newErrors.credits = 'Số tín chỉ không quá 10';
     }
 
-    // Total Sessions
-    if (!formData.totalSessions || formData.totalSessions < 1) {
-      newErrors.totalSessions = 'Tổng số buổi phải ít nhất là 1';
-    }
-
     // E-learning Sessions
     if (formData.elearningSessions === null || formData.elearningSessions === undefined) {
-      newErrors.elearningSessions = 'Số buổi E-Learning là bắt buộc';
+      newErrors.elearningSessions = 'Số buổi E-Learning là bắt buộc (có thể nhập 0)';
     } else if (formData.elearningSessions < 0) {
       newErrors.elearningSessions = 'Số buổi E-Learning không được âm';
     }
@@ -221,13 +210,13 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
     // In-person Sessions
     if (formData.inpersonSessions === null || formData.inpersonSessions === undefined) {
       newErrors.inpersonSessions = 'Số buổi trực tiếp là bắt buộc';
-    } else if (formData.inpersonSessions < 0) {
-      newErrors.inpersonSessions = 'Số buổi trực tiếp không được âm';
+    } else if (formData.inpersonSessions < 1) {
+      newErrors.inpersonSessions = 'Số buổi trực tiếp phải ít nhất là 1';
     }
 
-    // Validate sum (backend sẽ tự fix nếu sai)
-    if (formData.totalSessions !== (formData.elearningSessions + formData.inpersonSessions)) {
-      console.warn('Tổng buổi không khớp. Backend sẽ tự động tính lại.');
+    // Total validation
+    if (totalSessions < 1) {
+      newErrors.inpersonSessions = 'Tổng số buổi phải ít nhất là 1';
     }
 
     // Department
@@ -257,10 +246,17 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
     try {
       setLoading(true);
 
-      // Prepare data (majorId = 0 means no major)
+      // ⭐ Include totalSessions in submit data (auto-calculated)
       const submitData = {
-        ...formData,
+        subjectCode: formData.subjectCode,
+        subjectName: formData.subjectName,
+        credits: formData.credits,
+        totalSessions: totalSessions,  // ⭐ AUTO-CALCULATED
+        elearningSessions: formData.elearningSessions,
+        inpersonSessions: formData.inpersonSessions,
+        departmentId: formData.departmentId,
         majorId: formData.majorId > 0 ? formData.majorId : undefined,
+        description: formData.description,
       };
 
       if (isEditMode) {
@@ -302,17 +298,11 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
     }
   };
 
-  /**
-   * Get department name by ID
-   */
   const getDepartmentName = (id: number): string => {
     const dept = departments.find(d => d.departmentId === id);
     return dept ? `${dept.departmentCode} - ${dept.departmentName}` : '';
   };
 
-  /**
-   * Get major name by ID
-   */
   const getMajorName = (id: number): string => {
     const major = majors.find(m => m.majorId === id);
     return major ? `${major.majorCode} - ${major.majorName}` : '';
@@ -438,7 +428,7 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
             )}
           </div>
 
-          {/* Credits - Auto-calculate sessions */}
+          {/* Credits */}
           <div className="form-group">
             <label htmlFor="credits">
               Số tín chỉ <span className="required">*</span>
@@ -457,35 +447,13 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
             {errors.credits && (
               <span className="error-text">{errors.credits}</span>
             )}
-            <span className="helper-text">
-              Số tín chỉ (1-10). Số buổi học sẽ tự động tính.
-            </span>
           </div>
 
-          {/* Sessions - Auto-calculated */}
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="totalSessions">
-                Tổng số buổi <span className="required">*</span>
-              </label>
-              <input
-                type="number"
-                id="totalSessions"
-                name="totalSessions"
-                value={formData.totalSessions}
-                onChange={handleChange}
-                min={1}
-                className={errors.totalSessions ? 'error' : ''}
-                disabled={loading}
-              />
-              {errors.totalSessions && (
-                <span className="error-text">{errors.totalSessions}</span>
-              )}
-            </div>
-
+          {/* ⭐ SESSIONS - 2 FIELDS ONLY */}
+          <div className="form-row-sessions">
             <div className="form-group">
               <label htmlFor="elearningSessions">
-                Buổi E-Learning <span className="required">*</span>
+                Buổi E-Learning <span className="optional">(Có thể 0)</span>
               </label>
               <input
                 type="number"
@@ -512,7 +480,7 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
                 name="inpersonSessions"
                 value={formData.inpersonSessions}
                 onChange={handleChange}
-                min={0}
+                min={1}
                 className={errors.inpersonSessions ? 'error' : ''}
                 disabled={loading}
               />
@@ -520,16 +488,15 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
                 <span className="error-text">{errors.inpersonSessions}</span>
               )}
             </div>
-          </div>
 
-          <div className="info-box">
-            <strong>Quy tắc tính buổi:</strong>
-            <ul>
-              <li>2 tín chỉ = 10 buổi (5 E-Learning + 5 trực tiếp)</li>
-              <li>3 tín chỉ = 15 buổi (5 E-Learning + 10 trực tiếp)</li>
-              <li>4 tín chỉ = 20 buổi (5 E-Learning + 15 trực tiếp)</li>
-              <li>Khác: Backend tự tính theo tỷ lệ</li>
-            </ul>
+            {/* ⭐ TOTAL DISPLAY (READ-ONLY) */}
+            <div className="form-group">
+              <label>Tổng số buổi</label>
+              <div className="total-sessions-display">
+                {totalSessions} buổi
+              </div>
+              <span className="helper-text">Tự động tính = E-learning + Trực tiếp</span>
+            </div>
           </div>
 
           {/* Description */}

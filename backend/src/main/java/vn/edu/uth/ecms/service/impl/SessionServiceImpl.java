@@ -10,6 +10,7 @@ import vn.edu.uth.ecms.dto.response.ClassSessionResponse;
 import vn.edu.uth.ecms.entity.*;
 import vn.edu.uth.ecms.exception.*;
 import vn.edu.uth.ecms.repository.ClassSessionRepository;
+import vn.edu.uth.ecms.repository.RoomRepository;
 import vn.edu.uth.ecms.service.SessionService;
 
 import java.time.DayOfWeek;
@@ -18,12 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Implementation of SessionService
+ * Implementation of SessionService - CORRECTED
  *
- * KEY LOGIC:
- * 1. Reschedule single/multiple sessions
- * 2. Conflict detection for rescheduling
- * 3. Reset to original schedule
+ * KEY CHANGES:
+ * ✅ Fixed duplicate rescheduleSession() method
+ * ✅ Added missing getDayOfWeekDisplay() method
+ * ✅ Updated to use Room entity instead of String
  */
 @Service
 @RequiredArgsConstructor
@@ -32,6 +33,7 @@ import java.util.List;
 public class SessionServiceImpl implements SessionService {
 
     private final ClassSessionRepository sessionRepository;
+    private final RoomRepository roomRepository;
 
     // ==================== RESCHEDULE SINGLE SESSION ====================
 
@@ -51,13 +53,34 @@ public class SessionServiceImpl implements SessionService {
             throw new BadRequestException("Can only reschedule IN_PERSON sessions");
         }
 
-        // 3. Parse new schedule
+        // 3. Cannot reschedule PENDING sessions
+        if (session.getIsPending()) {
+            throw new BadRequestException(
+                    "Cannot reschedule PENDING sessions. " +
+                            "Wait for semester activation to schedule them first."
+            );
+        }
+
+        // 4. Parse new schedule
         LocalDate newDate = LocalDate.parse(request.getNewDate());
         DayOfWeek newDay = DayOfWeek.valueOf(request.getNewDayOfWeek());
         TimeSlot newSlot = TimeSlot.valueOf(request.getNewTimeSlot());
-        String newRoom = request.getNewRoom();
 
-        // 4. Validate new date within semester
+        // 5. ✅ FIND NEW ROOM (from request.getNewRoomId() or by code)
+        Room newRoom;
+        if (request.getNewRoomId() != null) {
+            // Option A: Frontend sends room ID
+            newRoom = roomRepository.findById(request.getNewRoomId())
+                    .orElseThrow(() -> new NotFoundException("Room not found"));
+        } else if (request.getNewRoom() != null) {
+            // Option B: Frontend sends room code (backward compatibility)
+            newRoom = roomRepository.findByRoomCode(request.getNewRoom())
+                    .orElseThrow(() -> new NotFoundException("Room not found: " + request.getNewRoom()));
+        } else {
+            throw new BadRequestException("Room is required for rescheduling");
+        }
+
+        // 6. Validate new date within semester
         ClassEntity classEntity = session.getClassEntity();
         Semester semester = classEntity.getSemester();
 
@@ -69,26 +92,26 @@ public class SessionServiceImpl implements SessionService {
             );
         }
 
-        // 5. Check conflicts
+        // 7. Check conflicts
         if (hasScheduleConflict(
                 semester.getSemesterId(),
                 classEntity.getTeacher().getTeacherId(),
                 newDate,
                 newDay,
                 newSlot,
-                newRoom,
+                newRoom.getRoomId(),  // ← Room ID, not String
                 sessionId)) {
             throw new ConflictException(
                     "Schedule conflict detected at " + newDate + " " +
-                            newDay + " " + newSlot.getDisplayName()
+                            newDay + " " + newSlot.getDisplayName() + " in room " + newRoom.getRoomCode()
             );
         }
 
-        // 6. Update session
+        // 8. Update session
         session.setActualDate(newDate);
         session.setActualDayOfWeek(newDay);
         session.setActualTimeSlot(newSlot);
-        session.setActualRoom(newRoom);
+        session.setActualRoom(newRoom);  // ← Room entity
         session.setIsRescheduled(true);
         session.setRescheduleReason(request.getReason());
 
@@ -96,9 +119,11 @@ public class SessionServiceImpl implements SessionService {
 
         log.info("✅ Session {} rescheduled: {} {} {} {} → {} {} {} {}",
                 session.getSessionNumber(),
-                session.getOriginalDate(), session.getOriginalDayOfWeek(),
-                session.getOriginalTimeSlot(), session.getOriginalRoom(),
-                newDate, newDay, newSlot, newRoom);
+                session.getOriginalDate(),
+                session.getOriginalDayOfWeek(),
+                session.getOriginalTimeSlot(),
+                session.getOriginalRoom() != null ? session.getOriginalRoom().getRoomCode() : "null",
+                newDate, newDay, newSlot, newRoom.getRoomCode());
 
         return mapToResponse(saved);
     }
@@ -161,7 +186,7 @@ public class SessionServiceImpl implements SessionService {
                 session.getOriginalDate(),
                 session.getOriginalDayOfWeek(),
                 session.getOriginalTimeSlot(),
-                session.getOriginalRoom());
+                session.getOriginalRoom() != null ? session.getOriginalRoom().getRoomCode() : "null");
 
         return mapToResponse(saved);
     }
@@ -232,21 +257,23 @@ public class SessionServiceImpl implements SessionService {
 
     // ==================== CONFLICT DETECTION ====================
 
-    @Override
+    /**
+     * ✅ UPDATED: Conflict detection with Room ID
+     */
     public boolean hasScheduleConflict(
             Long semesterId, Long teacherId,
             LocalDate date, DayOfWeek dayOfWeek,
-            TimeSlot timeSlot, String room,
+            TimeSlot timeSlot, Long roomId,  // ← Changed from String room
             Long excludeSessionId) {
 
         // Check teacher conflict
         boolean teacherConflict = sessionRepository.existsTeacherConflict(
-                semesterId, teacherId, date, dayOfWeek, timeSlot, excludeSessionId
+                semesterId, teacherId, date, dayOfWeek, timeSlot.name(), excludeSessionId
         );
 
         // Check room conflict
         boolean roomConflict = sessionRepository.existsRoomConflict(
-                semesterId, room, date, dayOfWeek, timeSlot, excludeSessionId
+                semesterId, roomId, date, dayOfWeek, timeSlot.name(), excludeSessionId
         );
 
         return teacherConflict || roomConflict;
@@ -303,6 +330,9 @@ public class SessionServiceImpl implements SessionService {
 
     // ==================== MAPPER ====================
 
+    /**
+     * ✅ UPDATED: Map Room entity to response
+     */
     private ClassSessionResponse mapToResponse(ClassSession entity) {
         return ClassSessionResponse.builder()
                 .sessionId(entity.getSessionId())
@@ -310,6 +340,8 @@ public class SessionServiceImpl implements SessionService {
                 .classCode(entity.getClassEntity().getClassCode())
                 .sessionNumber(entity.getSessionNumber())
                 .sessionType(entity.getSessionType().toString())
+                .category(entity.getCategory() != null ? entity.getCategory().toString() : null)  // ← NEW
+                .isPending(entity.getIsPending())  // ← NEW
                 // Original
                 .originalDate(entity.getOriginalDate())
                 .originalDayOfWeek(entity.getOriginalDayOfWeek() != null ?
@@ -320,7 +352,10 @@ public class SessionServiceImpl implements SessionService {
                         entity.getOriginalTimeSlot().toString() : null)
                 .originalTimeSlotDisplay(entity.getOriginalTimeSlot() != null ?
                         entity.getOriginalTimeSlot().getFullDisplay() : null)
-                .originalRoom(entity.getOriginalRoom())
+                .originalRoom(entity.getOriginalRoom() != null ?  // ← Room entity
+                        entity.getOriginalRoom().getRoomCode() : null)
+                .originalRoomName(entity.getOriginalRoom() != null ?  // ← NEW
+                        entity.getOriginalRoom().getDisplayName() : null)
                 // Actual
                 .actualDate(entity.getActualDate())
                 .actualDayOfWeek(entity.getActualDayOfWeek() != null ?
@@ -331,7 +366,10 @@ public class SessionServiceImpl implements SessionService {
                         entity.getActualTimeSlot().toString() : null)
                 .actualTimeSlotDisplay(entity.getActualTimeSlot() != null ?
                         entity.getActualTimeSlot().getFullDisplay() : null)
-                .actualRoom(entity.getActualRoom())
+                .actualRoom(entity.getActualRoom() != null ?  // ← Room entity
+                        entity.getActualRoom().getRoomCode() : null)
+                .actualRoomName(entity.getActualRoom() != null ?  // ← NEW
+                        entity.getActualRoom().getDisplayName() : null)
                 // Effective
                 .effectiveDate(entity.getEffectiveDate())
                 .effectiveDayOfWeek(entity.getEffectiveDayOfWeek() != null ?
@@ -342,7 +380,10 @@ public class SessionServiceImpl implements SessionService {
                         entity.getEffectiveTimeSlot().toString() : null)
                 .effectiveTimeSlotDisplay(entity.getEffectiveTimeSlot() != null ?
                         entity.getEffectiveTimeSlot().getFullDisplay() : null)
-                .effectiveRoom(entity.getEffectiveRoom())
+                .effectiveRoom(entity.getEffectiveRoom() != null ?  // ← Room entity
+                        entity.getEffectiveRoom().getRoomCode() : null)
+                .effectiveRoomName(entity.getEffectiveRoom() != null ?  // ← NEW
+                        entity.getEffectiveRoom().getDisplayName() : null)
                 // Reschedule
                 .isRescheduled(entity.getIsRescheduled())
                 .rescheduleReason(entity.getRescheduleReason())
@@ -354,6 +395,9 @@ public class SessionServiceImpl implements SessionService {
                 .build();
     }
 
+    /**
+     * ✅ NEW: Helper method to convert DayOfWeek to Vietnamese display
+     */
     private String getDayOfWeekDisplay(DayOfWeek day) {
         return switch (day) {
             case MONDAY -> "Thứ 2";

@@ -6,14 +6,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Request DTO for creating a new class
+ * Class Create Request - UPDATED
  *
- * VALIDATION RULES:
- * - Class code: unique, max 20 chars
- * - Max students: 1-200
- * - Day of week: MONDAY-SATURDAY
- * - Time slot: CA1-CA5
- * - Room: max 50 chars
+ * CHANGES:
+ * REMOVED: room, extraDayOfWeek, extraTimeSlot, extraRoom
+ * KEPT: dayOfWeek, timeSlot (for fixed 10 sessions)
+ * KEPT: elearningDayOfWeek, elearningTimeSlot (optional)
+ *
+ * AUTO ASSIGNMENT:
+ * - System will auto-assign fixedRoom
+ * - Extra sessions will be scheduled on semester activation
  */
 @Data
 @NoArgsConstructor
@@ -21,38 +23,68 @@ import lombok.NoArgsConstructor;
 public class ClassCreateRequest {
 
     @NotBlank(message = "Class code is required")
-    @Size(max = 20, message = "Class code must not exceed 20 characters")
-    @Pattern(regexp = "^[A-Z0-9-]+$", message = "Class code must contain only uppercase letters, numbers, and hyphens")
+    @Size(max = 20, message = "Class code max 20 characters")
+    @Pattern(regexp = "^[A-Z0-9-]+$", message = "Class code must be uppercase alphanumeric with dash")
     private String classCode;
 
     @NotNull(message = "Subject ID is required")
-    @Positive(message = "Subject ID must be positive")
     private Long subjectId;
 
     @NotNull(message = "Teacher ID is required")
-    @Positive(message = "Teacher ID must be positive")
     private Long teacherId;
 
     @NotNull(message = "Semester ID is required")
-    @Positive(message = "Semester ID must be positive")
     private Long semesterId;
 
     @NotNull(message = "Max students is required")
     @Min(value = 1, message = "Max students must be at least 1")
-    @Max(value = 200, message = "Max students must not exceed 200")
+    @Max(value = 200, message = "Max students cannot exceed 200")
     private Integer maxStudents;
 
+    // ==================== FIXED SCHEDULE (for 10 sessions) ====================
+
+    /**
+     * Day of week for FIXED sessions
+     * Admin inputs: MONDAY, TUESDAY, etc.
+     * System will find available room automatically
+     */
     @NotBlank(message = "Day of week is required")
-    @Pattern(regexp = "^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY)$",
+    @Pattern(regexp = "MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY",
             message = "Invalid day of week")
     private String dayOfWeek;
 
+    /**
+     * Time slot for FIXED sessions
+     * Admin inputs: CA1, CA2, CA3, CA4, CA5
+     * System will find available room automatically
+     */
     @NotBlank(message = "Time slot is required")
-    @Pattern(regexp = "^(CA1|CA2|CA3|CA4|CA5)$",
+    @Pattern(regexp = "CA1|CA2|CA3|CA4|CA5",
             message = "Invalid time slot")
     private String timeSlot;
 
-    @NotBlank(message = "Room is required")
-    @Size(max = 50, message = "Room must not exceed 50 characters")
-    private String room;
+    // ==================== E-LEARNING SCHEDULE (optional) ====================
+
+    /**
+     * Day of week for E-LEARNING sessions
+     * Optional - NULL if subject has no e-learning
+     */
+    @Pattern(regexp = "MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY",
+            message = "Invalid e-learning day of week")
+    private String elearningDayOfWeek;
+
+    /**
+     * Time slot for E-LEARNING sessions
+     * Optional - NULL if subject has no e-learning
+     */
+    @Pattern(regexp = "CA1|CA2|CA3|CA4|CA5",
+            message = "Invalid e-learning time slot")
+    private String elearningTimeSlot;
+
+    // ==================== VALIDATION ====================
+
+    /**
+     * Custom validation: If subject has e-learning, both day and time must be provided
+     * This is handled in service layer by checking subject.eLearningSessions > 0
+     */
 }

@@ -11,7 +11,10 @@ import vn.edu.uth.ecms.exception.*;
 import vn.edu.uth.ecms.repository.*;
 import vn.edu.uth.ecms.service.EnrollmentService;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -77,7 +80,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         }
 
         // 6. ✅ CHECK ACTUAL SCHEDULE CONFLICT (via student_schedule)
-        if (hasActualScheduleConflict(student.getStudentId(), classEntity)) {
+        if (hasActualScheduleConflict(student, classEntity)) {
             throw new ConflictException(
                     "❌ Student " + student.getFullName() + " has schedule conflict! " +
                             "They already have another class at the same time. " +
@@ -199,48 +202,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     // ==================== SCHEDULE MANAGEMENT ====================
 
     /**
-     * ✅ AUTO CREATE student_schedule records for all IN_PERSON sessions
-     * Called when student enrolls in a class
-     */
-    private void createStudentSchedule(Student student, ClassEntity classEntity) {
-        log.info("📅 Creating schedule for student {} in class {}",
-                student.getStudentCode(), classEntity.getClassCode());
-
-        // 1. Get all IN_PERSON sessions (exclude E_LEARNING)
-        List<ClassSession> sessions = sessionRepository
-                .findByClassAndType(classEntity.getClassId(), SessionType.IN_PERSON);
-
-        if (sessions.isEmpty()) {
-            log.warn("⚠️ No IN_PERSON sessions found for class {}. Skipping schedule creation.",
-                    classEntity.getClassCode());
-            return;
-        }
-
-        // 2. Create student_schedule record for each session
-        List<StudentSchedule> schedules = sessions.stream()
-                .map(session -> StudentSchedule.builder()
-                        .student(student)
-                        .classEntity(classEntity)
-                        .classSession(session)
-                        .sessionDate(session.getEffectiveDate())
-                        .dayOfWeek(session.getEffectiveDayOfWeek())
-                        .timeSlot(session.getEffectiveTimeSlot())
-                        .room(session.getEffectiveRoom())
-                        .semester(classEntity.getSemester())
-                        .status(ScheduleStatus.SCHEDULED)
-                        .build())
-                .collect(Collectors.toList());
-
-        // 3. Batch save for performance
-        scheduleRepository.saveAll(schedules);
-
-        log.info("✅ Created {} schedule records for student {} in class {}",
-                schedules.size(),
-                student.getStudentCode(),
-                classEntity.getClassCode());
-    }
-
-    /**
      * ✅ AUTO DELETE student_schedule records
      * Called when student drops a class or admin removes student
      *
@@ -257,50 +218,107 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 deletedCount, studentId, classId);
     }
 
-    /**
-     * ✅ CHECK ACTUAL SCHEDULE CONFLICT via student_schedule table
-     *
-     * Logic:
-     * 1. Get all IN_PERSON sessions of the new class
-     * 2. For each session, check if student already has a class at that date/time
-     * 3. Return true if ANY conflict found
-     */
-    private boolean hasActualScheduleConflict(Long studentId, ClassEntity newClass) {
-        log.debug("🔍 Checking schedule conflict for student {} enrolling in class {}",
-                studentId, newClass.getClassCode());
+    @Override
+    @Transactional
+    public void createStudentSchedule(Student student, ClassEntity classEntity) {
+        log.info("📅 Creating student_schedule for student {} in class {}",
+                student.getStudentCode(),
+                classEntity.getClassCode());
 
-        // Get all IN_PERSON sessions of new class
-        List<ClassSession> newSessions = sessionRepository
-                .findByClassAndType(newClass.getClassId(), SessionType.IN_PERSON);
+        // 1. Get all IN_PERSON sessions (skip E_LEARNING and PENDING)
+        List<ClassSession> sessions = sessionRepository.findByClassAndType(
+                        classEntity.getClassId(),
+                        SessionType.IN_PERSON
+                ).stream()
+                .filter(session -> !session.getIsPending())  // ✅ Skip pending sessions
+                .toList();
 
-        if (newSessions.isEmpty()) {
-            log.debug("No IN_PERSON sessions for class {}, no conflict possible",
-                    newClass.getClassCode());
-            return false;
+        // 2. Build student schedule entries
+        List<StudentSchedule> schedules = new ArrayList<>();
+
+        for (ClassSession session : sessions) {
+            StudentSchedule schedule = StudentSchedule.builder()
+                    .student(student)
+                    .classSession(session)
+                    .sessionDate(session.getEffectiveDate())
+                    .dayOfWeek(session.getEffectiveDayOfWeek())
+                    .timeSlot(session.getEffectiveTimeSlot())
+                    .room(session.getEffectiveRoom())
+                    .attendanceStatus(AttendanceStatus.ABSENT)
+                    .build();
+
+            schedules.add(schedule);
         }
 
-        // Check each session for conflict
-        for (ClassSession session : newSessions) {
-            boolean hasConflict = scheduleRepository.existsConflict(
-                    studentId,
-                    session.getEffectiveDate(),
-                    session.getEffectiveDayOfWeek(),
-                    session.getEffectiveTimeSlot()
-            );
+        // 3. Batch save for performance
+        scheduleRepository.saveAll(schedules);
 
-            if (hasConflict) {
-                log.warn("⚠️ CONFLICT DETECTED: Student {} already has class on {} {} {}",
-                        studentId,
-                        session.getEffectiveDate(),
-                        session.getEffectiveDayOfWeek(),
-                        session.getEffectiveTimeSlot().getFullDisplay());
-                return true;
+        log.info("✅ Created {} schedule entries for student {}",
+                schedules.size(),
+                student.getStudentCode());
+    }
+
+    /**
+     * ✅ CORRECTED: Check actual schedule conflict
+     * @param student The Student entity (NOT Long!)
+     * @param newClass The class to check for conflicts
+     */
+    private boolean hasActualScheduleConflict(Student student, ClassEntity newClass) {
+
+        Semester semester = newClass.getSemester();
+
+        // Get all scheduled IN_PERSON sessions (not pending)
+        List<ClassSession> newSessions = sessionRepository
+                .findByClassAndType(newClass.getClassId(), SessionType.IN_PERSON)
+                .stream()
+                .filter(session -> !session.getIsPending())  // ✅ Skip pending
+                .toList();
+
+        // Get student's current registrations in this semester
+        List<CourseRegistration> currentRegistrations = registrationRepository
+                .findByStudentAndSemester(student.getStudentId(), semester.getSemesterId())
+                .stream()
+                .filter(reg -> reg.getStatus() == RegistrationStatus.REGISTERED)
+                .toList();
+
+        // Check each new session against existing schedule
+        for (ClassSession newSession : newSessions) {
+            LocalDate newDate = newSession.getEffectiveDate();
+            DayOfWeek newDay = newSession.getEffectiveDayOfWeek();
+            TimeSlot newSlot = newSession.getEffectiveTimeSlot();
+            Room newRoom = newSession.getEffectiveRoom();  // ✅ Room entity
+
+            // Check conflicts with existing classes
+            for (CourseRegistration reg : currentRegistrations) {
+                List<ClassSession> existingSessions = sessionRepository
+                        .findByClassAndType(
+                                reg.getClassEntity().getClassId(),
+                                SessionType.IN_PERSON
+                        )
+                        .stream()
+                        .filter(session -> !session.getIsPending())
+                        .toList();
+
+                for (ClassSession existing : existingSessions) {
+                    // Compare dates and times
+                    if (existing.getEffectiveDate() != null &&
+                            existing.getEffectiveDate().equals(newDate) &&
+                            existing.getEffectiveDayOfWeek() == newDay &&
+                            existing.getEffectiveTimeSlot() == newSlot) {
+
+                        log.warn("⚠️ Schedule conflict detected: " +
+                                        "Student {} has {} at {} {} {}",
+                                student.getStudentCode(),  // ✅ Now works - student is Student entity
+                                reg.getClassEntity().getClassCode(),
+                                newDate, newDay, newSlot);
+
+                        return true;  // Conflict found
+                    }
+                }
             }
         }
 
-        log.debug("✅ No conflict found for student {} in class {}",
-                studentId, newClass.getClassCode());
-        return false;
+        return false;  // No conflict
     }
 
     // ==================== MAPPER ====================

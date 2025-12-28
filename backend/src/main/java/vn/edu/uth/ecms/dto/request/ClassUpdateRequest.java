@@ -6,10 +6,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Request DTO for updating an existing class
+ * Class Update Request - UPDATED
  *
- * NOTE: Cannot update subject or semester (only teacher, capacity, schedule)
- * WARNING: Updating schedule will regenerate all sessions!
+ * CHANGES:
+ * REMOVED: Manual room fields (room, extraRoom)
+ * REMOVED: Extra schedule fields (extraDayOfWeek, extraTimeSlot)
+ * KEPT: Teacher, maxStudents
+ * KEPT: Fixed day/time (for 10 sessions, system will re-find room)
+ * KEPT: E-learning day/time (optional)
+ *
+ * NOTE:
+ * - Cannot update subject or semester (immutable)
+ * - Updating schedule will trigger room re-assignment
+ * - Extra sessions remain pending (re-scheduled on next activation)
  */
 @Data
 @NoArgsConstructor
@@ -25,17 +34,70 @@ public class ClassUpdateRequest {
     @Max(value = 200, message = "Max students must not exceed 200")
     private Integer maxStudents;
 
-    @NotBlank(message = "Day of week is required")
-    @Pattern(regexp = "^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY)$",
+    // ==================== FIXED SCHEDULE (OPTIONAL - for re-scheduling) ====================
+
+    /**
+     * Day of week for FIXED sessions
+     * Optional - if provided, will trigger re-scheduling
+     */
+    @Pattern(regexp = "^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)?$",
             message = "Invalid day of week")
     private String dayOfWeek;
 
-    @NotBlank(message = "Time slot is required")
-    @Pattern(regexp = "^(CA1|CA2|CA3|CA4|CA5)$",
+    /**
+     * Time slot for FIXED sessions
+     * Optional - if provided, will trigger re-scheduling
+     */
+    @Pattern(regexp = "^(CA1|CA2|CA3|CA4|CA5)?$",
             message = "Invalid time slot")
     private String timeSlot;
 
-    @NotBlank(message = "Room is required")
-    @Size(max = 50, message = "Room must not exceed 50 characters")
-    private String room;
+    // ==================== E-LEARNING SCHEDULE (OPTIONAL) ====================
+
+    /**
+     * E-learning day of week
+     * Optional - if subject has e-learning
+     */
+    @Pattern(regexp = "^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)?$",
+            message = "Invalid e-learning day of week")
+    private String elearningDayOfWeek;
+
+    /**
+     * E-learning time slot
+     * Optional - if subject has e-learning
+     */
+    @Pattern(regexp = "^(CA1|CA2|CA3|CA4|CA5)?$",
+            message = "Invalid e-learning time slot")
+    private String elearningTimeSlot;
+
+    // ==================== VALIDATION HELPERS ====================
+
+    /**
+     * Check if schedule is being updated
+     */
+    public boolean isScheduleUpdate() {
+        return dayOfWeek != null || timeSlot != null;
+    }
+
+    /**
+     * Check if has complete fixed schedule
+     */
+    public boolean hasCompleteFixedSchedule() {
+        boolean hasAny = dayOfWeek != null || timeSlot != null;
+        boolean hasAll = dayOfWeek != null && timeSlot != null;
+
+        if (!hasAny) return true;  // No update
+        return hasAll;  // Must have both
+    }
+
+    /**
+     * Check if has complete e-learning schedule
+     */
+    public boolean hasCompleteElearningSchedule() {
+        boolean hasAny = elearningDayOfWeek != null || elearningTimeSlot != null;
+        boolean hasAll = elearningDayOfWeek != null && elearningTimeSlot != null;
+
+        if (!hasAny) return true;
+        return hasAll;
+    }
 }

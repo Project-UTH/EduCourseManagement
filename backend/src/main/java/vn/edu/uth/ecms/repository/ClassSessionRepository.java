@@ -1,164 +1,252 @@
 package vn.edu.uth.ecms.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.ClassSession;
+import vn.edu.uth.ecms.entity.SessionCategory;
 import vn.edu.uth.ecms.entity.SessionStatus;
 import vn.edu.uth.ecms.entity.SessionType;
-import vn.edu.uth.ecms.entity.TimeSlot;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Repository for ClassSession
+ * ClassSession Repository - CORRECTED
+ *
+ * ✅ FIXED: existsRoomConflict() - Use original/actual fields, not effective getters
  */
 @Repository
 public interface ClassSessionRepository extends JpaRepository<ClassSession, Long> {
 
     // ==================== BASIC QUERIES ====================
 
-    /**
-     * Find all sessions for a class
-     */
-    @Query("SELECT s FROM ClassSession s WHERE s.classEntity.classId = :classId ORDER BY s.sessionNumber ASC")
+    @Query("SELECT cs FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId " +
+            "ORDER BY cs.sessionNumber")
     List<ClassSession> findByClass(@Param("classId") Long classId);
 
-    /**
-     * Find all IN_PERSON sessions for a class
-     */
-    @Query("SELECT s FROM ClassSession s " +
-            "WHERE s.classEntity.classId = :classId " +
-            "AND s.sessionType = :sessionType " +
-            "ORDER BY s.sessionNumber ASC")
+    @Query("SELECT cs FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId " +
+            "AND cs.sessionType = :sessionType " +
+            "ORDER BY cs.sessionNumber")
     List<ClassSession> findByClassAndType(
             @Param("classId") Long classId,
             @Param("sessionType") SessionType sessionType
     );
 
-    /**
-     * Find all rescheduled sessions for a class
-     */
-    @Query("SELECT s FROM ClassSession s " +
-            "WHERE s.classEntity.classId = :classId " +
-            "AND s.isRescheduled = true " +
-            "ORDER BY s.sessionNumber ASC")
+    @Query("SELECT cs FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId " +
+            "AND cs.category = :category " +
+            "ORDER BY cs.sessionNumber")
+    List<ClassSession> findByClassAndCategory(
+            @Param("classId") Long classId,
+            @Param("category") SessionCategory category
+    );
+
+    @Query("SELECT cs FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId " +
+            "AND cs.isRescheduled = true " +
+            "ORDER BY cs.sessionNumber")
     List<ClassSession> findRescheduledSessions(@Param("classId") Long classId);
 
-    // ==================== CONFLICT DETECTION FOR RESCHEDULING ====================
+    // ==================== PENDING SESSIONS ====================
 
     /**
-     * Check if teacher has conflict at specific time
-     *
-     * Used when rescheduling a session
-     * Checks BOTH:
-     * 1. Other classes' fixed sessions
-     * 2. Other sessions that have been rescheduled to this time
+     * Find all pending extra sessions for a class
      */
-    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END " +
-            "FROM ClassSession s " +
-            "WHERE s.classEntity.semester.semesterId = :semesterId " +
-            "AND s.classEntity.teacher.teacherId = :teacherId " +
-            "AND s.sessionType = 'IN_PERSON' " +
+    @Query("SELECT cs FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId " +
+            "AND cs.isPending = true " +
+            "AND cs.category = 'EXTRA' " +
+            "ORDER BY cs.sessionNumber")
+    List<ClassSession> findPendingSessionsByClass(@Param("classId") Long classId);
+
+    /**
+     * Find all pending extra sessions in a semester
+     */
+    @Query("SELECT cs FROM ClassSession cs " +
+            "WHERE cs.classEntity.semester.semesterId = :semesterId " +
+            "AND cs.isPending = true " +
+            "AND cs.category = 'EXTRA' " +
+            "ORDER BY cs.classEntity.classId, cs.sessionNumber")
+    List<ClassSession> findPendingSessionsBySemester(@Param("semesterId") Long semesterId);
+
+    /**
+     * Count pending sessions for a class
+     */
+    @Query("SELECT COUNT(cs) FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId " +
+            "AND cs.isPending = true")
+    long countPendingByClass(@Param("classId") Long classId);
+
+    // ==================== CONFLICT DETECTION ====================
+
+    /**
+     * Check teacher conflict with specific date
+     *
+     * Logic: Check BOTH original and actual schedules
+     */
+    @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
+            "FROM ClassSession cs " +
+            "WHERE cs.classEntity.semester.semesterId = :semesterId " +
+            "AND cs.classEntity.teacher.teacherId = :teacherId " +
+            "AND cs.isPending = false " +
+            "AND cs.status != 'CANCELLED' " +
             "AND (" +
-            "  (s.isRescheduled = false AND s.originalDate = :date AND s.originalDayOfWeek = :dayOfWeek AND s.originalTimeSlot = :timeSlot) " +
+            "  (cs.isRescheduled = false " +
+            "   AND cs.originalDate = :date " +
+            "   AND cs.originalDayOfWeek = :dayOfWeek " +
+            "   AND cs.originalTimeSlot = :timeSlot) " +
             "  OR " +
-            "  (s.isRescheduled = true AND s.actualDate = :date AND s.actualDayOfWeek = :dayOfWeek AND s.actualTimeSlot = :timeSlot)" +
+            "  (cs.isRescheduled = true " +
+            "   AND cs.actualDate = :date " +
+            "   AND cs.actualDayOfWeek = :dayOfWeek " +
+            "   AND cs.actualTimeSlot = :timeSlot)" +
             ") " +
-            "AND (:excludeSessionId IS NULL OR s.sessionId != :excludeSessionId)")
+            "AND (:excludeSessionId IS NULL OR cs.sessionId != :excludeSessionId)")
     boolean existsTeacherConflict(
             @Param("semesterId") Long semesterId,
             @Param("teacherId") Long teacherId,
             @Param("date") LocalDate date,
             @Param("dayOfWeek") DayOfWeek dayOfWeek,
-            @Param("timeSlot") TimeSlot timeSlot,
+            @Param("timeSlot") String timeSlot,
             @Param("excludeSessionId") Long excludeSessionId
     );
 
     /**
-     * Check if room has conflict at specific time
+     * Check student conflict
      *
-     * Same logic as teacher conflict but for rooms
+     * Logic: Check via CourseRegistration join
      */
-    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END " +
-            "FROM ClassSession s " +
-            "WHERE s.classEntity.semester.semesterId = :semesterId " +
-            "AND s.sessionType = 'IN_PERSON' " +
+    @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
+            "FROM ClassSession cs " +
+            "JOIN CourseRegistration cr ON cr.classEntity.classId = cs.classEntity.classId " +
+            "WHERE cs.classEntity.semester.semesterId = :semesterId " +
+            "AND cr.student.studentId = :studentId " +
+            "AND cr.status = 'REGISTERED' " +
+            "AND cs.isPending = false " +
+            "AND cs.status != 'CANCELLED' " +
             "AND (" +
-            "  (s.isRescheduled = false AND s.originalDate = :date AND s.originalDayOfWeek = :dayOfWeek AND s.originalTimeSlot = :timeSlot AND s.originalRoom = :room) " +
+            "  (cs.isRescheduled = false " +
+            "   AND cs.originalDate = :date " +
+            "   AND cs.originalDayOfWeek = :dayOfWeek " +
+            "   AND cs.originalTimeSlot = :timeSlot) " +
             "  OR " +
-            "  (s.isRescheduled = true AND s.actualDate = :date AND s.actualDayOfWeek = :dayOfWeek AND s.actualTimeSlot = :timeSlot AND s.actualRoom = :room)" +
+            "  (cs.isRescheduled = true " +
+            "   AND cs.actualDate = :date " +
+            "   AND cs.actualDayOfWeek = :dayOfWeek " +
+            "   AND cs.actualTimeSlot = :timeSlot)" +
             ") " +
-            "AND (:excludeSessionId IS NULL OR s.sessionId != :excludeSessionId)")
-    boolean existsRoomConflict(
+            "AND (:excludeSessionId IS NULL OR cs.sessionId != :excludeSessionId)")
+    boolean existsStudentConflict(
             @Param("semesterId") Long semesterId,
-            @Param("room") String room,
+            @Param("studentId") Long studentId,
             @Param("date") LocalDate date,
             @Param("dayOfWeek") DayOfWeek dayOfWeek,
-            @Param("timeSlot") TimeSlot timeSlot,
+            @Param("timeSlot") String timeSlot,
             @Param("excludeSessionId") Long excludeSessionId
     );
 
-    // ==================== STATISTICS ====================
-
     /**
-     * Count total sessions for a class
+     * ✅ FIXED: Check room conflict
+     *
+     * CANNOT use effectiveDate, effectiveDayOfWeek, effectiveTimeSlot
+     * → They are Java methods, not DB columns!
+     *
+     * MUST check BOTH original and actual separately
      */
-    @Query("SELECT COUNT(s) FROM ClassSession s WHERE s.classEntity.classId = :classId")
-    long countByClass(@Param("classId") Long classId);
-
-    /**
-     * Count sessions by type
-     */
-    @Query("SELECT COUNT(s) FROM ClassSession s WHERE s.classEntity.classId = :classId AND s.sessionType = :type")
-    long countByClassAndType(
-            @Param("classId") Long classId,
-            @Param("type") SessionType type
+    @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
+            "FROM ClassSession cs " +
+            "WHERE cs.classEntity.semester.semesterId = :semesterId " +
+            "AND cs.isPending = false " +
+            "AND cs.status != 'CANCELLED' " +
+            "AND (" +
+            "  (cs.isRescheduled = false " +
+            "   AND cs.originalRoom.roomId = :roomId " +
+            "   AND cs.originalDate = :date " +
+            "   AND cs.originalDayOfWeek = :dayOfWeek " +
+            "   AND cs.originalTimeSlot = :timeSlot) " +
+            "  OR " +
+            "  (cs.isRescheduled = true " +
+            "   AND cs.actualRoom.roomId = :roomId " +
+            "   AND cs.actualDate = :date " +
+            "   AND cs.actualDayOfWeek = :dayOfWeek " +
+            "   AND cs.actualTimeSlot = :timeSlot)" +
+            ") " +
+            "AND (:excludeSessionId IS NULL OR cs.sessionId != :excludeSessionId)")
+    boolean existsRoomConflict(
+            @Param("semesterId") Long semesterId,
+            @Param("roomId") Long roomId,
+            @Param("date") LocalDate date,
+            @Param("dayOfWeek") DayOfWeek dayOfWeek,
+            @Param("timeSlot") String timeSlot,
+            @Param("excludeSessionId") Long excludeSessionId
     );
 
-    /**
-     * Count rescheduled sessions
-     */
-    @Query("SELECT COUNT(s) FROM ClassSession s WHERE s.classEntity.classId = :classId AND s.isRescheduled = true")
-    long countRescheduledSessions(@Param("classId") Long classId);
-
-    /**
-     * Count completed sessions
-     */
-    @Query("SELECT COUNT(s) FROM ClassSession s WHERE s.classEntity.classId = :classId AND s.status = :status")
-    long countByStatus(
-            @Param("classId") Long classId,
-            @Param("status") SessionStatus status
-    );
-
-    // ==================== UTILITY ====================
+    // ==================== DELETE OPERATIONS ====================
 
     /**
      * Delete all sessions for a class
-     * Used when deleting a class
      */
-    @Query("DELETE FROM ClassSession s WHERE s.classEntity.classId = :classId")
+    @Modifying
+    @Query("DELETE FROM ClassSession cs WHERE cs.classEntity.classId = :classId")
     void deleteByClass(@Param("classId") Long classId);
 
     /**
-     * Find sessions by date range
-     * Used for calendar view
+     * Delete all pending sessions for a class
      */
-    @Query("SELECT s FROM ClassSession s " +
-            "WHERE s.classEntity.classId = :classId " +
-            "AND s.sessionType = 'IN_PERSON' " +
-            "AND (" +
-            "  (s.isRescheduled = false AND s.originalDate BETWEEN :startDate AND :endDate) " +
-            "  OR " +
-            "  (s.isRescheduled = true AND s.actualDate BETWEEN :startDate AND :endDate)" +
-            ") " +
-            "ORDER BY COALESCE(s.actualDate, s.originalDate) ASC")
-    List<ClassSession> findByDateRange(
+    @Modifying
+    @Query("DELETE FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId " +
+            "AND cs.isPending = true")
+    void deletePendingByClass(@Param("classId") Long classId);
+
+    // ==================== STATISTICS ====================
+
+    @Query("SELECT COUNT(cs) FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId")
+    long countByClass(@Param("classId") Long classId);
+
+    @Query("SELECT COUNT(cs) FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId " +
+            "AND cs.sessionType = :sessionType")
+    long countByClassAndType(
             @Param("classId") Long classId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate
+            @Param("sessionType") SessionType sessionType
     );
+
+    @Query("SELECT COUNT(cs) FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId " +
+            "AND cs.isRescheduled = true")
+    long countRescheduledSessions(@Param("classId") Long classId);
+
+    @Query("SELECT COUNT(cs) FROM ClassSession cs " +
+            "WHERE cs.classEntity.classId = :classId " +
+            "AND cs.status = :status")
+    long countByStatus(
+            @Param("classId") Long classId,
+            @Param("sessionStatus") SessionStatus status
+    );
+
+    // ==================== SEMESTER STATISTICS ====================
+
+    @Query("SELECT cs.category, COUNT(cs) " +
+            "FROM ClassSession cs " +
+            "WHERE cs.classEntity.semester.semesterId = :semesterId " +
+            "GROUP BY cs.category")
+    List<Object[]> countByCategoryInSemester(@Param("semesterId") Long semesterId);
+
+    @Query("SELECT COUNT(cs) FROM ClassSession cs " +
+            "WHERE cs.classEntity.semester.semesterId = :semesterId " +
+            "AND cs.isPending = true")
+    long countPendingInSemester(@Param("semesterId") Long semesterId);
+
+    @Query("SELECT COUNT(cs) FROM ClassSession cs " +
+            "WHERE cs.classEntity.semester.semesterId = :semesterId " +
+            "AND cs.isPending = false")
+    long countScheduledInSemester(@Param("semesterId") Long semesterId);
 }

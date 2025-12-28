@@ -2,6 +2,8 @@ package vn.edu.uth.ecms.service;
 
 import vn.edu.uth.ecms.dto.request.ManualEnrollRequest;
 import vn.edu.uth.ecms.dto.response.CourseRegistrationResponse;
+import vn.edu.uth.ecms.entity.ClassEntity;
+import vn.edu.uth.ecms.entity.Student;
 
 import java.util.List;
 
@@ -36,6 +38,8 @@ public interface EnrollmentService {
      * @return List of active registrations
      */
     List<CourseRegistrationResponse> getStudentsInClass(Long classId);
+
+    void createStudentSchedule(Student student, ClassEntity classEntity);
 
     /**
      * Get all manual enrollments for audit

@@ -9,12 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.request.SemesterCreateRequest;
 import vn.edu.uth.ecms.dto.request.SemesterUpdateRequest;
 import vn.edu.uth.ecms.dto.response.SemesterResponse;
+import vn.edu.uth.ecms.entity.ClassSession;
 import vn.edu.uth.ecms.entity.Semester;
 import vn.edu.uth.ecms.entity.SemesterStatus;
 import vn.edu.uth.ecms.exception.BadRequestException;
 import vn.edu.uth.ecms.exception.DuplicateException;
 import vn.edu.uth.ecms.exception.NotFoundException;
+import vn.edu.uth.ecms.repository.ClassSessionRepository;
 import vn.edu.uth.ecms.repository.SemesterRepository;
+import vn.edu.uth.ecms.service.ExtraSessionScheduler;
 import vn.edu.uth.ecms.service.SemesterService;
 
 import java.time.LocalDate;
@@ -31,6 +34,7 @@ import java.util.Optional;
  * 3. Registration period validation
  * 4. Cannot edit COMPLETED semesters
  * 5. Registration control only for UPCOMING semesters
+ * 6. ⭐ Auto-schedule PENDING extra sessions when activating semester
  */
 @Service
 @RequiredArgsConstructor
@@ -39,6 +43,8 @@ import java.util.Optional;
 public class SemesterServiceImpl implements SemesterService {
 
     private final SemesterRepository semesterRepository;
+    private final ClassSessionRepository sessionRepository;
+    private final ExtraSessionScheduler extraSessionScheduler;  // ⭐ Injected
 
     // ==================== HELPER METHODS ====================
 
@@ -236,7 +242,7 @@ public class SemesterServiceImpl implements SemesterService {
 
     @Override
     public SemesterResponse activateSemester(Long id) {
-        log.info("Activating semester ID: {}", id);
+        log.info("🔄 Activating semester ID: {}", id);
 
         // 1. Find semester to activate
         Semester semesterToActivate = semesterRepository.findById(id)
@@ -274,7 +280,88 @@ public class SemesterServiceImpl implements SemesterService {
 
         log.info("✅ Activated semester: {}", saved.getSemesterCode());
 
+        // 6. ⭐ AUTO SCHEDULE ALL PENDING EXTRA SESSIONS ⭐
+        try {
+            schedulePendingExtraSessions(id);
+        } catch (Exception e) {
+            log.error("❌ Failed to auto-schedule extra sessions: {}", e.getMessage(), e);
+            // Don't fail activation, just log error
+            // Admin can manually schedule later if needed
+        }
+
         return mapToResponse(saved);
+    }
+
+    /**
+     * ⭐ AUTO SCHEDULE ALL PENDING EXTRA SESSIONS
+     *
+     * Called when admin activates semester
+     * Uses ExtraSessionScheduler with 4-tier fallback strategy:
+     * 1. Ideal slot (Mon-Sat, physical room, no conflicts)
+     * 2. Sunday ONLINE (no student conflicts)
+     * 3. Any day ONLINE (no student conflicts)
+     * 4. Force ONLINE (ignore conflicts)
+     *
+     * @param semesterId Semester ID to schedule sessions for
+     */
+    private void schedulePendingExtraSessions(Long semesterId) {
+        log.info("📅 Scheduling all pending extra sessions for semester {}", semesterId);
+
+        // Get semester
+        Semester semester = semesterRepository.findById(semesterId)
+                .orElseThrow(() -> new NotFoundException("Semester not found"));
+
+        // Get all pending extra sessions
+        List<ClassSession> pendingSessions = sessionRepository.findPendingSessionsBySemester(semesterId);
+
+        if (pendingSessions.isEmpty()) {
+            log.info("ℹ️ No pending extra sessions to schedule");
+            return;
+        }
+
+        log.info("Found {} pending extra sessions to schedule", pendingSessions.size());
+
+        int successCount = 0;
+        int failCount = 0;
+
+        // Schedule each session using 4-tier strategy
+        for (ClassSession session : pendingSessions) {
+            try {
+                boolean scheduled = extraSessionScheduler.scheduleExtraSession(session, semester);
+
+                if (scheduled) {
+                    // Save the updated session
+                    sessionRepository.save(session);
+                    successCount++;
+
+                    log.debug("✅ Scheduled session {}: {} {} {} {}",
+                            session.getSessionNumber(),
+                            session.getOriginalDate(),
+                            session.getOriginalDayOfWeek(),
+                            session.getOriginalTimeSlot(),
+                            session.getOriginalRoom().getRoomCode());
+                } else {
+                    log.error("❌ Failed to schedule session {} for class {}",
+                            session.getSessionNumber(),
+                            session.getClassEntity().getClassCode());
+                    failCount++;
+                }
+            } catch (Exception e) {
+                log.error("❌ Error scheduling session {} for class {}: {}",
+                        session.getSessionNumber(),
+                        session.getClassEntity().getClassCode(),
+                        e.getMessage(), e);
+                failCount++;
+            }
+        }
+
+        log.info("✅ Extra session scheduling complete: {} success, {} failed",
+                successCount, failCount);
+
+        if (failCount > 0) {
+            log.warn("⚠️ {} sessions could not be scheduled automatically. " +
+                    "Admin should manually schedule these sessions.", failCount);
+        }
     }
 
     @Override
