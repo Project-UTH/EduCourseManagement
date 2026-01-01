@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.entity.StudentSchedule;
+import vn.edu.uth.ecms.entity.TimeSlot;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -85,4 +86,35 @@ public interface StudentScheduleRepository extends JpaRepository<StudentSchedule
             Long studentId,
             Long sessionId
     );
+
+    /**
+     * NEW: Check if student has schedule at specific date/time
+     * CRITICAL for extra session conflict detection
+     */
+    @Query("SELECT CASE WHEN COUNT(ss) > 0 THEN true ELSE false END " +
+            "FROM StudentSchedule ss " +
+            "WHERE ss.student.studentId = :studentId " +
+            "AND ss.sessionDate = :date " +
+            "AND ss.timeSlot = :timeSlot")
+    boolean existsByStudentAndDateAndTimeSlot(
+            @Param("studentId") Long studentId,
+            @Param("date") LocalDate date,
+            @Param("timeSlot") TimeSlot timeSlot
+    );
+
+    /**
+     * NEW: Find schedules at specific date/time
+     * Used to identify which class conflicts
+     */
+    @Query("SELECT ss FROM StudentSchedule ss " +
+            "WHERE ss.student.studentId = :studentId " +
+            "AND ss.sessionDate = :date " +
+            "AND ss.timeSlot = :timeSlot")
+    List<StudentSchedule> findByStudentAndDateAndTimeSlot(
+            @Param("studentId") Long studentId,
+            @Param("date") LocalDate date,
+            @Param("timeSlot") TimeSlot timeSlot
+    );
+
+
 }
