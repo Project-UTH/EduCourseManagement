@@ -52,6 +52,7 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
             path: '/admin/classes-management',
             children: [
               { icon: '📋', label: 'Danh sách lớp', path: '/admin/classes' },
+              { icon: '🏢', label: 'Phòng học', path: '/admin/rooms' },
               { icon: '👨‍🏫', label: 'Phân công giảng dạy', path: '/admin/assignments' },
               { icon: '📝', label: 'Đề xuất giảng dạy', path: '/admin/proposals' },
             ]

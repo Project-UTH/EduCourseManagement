@@ -2,18 +2,34 @@ package vn.edu.uth.ecms.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.edu.uth.ecms.entity.Room;
-import vn.edu.uth.ecms.entity.TimeSlot;
+import vn.edu.uth.ecms.dto.response.RoomResponse;
+import vn.edu.uth.ecms.dto.response.RoomScheduleResponse;
+import vn.edu.uth.ecms.entity.*;
 import vn.edu.uth.ecms.exception.NotFoundException;
+import vn.edu.uth.ecms.repository.ClassSessionRepository;
 import vn.edu.uth.ecms.repository.RoomRepository;
 import vn.edu.uth.ecms.service.RoomService;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
+/**
+ * ✨ ENHANCED RoomServiceImpl with Real-time Status Logic
+ *
+ * KEY FEATURES:
+ * 1. Calculate real-time room status based on current sessions
+ * 2. Determine if room is IN_USE or AVAILABLE right now
+ * 3. Show current session info if room is in use
+ * 4. Provide comprehensive statistics
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -21,24 +37,97 @@ import java.util.List;
 public class RoomServiceImpl implements RoomService {
 
     private final RoomRepository roomRepository;
+    private final ClassSessionRepository sessionRepository;
+
+    // ==================== CRUD OPERATIONS IMPLEMENTATION ====================
+
+    @Override
+    @Transactional
+    public Room createRoom(Room room) {
+        log.info("Creating room: {}", room.getRoomCode());
+
+        // Validate room code is unique
+        if (roomRepository.existsByRoomCode(room.getRoomCode())) {
+            throw new IllegalArgumentException("Room code already exists: " + room.getRoomCode());
+        }
+
+        Room saved = roomRepository.save(room);
+
+        log.info("✅ Room created successfully: {}", saved.getRoomCode());
+
+        return saved;
+    }
+
+    @Override
+    @Transactional
+    public Room updateRoom(Room room) {
+        log.info("Updating room: {}", room.getRoomCode());
+
+        // Verify room exists
+        if (!roomRepository.existsById(room.getRoomId())) {
+            throw new NotFoundException("Room not found with ID: " + room.getRoomId());
+        }
+
+        Room updated = roomRepository.save(room);
+
+        log.info("✅ Room updated successfully: {}", updated.getRoomCode());
+
+        return updated;
+    }
+
+    @Override
+    @Transactional
+    public void deleteRoom(Long roomId) {
+        log.info("Deleting room ID: {}", roomId);
+
+        Room room = getRoomById(roomId);
+
+        roomRepository.delete(room);
+
+        log.info("✅ Room deleted successfully: {}", room.getRoomCode());
+    }
+
+// No new imports needed - all already imported
+
+    // ==================== EXISTING METHODS (Keep as is) ====================
 
     @Override
     @Transactional(readOnly = true)
-    public Room findRoomForFixedSchedule(Long semesterId, List<LocalDate> dates, DayOfWeek dayOfWeek, TimeSlot timeSlot, int minCapacity) {
-        List<Room> availableRooms = roomRepository.findRoomsAvailableForAllDates(semesterId, dates, timeSlot, minCapacity);
+    public Room findRoomForFixedSchedule(
+            Long semesterId,
+            List<LocalDate> dates,
+            DayOfWeek dayOfWeek,
+            TimeSlot timeSlot,
+            int minCapacity) {
+
+        List<Room> availableRooms = roomRepository.findRoomsAvailableForAllDates(
+                semesterId, dates, timeSlot, minCapacity
+        );
+
         if (availableRooms.isEmpty()) {
             throw new NotFoundException("Không tìm thấy phòng trống cho lịch cố định.");
         }
+
         return availableRooms.get(0);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Room findRoomForSingleSession(Long semesterId, LocalDate date, DayOfWeek dayOfWeek, TimeSlot timeSlot, int minCapacity) {
-        List<Room> availableRooms = roomRepository.findAvailableRoomsForSlot(semesterId, date, timeSlot, minCapacity);
+    public Room findRoomForSingleSession(
+            Long semesterId,
+            LocalDate date,
+            DayOfWeek dayOfWeek,
+            TimeSlot timeSlot,
+            int minCapacity) {
+
+        List<Room> availableRooms = roomRepository.findAvailableRoomsForSlot(
+                semesterId, date, timeSlot, minCapacity
+        );
+
         if (availableRooms.isEmpty()) {
             throw new NotFoundException("Không tìm thấy phòng trống cho ngày " + date);
         }
+
         return availableRooms.get(0);
     }
 
@@ -51,8 +140,17 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean hasRoomConflict(Long semesterId, Long roomId, LocalDate date, DayOfWeek dayOfWeek, TimeSlot timeSlot, Long excludeSessionId) {
-        return roomRepository.existsRoomConflict(semesterId, roomId, date, timeSlot, excludeSessionId);
+    public boolean hasRoomConflict(
+            Long semesterId,
+            Long roomId,
+            LocalDate date,
+            DayOfWeek dayOfWeek,
+            TimeSlot timeSlot,
+            Long excludeSessionId) {
+
+        return roomRepository.existsRoomConflict(
+                semesterId, roomId, date, timeSlot, excludeSessionId
+        );
     }
 
     @Override
@@ -83,7 +181,498 @@ public class RoomServiceImpl implements RoomService {
 
         if (totalSessions == 0) return 0.0;
 
-        // Tính tỷ lệ % sử dụng của phòng này so với tổng số tiết học trong học kỳ
         return (sessionsInRoom.doubleValue() / totalSessions.doubleValue()) * 100.0;
+    }
+
+    // ==================== ✨ NEW: ROOM MANAGEMENT WITH STATUS ====================
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RoomResponse> getAllRoomsWithStatus(Long semesterId, Pageable pageable) {
+        log.debug("Getting all rooms with status for semester: {}", semesterId);
+
+        Page<Room> roomPage = roomRepository.findAllByOrderByBuildingAscFloorAscRoomCodeAsc(pageable);
+
+        List<RoomResponse> roomResponses = roomPage.getContent().stream()
+                .map(room -> mapToResponseWithStatus(room, semesterId))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(roomResponses, pageable, roomPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RoomResponse getRoomWithStatus(Long roomId, Long semesterId) {
+        log.debug("Getting room {} with status", roomId);
+
+        Room room = getRoomById(roomId);
+        return mapToResponseWithStatus(room, semesterId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RoomResponse> getRoomsByCurrentStatus(
+            String status,
+            Long semesterId,
+            Pageable pageable) {
+
+        log.debug("Getting rooms by status: {}", status);
+
+        // Get all active rooms first
+        Page<Room> allRooms = roomRepository.findByIsActiveOrderByRoomCodeAsc(true, pageable);
+
+        // Filter by real-time status
+        List<RoomResponse> filteredRooms = allRooms.getContent().stream()
+                .map(room -> mapToResponseWithStatus(room, semesterId))
+                .filter(response -> response.getCurrentStatus().equals(status))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(filteredRooms, pageable, filteredRooms.size());
+    }
+
+    // ==================== ✨ NEW: SEARCH & FILTER ====================
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RoomResponse> searchRooms(
+            String keyword,
+            Long semesterId,
+            Pageable pageable) {
+
+        log.debug("Searching rooms with keyword: {}", keyword);
+
+        Page<Room> roomPage = roomRepository.searchRooms(keyword, pageable);
+
+        List<RoomResponse> roomResponses = roomPage.getContent().stream()
+                .map(room -> mapToResponseWithStatus(room, semesterId))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(roomResponses, pageable, roomPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RoomResponse> filterRooms(
+            String building,
+            Integer floor,
+            RoomType roomType,
+            Boolean isActive,
+            String currentStatus,
+            Long semesterId,
+            Pageable pageable) {
+
+        log.debug("Filtering rooms - building: {}, floor: {}, type: {}, active: {}, status: {}",
+                building, floor, roomType, isActive, currentStatus);
+
+        Page<Room> roomPage = roomRepository.findByFilters(
+                building, floor, roomType, isActive, pageable
+        );
+
+        List<RoomResponse> roomResponses = roomPage.getContent().stream()
+                .map(room -> mapToResponseWithStatus(room, semesterId))
+                .filter(response -> currentStatus == null ||
+                        response.getCurrentStatus().equals(currentStatus))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(roomResponses, pageable, roomResponses.size());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RoomResponse> getRoomsByBuilding(
+            String building,
+            Long semesterId,
+            Pageable pageable) {
+
+        Page<Room> roomPage = roomRepository.findByBuildingOrderByFloorAscRoomCodeAsc(
+                building, pageable
+        );
+
+        List<RoomResponse> roomResponses = roomPage.getContent().stream()
+                .map(room -> mapToResponseWithStatus(room, semesterId))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(roomResponses, pageable, roomPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RoomResponse> getRoomsByFloor(
+            Integer floor,
+            Long semesterId,
+            Pageable pageable) {
+
+        Page<Room> roomPage = roomRepository.findByFloorOrderByBuildingAscRoomCodeAsc(
+                floor, pageable
+        );
+
+        List<RoomResponse> roomResponses = roomPage.getContent().stream()
+                .map(room -> mapToResponseWithStatus(room, semesterId))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(roomResponses, pageable, roomPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RoomResponse> getRoomsByType(
+            RoomType roomType,
+            Long semesterId,
+            Pageable pageable) {
+
+        Page<Room> roomPage = roomRepository.findByRoomTypeOrderByRoomCodeAsc(
+                roomType, pageable
+        );
+
+        List<RoomResponse> roomResponses = roomPage.getContent().stream()
+                .map(room -> mapToResponseWithStatus(room, semesterId))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(roomResponses, pageable, roomPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RoomResponse> getRoomsByAdminStatus(
+            Boolean isActive,
+            Long semesterId,
+            Pageable pageable) {
+
+        Page<Room> roomPage = roomRepository.findByIsActiveOrderByRoomCodeAsc(
+                isActive, pageable
+        );
+
+        List<RoomResponse> roomResponses = roomPage.getContent().stream()
+                .map(room -> mapToResponseWithStatus(room, semesterId))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(roomResponses, pageable, roomPage.getTotalElements());
+    }
+
+    // ==================== CONTINUE IN PART 2 ====================
+
+    // ==================== PART 2: REAL-TIME STATUS LOGIC ====================
+
+    // ==================== ✨ SCHEDULE & SESSIONS ====================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RoomScheduleResponse> getRoomSchedule(Long roomId, Long semesterId) {
+        log.debug("Getting schedule for room {} in semester {}", roomId, semesterId);
+
+        Room room = getRoomById(roomId);
+
+        // Find all sessions using this room in the semester
+        List<ClassSession> sessions = sessionRepository.findByClass(roomId).stream()
+                .filter(session -> session.getClassEntity().getSemester().getSemesterId().equals(semesterId))
+                .filter(session -> !session.getIsPending())
+                .collect(Collectors.toList());
+
+        return sessions.stream()
+                .map(this::mapToScheduleResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RoomScheduleResponse> getRoomScheduleToday(Long roomId) {
+        LocalDate today = LocalDate.now();
+        return getRoomScheduleForDate(roomId, today);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RoomScheduleResponse> getRoomScheduleForDate(Long roomId, LocalDate date) {
+        log.debug("Getting schedule for room {} on {}", roomId, date);
+
+        Room room = getRoomById(roomId);
+
+        // Find sessions on this date
+        List<Object[]> results = roomRepository.findCurrentSessionsInRoom(roomId, date);
+
+        return results.stream()
+                .map(row -> {
+                    ClassSession session = (ClassSession) row[0];
+                    return mapToScheduleResponse(session);
+                })
+                .collect(Collectors.toList());
+    }
+
+    // ==================== ✨ STATISTICS ====================
+
+    @Override
+    @Transactional(readOnly = true)
+    public RoomResponse.RoomStatistics getRoomStatistics(Long roomId, Long semesterId) {
+        log.debug("Getting statistics for room {} in semester {}", roomId, semesterId);
+
+        // Get session counts by status
+        List<Object[]> statusCounts = roomRepository.countSessionsByStatus(roomId, semesterId);
+
+        long totalSessions = 0;
+        long completedSessions = 0;
+        long cancelledSessions = 0;
+
+        for (Object[] row : statusCounts) {
+            SessionStatus status = (SessionStatus) row[0];
+            Long count = (Long) row[1];
+
+            totalSessions += count;
+
+            if (status == SessionStatus.COMPLETED) {
+                completedSessions = count;
+            } else if (status == SessionStatus.CANCELLED) {
+                cancelledSessions = count;
+            }
+        }
+
+        long upcomingSessions = totalSessions - completedSessions - cancelledSessions;
+
+        Double utilizationPercentage = getRoomUtilization(roomId, semesterId);
+
+        return RoomResponse.RoomStatistics.builder()
+                .totalSessions(totalSessions)
+                .completedSessions(completedSessions)
+                .upcomingSessions(upcomingSessions)
+                .cancelledSessions(cancelledSessions)
+                .utilizationPercentage(utilizationPercentage)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getAllBuildings() {
+        return roomRepository.findDistinctBuildings();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Integer> getFloorsByBuilding(String building) {
+        return roomRepository.findDistinctFloorsByBuilding(building);
+    }
+
+    // ==================== ✨ REAL-TIME STATUS CALCULATION ====================
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isRoomCurrentlyInUse(Long roomId) {
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        // Check if room has session today
+        boolean hasSessionToday = roomRepository.isRoomInUseToday(roomId, today);
+        if (!hasSessionToday) {
+            return false;
+        }
+
+        // Get today's sessions and check if any is happening NOW
+        List<Object[]> todaySessions = roomRepository.findCurrentSessionsInRoom(roomId, today);
+
+        for (Object[] row : todaySessions) {
+            ClassSession session = (ClassSession) row[0];
+            TimeSlot timeSlot = session.getEffectiveTimeSlot();
+
+            if (timeSlot != null && isTimeSlotActive(timeSlot, now)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RoomResponse.CurrentSessionInfo getCurrentSession(Long roomId) {
+        if (!isRoomCurrentlyInUse(roomId)) {
+            return null;
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        List<Object[]> todaySessions = roomRepository.findCurrentSessionsInRoom(roomId, today);
+
+        for (Object[]  row : todaySessions) {
+            ClassSession session = (ClassSession) row[0];
+            TimeSlot timeSlot = session.getEffectiveTimeSlot();
+
+            if (timeSlot != null && isTimeSlotActive(timeSlot, now)) {
+                return mapToCurrentSessionInfo(session, timeSlot, now);
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String calculateCurrentStatus(Room room) {
+        // If admin disabled room → INACTIVE
+        if (!room.getIsActive()) {
+            return "INACTIVE";
+        }
+
+        // If room is currently in use → IN_USE
+        if (isRoomCurrentlyInUse(room.getRoomId())) {
+            return "IN_USE";
+        }
+
+        // Otherwise → AVAILABLE
+        return "AVAILABLE";
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    /**
+     * Check if current time is within a time slot
+     */
+    private boolean isTimeSlotActive(TimeSlot timeSlot, LocalTime now) {
+        LocalTime start = LocalTime.parse(timeSlot.getStartTime());
+        LocalTime end = LocalTime.parse(timeSlot.getEndTime());
+
+        return !now.isBefore(start) && !now.isAfter(end);
+    }
+
+    /**
+     * Calculate minutes remaining in session
+     */
+    private Integer calculateMinutesRemaining(TimeSlot timeSlot, LocalTime now) {
+        LocalTime end = LocalTime.parse(timeSlot.getEndTime());
+
+        if (now.isAfter(end)) {
+            return 0;
+        }
+
+        int hours = end.getHour() - now.getHour();
+        int minutes = end.getMinute() - now.getMinute();
+
+        return hours * 60 + minutes;
+    }
+
+    /**
+     * Get current status display in Vietnamese
+     */
+    private String getCurrentStatusDisplay(String status) {
+        return switch (status) {
+            case "IN_USE" -> "Đang sử dụng";
+            case "AVAILABLE" -> "Trống";
+            case "INACTIVE" -> "Ngừng hoạt động";
+            default -> "Không xác định";
+        };
+    }
+
+    // ==================== MAPPERS ====================
+
+    /**
+     * ✨ Map Room entity to RoomResponse with real-time status
+     */
+    private RoomResponse mapToResponseWithStatus(Room room, Long semesterId) {
+        // Calculate real-time status
+        String currentStatus = calculateCurrentStatus(room);
+        RoomResponse.CurrentSessionInfo currentSession =
+                "IN_USE".equals(currentStatus) ? getCurrentSession(room.getRoomId()) : null;
+
+        // Get statistics
+        Long totalSessions = roomRepository.countSessionsUsingRoom(room.getRoomId(), semesterId);
+
+        List<Object[]> statusCounts = roomRepository.countSessionsByStatus(
+                room.getRoomId(), semesterId
+        );
+
+        Long completedSessions = 0L;
+        Long upcomingSessions = 0L;
+
+        for (Object[] row : statusCounts) {
+            SessionStatus status = (SessionStatus) row[0];
+            Long count = (Long) row[1];
+
+            if (status == SessionStatus.COMPLETED) {
+                completedSessions = count;
+            } else if (status == SessionStatus.SCHEDULED) {
+                upcomingSessions = count;
+            }
+        }
+
+        Double utilizationPercentage = getRoomUtilization(room.getRoomId(), semesterId);
+
+        return RoomResponse.builder()
+                // Basic info
+                .roomId(room.getRoomId())
+                .roomCode(room.getRoomCode())
+                .roomName(room.getRoomName())
+                .building(room.getBuilding())
+                .floor(room.getFloor())
+                .roomType(room.getRoomType().name())
+                .roomTypeDisplay(room.getRoomTypeDisplay())
+                .capacity(room.getCapacity())
+                // Admin status
+                .isActive(room.getIsActive())
+                .adminStatus(room.getAdminStatus().name())
+                .adminStatusDisplay(room.getAdminStatusDisplay())
+                // Real-time status
+                .currentStatus(currentStatus)
+                .currentStatusDisplay(getCurrentStatusDisplay(currentStatus))
+                .currentSession(currentSession)
+                // Statistics
+                .totalSessionsInSemester(totalSessions)
+                .completedSessions(completedSessions)
+                .upcomingSessions(upcomingSessions)
+                .utilizationPercentage(utilizationPercentage)
+                // Location
+                .fullLocation(room.getFullLocation())
+                .capacityInfo(room.getCapacityInfo())
+                // Metadata
+                .createdAt(room.getCreatedAt())
+                .updatedAt(room.getUpdatedAt())
+                .build();
+    }
+
+    /**
+     * Map ClassSession to CurrentSessionInfo
+     */
+    private RoomResponse.CurrentSessionInfo mapToCurrentSessionInfo(
+            ClassSession session,
+            TimeSlot timeSlot,
+            LocalTime now) {
+
+        ClassEntity classEntity = session.getClassEntity();
+        Teacher teacher = classEntity.getTeacher();
+        Subject subject = classEntity.getSubject();
+
+        return RoomResponse.CurrentSessionInfo.builder()
+                .sessionId(session.getSessionId())
+                .classId(classEntity.getClassId())
+                .classCode(classEntity.getClassCode())
+                .subjectName(subject.getSubjectName())
+                .teacherName(teacher.getFullName())
+                .timeSlot(timeSlot.name())
+                .timeSlotDisplay(timeSlot.getFullDisplay())
+                .startTime(timeSlot.getStartTime())
+                .endTime(timeSlot.getEndTime())
+                .minutesRemaining(calculateMinutesRemaining(timeSlot, now))
+                .build();
+    }
+
+    /**
+     * Map ClassSession to RoomScheduleResponse
+     */
+    private RoomScheduleResponse mapToScheduleResponse(ClassSession session) {
+        ClassEntity classEntity = session.getClassEntity();
+        Teacher teacher = classEntity.getTeacher();
+        Subject subject = classEntity.getSubject();
+
+        return RoomScheduleResponse.builder()
+                .sessionId(session.getSessionId())
+                .sessionDate(session.getEffectiveDate())
+                .dayOfWeek(session.getEffectiveDayOfWeek() != null ?
+                        session.getEffectiveDayOfWeek().name() : null)
+                .timeSlot(session.getEffectiveTimeSlot() != null ?
+                        session.getEffectiveTimeSlot().name() : null)
+                .classId(classEntity.getClassId())
+                .classCode(classEntity.getClassCode())
+                .subjectName(subject.getSubjectName())
+                .teacherName(teacher.getFullName())
+                .status(session.getStatus().name())
+                .isRescheduled(session.getIsRescheduled())
+                .build();
     }
 }

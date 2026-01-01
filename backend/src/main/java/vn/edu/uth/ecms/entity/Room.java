@@ -4,12 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 /**
- * Room entity - CORRECTED
+ * Room entity - ENHANCED with Real-time Status
  *
- * ✅ FIXES:
- * - Added getRoomCode() method
- * - Added getDisplayName() method
- * - Added helper methods for room info display
+ * ✅ NEW FEATURES:
+ * - Real-time status calculation based on ClassSession
+ * - Better integration with scheduling system
+ * - Status tracking (ACTIVE, AVAILABLE, INACTIVE)
  */
 @Entity
 @Table(name = "room")
@@ -47,25 +47,12 @@ public class Room extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    // ==================== ✅ FIX: ADD MISSING METHODS ====================
+    // ==================== EXISTING METHODS (Keep as is) ====================
 
-    /**
-     * ✅ FIX 1: Get room code
-     * Used by: SessionServiceImpl, ClassServiceImpl
-     */
     public String getRoomCode() {
         return this.roomCode;
     }
 
-    /**
-     * ✅ FIX 2: Get display name (code + name)
-     * Used by: SessionServiceImpl, ClassServiceImpl, Frontend display
-     *
-     * Examples:
-     * - A201 - Phòng thực hành
-     * - B105 - Phòng giảng đường lớn
-     * - ONLINE (if no room name)
-     */
     public String getDisplayName() {
         if (this.roomName != null && !this.roomName.trim().isEmpty()) {
             return this.roomCode + " - " + this.roomName;
@@ -73,12 +60,6 @@ public class Room extends BaseEntity {
         return this.roomCode;
     }
 
-    // ==================== ADDITIONAL HELPER METHODS ====================
-
-    /**
-     * Get full location info
-     * Example: "Tòa A - Tầng 2 - A201"
-     */
     public String getFullLocation() {
         StringBuilder location = new StringBuilder();
 
@@ -105,31 +86,18 @@ public class Room extends BaseEntity {
         return this.capacity >= requiredCapacity;
     }
 
-    /**
-     * Check if room is physical (not ONLINE)
-     */
     public boolean isPhysicalRoom() {
         return this.roomType != RoomType.ONLINE;
     }
 
-    /**
-     * Check if room is online/virtual
-     */
     public boolean isOnlineRoom() {
         return this.roomType == RoomType.ONLINE;
     }
 
-    /**
-     * Check if room has enough capacity for class
-     */
     public boolean hasCapacity(int requiredCapacity) {
         return this.capacity >= requiredCapacity;
     }
 
-    /**
-     * Get capacity info string
-     * Example: "100 chỗ ngồi"
-     */
     public String getCapacityInfo() {
         if (this.roomType == RoomType.ONLINE) {
             return "Không giới hạn";
@@ -137,9 +105,6 @@ public class Room extends BaseEntity {
         return this.capacity + " chỗ ngồi";
     }
 
-    /**
-     * Get room type display
-     */
     public String getRoomTypeDisplay() {
         return switch (this.roomType) {
             case LECTURE_HALL -> "Giảng đường";
@@ -148,6 +113,52 @@ public class Room extends BaseEntity {
             case SEMINAR_ROOM -> "Phòng seminar";
             case ONLINE -> "Trực tuyến";
         };
+    }
+
+    // ==================== ✨ NEW: REAL-TIME STATUS METHODS ====================
+
+    /**
+     * ✨ NEW: Get administrative status
+     * - ACTIVE: Room is enabled by admin
+     * - INACTIVE: Room is disabled by admin
+     *
+     * This is static status set by admin, not based on current usage
+     */
+    public RoomAdminStatus getAdminStatus() {
+        return this.isActive ? RoomAdminStatus.ACTIVE : RoomAdminStatus.INACTIVE;
+    }
+
+    /**
+     * ✨ NEW: Get admin status display
+     */
+    public String getAdminStatusDisplay() {
+        return this.isActive ? "Hoạt động" : "Ngừng hoạt động";
+    }
+
+    /**
+     * Check if room can be assigned to new sessions
+     * Only active rooms can be assigned
+     */
+    public boolean canBeAssigned() {
+        return this.isActive;
+    }
+
+    /**
+     * Check if room is suitable for a class
+     * - Must be active
+     * - Must have enough capacity
+     */
+    public boolean isSuitableFor(int requiredCapacity) {
+        return this.isActive && this.capacity >= requiredCapacity;
+    }
+
+    /**
+     * Get status badge color for UI
+     * - green: ACTIVE
+     * - gray: INACTIVE
+     */
+    public String getStatusBadgeColor() {
+        return this.isActive ? "green" : "gray";
     }
 
     // ==================== OVERRIDE METHODS ====================
@@ -178,3 +189,4 @@ public class Room extends BaseEntity {
         return getClass().hashCode();
     }
 }
+
