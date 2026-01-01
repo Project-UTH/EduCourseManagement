@@ -16,22 +16,25 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow frontend origin
+        //  Allow frontend origins
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "http://127.0.0.1:5173"
         ));
 
-        // Allow all HTTP methods
+        //  Allow all HTTP methods
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // Allow all headers
+        //  Allow all headers
         config.setAllowedHeaders(List.of("*"));
 
-        // Allow credentials
+        //  CRITICAL: Allow credentials (for JWT cookies/auth)
         config.setAllowCredentials(true);
 
-        // Max age
+        //  Expose headers (including Authorization)
+        config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+
+        // Cache preflight response for 1 hour
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -1,0 +1,642 @@
+/**
+ * Department List CSS - FIXED WIDTH
+ * File: frontend/src/pages/admin/departments/DepartmentList.css
+ * 
+ * FIX: Giới hạn width các cột để vừa màn hình
+ */
+
+/* ================================================================
+   PAGE CONTAINER
+   ================================================================ */
+
+.page-container {
+  padding: 1.5rem;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+/* ================================================================
+   BUTTONS
+   ================================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background: #16a34a;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #15803d;
+}
+
+.btn-primary .icon {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.btn-edit {
+  padding: 0.375rem 0.75rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.btn-edit:hover {
+  background: #2563eb;
+}
+
+.btn-delete {
+  padding: 0.375rem 0.75rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+}
+
+.btn-delete:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-icon-info {
+  padding: 0.25rem 0.5rem;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.btn-icon-info:hover {
+  background: #bae6fd;
+  transform: scale(1.15);
+}
+
+/* ================================================================
+   FILTERS BAR
+   ================================================================ */
+
+.filters-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 300px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.625rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.btn-search {
+  padding: 0.625rem 1rem;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-search:hover {
+  background: #15803d;
+}
+
+.btn-clear {
+  padding: 0.625rem 1rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.btn-clear:hover {
+  background: #dc2626;
+}
+
+/* ================================================================
+   TABLE - FIXED COLUMN WIDTHS
+   ================================================================ */
+
+.table-container {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  table-layout: fixed; /* ⭐ CRITICAL: Fixed table layout */
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.data-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+.data-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ⭐ COLUMN WIDTHS - Department List (6 cột) */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+  width: 100px; /* Mã Khoa */
+}
+
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+  width: 280px; /* Tên Khoa - GIỚI HẠN */
+}
+
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+  width: 140px; /* Loại Kiến thức */
+}
+
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) {
+  width: 60px; /* MT (Mô tả button) */
+  text-align: center;
+}
+
+.data-table th:nth-child(5),
+.data-table td:nth-child(5) {
+  width: 110px; /* Ngày tạo */
+}
+
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+  width: 160px; /* Thao tác */
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover {
+  background: #f3f4f6;
+}
+
+.code {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.center {
+  text-align: center;
+}
+
+.text-muted {
+  color: #9ca3af;
+}
+
+.date-cell {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+/* ================================================================
+   BADGES
+   ================================================================ */
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-department {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* ================================================================
+   LOADING & MESSAGES
+   ================================================================ */
+
+.loading,
+.no-data,
+.error-message {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.error-message {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* ================================================================
+   PAGINATION
+   ================================================================ */
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-page {
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-page:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #16a34a;
+}
+
+.btn-page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-number {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* ================================================================
+   DESCRIPTION TOOLTIP
+   ================================================================ */
+
+.description-tooltip {
+  position: fixed;
+  z-index: 9999;
+  background: #1f2937;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  max-width: 350px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  animation: tooltipFadeIn 0.2s;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================================================================
+   MODAL STYLES
+   ================================================================ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+  overflow-y: auto;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s;
+  position: relative;
+  z-index: 10001;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.btn-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-close:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.modal-body {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-group label .required {
+  color: #ef4444;
+  margin-left: 0.25rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.625rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.15s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.error-text {
+  display: block;
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-cancel {
+  padding: 0.625rem 1.25rem;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-cancel:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-submit {
+  padding: 0.625rem 1.25rem;
+  background: #16a34a;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-submit:hover {
+  background: #15803d;
+}
+
+.btn-submit:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 1200px) {
+  /* Giảm width tên khoa */
+  .data-table th:nth-child(2),
+  .data-table td:nth-child(2) {
+    width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filters-bar {
+    flex-direction: column;
+  }
+  
+  .search-form {
+    min-width: 100%;
+  }
+  
+  /* Hide Ngày tạo on mobile */
+  .data-table th:nth-child(5),
+  .data-table td:nth-child(5) {
+    display: none;
+  }
+  
+  .modal-content {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

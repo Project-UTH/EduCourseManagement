@@ -1,0 +1,24 @@
+/**
+ * Major Modal - Styles
+ * File: frontend/src/pages/admin/majors/MajorModal.css
+ */
+
+
+/* Major modal có dropdown cascade - thêm style */
+.major-modal-department-info {
+  background-color: var(--primary-50);
+  padding: var(--spacing-3);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-4);
+}
+
+.major-modal-department-info strong {
+  color: var(--primary-700);
+  font-size: var(--font-size-sm);
+}
+
+.major-modal-department-info .department-details {
+  margin-top: var(--spacing-2);
+  color: var(--gray-600);
+  font-size: var(--font-size-sm);
+}

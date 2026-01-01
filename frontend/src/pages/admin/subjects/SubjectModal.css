@@ -1,0 +1,29 @@
+/**
+ * Subject Modal - Styles
+ * File: frontend/src/pages/admin/subjects/SubjectModal.css
+ */
+
+
+/* Subject modal có form 3 cột cho sessions */
+.subject-modal-sessions-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-5);
+}
+
+@media (max-width: 768px) {
+  .subject-modal-sessions-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Info box cho quy tắc tính buổi - đã có trong admin-components.css */
+/* Chỉ cần dùng class .info-box */
+
+/* Major dropdown loading state */
+.subject-modal-major-loading {
+  color: var(--gray-400);
+  font-style: italic;
+  font-size: var(--font-size-sm);
+}

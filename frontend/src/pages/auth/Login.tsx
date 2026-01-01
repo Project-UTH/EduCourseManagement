@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '@/services/api/authApi';
+import authApi from '@/services/api/authApi';
 import { useAuthStore } from '@/store/authStore';
 import './Login.css';
 
@@ -34,19 +34,20 @@ const Login = () => {
 
       if (response.success) {
         const { user, token } = response.data;
-        setAuth(user, token);
+        const mappedUser = { ...user, isFirstLogin: user.firstLogin };
+        setAuth(mappedUser, token);
 
         // Redirect based on role
-        if (user.role === 'ADMIN') {
+        if (mappedUser.role === 'ADMIN') {
           navigate('/admin/dashboard');
-        } else if (user.role === 'TEACHER') {
+        } else if (mappedUser.role === 'TEACHER') {
           navigate('/teacher/dashboard');
-        } else if (user.role === 'STUDENT') {
+        } else if (mappedUser.role === 'STUDENT') {
           navigate('/student/dashboard');
         }
 
         // Show change password dialog if first login
-        if (user.isFirstLogin) {
+        if (mappedUser.isFirstLogin) {
           // TODO: Show change password modal
           alert('Bạn cần đổi mật khẩu lần đầu đăng nhập!');
         }

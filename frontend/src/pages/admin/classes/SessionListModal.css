@@ -1,0 +1,235 @@
+/* SessionListModal.css - Session Schedule Modal */
+
+.modal-large {
+  max-width: 1200px;
+  width: 90%;
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: var(--gray-600);
+  margin-top: 4px;
+}
+
+/* ==================== SESSIONS TABLE ==================== */
+
+.sessions-table-wrapper {
+  overflow-x: auto;
+}
+
+.sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.sessions-table th {
+  background: var(--gray-50);
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.sessions-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--gray-200);
+  vertical-align: top;
+}
+
+.sessions-table tr:hover {
+  background: var(--gray-50);
+}
+
+.rescheduled-row {
+  background: #fffbeb !important;
+}
+
+.rescheduled-row:hover {
+  background: #fef3c7 !important;
+}
+
+/* Schedule cell */
+.schedule-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.schedule-cell .date {
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.schedule-cell .time {
+  font-size: 13px;
+  color: var(--gray-700);
+}
+
+.schedule-cell .room {
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
+/* Rescheduled badge */
+.rescheduled-badge {
+  display: inline-block;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* Edit form */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.reason-text {
+  font-size: 13px;
+  color: var(--gray-700);
+  font-style: italic;
+}
+
+/* Action buttons in table */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-save,
+.btn-cancel,
+.btn-edit,
+.btn-reset {
+  padding: 6px 12px;
+  font-size: 13px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.btn-save {
+  background: var(--primary-600);
+  color: white;
+}
+
+.btn-save:hover {
+  background: var(--primary-700);
+}
+
+.btn-cancel {
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.btn-cancel:hover {
+  background: var(--gray-300);
+}
+
+.btn-edit {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #2563eb;
+}
+
+.btn-reset {
+  background: #f59e0b;
+  color: white;
+}
+
+.btn-reset:hover {
+  background: #d97706;
+}
+
+/* Sessions summary */
+.sessions-summary {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--gray-50);
+  border-radius: 6px;
+  display: flex;
+  gap: 24px;
+}
+
+.summary-item {
+  font-size: 14px;
+}
+
+.summary-item strong {
+  color: var(--primary-600);
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .modal-large {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .sessions-table {
+    font-size: 13px;
+  }
+  
+  .sessions-table th,
+  .sessions-table td {
+    padding: 8px;
+  }
+  
+  .edit-form {
+    gap: 6px;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .btn-save,
+  .btn-cancel,
+  .btn-edit,
+  .btn-reset {
+    width: 100%;
+  }
+}

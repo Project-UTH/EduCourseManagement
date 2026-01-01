@@ -1,0 +1,317 @@
+/**
+ * Semester Modal CSS - NO CONFLICT
+ * File: frontend/src/pages/admin/semesters/SemesterModal.css
+ * 
+ * Uses .semester-* prefix to avoid conflicts
+ */
+
+/* ================================================================
+   MODAL OVERLAY
+   ================================================================ */
+
+.semester-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+/* ================================================================
+   MODAL CONTENT
+   ================================================================ */
+
+.semester-modal-content {
+  background: white;
+  border-radius: 0.75rem;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ================================================================
+   MODAL HEADER
+   ================================================================ */
+
+.semester-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.semester-modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.semester-btn-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #6b7280;
+  cursor: pointer;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.semester-btn-close:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+/* ================================================================
+   MODAL BODY
+   ================================================================ */
+
+.semester-modal-body {
+  padding: 1.5rem;
+}
+
+/* ================================================================
+   FORM GROUPS
+   ================================================================ */
+
+.semester-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.semester-form-group label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.semester-required {
+  color: #ef4444;
+  margin-left: 0.25rem;
+}
+
+.semester-form-group input,
+.semester-form-group select,
+.semester-form-group textarea {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.semester-form-group input:focus,
+.semester-form-group select:focus,
+.semester-form-group textarea:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.semester-form-group input:disabled,
+.semester-form-group select:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.semester-form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Error state */
+.semester-form-group input.semester-error,
+.semester-form-group select.semester-error,
+.semester-form-group textarea.semester-error {
+  border-color: #ef4444;
+}
+
+.semester-error-text {
+  display: block;
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.semester-help-text {
+  display: block;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+/* ================================================================
+   FORM ROWS
+   ================================================================ */
+
+.semester-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .semester-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ================================================================
+   FORM SECTIONS
+   ================================================================ */
+
+.semester-form-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.semester-form-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  margin-top: 0;
+}
+
+/* ================================================================
+   INFO BOX
+   ================================================================ */
+
+.semester-info-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  color: #1e40af;
+  margin-top: 0.75rem;
+}
+
+.semester-info-box strong {
+  font-weight: 600;
+}
+
+/* ================================================================
+   MODAL FOOTER
+   ================================================================ */
+
+.semester-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 1.5rem;
+}
+
+.semester-btn-cancel {
+  padding: 0.625rem 1.25rem;
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.semester-btn-cancel:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.semester-btn-submit {
+  padding: 0.625rem 1.25rem;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.semester-btn-submit:hover:not(:disabled) {
+  background: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.semester-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 768px) {
+  .semester-modal-content {
+    max-width: 95%;
+    max-height: 95vh;
+  }
+
+  .semester-modal-header {
+    padding: 1rem;
+  }
+
+  .semester-modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .semester-modal-body {
+    padding: 1rem;
+  }
+
+  .semester-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .semester-btn-cancel,
+  .semester-btn-submit {
+    width: 100%;
+  }
+}
+
+/* ================================================================
+   SCROLLBAR STYLING (for modal body overflow)
+   ================================================================ */
+
+.semester-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.semester-modal-content::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.semester-modal-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.semester-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

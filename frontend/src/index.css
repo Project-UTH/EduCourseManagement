@@ -1,46 +1,46 @@
+/**
+ * Global Styles - index.css
+ * File: frontend/src/index.css
+ * 
+ * KẾT HỢP CSS cũ + CSS mới
+ */
+
+
+
+/* ========== KEEP OLD CUSTOM VARIABLES ========== */
 :root {
-  /* Primary Colors - Green Theme */
+  /* Old Primary Colors - Keep for backward compatibility */
   --primary-green: #10b981;
   --primary-green-dark: #059669;
   --primary-green-light: #34d399;
   --primary-green-lighter: #6ee7b7;
   
-  /* Secondary Colors */
+  /* Old Secondary Colors */
   --secondary-blue: #3b82f6;
   --secondary-blue-dark: #2563eb;
   
-  /* Neutral Colors */
+  /* Old Neutral Colors */
   --white: #ffffff;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
   
-  /* Status Colors */
+  /* Old Status Colors */
   --success: #10b981;
   --error: #ef4444;
   --warning: #f59e0b;
   --info: #3b82f6;
   
-  /* Shadows */
+  /* Old Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
   
-  /* Border Radius */
+  /* Old Border Radius */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
   
-  /* Spacing */
+  /* Old Spacing */
   --spacing-xs: 0.5rem;
   --spacing-sm: 0.75rem;
   --spacing-md: 1rem;
@@ -51,28 +51,38 @@
   font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  
   color-scheme: light;
   background-color: var(--gray-50);
 }
 
-* {
+/* ========== GLOBAL RESET ========== */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ========== BODY STYLES ========== */
 body {
   margin: 0;
   min-height: 100vh;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
   min-height: 100vh;
 }
 
-/* Scrollbar Styling */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* ========== SCROLLBAR STYLING ========== */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -89,4 +99,11 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-green-dark);
+}
+
+/* ========== OVERRIDE FOR ADMIN PAGES ========== */
+.dashboard-layout,
+.admin-page,
+.page-container {
+  background: var(--gray-50);
 }

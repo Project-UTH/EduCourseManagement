@@ -22,8 +22,10 @@ interface ChatGroup {
   avatar: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const RightSidebar = ({ userRole }: RightSidebarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // Mock data - will be replaced with real API calls

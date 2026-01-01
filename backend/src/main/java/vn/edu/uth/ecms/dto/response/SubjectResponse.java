@@ -1,0 +1,44 @@
+package vn.edu.uth.ecms.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class SubjectResponse {
+
+    private Long subjectId;
+    private String subjectCode;
+    private String subjectName;
+    private Integer credits;
+
+    // Số buổi học
+    private Integer totalSessions;
+    private Integer elearningSessions;
+    private Integer inpersonSessions;
+
+    // Department information
+    private Long departmentId;
+    private String departmentCode;
+    private String departmentName;
+
+    // Major information (nullable)
+    private Long majorId;
+    private String majorCode;
+    private String majorName;
+
+    private String description;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // Statistics
+    private Integer totalClasses;
+    private Integer totalStudents;
+}

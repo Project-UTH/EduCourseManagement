@@ -9,6 +9,17 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 
+// Admin Pages
+import DepartmentList from './pages/admin/departments/DepartmentList';
+import MajorList from './pages/admin/majors/MajorList';
+import SubjectList from './pages/admin/subjects/SubjectList';
+import SemesterList from './pages/admin/semesters/SemesterList';
+import TeacherList from './pages/admin/teachers/TeacherList';
+import StudentList from './pages/admin/students/StudentList';
+import ClassList from './pages/admin/classes/ClassList';
+import RoomList from './pages/admin/rooms/RoomList';
+import RoomDetail from './pages/admin/rooms/RoomDetail';
+
 // Placeholder cho các trang chưa phát triển
 const Placeholder = ({ title }: { title: string }) => (
   <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -114,14 +125,16 @@ function App() {
           }
         >
           <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="teachers" element={<Placeholder title="Quản lý Giảng viên" />} />
-          <Route path="students" element={<Placeholder title="Quản lý Sinh viên" />} />
+          <Route path="teachers" element={<TeacherList />} />
+          <Route path="students" element={<StudentList />} />
           <Route path="import" element={<Placeholder title="Import từ Excel" />} />
-          <Route path="departments" element={<Placeholder title="Quản lý Khoa" />} />
-          <Route path="majors" element={<Placeholder title="Quản lý Chuyên ngành" />} />
-          <Route path="subjects" element={<Placeholder title="Quản lý Môn học" />} />
-          <Route path="semesters" element={<Placeholder title="Quản lý Học kỳ" />} />
-          <Route path="classes" element={<Placeholder title="Quản lý Lớp học" />} />
+          <Route path="departments" element={<DepartmentList />} />
+          <Route path="majors" element={<MajorList />} />
+          <Route path="subjects" element={<SubjectList />} />
+          <Route path="semesters" element={<SemesterList />} />
+          <Route path="classes" element={<ClassList />} />
+          <Route path="rooms" element={<RoomList />} />
+          <Route path="rooms/:id" element={<RoomDetail />} />
           <Route path="assignments" element={<Placeholder title="Phân công giảng dạy" />} />
           <Route path="proposals" element={<Placeholder title="Đề xuất giảng dạy" />} />
           <Route path="registration-settings" element={<Placeholder title="Cài đặt Đăng ký" />} />

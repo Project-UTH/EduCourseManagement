@@ -1,0 +1,56 @@
+/**
+ * Major List CSS - FIXED WIDTH
+ * File: frontend/src/pages/admin/majors/MajorList.css
+ * 
+ * FIX: Giới hạn width tên ngành để vừa màn hình (7 cột)
+ */
+
+/* Import base styles from Department */
+@import url('../departments/DepartmentList.css');
+
+/* ⭐ COLUMN WIDTHS - Major List (7 cột) */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+  width: 90px; /* Mã CN */
+}
+
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+  width: 250px; /* Tên CN - GIỚI HẠN */
+}
+
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+  width: 180px; /* Khoa (badge + name) */
+}
+
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) {
+  width: 60px; /* MT (Mô tả button) */
+  text-align: center;
+}
+
+.data-table th:nth-child(5),
+.data-table td:nth-child(5) {
+  width: 110px; /* Ngày tạo */
+}
+
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+  width: 160px; /* Thao tác */
+}
+
+/* Department name below badge */
+.department-name {
+  display: block;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 1200px) {
+  .data-table th:nth-child(2),
+  .data-table td:nth-child(2) {
+    width: 180px;
+  }
+}

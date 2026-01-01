@@ -1,0 +1,27 @@
+/**
+ * Department Modal - Styles
+ * File: frontend/src/pages/admin/departments/DepartmentModal.css
+ * 
+ * Modal styles đã có trong admin-components.css
+ * File này chỉ import và custom nếu cần
+ */
+
+
+/* 
+ * Tất cả modal styles đã có trong admin-components.css:
+ * - .modal-overlay
+ * - .modal-content
+ * - .modal-header
+ * - .modal-body
+ * - .modal-footer
+ * - .btn-close
+ * - .btn-cancel
+ * - .btn-submit
+ * - .form-group
+ * - .error-text
+ * - .helper-text
+ * 
+ * Chỉ thêm custom nếu Department modal có gì đặc biệt
+ */
+
+/* Department modal specific (nếu cần) */

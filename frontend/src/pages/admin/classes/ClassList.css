@@ -1,0 +1,271 @@
+/* ClassList.css - Class Management List Page */
+
+/* ==================== CLASS TABLE ==================== */
+
+.class-table {
+  font-size: 14px;
+}
+
+.class-table th {
+  white-space: nowrap;
+}
+
+.class-table td {
+  vertical-align: middle;
+}
+
+/* Subject info */
+.subject-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subject-code {
+  font-weight: 600;
+  color: var(--primary-600);
+}
+
+.subject-name {
+  font-size: 13px;
+  color: var(--gray-700);
+}
+
+.credits {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+/* Semester info */
+.semester-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Schedule info */
+.schedule-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.schedule-info .room {
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
+.rescheduled-badge {
+  display: inline-block;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Enrollment info */
+.enrollment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 100px;
+}
+
+.enrollment-count {
+  font-size: 15px;
+}
+
+.enrollment-count strong {
+  font-size: 18px;
+  color: var(--primary-600);
+}
+
+.seats-available {
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--gray-200);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+/* Sessions info */
+.sessions-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.text-warning {
+  color: #f59e0b;
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-action {
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-action:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--primary-500);
+  color: var(--primary-600);
+}
+
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-view {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.btn-view:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+.btn-students {
+  border-color: #8b5cf6;
+  color: #8b5cf6;
+}
+
+.btn-students:hover:not(:disabled) {
+  background: #f5f3ff;
+}
+
+.btn-edit {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.btn-edit:hover:not(:disabled) {
+  background: #fffbeb;
+}
+
+.btn-delete {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+/* Badges */
+.badge-open {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-full {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-closed {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.badge-upcoming {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-completed {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1400px) {
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .btn-action {
+    width: 100%;
+  }
+}
+
+@media (max-width: 1024px) {
+  .class-table {
+    font-size: 13px;
+  }
+  
+  .subject-name {
+    display: none;
+  }
+  
+  .schedule-info .room {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .class-table thead {
+    display: none;
+  }
+  
+  .class-table tr {
+    display: block;
+    margin-bottom: 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  
+  .class-table td {
+    display: block;
+    text-align: left !important;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  
+  .class-table td:last-child {
+    border-bottom: none;
+  }
+  
+  .class-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+    color: var(--gray-700);
+  }
+  
+  .action-buttons {
+    flex-direction: row;
+  }
+}
