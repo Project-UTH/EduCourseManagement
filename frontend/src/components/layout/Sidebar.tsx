@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
 import './Sidebar.css';
 
+
 interface SidebarProps {
   collapsed: boolean;
   userRole: 'ADMIN' | 'TEACHER' | 'STUDENT';
@@ -126,8 +127,9 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
             label: 'Khóa học',
             path: '/student/courses-menu',
             children: [
-              { icon: '📋', label: 'Khóa học của tôi', path: '/student/courses' },
-              { icon: '✏️', label: 'Đăng ký học phần', path: '/student/registration' },
+              { icon: '📚', label: 'Đăng ký học phần', path: '/student/subjects' },        // ✅ MỚI
+              { icon: '📋', label: 'Lớp đã đăng ký', path: '/student/registrations' },     // ✅ CÓ RỒI
+              { icon: '🔍', label: 'Tìm kiếm lớp học', path: '/student/search' },          // ✅ CŨ
             ]
           },
           { 
@@ -188,7 +190,7 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
         key={index}
         to={item.path}
         className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
-        data-label={item.label} // ⭐ For tooltip
+        data-label={item.label}
       >
         <span className="sidebar-icon">{item.icon}</span>
         <span className="sidebar-label">{item.label}</span>
@@ -222,7 +224,7 @@ const SidebarSubmenu = ({ item }: SidebarSubmenuProps) => {
       <button
         className={`sidebar-item submenu-trigger ${expanded ? 'expanded' : ''}`}
         onClick={() => setExpanded(!expanded)}
-        data-label={item.label} // ⭐ For tooltip
+        data-label={item.label}
       >
         <span className="sidebar-icon">{item.icon}</span>
         <span className="sidebar-label">{item.label}</span>
@@ -245,7 +247,7 @@ const SidebarSubmenu = ({ item }: SidebarSubmenuProps) => {
               key={idx}
               to={child.path}
               className={({ isActive }) => `sidebar-item submenu-item ${isActive ? 'active' : ''}`}
-              data-label={child.label} // ⭐ For tooltip
+              data-label={child.label}
             >
               <span className="sidebar-icon">{child.icon}</span>
               <span className="sidebar-label">{child.label}</span>

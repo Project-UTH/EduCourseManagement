@@ -12,174 +12,95 @@ import vn.edu.uth.ecms.entity.Student;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository for CourseRegistration entity - CORRECTED
- *
- * ✅ FIXES:
- * - Added existsByStudentStudentIdAndClassEntityClassId()
- * - Added findByStudentStudentIdAndClassEntityClassId()
- * - Added findByClassEntityClassIdAndStatus()
- * - Added findAllManualEnrollments()
- * - Added countActiveStudents()
- * - Added findActiveStudentsByClass()
- */
 @Repository
 public interface CourseRegistrationRepository extends JpaRepository<CourseRegistration, Long> {
+List<CourseRegistration> findByStudent_StudentIdAndStatus(Long studentId, RegistrationStatus status);
 
-    // ==================== EXISTING METHODS (Keep these) ====================
+    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
+       "FROM CourseRegistration r " +
+       "WHERE r.student.studentId = :studentId " +
+       "AND r.classEntity.classId = :classId " +
+       "AND r.status = 'REGISTERED'")
+boolean existsByStudentAndClass(
+        @Param("studentId") Long studentId,
+        @Param("classId") Long classId
+);
 
-    /**
-     * Count active enrollments in a class
-     */
-    @Query("SELECT COUNT(cr) FROM CourseRegistration cr " +
-            "WHERE cr.classEntity.classId = :classId " +
-            "AND cr.status = 'REGISTERED'")
-    long countActiveEnrollmentsByClassId(@Param("classId") Long classId);
+    @Query("SELECT r FROM CourseRegistration r " +
+           "WHERE r.student.studentId = :studentId " +
+           "AND r.status = :status " +
+           "ORDER BY r.registeredAt DESC")
+    List<CourseRegistration> findByStudentAndStatus(
+            @Param("studentId") Long studentId,
+            @Param("status") RegistrationStatus status
+    );
 
-    /**
-     * Find registrations by student and semester
-     */
-    @Query("SELECT cr FROM CourseRegistration cr " +
-            "WHERE cr.student.studentId = :studentId " +
-            "AND cr.classEntity.semester.semesterId = :semesterId")
+    @Query("SELECT r FROM CourseRegistration r " +
+           "WHERE r.student.studentId = :studentId " +
+           "AND r.semester.semesterId = :semesterId " +
+           "ORDER BY r.registeredAt DESC")
     List<CourseRegistration> findByStudentAndSemester(
             @Param("studentId") Long studentId,
             @Param("semesterId") Long semesterId
     );
 
-    /**
-     * Delete dropped registrations for a class
-     *
-     * @return
-     */
+    @Query("SELECT r FROM CourseRegistration r " +
+           "WHERE r.classEntity.classId = :classId " +
+           "AND r.status = 'REGISTERED'")
+    List<CourseRegistration> findByClass(@Param("classId") Long classId);
+
+    @Query("SELECT r FROM CourseRegistration r " +
+           "WHERE r.student.studentId = :studentId " +
+           "AND r.classEntity.classId = :classId")
+    Optional<CourseRegistration> findByStudentAndClass(
+            @Param("studentId") Long studentId,
+            @Param("classId") Long classId
+    );
+
+    @Query("SELECT COUNT(r) FROM CourseRegistration r " +
+           "WHERE r.classEntity.classId = :classId " +
+           "AND r.status = 'REGISTERED'")
+    Long countActiveEnrollmentsByClassId(@Param("classId") Long classId);
+
     @Modifying
-    @Query("DELETE FROM CourseRegistration cr " +
-            "WHERE cr.classEntity.classId = :classId " +
-            "AND cr.status = 'DROPPED'")
+    @Query("DELETE FROM CourseRegistration r " +
+           "WHERE r.classEntity.classId = :classId " +
+           "AND r.status = 'DROPPED'")
     int deleteDroppedByClassId(@Param("classId") Long classId);
 
-    // ==================== ✅ NEW METHODS (Fix compilation errors) ====================
+    @Query("SELECT r.student FROM CourseRegistration r " +
+           "WHERE r.classEntity.classId = :classId " +
+           "AND r.status = 'REGISTERED'")
+    List<Student> findActiveStudentsByClass(@Param("classId") Long classId);
 
-    /**
-     * ✅ FIX 1: Check if student is already registered in a class
-     * Used by: EligibleStudentServiceImpl, EnrollmentServiceImpl
-     */
-    @Query("SELECT CASE WHEN COUNT(cr) > 0 THEN true ELSE false END " +
-            "FROM CourseRegistration cr " +
-            "WHERE cr.student.studentId = :studentId " +
-            "AND cr.classEntity.classId = :classId " +
-            "AND cr.status = 'REGISTERED'")
-    boolean existsByStudentStudentIdAndClassEntityClassId(
-            @Param("studentId") Long studentId,
-            @Param("classId") Long classId
-    );
-
-    /**
-     * ✅ FIX 2: Find registration by student and class
-     * Used by: EnrollmentServiceImpl (manualEnroll, dropout)
-     */
-    @Query("SELECT cr FROM CourseRegistration cr " +
-            "WHERE cr.student.studentId = :studentId " +
-            "AND cr.classEntity.classId = :classId")
-    Optional<CourseRegistration> findByStudentStudentIdAndClassEntityClassId(
-            @Param("studentId") Long studentId,
-            @Param("classId") Long classId
-    );
-
-    /**
-     * ✅ FIX 3: Find all registrations in a class with specific status
-     * Used by: EligibleStudentServiceImpl, EnrollmentServiceImpl
-     */
-    @Query("SELECT cr FROM CourseRegistration cr " +
-            "WHERE cr.classEntity.classId = :classId " +
-            "AND cr.status = :status " +
-            "ORDER BY cr.registeredAt DESC")
+    @Query("SELECT r FROM CourseRegistration r " +
+           "WHERE r.classEntity.classId = :classId " +
+           "AND r.status = :status")
     List<CourseRegistration> findByClassEntityClassIdAndStatus(
             @Param("classId") Long classId,
             @Param("status") RegistrationStatus status
     );
 
-    /**
-     * ✅ FIX 4: Find all manual enrollments
-     * Used by: EnrollmentServiceImpl (viewManualEnrollments)
-     */
-    @Query("SELECT cr FROM CourseRegistration cr " +
-            "WHERE cr.enrollmentType = 'MANUAL' " +
-            "ORDER BY cr.registeredAt DESC")
-    List<CourseRegistration> findAllManualEnrollments();
-
-    /**
-     * ✅ FIX 5: Count active students in a class
-     * Used by: EnrollmentServiceImpl
-     * Note: This is same as countActiveEnrollmentsByClassId but with different name
-     */
-    @Query("SELECT COUNT(cr) FROM CourseRegistration cr " +
-            "WHERE cr.classEntity.classId = :classId " +
-            "AND cr.status = 'REGISTERED'")
-    long countActiveStudents(@Param("classId") Long classId);
-
-    /**
-     * ✅ FIX 6: Find all active students in a class
-     * Used by: EnrollmentServiceImpl (createStudentSchedule)
-     * Returns Student entities for schedule conflict checking
-     */
-    @Query("SELECT cr.student FROM CourseRegistration cr " +
-            "WHERE cr.classEntity.classId = :classId " +
-            "AND cr.status = 'REGISTERED'")
-    List<Student> findActiveStudentsByClass(@Param("classId") Long classId);
-
-    // ==================== ADDITIONAL USEFUL METHODS ====================
-
-    /**
-     * Find all registrations for a class (any status)
-     */
-    @Query("SELECT cr FROM CourseRegistration cr " +
-            "WHERE cr.classEntity.classId = :classId " +
-            "ORDER BY cr.status, cr.registeredAt DESC")
-    List<CourseRegistration> findByClassEntityClassId(@Param("classId") Long classId);
-
-    /**
-     * Check if student has schedule conflict
-     */
-    @Query("SELECT CASE WHEN COUNT(cr) > 0 THEN true ELSE false END " +
-            "FROM CourseRegistration cr " +
-            "JOIN cr.classEntity ce " +
-            "WHERE cr.student.studentId = :studentId " +
-            "AND cr.status = 'REGISTERED' " +
-            "AND ce.semester.semesterId = :semesterId " +
-            "AND ce.dayOfWeek = :dayOfWeek " +
-            "AND ce.timeSlot = :timeSlot " +
-            "AND ce.classId != :excludeClassId")
-    boolean hasStudentScheduleConflict(
+    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
+           "FROM CourseRegistration r " +
+           "WHERE r.student.studentId = :studentId " +
+           "AND r.classEntity.classId = :classId")
+    boolean existsByStudentStudentIdAndClassEntityClassId(
             @Param("studentId") Long studentId,
-            @Param("semesterId") Long semesterId,
-            @Param("dayOfWeek") String dayOfWeek,
-            @Param("timeSlot") String timeSlot,
-            @Param("excludeClassId") Long excludeClassId
+            @Param("classId") Long classId
     );
 
-    /**
-     * Count total registrations by student and semester
-     */
-    @Query("SELECT COUNT(cr) FROM CourseRegistration cr " +
-            "WHERE cr.student.studentId = :studentId " +
-            "AND cr.classEntity.semester.semesterId = :semesterId " +
-            "AND cr.status = 'REGISTERED'")
-    long countByStudentAndSemester(
+    @Query("SELECT r FROM CourseRegistration r " +
+           "WHERE r.student.studentId = :studentId " +
+           "AND r.classEntity.classId = :classId")
+    Optional<CourseRegistration> findByStudentStudentIdAndClassEntityClassId(
             @Param("studentId") Long studentId,
-            @Param("semesterId") Long semesterId
+            @Param("classId") Long classId
     );
 
-    /**
-     * Sum total credits registered by student in semester
-     */
-    @Query("SELECT COALESCE(SUM(cr.classEntity.subject.credits), 0) " +
-            "FROM CourseRegistration cr " +
-            "WHERE cr.student.studentId = :studentId " +
-            "AND cr.classEntity.semester.semesterId = :semesterId " +
-            "AND cr.status = 'REGISTERED'")
-    int sumCreditsByStudentAndSemester(
-            @Param("studentId") Long studentId,
-            @Param("semesterId") Long semesterId
-    );
+    @Query("SELECT COUNT(r) FROM CourseRegistration r " +
+           "WHERE r.classEntity.classId = :classId " +
+           "AND r.status = 'REGISTERED'")
+    Long countActiveStudents(@Param("classId") Long classId);
+
 }

@@ -41,4 +41,6 @@ public class SubjectResponse {
     // Statistics
     private Integer totalClasses;
     private Integer totalStudents;
+    
+    private String departmentKnowledgeType; // BASIC or SPECIALIZED
 }

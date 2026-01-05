@@ -20,6 +20,7 @@ export interface Subject {
   departmentId: number;
   departmentCode: string;
   departmentName: string;
+  departmentKnowledgeType?: string; 
   
   // Major (nullable)
   majorId?: number;
@@ -240,6 +241,40 @@ const subjectApi = {
     
     console.log('[subjectApi] Prerequisites fetched:', response.data.data.length);
     return response.data;
+  },
+  getAvailableSubjects: async (): Promise<ApiResponse<Subject[]>> => {
+    console.log('[subjectApi] Fetching available subjects for student');
+    
+    try {
+      const response = await apiClient.get<ApiResponse<Subject[]>>(
+        '/api/student/subjects/available'
+      );
+      
+      console.log('[subjectApi] Available subjects fetched:', response.data.data?.length || 0);
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[subjectApi] Failed to fetch available subjects:', apiError.response?.data || apiError.message);
+      throw error;
+    }
+  },
+
+  // Get classes for a subject (student)
+  getClassesBySubject: async (subjectId: number) => {
+    console.log(`[subjectApi] Fetching classes for subject ID: ${subjectId}`);
+    
+    try {
+      const response = await apiClient.get(
+        `/api/student/classes/by-subject/${subjectId}`
+      );
+      
+      console.log('[subjectApi] Classes fetched:', response.data.data?.length || 0);
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[subjectApi] Failed to fetch classes:', apiError.response?.data || apiError.message);
+      throw error;
+    }
   },
 };
 

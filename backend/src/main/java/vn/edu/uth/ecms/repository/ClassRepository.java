@@ -25,6 +25,9 @@ import java.util.Optional;
 @Repository
 public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
 
+    List<ClassEntity> findBySemester_SemesterId(Long semesterId);
+
+
     // ==================== BASIC QUERIES ====================
 
     /**
@@ -196,4 +199,14 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
             "AND cs.category = 'EXTRA' " +
             "ORDER BY cs.classEntity.classCode ASC")
     List<ClassEntity> findClassesWithPendingSessions(@Param("semesterId") Long semesterId);
+    @Query("SELECT COUNT(c) > 0 FROM ClassEntity c WHERE c.subject.subjectId = :subjectId AND c.semester.semesterId = :semesterId")
+boolean existsBySubjectAndSemester(@Param("subjectId") Long subjectId, @Param("semesterId") Long semesterId);
+    
+    @Query("SELECT COUNT(c) > 0 FROM ClassEntity c " +
+       "WHERE c.subject.subjectId = :subjectId " +
+       "AND c.semester.semesterId = :semesterId")
+boolean existsBySubjectIdAndSemesterId(
+    @Param("subjectId") Long subjectId, 
+    @Param("semesterId") Long semesterId
+);
 }

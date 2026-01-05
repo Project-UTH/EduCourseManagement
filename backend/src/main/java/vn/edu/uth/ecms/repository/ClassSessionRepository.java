@@ -50,7 +50,19 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             "ORDER BY cs.sessionNumber")
     List<ClassSession> findRescheduledSessions(@Param("classId") Long classId);
 
-    // ==================== PENDING SESSIONS ====================
+
+    // ==================== PENDING SESSION (NEW) ====================
+
+    /**
+     * Find sessions by class and pending status
+     */
+    @Query("SELECT s FROM ClassSession s WHERE s.classEntity.classId = :classId " +
+            "AND s.isPending = :isPending " +
+            "ORDER BY s.sessionNumber")
+    List<ClassSession> findByClassAndPending(
+            @Param("classId") Long classId,
+            @Param("isPending") Boolean isPending);
+
 
     /**
      * Find all pending extra sessions for a class
@@ -80,11 +92,9 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             "AND cs.isPending = true")
     long countPendingByClass(@Param("classId") Long classId);
 
-    // ==================== CONFLICT DETECTION (ĐÃ FIX) ====================
 
-    /**
-     * ✅ FIXED: Đổi String -> TimeSlot enum
-     */
+    // ==================== CONFLICT DETECTION ====================
+
     @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
             "FROM ClassSession cs " +
             "WHERE cs.classEntity.semester.semesterId = :semesterId " +
@@ -102,15 +112,11 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             @Param("semesterId") Long semesterId,
             @Param("teacherId") Long teacherId,
             @Param("date") LocalDate date,
-            @Param("dayOfWeek") DayOfWeek dayOfWeek, // Spring JPA sẽ tự lấy từ date nếu cần, nhưng giữ để khớp Repo
-            @Param("timeSlot") TimeSlot timeSlot,   // ✅ Đổi sang Enum
+            @Param("dayOfWeek") DayOfWeek dayOfWeek,
+            @Param("timeSlot") TimeSlot timeSlot,
             @Param("excludeClassId") Long excludeClassId
     );
 
-    /**
-     * ✅ NEW: Kiểm tra xung đột cho NHÓM sinh viên (Batch check)
-     * Dùng cho ExtraSessionScheduler để tối ưu hiệu năng
-     */
     @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
             "FROM ClassSession cs " +
             "JOIN CourseRegistration cr ON cr.classEntity.classId = cs.classEntity.classId " +
@@ -136,7 +142,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     );
 
     /**
-     * ✅ FIXED: Kiểm tra xung đột phòng học
+     * ✅ FIXED: Room conflict including rescheduled sessions
      */
     @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
             "FROM ClassSession cs " +
@@ -165,23 +171,19 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             @Param("excludeSessionId") Long excludeSessionId
     );
 
-    // ==================== DELETE OPERATIONS ====================
 
-    /**
-     * Delete all sessions for a class
-     */
+    // ==================== DELETE ====================
+
     @Modifying
     @Query("DELETE FROM ClassSession cs WHERE cs.classEntity.classId = :classId")
     void deleteByClass(@Param("classId") Long classId);
 
-    /**
-     * Delete all pending sessions for a class
-     */
     @Modifying
     @Query("DELETE FROM ClassSession cs " +
             "WHERE cs.classEntity.classId = :classId " +
             "AND cs.isPending = true")
     void deletePendingByClass(@Param("classId") Long classId);
+
 
     // ==================== STATISTICS ====================
 
@@ -210,6 +212,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             @Param("status") SessionStatus status
     );
 
+
     // ==================== SEMESTER STATISTICS ====================
 
     @Query("SELECT cs.category, COUNT(cs) " +
@@ -227,4 +230,19 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             "WHERE cs.classEntity.semester.semesterId = :semesterId " +
             "AND cs.isPending = false")
     long countScheduledInSemester(@Param("semesterId") Long semesterId);
+
+
+    // ==================== DATE RANGE QUERY ====================
+
+    @Query("SELECT s FROM ClassSession s WHERE s.classEntity.classId = :classId " +
+            "AND s.sessionType = 'IN_PERSON' " +
+            "AND s.isPending = false " +
+            "AND COALESCE(s.actualDate, s.originalDate) >= :startDate " +
+            "AND COALESCE(s.actualDate, s.originalDate) <= :endDate " +
+            "ORDER BY COALESCE(s.actualDate, s.originalDate), " +
+            "COALESCE(s.actualTimeSlot, s.originalTimeSlot)")
+    List<ClassSession> findByClassAndDateRange(
+            @Param("classId") Long classId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }

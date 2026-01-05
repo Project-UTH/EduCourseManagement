@@ -20,6 +20,13 @@ import ClassList from './pages/admin/classes/ClassList';
 import RoomList from './pages/admin/rooms/RoomList';
 import RoomDetail from './pages/admin/rooms/RoomDetail';
 
+// ✅ Student Pages - PHASE 5
+import ClassSearch from './pages/student/ClassSearch';
+import MyRegistrations from './pages/student/MyRegistrations';
+import SubjectSelection from './pages/student/SubjectSelection';
+import ClassSelection from './pages/student/ClassSelection';
+import StudentSchedule from './pages/student/StudentSchedule';
+
 // Placeholder cho các trang chưa phát triển
 const Placeholder = ({ title }: { title: string }) => (
   <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -171,6 +178,17 @@ function App() {
           }
         >
           <Route path="dashboard" element={<StudentDashboard />} />
+          
+          {/* ✅ PHASE 5 - Course Registration (2-STEP) */}
+          <Route path="subjects" element={<SubjectSelection />} />
+          <Route path="classes/:subjectId" element={<ClassSelection />} />
+          <Route path="schedule" element={<StudentSchedule />} /> 
+          
+          {/* ✅ PHASE 5 - Course Registration (OLD) */}
+          <Route path="search" element={<ClassSearch />} />
+          <Route path="registrations" element={<MyRegistrations />} />  
+          
+          {/* Placeholder pages */}
           <Route path="courses" element={<Placeholder title="Khóa học của tôi" />} />
           <Route path="registration" element={<Placeholder title="Đăng ký học phần" />} />
           <Route path="schedule" element={<Placeholder title="Lịch học" />} />

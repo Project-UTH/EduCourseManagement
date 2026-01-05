@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.request.SemesterCreateRequest;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -607,4 +609,27 @@ public class SemesterServiceImpl implements SemesterService {
 
         return !overlapping.isEmpty();
     }
+    @Override
+@Transactional(readOnly = true)
+public List<SemesterResponse> getActiveSemesters() {
+    List<Semester> semesters = semesterRepository.findByStatusIn(
+            Arrays.asList(SemesterStatus.ACTIVE, SemesterStatus.UPCOMING)
+    );
+    
+    return semesters.stream()
+            .map(this::mapToResponse)
+            .toList();
+ }
+
+@Override
+@Transactional(readOnly = true)
+public List<SemesterResponse> getAllSemesters() {
+    List<Semester> semesters = semesterRepository.findAll(
+            Sort.by(Sort.Direction.DESC, "startDate")
+    );
+    
+    return semesters.stream()
+            .map(this::mapToResponse)
+            .toList();
+ }
 }

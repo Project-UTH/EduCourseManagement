@@ -3,8 +3,10 @@ package vn.edu.uth.ecms.service;
 import vn.edu.uth.ecms.dto.request.BatchRescheduleRequest;
 import vn.edu.uth.ecms.dto.request.RescheduleSessionRequest;
 import vn.edu.uth.ecms.dto.response.ClassSessionResponse;
+import vn.edu.uth.ecms.dto.response.SubjectResponse;
 import vn.edu.uth.ecms.entity.TimeSlot;
 import vn.edu.uth.ecms.exception.BadRequestException;
+import vn.edu.uth.ecms.exception.ConflictException;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -109,6 +111,7 @@ public interface SessionService {
      * Get only rescheduled sessions
      */
     List<ClassSessionResponse> getRescheduledSessions(Long classId);
+// Thêm dòng này nếu chưa có
 
     /**
      * Get session by ID

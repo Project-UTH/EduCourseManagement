@@ -7,6 +7,7 @@ import vn.edu.uth.ecms.dto.request.SemesterUpdateRequest;
 import vn.edu.uth.ecms.dto.response.SemesterResponse;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Service interface for Semester operations
@@ -19,6 +20,7 @@ import java.time.LocalDate;
  * 5. Cannot edit COMPLETED semesters
  */
 public interface SemesterService {
+
 
     // ==================== CRUD OPERATIONS ====================
 
@@ -155,4 +157,14 @@ public interface SemesterService {
      * Check if semester dates overlap with existing semesters
      */
     boolean hasDateOverlap(LocalDate startDate, LocalDate endDate, Long excludeSemesterId);
+    /**
+ * Get active semesters (for student registration)
+ * ACTIVE or UPCOMING status
+ */
+List<SemesterResponse> getActiveSemesters();
+
+/**
+ * Get all semesters
+ */
+List<SemesterResponse> getAllSemesters();
 }

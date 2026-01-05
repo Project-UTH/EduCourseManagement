@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+
 /**
  * Repository for Semester entity
  *
@@ -42,7 +43,7 @@ public interface SemesterRepository extends JpaRepository<Semester, Long> {
     /**
      * Find all semesters by status
      */
-    List<Semester> findByStatusIn(List<SemesterStatus> statuses);
+
 
     /**
      * Find all semesters ordered by start date descending
@@ -113,4 +114,5 @@ public interface SemesterRepository extends JpaRepository<Semester, Long> {
      * Used by scheduler to auto-disable expired registrations
      */
     List<Semester> findByRegistrationEnabled(Boolean enabled);
+    List<Semester> findByStatusIn(List<SemesterStatus> statuses);
 }

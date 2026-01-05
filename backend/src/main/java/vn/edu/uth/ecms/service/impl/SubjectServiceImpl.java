@@ -17,7 +17,7 @@ import vn.edu.uth.ecms.exception.NotFoundException;
 import vn.edu.uth.ecms.exception.ResourceNotFoundException;
 import vn.edu.uth.ecms.repository.*;
 import vn.edu.uth.ecms.service.SubjectService;
-import vn.edu.uth.ecms.repository.SubjectPrerequisiteRepository;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -400,28 +400,30 @@ public class SubjectServiceImpl implements SubjectService {
                 log.info("Major loaded: {} - {}", majorCode, majorName);
             }
 
-            SubjectResponse response = SubjectResponse.builder()
-                    .subjectId(subject.getSubjectId())
-                    .subjectCode(subject.getSubjectCode())
-                    .subjectName(subject.getSubjectName())
-                    .credits(subject.getCredits())
-                    .totalSessions(subject.getTotalSessions())
-                    .elearningSessions(subject.getElearningSessions())
-                    .inpersonSessions(subject.getInpersonSessions())
-                    // Department info
-                    .departmentId(dept.getDepartmentId())
-                    .departmentCode(dept.getDepartmentCode())
-                    .departmentName(dept.getDepartmentName())
-                    // Major info
-                    .majorId(majorId)
-                    .majorCode(majorCode)
-                    .majorName(majorName)
-                    .description(subject.getDescription())
-                    .createdAt(subject.getCreatedAt())
-                    .updatedAt(subject.getUpdatedAt())
-                    .build();
+           SubjectResponse response = SubjectResponse.builder()
+        .subjectId(subject.getSubjectId())
+        .subjectCode(subject.getSubjectCode())
+        .subjectName(subject.getSubjectName())
+        .credits(subject.getCredits())
+        .totalSessions(subject.getTotalSessions())
+        .elearningSessions(subject.getElearningSessions())
+        .inpersonSessions(subject.getInpersonSessions())
+        // Department info
+        .departmentId(dept.getDepartmentId())
+        .departmentCode(dept.getDepartmentCode())
+        .departmentName(dept.getDepartmentName())
+        .departmentKnowledgeType(dept.getKnowledgeType() != null ? dept.getKnowledgeType().name() : null)  // ← ĐÚNG!
+        // Major info
+        .majorId(majorId)
+        .majorCode(majorCode)
+        .majorName(majorName)
+        .description(subject.getDescription())
+        .createdAt(subject.getCreatedAt())
+        .updatedAt(subject.getUpdatedAt())
+        .build();
 
-            log.info("mapToResponse DONE");
+log.info("✅ Mapped knowledge_type: {}", response.getDepartmentKnowledgeType());
+log.info("mapToResponse DONE");
             return response;
 
         } catch (Exception e) {
