@@ -14,17 +14,20 @@ import java.util.Optional;
 
 @Repository
 public interface CourseRegistrationRepository extends JpaRepository<CourseRegistration, Long> {
-List<CourseRegistration> findByStudent_StudentIdAndStatus(Long studentId, RegistrationStatus status);
+    
+    // ==================== EXISTING METHODS ====================
+    
+    List<CourseRegistration> findByStudent_StudentIdAndStatus(Long studentId, RegistrationStatus status);
 
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
-       "FROM CourseRegistration r " +
-       "WHERE r.student.studentId = :studentId " +
-       "AND r.classEntity.classId = :classId " +
-       "AND r.status = 'REGISTERED'")
-boolean existsByStudentAndClass(
-        @Param("studentId") Long studentId,
-        @Param("classId") Long classId
-);
+           "FROM CourseRegistration r " +
+           "WHERE r.student.studentId = :studentId " +
+           "AND r.classEntity.classId = :classId " +
+           "AND r.status = 'REGISTERED'")
+    boolean existsByStudentAndClass(
+            @Param("studentId") Long studentId,
+            @Param("classId") Long classId
+    );
 
     @Query("SELECT r FROM CourseRegistration r " +
            "WHERE r.student.studentId = :studentId " +
@@ -103,4 +106,18 @@ boolean existsByStudentAndClass(
            "AND r.status = 'REGISTERED'")
     Long countActiveStudents(@Param("classId") Long classId);
 
+    // ==================== NEW METHOD FOR PHASE 4 ====================
+    
+    /**
+     * Find registrations by class ID
+     * Added for Phase 4 - Teacher Features
+     */
+    List<CourseRegistration> findByClassEntity_ClassId(Long classId);
+    
+    /**
+     * Find registrations by class ID and status
+     * Added for Phase 4 - Teacher Features
+     * This is the Spring Data JPA naming convention method
+     */
+    List<CourseRegistration> findByClassEntity_ClassIdAndStatus(Long classId, RegistrationStatus status);
 }
