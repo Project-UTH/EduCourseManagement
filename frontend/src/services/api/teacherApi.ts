@@ -336,8 +336,9 @@ const teacherApi = {
    * POST /api/teacher/change-password
    */
   changePassword: async (data: {
-    currentPassword: string;
+    oldPassword: string;
     newPassword: string;
+    confirmPassword: string;
   }): Promise<ApiResponse<null>> => {
     console.log('[teacherApi] Changing password');
     

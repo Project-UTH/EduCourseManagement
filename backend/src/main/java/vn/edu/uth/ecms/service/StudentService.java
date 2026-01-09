@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import vn.edu.uth.ecms.dto.request.StudentCreateRequest;
 import vn.edu.uth.ecms.dto.request.StudentUpdateRequest;
+import vn.edu.uth.ecms.dto.request.UpdateStudentProfileRequest;
 import vn.edu.uth.ecms.dto.response.StudentResponse;
 
 import java.util.List;
@@ -68,4 +69,22 @@ public interface StudentService {
      * Search students by keyword
      */
     Page<StudentResponse> searchStudents(String keyword, Pageable pageable);
+
+    // ==================== PROFILE METHODS (NEW) ====================
+
+    /**
+     * Get student by student code (for current user profile)
+     * @param studentCode Student's code
+     * @return Student response
+     */
+    StudentResponse getByStudentCode(String studentCode);
+
+    /**
+     * Update student profile (self-service for current user)
+     * Only allows updating: email, phone
+     * @param studentCode Student's code
+     * @param request Profile update request
+     * @return Updated student response
+     */
+    StudentResponse updateProfile(String studentCode, UpdateStudentProfileRequest request);
 }

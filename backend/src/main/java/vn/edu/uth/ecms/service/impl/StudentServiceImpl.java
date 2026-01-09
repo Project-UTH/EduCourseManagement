@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.request.StudentCreateRequest;
 import vn.edu.uth.ecms.dto.request.StudentUpdateRequest;
+import vn.edu.uth.ecms.dto.request.UpdateStudentProfileRequest;
 import vn.edu.uth.ecms.dto.response.StudentResponse;
 import vn.edu.uth.ecms.entity.Major;
 import vn.edu.uth.ecms.entity.Student;
@@ -265,5 +266,40 @@ public class StudentServiceImpl implements StudentService {
 
         return studentRepository.searchStudents(keyword, pageable)
                 .map(this::mapToResponse);
+    }
+
+    // ==================== PROFILE METHODS (NEW) ====================
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentResponse getByStudentCode(String studentCode) {
+        log.info("📋 [StudentService] Getting student by code: {}", studentCode);
+        
+        Student student = studentRepository.findByStudentCode(studentCode)
+                .orElseThrow(() -> new NotFoundException("Student not found with code: " + studentCode));
+        
+        return mapToResponse(student);
+    }
+
+    @Override
+    @Transactional
+    public StudentResponse updateProfile(String studentCode, UpdateStudentProfileRequest request) {
+        log.info("✏️ [StudentService] Updating profile for student code: {}", studentCode);
+        
+        Student student = studentRepository.findByStudentCode(studentCode)
+                .orElseThrow(() -> new NotFoundException("Student not found with code: " + studentCode));
+        
+        // Update only allowed fields (email, phone)
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            student.setEmail(request.getEmail().trim());
+        }
+        if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+            student.setPhone(request.getPhone().trim());
+        }
+        
+        Student updated = studentRepository.save(student);
+        log.info("✅ [StudentService] Profile updated for: {}", updated.getFullName());
+        
+        return mapToResponse(updated);
     }
 }

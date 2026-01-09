@@ -3,7 +3,7 @@ import teacherApi from '../../../services/api/teacherApi';
 import './TeacherProfile.css';
 
 /**
- * TeacherProfile Component
+ * TeacherProfile Component - WITH DEBUG LOGGING
  * 
  * Teacher profile management page
  * Features:
@@ -29,7 +29,7 @@ const TeacherProfile = () => {
 
   // Change password form state
   const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
+    oldPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
@@ -80,6 +80,12 @@ const TeacherProfile = () => {
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // 🔍 DEBUG: Log form state
+    console.log('🔍 [DEBUG] Password Form State:', passwordForm);
+    console.log('🔍 [DEBUG] oldPassword:', passwordForm.oldPassword);
+    console.log('🔍 [DEBUG] newPassword:', passwordForm.newPassword);
+    console.log('🔍 [DEBUG] confirmPassword:', passwordForm.confirmPassword);
+    
     // Validation
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       showMessage('error', 'Mật khẩu mới không khớp!');
@@ -91,18 +97,25 @@ const TeacherProfile = () => {
       return;
     }
     
+    // 🔍 DEBUG: Prepare payload
+    const payload = {
+      oldPassword: passwordForm.oldPassword,
+      newPassword: passwordForm.newPassword,
+      confirmPassword: passwordForm.confirmPassword,
+    };
+    console.log('🔍 [DEBUG] Sending payload:', payload);
+    console.log('🔍 [DEBUG] Payload JSON:', JSON.stringify(payload));
+    
     setLoading(true);
     try {
-      await teacherApi.changePassword({
-        currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword,
-      });
+      await teacherApi.changePassword(payload);
       
-      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
       setIsChangingPassword(false);
       showMessage('success', 'Đổi mật khẩu thành công!');
     } catch (error: any) {
-      console.error('Failed to change password:', error);
+      console.error('❌ [ERROR] Failed to change password:', error);
+      console.error('❌ [ERROR] Response:', error.response?.data);
       const errorMessage = error.response?.data?.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại!';
       showMessage('error', errorMessage);
     } finally {
@@ -367,10 +380,15 @@ const TeacherProfile = () => {
                   <label>Mật khẩu hiện tại</label>
                   <input
                     type="password"
-                    value={passwordForm.currentPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                    name="oldPassword"
+                    value={passwordForm.oldPassword}
+                    onChange={(e) => {
+                      console.log('🔍 [INPUT] oldPassword changed:', e.target.value);
+                      setPasswordForm({ ...passwordForm, oldPassword: e.target.value });
+                    }}
                     required
                     placeholder="Nhập mật khẩu hiện tại"
+                    autoComplete="current-password"
                   />
                 </div>
 
@@ -378,11 +396,16 @@ const TeacherProfile = () => {
                   <label>Mật khẩu mới</label>
                   <input
                     type="password"
+                    name="newPassword"
                     value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    onChange={(e) => {
+                      console.log('🔍 [INPUT] newPassword changed:', e.target.value);
+                      setPasswordForm({ ...passwordForm, newPassword: e.target.value });
+                    }}
                     required
                     placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
                     minLength={6}
+                    autoComplete="new-password"
                   />
                 </div>
 
@@ -390,11 +413,16 @@ const TeacherProfile = () => {
                   <label>Xác nhận mật khẩu mới</label>
                   <input
                     type="password"
+                    name="confirmPassword"
                     value={passwordForm.confirmPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                    onChange={(e) => {
+                      console.log('🔍 [INPUT] confirmPassword changed:', e.target.value);
+                      setPasswordForm({ ...passwordForm, confirmPassword: e.target.value });
+                    }}
                     required
                     placeholder="Nhập lại mật khẩu mới"
                     minLength={6}
+                    autoComplete="new-password"
                   />
                 </div>
 
@@ -411,7 +439,7 @@ const TeacherProfile = () => {
                     className="btn-secondary" 
                     onClick={() => {
                       setIsChangingPassword(false);
-                      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
                     }}
                     disabled={loading}
                   >

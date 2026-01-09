@@ -299,6 +299,55 @@ const studentApi = {
       throw error;
     }
   },
+
+  // ==================== PROFILE METHODS (NEW) ====================
+
+  /**
+   * Get current student profile
+   * GET /api/student/profile
+   */
+  getProfile: async (): Promise<StudentResponse> => {
+    console.log('[studentApi] Getting current student profile');
+    
+    try {
+      const response = await apiClient.get<ApiResponse<StudentResponse>>(
+        '/api/student/profile'
+      );
+      
+      console.log('[studentApi] Profile fetched:', response.data.data.fullName);
+      return response.data.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[studentApi] Failed to get profile:', apiError.response?.data || apiError.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Update student profile
+   * PUT /api/student/profile
+   * Only allows updating: email, phone
+   */
+  updateProfile: async (data: {
+    email?: string;
+    phone?: string;
+  }): Promise<ApiResponse<StudentResponse>> => {
+    console.log('[studentApi] Updating profile');
+    
+    try {
+      const response = await apiClient.put<ApiResponse<StudentResponse>>(
+        '/api/student/profile',
+        data
+      );
+      
+      console.log('[studentApi] Profile updated successfully');
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[studentApi] Failed to update profile:', apiError.response?.data || apiError.message);
+      throw error;
+    }
+  },
 };
 
 export default studentApi;

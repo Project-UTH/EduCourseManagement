@@ -26,6 +26,7 @@ import MyRegistrations from './pages/student/MyRegistrations';
 import SubjectSelection from './pages/student/SubjectSelection';
 import ClassSelection from './pages/student/ClassSelection';
 import StudentSchedule from './pages/student/StudentSchedule';
+import StudentProfile from './pages/student/profile/StudentProfile'; // ✅ ADDED
 
 // ✅ Teacher Pages - PHASE 4
 import HomeworkList from './pages/teacher/assignments/HomeworkList';
@@ -223,7 +224,9 @@ function App() {
           <Route path="grades" element={<Placeholder title="Xem điểm" />} />
           <Route path="transcript" element={<Placeholder title="Bảng điểm tích lũy" />} />
           <Route path="feedback" element={<Placeholder title="Gửi Phản hồi" />} />
-          <Route path="profile" element={<Placeholder title="Hồ sơ cá nhân" />} />
+          
+          {/* ✅ PHASE 5 - Profile - UPDATED */}
+          <Route path="profile" element={<StudentProfile />} />
         </Route>
 
         {/* 404 */}
