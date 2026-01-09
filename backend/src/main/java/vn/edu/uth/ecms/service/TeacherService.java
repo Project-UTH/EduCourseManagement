@@ -2,8 +2,10 @@ package vn.edu.uth.ecms.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import vn.edu.uth.ecms.dto.request.ChangePasswordRequest;
 import vn.edu.uth.ecms.dto.request.TeacherCreateRequest;
 import vn.edu.uth.ecms.dto.request.TeacherUpdateRequest;
+import vn.edu.uth.ecms.dto.request.UpdateTeacherProfileRequest;
 import vn.edu.uth.ecms.dto.response.TeacherResponse;
 
 import java.util.List;
@@ -21,7 +23,7 @@ public interface TeacherService {
     TeacherResponse createTeacher(TeacherCreateRequest request);
 
     /**
-     * Update an existing teacher
+     * Update an existing teacher (admin function)
      * @param id Teacher ID
      * @param request Teacher update data
      * @return Updated teacher response
@@ -75,4 +77,29 @@ public interface TeacherService {
      * @return List of active teacher responses
      */
     List<TeacherResponse> getActiveTeachers();
+
+    // ==================== PROFILE METHODS (NEW) ====================
+
+    /**
+     * Get teacher by citizen ID (for current user profile)
+     * @param citizenId Teacher's citizen ID
+     * @return Teacher response
+     */
+    TeacherResponse getByCitizenId(String citizenId);
+
+    /**
+     * Update teacher profile (self-service for current user)
+     * Only allows updating: email, phone, address
+     * @param citizenId Teacher's citizen ID
+     * @param request Profile update request
+     * @return Updated teacher response
+     */
+    TeacherResponse updateProfile(String citizenId, UpdateTeacherProfileRequest request);
+
+    /**
+     * Change password (self-service for current user)
+     * @param citizenId Teacher's citizen ID
+     * @param request Change password request
+     */
+    void changePassword(String citizenId, ChangePasswordRequest request);
 }

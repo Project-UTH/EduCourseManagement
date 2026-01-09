@@ -264,7 +264,8 @@ const classApi = {
   },
   
   /**
-   * Get classes by teacher
+   * Get classes by teacher (ADMIN endpoint - deprecated for teachers)
+   * @deprecated Use getMyClasses() instead for teacher access
    */
   getClassesByTeacher: async (teacherId: number): Promise<ClassResponse[]> => {
     console.log('[classApi] Fetching classes for teacher:', teacherId);
@@ -313,6 +314,71 @@ const classApi = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('[classApi] ❌ Failed to search classes:', error);
+      throw error;
+    }
+  },
+  
+  // ==================== TEACHER-SPECIFIC ENDPOINTS (Phase 4) ====================
+  
+  /**
+   * ✅ FIXED: Get current teacher's classes
+   * Uses teacher-specific endpoint for better security
+   * 
+   * @returns List of classes for current logged-in teacher
+   * 
+   * ⭐ NEW in Phase 4 - Recommended for teacher access
+   * Benefits:
+   * - Uses JWT token (no need to pass teacherId)
+   * - Better security (teacher can only see their own classes)
+   * - Proper separation of concerns
+   * 
+   * 🔧 FIX: Backend returns array DIRECTLY, NOT wrapped in {data: [...]}
+   */
+  getMyClasses: async (): Promise<ClassResponse[]> => {
+    console.log('[classApi] Fetching my classes (teacher endpoint)');
+    try {
+      const response = await apiClient.get('/api/teacher/classes/my');
+      
+      // ✅ FIX: Backend returns array directly
+      // Backend response: [{classId: 2, classCode: "XNK1", ...}]
+      // NOT: {data: [{...}]}
+      const classes = response.data;
+      
+      console.log(`[classApi] ✅ My classes fetched: ${classes.length}`);
+      return classes;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error('[classApi] ❌ Failed to fetch my classes:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * ✅ FIXED: Get class by ID via teacher endpoint
+   * Only returns class if teacher owns it
+   * 
+   * @param id Class ID
+   * @returns Class details (403 if not owned by teacher)
+   * 
+   * ⭐ NEW in Phase 4
+   * 
+   * 🔧 FIX: Backend returns object DIRECTLY, NOT wrapped in {data: {...}}
+   */
+  getMyClassById: async (id: number): Promise<ClassResponse> => {
+    console.log('[classApi] Fetching my class ID:', id);
+    try {
+      const response = await apiClient.get(`/api/teacher/classes/${id}`);
+      
+      // ✅ FIX: Backend returns object directly
+      // Backend response: {classId: 2, classCode: "XNK1", ...}
+      // NOT: {data: {...}}
+      const classData = response.data;
+      
+      console.log('[classApi] ✅ Class fetched successfully');
+      return classData;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error('[classApi] ❌ Failed to fetch class:', error);
       throw error;
     }
   },

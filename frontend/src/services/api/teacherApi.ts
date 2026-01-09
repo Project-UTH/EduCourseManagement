@@ -280,7 +280,81 @@ const teacherApi = {
       console.error('[teacherApi] Failed to delete teacher:', apiError.response?.data || apiError.message);
       throw error;
     }
-  }
+  },
+
+  // ==================== PROFILE METHODS (NEW) ====================
+
+  /**
+   * Get current teacher profile
+   * GET /api/teacher/profile
+   */
+  getProfile: async (): Promise<TeacherResponse> => {
+    console.log('[teacherApi] Fetching current teacher profile');
+    
+    try {
+      const response = await apiClient.get<ApiResponse<TeacherResponse>>(
+        '/api/teacher/profile'
+      );
+      
+      console.log('[teacherApi] Profile fetched:', response.data.data.fullName);
+      return response.data.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[teacherApi] Failed to fetch profile:', apiError.response?.data || apiError.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Update current teacher profile
+   * PUT /api/teacher/profile
+   */
+  updateProfile: async (data: {
+    email?: string;
+    phone?: string;
+    address?: string;
+  }): Promise<ApiResponse<TeacherResponse>> => {
+    console.log('[teacherApi] Updating profile');
+    
+    try {
+      const response = await apiClient.put<ApiResponse<TeacherResponse>>(
+        '/api/teacher/profile',
+        data
+      );
+      
+      console.log('[teacherApi] Profile updated successfully');
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[teacherApi] Failed to update profile:', apiError.response?.data || apiError.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Change password
+   * POST /api/teacher/change-password
+   */
+  changePassword: async (data: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<ApiResponse<null>> => {
+    console.log('[teacherApi] Changing password');
+    
+    try {
+      const response = await apiClient.post<ApiResponse<null>>(
+        '/api/teacher/change-password',
+        data
+      );
+      
+      console.log('[teacherApi] Password changed successfully');
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[teacherApi] Failed to change password:', apiError.response?.data || apiError.message);
+      throw error;
+    }
+  },
 };
 
 export default teacherApi;

@@ -16,6 +16,10 @@ import java.time.LocalDateTime;
  * 
  * Request body for creating or updating homework
  * 
+ * ✅ FIXED: @JsonFormat pattern changed to accept ISO 8601 format (with 'T')
+ * Frontend sends: "2026-01-22T03:52:00"
+ * Backend accepts: "yyyy-MM-dd'T'HH:mm:ss"
+ * 
  * @author Phase 4 - Teacher Features
  * @since 2026-01-06
  */
@@ -66,12 +70,16 @@ public class HomeworkRequest {
     private BigDecimal maxScore = new BigDecimal("10.00");
     
     /**
-     * Submission deadline
+     * ✅ FIXED: Submission deadline with ISO 8601 format support
+     * 
+     * Pattern changed from "yyyy-MM-dd HH:mm:ss" to "yyyy-MM-dd'T'HH:mm:ss"
+     * This accepts datetime-local input format: "2026-01-22T03:52:00"
+     * 
      * Must be in the future (for creation)
      */
     @NotNull(message = "Deadline is required")
     @Future(message = "Deadline must be in the future", groups = CreateValidation.class)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime deadline;
     
     /**

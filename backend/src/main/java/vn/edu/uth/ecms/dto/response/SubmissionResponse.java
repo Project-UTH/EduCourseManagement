@@ -80,12 +80,13 @@ public class SubmissionResponse {
     private LocalDateTime gradedDate;
     
     /**
-     * Submission status
+     * Submission status (enum value: SUBMITTED, GRADED, LATE)
+     * ✅ FIX: Trả về enum name thay vì display name
      */
-    private SubmissionStatus status;
+    private String status;
     
     /**
-     * Status display name
+     * Status display name (Vietnamese: "Đã nộp", "Đã chấm", "Nộp muộn")
      */
     private String statusDisplay;
     
@@ -165,7 +166,10 @@ public class SubmissionResponse {
             .score(submission.getScore())
             .teacherFeedback(submission.getTeacherFeedback())
             .gradedDate(submission.getGradedDate())
-            .status(submission.getStatus())
+            // ✅ FIX: Trả về enum name (SUBMITTED, GRADED, LATE)
+            .status(submission.getStatus() != null ?
+                   submission.getStatus().name() : null)
+            // Giữ lại statusDisplay cho UI display
             .statusDisplay(submission.getStatus() != null ?
                           submission.getStatus().getDisplayName() : null)
             .isLate(submission.isLate())

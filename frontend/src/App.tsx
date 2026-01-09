@@ -20,14 +20,26 @@ import ClassList from './pages/admin/classes/ClassList';
 import RoomList from './pages/admin/rooms/RoomList';
 import RoomDetail from './pages/admin/rooms/RoomDetail';
 
-// ✅ Student Pages - PHASE 5
+// Student Pages - PHASE 5
 import ClassSearch from './pages/student/ClassSearch';
 import MyRegistrations from './pages/student/MyRegistrations';
 import SubjectSelection from './pages/student/SubjectSelection';
 import ClassSelection from './pages/student/ClassSelection';
 import StudentSchedule from './pages/student/StudentSchedule';
 
-// Placeholder cho các trang chưa phát triển
+// ✅ Teacher Pages - PHASE 4
+import HomeworkList from './pages/teacher/assignments/HomeworkList';
+import CreateHomework from './pages/teacher/assignments/CreateHomework';
+import HomeworkDetail from './pages/teacher/assignments/HomeworkDetail';
+import EditHomework from './pages/teacher/assignments/EditHomework';
+import SubmissionList from './pages/teacher/submissions/SubmissionList';
+import TeacherGrading from './pages/teacher/grading/TeacherGrading';
+import GradeStatistics from './pages/teacher/grading/GradeStatistics';
+import TeacherSchedule from './pages/teacher/schedule/TeacherSchedule';
+import TeacherClasses from './pages/teacher/classes/TeacherClasses';
+import TeacherProfile from './pages/teacher/profile/TeacherProfile'; // ✅ ADDED
+
+// Placeholder
 const Placeholder = ({ title }: { title: string }) => (
   <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
     <div style={{
@@ -158,14 +170,29 @@ function App() {
           }
         >
           <Route path="dashboard" element={<TeacherDashboard />} />
-          <Route path="classes" element={<Placeholder title="Lớp học của tôi" />} />
+          
+          {/* ✅ PHASE 4 - Classes - UPDATED */}
+          <Route path="classes" element={<TeacherClasses />} />
+          
           <Route path="proposals" element={<Placeholder title="Đề xuất giảng dạy" />} />
-          <Route path="schedule" element={<Placeholder title="Lịch giảng dạy" />} />
-          <Route path="assignments" element={<Placeholder title="Quản lý Bài tập" />} />
-          <Route path="submissions" element={<Placeholder title="Bài nộp của SV" />} />
-          <Route path="grading" element={<Placeholder title="Nhập điểm" />} />
-          <Route path="grade-statistics" element={<Placeholder title="Thống kê điểm" />} />
-          <Route path="profile" element={<Placeholder title="Hồ sơ cá nhân" />} />
+          
+          {/* ✅ PHASE 4 - Schedule - UPDATED */}
+          <Route path="schedule" element={<TeacherSchedule />} />
+          
+          {/* ✅ PHASE 4 - Homework Management */}
+          <Route path="assignments" element={<HomeworkList />} />
+          <Route path="assignments/create" element={<CreateHomework />} />
+          <Route path="assignments/:id" element={<HomeworkDetail />} />
+          <Route path="assignments/edit/:id" element={<EditHomework />} />
+          
+          <Route path="submissions" element={<SubmissionList />} />
+          
+          {/* ✅ PHASE 4 - Grade Management - UPDATED */}
+          <Route path="grading" element={<TeacherGrading />} />
+          <Route path="grade-statistics" element={<GradeStatistics />} />
+          
+          {/* ✅ PHASE 4 - Profile - UPDATED */}
+          <Route path="profile" element={<TeacherProfile />} />
         </Route>
 
         {/* STUDENT ROUTES */}
@@ -191,7 +218,6 @@ function App() {
           {/* Placeholder pages */}
           <Route path="courses" element={<Placeholder title="Khóa học của tôi" />} />
           <Route path="registration" element={<Placeholder title="Đăng ký học phần" />} />
-          <Route path="schedule" element={<Placeholder title="Lịch học" />} />
           <Route path="assignments" element={<Placeholder title="Danh sách Bài tập" />} />
           <Route path="submissions" element={<Placeholder title="Bài đã nộp" />} />
           <Route path="grades" element={<Placeholder title="Xem điểm" />} />

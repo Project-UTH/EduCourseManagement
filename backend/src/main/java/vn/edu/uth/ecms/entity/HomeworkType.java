@@ -1,9 +1,14 @@
 package vn.edu.uth.ecms.entity;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * HomeworkType Enum
  * 
  * Defines the type of homework/assignment
+ * 
+ * ✅ FIXED: Added @JsonValue to use enum name (REGULAR, MIDTERM, FINAL)
+ * instead of displayName for JSON serialization
  * 
  * @author Phase 4 - Teacher Features
  * @since 2026-01-06
@@ -125,6 +130,23 @@ public enum HomeworkType {
             this.weight * 100);
     }
     
+    /**
+     * ✅ FIX: Use enum name (REGULAR, MIDTERM, FINAL) for JSON serialization
+     * This tells Jackson to serialize as "REGULAR" instead of "Thường xuyên"
+     * 
+     * @return Enum name (REGULAR, MIDTERM, FINAL)
+     */
+    @JsonValue
+    public String toJson() {
+        return this.name();
+    }
+    
+    /**
+     * ❌ REMOVED @JsonValue from toString()
+     * toString() now only returns displayName for logging purposes
+     * 
+     * @return Display name in Vietnamese
+     */
     @Override
     public String toString() {
         return displayName;

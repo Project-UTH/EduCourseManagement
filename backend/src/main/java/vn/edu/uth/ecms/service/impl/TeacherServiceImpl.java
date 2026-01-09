@@ -7,8 +7,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.edu.uth.ecms.dto.request.ChangePasswordRequest;
 import vn.edu.uth.ecms.dto.request.TeacherCreateRequest;
 import vn.edu.uth.ecms.dto.request.TeacherUpdateRequest;
+import vn.edu.uth.ecms.dto.request.UpdateTeacherProfileRequest;
 import vn.edu.uth.ecms.dto.response.TeacherResponse;
 import vn.edu.uth.ecms.dto.response.TeacherSubjectResponse;
 import vn.edu.uth.ecms.entity.Department;
@@ -124,8 +126,6 @@ public class TeacherServiceImpl implements TeacherService {
             );
         }
     }
-
-    // Service methods implementation will continue in next parts...
 
     @Override
     public TeacherResponse createTeacher(TeacherCreateRequest request) {
@@ -311,5 +311,69 @@ public class TeacherServiceImpl implements TeacherService {
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    // ==================== PROFILE METHODS (NEW) ====================
+
+    @Override
+    @Transactional(readOnly = true)
+    public TeacherResponse getByCitizenId(String citizenId) {
+        log.info("📋 [TeacherService] Getting teacher by citizenId: {}", citizenId);
+        
+        Teacher teacher = teacherRepository.findByCitizenId(citizenId)
+                .orElseThrow(() -> new NotFoundException("Teacher not found with citizenId: " + citizenId));
+        
+        return mapToResponse(teacher);
+    }
+
+    @Override
+    @Transactional
+    public TeacherResponse updateProfile(String citizenId, UpdateTeacherProfileRequest request) {
+        log.info("✏️ [TeacherService] Updating profile for citizenId: {}", citizenId);
+        
+        Teacher teacher = teacherRepository.findByCitizenId(citizenId)
+                .orElseThrow(() -> new NotFoundException("Teacher not found with citizenId: " + citizenId));
+        
+        // Update only allowed fields (email, phone, address)
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            teacher.setEmail(request.getEmail().trim());
+        }
+        if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+            teacher.setPhone(request.getPhone().trim());
+        }
+        if (request.getAddress() != null) {
+            teacher.setAddress(request.getAddress().trim());
+        }
+        
+        Teacher updated = teacherRepository.save(teacher);
+        log.info("✅ [TeacherService] Profile updated for: {}", updated.getFullName());
+        
+        return mapToResponse(updated);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String citizenId, ChangePasswordRequest request) {
+        log.info("🔒 [TeacherService] Changing password for citizenId: {}", citizenId);
+        
+        Teacher teacher = teacherRepository.findByCitizenId(citizenId)
+                .orElseThrow(() -> new NotFoundException("Teacher not found with citizenId: " + citizenId));
+        
+        // Verify old password matches
+        if (!passwordEncoder.matches(request.getOldPassword(), teacher.getPassword())) {
+            throw new BadRequestException("Mật khẩu hiện tại không đúng");
+        }
+        
+        // Verify new password matches confirm password
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new BadRequestException("Mật khẩu mới và xác nhận mật khẩu không khớp");
+        }
+        
+        // Update password
+        teacher.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        teacher.setIsFirstLogin(false); // Mark as not first login anymore
+        
+        teacherRepository.save(teacher);
+        log.info("✅ [TeacherService] Password changed successfully for: {}", teacher.getFullName());
     }
 }

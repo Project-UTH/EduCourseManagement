@@ -1,0 +1,569 @@
+/* ==================== GRADE STATISTICS PAGE ==================== */
+
+.grade-statistics-container {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  min-height: calc(100vh - 64px);
+}
+
+/* ==================== HEADER ==================== */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.page-header p {
+  color: #6b7280;
+  font-size: 0.9375rem;
+}
+
+.btn-export {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.btn-export:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* ==================== ALERT ==================== */
+
+.alert {
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+/* ==================== CLASS SELECTOR ==================== */
+
+.class-selector-wrapper {
+  margin-bottom: 2rem;
+}
+
+.class-selector {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  background: white;
+  color: #111827;
+  transition: border-color 0.2s;
+}
+
+.class-selector:focus {
+  outline: none;
+  border-color: #10b981;
+}
+
+/* ==================== LOADING ==================== */
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+  margin-top: 1rem;
+  color: #6b7280;
+}
+
+/* ==================== STATS CARDS ==================== */
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ==================== CHARTS ROW ==================== */
+
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chart-card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+/* ==================== BAR CHART ==================== */
+
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 200px;
+  gap: 0.25rem;
+  padding: 0 0.5rem;
+}
+
+.bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.bar {
+  width: 100%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 0.25rem 0.25rem 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 0.25rem;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.bar:hover {
+  opacity: 0.8;
+}
+
+.bar-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+.bar-axis {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ==================== LETTER DISTRIBUTION ==================== */
+
+.letter-distribution {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 1rem;
+}
+
+.letter-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.letter-item:hover {
+  background: #f3f4f6;
+  transform: translateY(-2px);
+}
+
+.letter-badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.letter-badge.grade-A {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.letter-badge.grade-B-plus {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.letter-badge.grade-B {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.letter-badge.grade-C-plus {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.letter-badge.grade-C {
+  background: #fed7aa;
+  color: #9a3412;
+}
+
+.letter-badge.grade-D-plus {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.letter-badge.grade-D {
+  background: #fecaca;
+  color: #7f1d1d;
+}
+
+.letter-badge.grade-F {
+  background: #fee;
+  color: #991b1b;
+}
+
+.letter-count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.letter-percent {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+/* ==================== TOP STUDENTS ==================== */
+
+.top-students-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.top-students-card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.top-students-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.top-students-table thead {
+  background: #f9fafb;
+}
+
+.top-students-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.top-students-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+}
+
+.top-students-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.top-students-table td {
+  padding: 0.875rem 1rem;
+  color: #374151;
+}
+
+.rank-cell {
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.medal {
+  font-size: 1.875rem;
+}
+
+.rank-number {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.score-cell {
+  font-weight: 600;
+  color: #111827;
+  font-size: 1rem;
+}
+
+/* ==================== BOTTOM STATS ROW ==================== */
+
+.bottom-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.info-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.info-card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+/* ==================== PASS/FAIL STATS ==================== */
+
+.pass-fail-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pass-stat,
+.fail-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+}
+
+.pass-stat {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+}
+
+.fail-stat {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+}
+
+.pass-icon,
+.fail-icon {
+  font-size: 1.5rem;
+}
+
+.pass-label,
+.fail-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.pass-value,
+.fail-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-left: auto;
+}
+
+.pass-percent,
+.fail-percent {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* ==================== SCORE STATISTICS ==================== */
+
+.score-statistics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.score-stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+}
+
+.score-stat-label {
+  color: #6b7280;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.score-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.score-stat-value.highlight-green {
+  color: #059669;
+}
+
+.score-stat-value.highlight-red {
+  color: #dc2626;
+}
+
+/* ==================== EMPTY STATE ==================== */
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state p {
+  font-size: 1.125rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.empty-hint {
+  font-size: 0.9375rem;
+  color: #9ca3af;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1200px) {
+  .grade-statistics-container {
+    padding: 1.5rem;
+  }
+  
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .btn-export {
+    width: 100%;
+  }
+  
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .letter-distribution {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .bottom-stats-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .bar-chart {
+    gap: 0.125rem;
+    padding: 0;
+  }
+  
+  .bar-axis {
+    font-size: 0.625rem;
+  }
+}

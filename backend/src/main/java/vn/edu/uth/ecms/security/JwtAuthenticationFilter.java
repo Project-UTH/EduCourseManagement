@@ -49,33 +49,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 String username = tokenProvider.getUsernameFromToken(jwt);
                 Claims claims = tokenProvider.getClaimsFromToken(jwt);
+                
+                // Extract data from JWT claims
+                Long userId = claims.get("id", Long.class);
                 String role = claims.get("role", String.class);
+                String fullName = claims.get("fullName", String.class);
 
                 // Add ROLE_ prefix if not present and role is not null
                 if (role != null && !role.isEmpty() && !role.startsWith("ROLE_")) {
                     role = "ROLE_" + role;
                 }
 
-                logger.info("JWT Authentication - Username: {}, Role: {}", username, role);
+                logger.info("JWT Authentication - Username: {}, Role: {}, ID: {}", username, role, userId);
 
-                // Create authority from role (handle null case)
-                SimpleGrantedAuthority authority = new SimpleGrantedAuthority(
-                        role != null ? role : "ROLE_USER"
+                // ✅ FIX: Create UserPrincipal using AllArgsConstructor
+                SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role != null ? role : "ROLE_USER");
+                
+                UserPrincipal userPrincipal = new UserPrincipal(
+                        userId,                                      // id
+                        username,                                    // username
+                        null,                                        // password (not needed from JWT)
+                        fullName,                                    // fullName
+                        role != null ? role.replace("ROLE_", "") : "USER",  // role (without ROLE_ prefix)
+                        false,                                       // isFirstLogin
+                        true,                                        // isActive
+                        Collections.singletonList(authority)         // authorities
                 );
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                username,
+                                userPrincipal,
                                 null,
-                                Collections.singletonList(authority)
+                                userPrincipal.getAuthorities()
                         );
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                logger.info("✅ Authentication successful for user: {} with authority: {}",
-                        username, authority.getAuthority());
+                logger.info("✅ Authentication successful for user: {} (ID: {}) with authority: {}",
+                        username, userId, authority.getAuthority());
             }
         } catch (Exception ex) {
             logger.error("❌ Could not set user authentication in security context", ex);
