@@ -2,16 +2,26 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../../services/api/apiClient';
 import './StudentSchedule.css';
 
+/**
+ * StudentSchedule Component - Fixed Version
+ * 
+ * Features:
+ * - Correct day-of-week mapping (API returns MONDAY, TUESDAY, etc.)
+ * - Table layout similar to TeacherSchedule
+ * - Period-based rows (Sáng, Chiều, Tối)
+ * - Week navigation
+ */
+
 interface ScheduleItem {
   classId: number;
   classCode: string;
   subjectCode: string;
   subjectName: string;
   teacherName: string;
-  sessionDate: string; // "YYYY-MM-DD" format from API
-  dayOfWeek: string;
-  dayOfWeekDisplay: string;
-  timeSlot: string;
+  sessionDate: string; // "YYYY-MM-DD" format
+  dayOfWeek: string; // "MONDAY", "TUESDAY", etc. from API
+  dayOfWeekDisplay: string; // "Thứ 2", "Thứ 3", etc.
+  timeSlot: string; // "CA1", "CA2", etc.
   timeSlotDisplay: string;
   room: string;
   sessionNumber: number;
@@ -19,122 +29,94 @@ interface ScheduleItem {
   campus: string;
 }
 
+// Time slots grouped by period
 const TIME_SLOTS = [
-  { code: 'CA1', name: 'Ca 1', time: '06:45 - 09:15' },
-  { code: 'CA2', name: 'Ca 2', time: '09:25 - 11:55' },
-  { code: 'CA3', name: 'Ca 3', time: '12:10 - 14:40' },
-  { code: 'CA4', name: 'Ca 4', time: '14:50 - 17:20' },
-  { code: 'CA5', name: 'Ca 5', time: '17:30 - 20:00' },
+  { id: 'CA1', label: 'Ca 1', period: 'Sáng', time: '06:45 - 09:15' },
+  { id: 'CA2', label: 'Ca 2', period: 'Sáng', time: '09:25 - 11:55' },
+  { id: 'CA3', label: 'Ca 3', period: 'Chiều', time: '12:10 - 14:40' },
+  { id: 'CA4', label: 'Ca 4', period: 'Chiều', time: '14:50 - 17:20' },
+  { id: 'CA5', label: 'Ca 5', period: 'Chiều', time: '17:30 - 20:00' },
+  { id: 'CA6', label: 'Ca 6', period: 'Tối', time: '20:10 - 22:40' },
 ];
 
-const DAYS_OF_WEEK = [
-  { code: 'MONDAY', display: 'Thứ 2' },
-  { code: 'TUESDAY', display: 'Thứ 3' },
-  { code: 'WEDNESDAY', display: 'Thứ 4' },
-  { code: 'THURSDAY', display: 'Thứ 5' },
-  { code: 'FRIDAY', display: 'Thứ 6' },
-  { code: 'SATURDAY', display: 'Thứ 7' },
-  { code: 'SUNDAY', display: 'Chủ nhật' },
-];
+const PERIODS = ['Sáng', 'Chiều', 'Tối'];
+
+// ✅ CRITICAL: Map API day names to Vietnamese display AND correct week index
+// API returns: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+// Week array index: 0=Monday, 1=Tuesday, ..., 6=Sunday
+const DAY_MAPPING = {
+  'MONDAY': { display: 'Thứ 2', weekIndex: 0 },
+  'TUESDAY': { display: 'Thứ 3', weekIndex: 1 },
+  'WEDNESDAY': { display: 'Thứ 4', weekIndex: 2 },
+  'THURSDAY': { display: 'Thứ 5', weekIndex: 3 },
+  'FRIDAY': { display: 'Thứ 6', weekIndex: 4 },
+  'SATURDAY': { display: 'Thứ 7', weekIndex: 5 },
+  'SUNDAY': { display: 'Chủ nhật', weekIndex: 6 },
+};
 
 const StudentSchedule: React.FC = () => {
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(false);
-  
-  // ✅ Helper: Verify what day of week a date string is
-  const verifyDateDayOfWeek = (dateStr: string): string => {
-    const date = parseDate(dateStr);
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const dayNamesVi = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
-    const dayNum = date.getDay();
-    return `${dateStr} is ${dayNames[dayNum]} (${dayNamesVi[dayNum]})`;
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  useEffect(() => {
+    loadSchedule();
+  }, [selectedDate]);
+
+  // ✅ Get Monday of the current week (ISO week standard)
+  const getWeekMonday = (date: Date): Date => {
+    const d = new Date(date);
+    const day = d.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+    const diff = day === 0 ? -6 : 1 - day; // Adjust to Monday
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
   };
 
-  // ✅ CRITICAL FIX: Parse date without timezone issues
-  const formatDateToString = (date: Date): string => {
+  // ✅ Format date to YYYY-MM-DD for API
+  const formatDateForAPI = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
-  // ✅ CRITICAL FIX: Parse "YYYY-MM-DD" correctly (no timezone shift)
-  const parseDate = (dateStr: string): Date => {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day); // month is 0-indexed
+  // ✅ Get 7 dates of the week starting from Monday
+  const getWeekDates = (): Date[] => {
+    const monday = getWeekMonday(selectedDate);
+    const dates: Date[] = [];
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+      dates.push(date);
+    }
+    
+    return dates;
   };
 
-  // ✅ ULTIMATE FIX: Get Monday using ISO week (avoid timezone issues)
-  function getThisWeekMonday(): string {
-    const today = new Date();
-    
-    // Get local date parts to avoid timezone issues
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const date = today.getDate();
-    const dayOfWeek = today.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
-    
-    console.log('🔍 Today:', formatDateToString(today));
-    console.log('🔍 Day of week:', dayOfWeek, ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek]);
-    
-    // Create a new date for Monday calculation
-    const monday = new Date(year, month, date);
-    
-    // Calculate offset to Monday
-    // CRITICAL: We want the Monday of THIS week
-    // If today is Sunday, we want YESTERDAY's Monday (6 days back)
-    // If today is Monday, offset = 0
-    // If today is Tuesday, offset = -1
-    // etc.
-    let offset: number;
-    if (dayOfWeek === 0) {
-      // Sunday: go back 6 days to get THIS week's Monday
-      offset = -6;
-    } else {
-      // Any other day: go back (dayOfWeek - 1) days
-      offset = -(dayOfWeek - 1);
-    }
-    
-    monday.setDate(monday.getDate() + offset);
-    
-    const result = formatDateToString(monday);
-    const mondayDay = monday.getDay();
-    
-    console.log('✅ Calculated Monday:', result);
-    console.log('🔍 Monday day of week:', mondayDay, '(should be 1)');
-    
-    if (mondayDay !== 1) {
-      console.error('❌ ERROR: Calculated Monday is not actually Monday! It is day', mondayDay);
-      console.error('❌ Please check parseDate() and formatDateToString() functions');
-    }
-    
-    return result;
-  }
-
-  const [currentWeekStart, setCurrentWeekStart] = useState<string>(getThisWeekMonday());
-
-  useEffect(() => {
-    fetchSchedule();
-  }, [currentWeekStart]);
-
-  const fetchSchedule = async () => {
+  const loadSchedule = async () => {
     setLoading(true);
     try {
-      console.log('📅 Fetching schedule for week:', currentWeekStart);
-      console.log('🔍 Verify week start:', verifyDateDayOfWeek(currentWeekStart));
+      const monday = getWeekMonday(selectedDate);
+      const weekStartDate = formatDateForAPI(monday);
+      
+      console.log('📅 Fetching schedule for week starting:', weekStartDate);
 
       const response = await apiClient.get(
-        `/api/student/schedule/weekly?weekStartDate=${currentWeekStart}`
+        `/api/student/schedule/weekly?weekStartDate=${weekStartDate}`
       );
 
       if (response.data && response.data.success) {
         const items = response.data.data || [];
         console.log('✅ Received', items.length, 'schedule items');
         
-        // ✅ DEBUG: Log each item's date and verify its day
+        // Debug: Log each item's day mapping
         items.forEach((item: ScheduleItem) => {
-          console.log(`📍 ${item.sessionDate} | ${item.dayOfWeekDisplay} | ${item.timeSlot} | ${item.subjectName}`);
-          console.log(`   🔍 ${verifyDateDayOfWeek(item.sessionDate)}`);
+          const mapping = DAY_MAPPING[item.dayOfWeek as keyof typeof DAY_MAPPING];
+          console.log(
+            `📍 ${item.sessionDate} | ${item.dayOfWeek} → ${mapping?.display} (index ${mapping?.weekIndex}) | ${item.timeSlot} | ${item.subjectName}`
+          );
         });
         
         setScheduleItems(items);
@@ -146,74 +128,54 @@ const StudentSchedule: React.FC = () => {
     }
   };
 
-  const goToThisWeek = () => {
-    setCurrentWeekStart(getThisWeekMonday());
+  // ✅ CRITICAL FIX: Filter sessions by week day index AND time slot
+  const getSessionsForSlot = (weekDayIndex: number, timeSlotId: string): ScheduleItem[] => {
+    return scheduleItems.filter(item => {
+      const dayMapping = DAY_MAPPING[item.dayOfWeek as keyof typeof DAY_MAPPING];
+      return dayMapping?.weekIndex === weekDayIndex && item.timeSlot === timeSlotId;
+    });
+  };
+
+  // Navigation
+  const goToToday = () => {
+    setSelectedDate(new Date());
   };
 
   const goToPreviousWeek = () => {
-    const currentDate = parseDate(currentWeekStart);
-    currentDate.setDate(currentDate.getDate() - 7);
-    setCurrentWeekStart(formatDateToString(currentDate));
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() - 7);
+    setSelectedDate(newDate);
   };
 
   const goToNextWeek = () => {
-    const currentDate = parseDate(currentWeekStart);
-    currentDate.setDate(currentDate.getDate() + 7);
-    setCurrentWeekStart(formatDateToString(currentDate));
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + 7);
+    setSelectedDate(newDate);
   };
 
-  // ✅ CRITICAL FIX: Filter by EXACT date string match (no parsing issues)
-  const getItemsForSlot = (dateStr: string, slotCode: string): ScheduleItem[] => {
-    const filtered = scheduleItems.filter(
-      item => item.sessionDate === dateStr && item.timeSlot === slotCode
-    );
-    
-    if (filtered.length > 0) {
-      console.log(`🎯 Found ${filtered.length} items for ${dateStr} ${slotCode}`);
-    }
-    
-    return filtered;
-  };
-
-  // ✅ Get 7 days of the week as YYYY-MM-DD strings
-  const getWeekDates = (): string[] => {
-    const dates: string[] = [];
-    const startDate = parseDate(currentWeekStart);
-    
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      dates.push(formatDateToString(date));
-    }
-    
-    return dates;
-  };
-
-  // Format week display
-  const getWeekDisplay = (): string => {
-    const startDate = parseDate(currentWeekStart);
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 6);
-    
-    return `${formatDateDisplay(startDate)} - ${formatDateDisplay(endDate)}`;
-  };
-
-  const formatDateDisplay = (date: Date): string => {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  // ✅ DEBUG: Log week structure when it changes
-  useEffect(() => {
-    const weekDates = getWeekDates();
-    console.log('🗓️ Week structure:');
-    DAYS_OF_WEEK.forEach((day, idx) => {
-      const dateStr = weekDates[idx];
-      console.log(`  ${day.display} (${day.code}): ${dateStr} | ${verifyDateDayOfWeek(dateStr)}`);
+  // Format date for display
+  const formatDateHeader = (date: Date, weekDayIndex: number): { day: string; date: string } => {
+    const dayNames = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+    const day = dayNames[weekDayIndex];
+    const dateStr = date.toLocaleDateString('vi-VN', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric' 
     });
-  }, [currentWeekStart]);
+    return { day, date: dateStr };
+  };
+
+  // Check if date is today
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
+  const weekDates = getWeekDates();
 
   if (loading) {
     return (
@@ -225,122 +187,108 @@ const StudentSchedule: React.FC = () => {
   }
 
   return (
-    <div className="schedule-page">
-      {/* Header */}
-      <div className="schedule-header">
-        <h1>📅 Lịch học theo tuần</h1>
+    <div className="student-schedule-container">
+      {/* Header Controls */}
+      <div className="schedule-controls">
+        <input
+          type="date"
+          value={formatDateForAPI(selectedDate)}
+          onChange={(e) => setSelectedDate(new Date(e.target.value))}
+          className="date-picker"
+        />
         
-        <div className="schedule-controls">
-          <input
-            type="date"
-            value={currentWeekStart}
-            onChange={(e) => {
-              const selectedDate = e.target.value;
-              console.log('📅 User selected date:', selectedDate);
-              
-              // Force adjust to Monday if not Monday
-              const date = parseDate(selectedDate);
-              const dayOfWeek = date.getDay();
-              console.log('🔍 Selected date day of week:', dayOfWeek);
-              
-              if (dayOfWeek !== 1) {
-                // Adjust to Monday
-                const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-                date.setDate(date.getDate() + offset);
-                const mondayDate = formatDateToString(date);
-                console.log('🔧 Adjusted to Monday:', mondayDate);
-                setCurrentWeekStart(mondayDate);
-              } else {
-                setCurrentWeekStart(selectedDate);
-              }
-            }}
-            className="date-input"
-          />
-          
-          <button onClick={goToPreviousWeek} className="btn-nav">←</button>
-          <button onClick={goToThisWeek} className="btn-current">HIỆN TẠI</button>
-          <button onClick={goToNextWeek} className="btn-nav">→</button>
+        <div className="nav-buttons">
+          <button onClick={goToPreviousWeek} className="nav-btn" title="Tuần trước">
+            ←
+          </button>
+          <button onClick={goToToday} className="today-btn">
+            📅 HIỆN TẠI
+          </button>
+          <button onClick={goToNextWeek} className="nav-btn" title="Tuần sau">
+            →
+          </button>
         </div>
-
-        <div className="week-display">{getWeekDisplay()}</div>
       </div>
 
-      {/* Info */}
+      {/* Empty State */}
       {scheduleItems.length === 0 && !loading && (
-        <div className="no-schedule-info">
-          <p>📭 Không có lịch học trong tuần này</p>
+        <div className="empty-state">
+          <p>📅 Không có lịch học trong tuần này</p>
           <small>Chỉ hiển thị lịch của các lớp trong kỳ sắp tới hoặc đang diễn ra</small>
         </div>
       )}
 
-      {/* Schedule Grid */}
-      <div className="schedule-grid-container">
-        <table className="schedule-table" key={currentWeekStart}>
+      {/* Schedule Table - Similar to TeacherSchedule */}
+      <div className="calendar-wrapper">
+        <table className="schedule-table">
           <thead>
             <tr>
-              <th className="col-timeslot">Ca học</th>
-              {DAYS_OF_WEEK.map((day, idx) => {
-                const weekDates = getWeekDates();
-                const dateStr = weekDates[idx];
-                const date = parseDate(dateStr);
-                
+              <th className="period-header" rowSpan={2}></th>
+              <th className="shift-header" rowSpan={2}>Ca học</th>
+              {weekDates.map((date, index) => {
+                const header = formatDateHeader(date, index);
+                const todayClass = isToday(date) ? 'today-column' : '';
                 return (
-                  <th key={day.code} className="col-day">
-                    <div className="day-header">
-                      <div className="day-name">{day.display}</div>
-                      <div className="day-date">{formatDateDisplay(date)}</div>
-                    </div>
+                  <th key={index} className={`day-header ${todayClass}`}>
+                    <div className="day-name">{header.day}</div>
+                    <div className="day-date">{header.date}</div>
                   </th>
                 );
               })}
             </tr>
           </thead>
           <tbody>
-            {TIME_SLOTS.map(slot => {
-              const weekDates = getWeekDates();
+            {PERIODS.map(period => {
+              const periodSlots = TIME_SLOTS.filter(slot => slot.period === period);
               
-              return (
-                <tr key={slot.code}>
-                  <td className="timeslot-cell">
-                    <div className="timeslot-name">{slot.name}</div>
-                    <div className="timeslot-time">{slot.time}</div>
+              return periodSlots.map((slot, slotIndex) => (
+                <tr key={slot.id}>
+                  {/* Period label (merged cells) */}
+                  {slotIndex === 0 && (
+                    <td className="period-label-cell" rowSpan={periodSlots.length}>
+                      {period}
+                    </td>
+                  )}
+                  
+                  {/* Time slot label */}
+                  <td className="shift-label-cell">
+                    <div className="shift-label">{slot.label}</div>
+                    <div className="shift-time">{slot.time}</div>
                   </td>
                   
-                  {weekDates.map((dateStr) => {
-                    const items = getItemsForSlot(dateStr, slot.code);
+                  {/* Day cells */}
+                  {weekDates.map((date, dayIndex) => {
+                    const todayClass = isToday(date) ? 'today-cell' : '';
+                    const sessions = getSessionsForSlot(dayIndex, slot.id);
                     
                     return (
-                      <td key={`${dateStr}-${slot.code}`} className="schedule-cell">
-                        {items.length > 0 ? (
-                          items.map((item, idx) => (
-                            <div key={idx} className="schedule-item">
-                              <div className="item-subject">{item.subjectName}</div>
-                              <div className="item-code">{item.classCode}</div>
-                              <div className="item-info">
-                                📚 Buổi {item.sessionNumber}
-                              </div>
-                              <div className="item-info">
-                                👤 {item.teacherName}
-                              </div>
-                              <div className="item-info">
-                                🏢 {item.room}
-                              </div>
-                              <div className="item-info campus">
-                                📍 {item.campus}
-                              </div>
-                              {item.sessionType === 'E_LEARNING' && (
-                                <div className="item-badge elearning">💻 E-Learning</div>
-                              )}
+                      <td key={dayIndex} className={`session-cell ${todayClass}`}>
+                        {sessions.map(session => (
+                          <div key={session.classId} className="session-card">
+                            <div className="session-title">{session.subjectName}</div>
+                            <div className="session-code">{session.classCode}</div>
+                            <div className="session-info">
+                              📚 Buổi {session.sessionNumber}
                             </div>
-                          ))
-                        ) : (
-                          <div className="empty-cell"></div>
-                        )}
+                            <div className="session-info">
+                              👤 {session.teacherName}
+                            </div>
+                            <div className="session-info">
+                              📍 {session.room}
+                            </div>
+                            <div className="session-info campus">
+                              🏢 {session.campus}
+                            </div>
+                            {session.sessionType === 'E_LEARNING' && (
+                              <div className="online-badge">💻 E-Learning</div>
+                            )}
+                          </div>
+                        ))}
                       </td>
                     );
                   })}
                 </tr>
-              );
+              ));
             })}
           </tbody>
         </table>

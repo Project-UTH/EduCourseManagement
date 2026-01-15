@@ -86,8 +86,8 @@ public class SecurityConfig {
                         // Students/Teachers can download without re-authentication
                         .requestMatchers("/api/files/**").permitAll()
                         
-                        // ✅ ADDED: Uploaded homework files - PUBLIC ACCESS
-                        // Allow direct download of homework attachments
+                        // ✅ ADDED: Uploaded files - PUBLIC ACCESS
+                        // Allow direct download of homework and materials
                         .requestMatchers("/uploads/**").permitAll()
                         
                         // ✅ ADDED: Favicon and static resources

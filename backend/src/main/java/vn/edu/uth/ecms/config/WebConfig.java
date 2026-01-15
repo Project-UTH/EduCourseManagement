@@ -12,6 +12,7 @@ import java.io.File;
  * Configures static resource handling for uploaded files
  * 
  * ✅ FIXED: Use ABSOLUTE path to handle E drive location
+ * ✅ ADDED: Materials folder for class materials
  * 
  * @author Phase 4.1 - File Upload
  * @since 2026-01-15
@@ -21,19 +22,32 @@ public class WebConfig implements WebMvcConfigurer {
     
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // ✅ FIX: Get absolute path dynamically
+        // ✅ Homework files (EXISTING)
         String uploadDir = new File("uploads/homework/").getAbsolutePath();
         String resourceLocation = "file:///" + uploadDir.replace("\\", "/") + "/";
         
         registry.addResourceHandler("/uploads/homework/**")
                 .addResourceLocations(resourceLocation);
         
+        // ✅ Materials files (NEW)
+        String materialsDir = new File("uploads/materials/").getAbsolutePath();
+        String materialsLocation = "file:///" + materialsDir.replace("\\", "/") + "/";
+        
+        registry.addResourceHandler("/uploads/materials/**")
+                .addResourceLocations(materialsLocation);
+        
         System.out.println("====================================");
-        System.out.println("✅ Static Resource Handler Configured");
+        System.out.println("✅ Static Resource Handlers Configured");
         System.out.println("====================================");
-        System.out.println("URL Pattern:     /uploads/homework/**");
-        System.out.println("File Location:   " + resourceLocation);
-        System.out.println("Absolute Path:   " + uploadDir);
+        System.out.println("Homework:");
+        System.out.println("  URL Pattern:   /uploads/homework/**");
+        System.out.println("  File Location: " + resourceLocation);
+        System.out.println("  Absolute Path: " + uploadDir);
+        System.out.println("------------------------------------");
+        System.out.println("Materials:");
+        System.out.println("  URL Pattern:   /uploads/materials/**");
+        System.out.println("  File Location: " + materialsLocation);
+        System.out.println("  Absolute Path: " + materialsDir);
         System.out.println("====================================");
     }
 }

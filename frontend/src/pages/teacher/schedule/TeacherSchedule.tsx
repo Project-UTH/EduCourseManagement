@@ -3,33 +3,35 @@ import classApi from '../../../services/api/classApi';
 import './TeacherSchedule.css';
 
 /**
- * TeacherSchedule Component
+ * TeacherSchedule Component - Fixed Version (Based on StudentSchedule logic)
  * 
- * Weekly calendar view for teacher's class schedule
  * Features:
+ * - Correct day-of-week mapping using DAY_MAPPING
  * - Weekly view with date navigation
- * - Time slot grid (Morning, Afternoon, Evening)
+ * - Time slot grid (Sáng, Chiều, Tối)
  * - Class session cards with details
  * - Today highlighting
- * - Responsive design
  */
 
 interface ClassSession {
   classId: number;
   classCode: string;
   subjectName: string;
-  dayOfWeek: number; // 2=Monday, 3=Tuesday, ..., 8=Sunday
+  dayOfWeek: string; // "MONDAY", "TUESDAY", etc. from API
   timeSlot: string; // "CA_1", "CA_2", etc.
-  sessionPeriod: string; // "1-3", "7-9", "16-18"
-  startTime: string; // "06:45"
-  endTime: string; // "09:15"
+  startTime: string;
+  endTime: string;
   roomCode: string;
   roomName: string;
   location: string;
   isOnline: boolean;
+  semester: string;
+  academicYear: string;
+  currentStudents: number;
+  maxStudents: number;
 }
 
-// Time slot definitions
+// Time slots grouped by period (matching StudentSchedule)
 const TIME_SLOTS = [
   { id: 'CA_1', label: 'Ca 1', period: 'Sáng', time: '06:45 - 09:15' },
   { id: 'CA_2', label: 'Ca 2', period: 'Sáng', time: '09:30 - 12:00' },
@@ -41,6 +43,17 @@ const TIME_SLOTS = [
 
 const PERIODS = ['Sáng', 'Chiều', 'Tối'];
 
+// ✅ CRITICAL: Same mapping as StudentSchedule
+const DAY_MAPPING = {
+  'MONDAY': { display: 'Thứ 2', weekIndex: 0 },
+  'TUESDAY': { display: 'Thứ 3', weekIndex: 1 },
+  'WEDNESDAY': { display: 'Thứ 4', weekIndex: 2 },
+  'THURSDAY': { display: 'Thứ 5', weekIndex: 3 },
+  'FRIDAY': { display: 'Thứ 6', weekIndex: 4 },
+  'SATURDAY': { display: 'Thứ 7', weekIndex: 5 },
+  'SUNDAY': { display: 'Chủ nhật', weekIndex: 6 },
+};
+
 const TeacherSchedule = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [sessions, setSessions] = useState<ClassSession[]>([]);
@@ -50,95 +63,115 @@ const TeacherSchedule = () => {
     loadSchedule();
   }, [selectedDate]);
 
-  const loadSchedule = async () => {
-    setLoading(true);
-    try {
-      // Get all teacher's classes
-      const classes = await classApi.getMyClasses();
-      
-      // Transform to session format
-      // Note: This is mock data - need real ClassSession API
-      const mockSessions: ClassSession[] = classes.flatMap(cls => {
-        // Parse schedule from class (assuming format like "THU_6_CA_1")
-        const schedules = parseClassSchedule(cls);
-        return schedules.map(schedule => ({
-          classId: cls.classId,
-          classCode: cls.classCode,
-          subjectName: cls.subjectName,
-          dayOfWeek: schedule.dayOfWeek,
-          timeSlot: schedule.timeSlot,
-          sessionPeriod: schedule.sessionPeriod,
-          startTime: schedule.startTime,
-          endTime: schedule.endTime,
-          roomCode: (cls as any).roomCode || (cls as any).fixedRoom || 'TBA',
-          roomName: (cls as any).roomName || 'To Be Announced',
-          location: extractLocation((cls as any).roomName),
-          isOnline: (cls as any).roomCode === 'E-Learning' || (cls as any).roomName?.includes('E-Learning'),
-        }));
-      });
-      
-      setSessions(mockSessions);
-    } catch (error) {
-      console.error('Failed to load schedule:', error);
-    } finally {
-      setLoading(false);
-    }
+  // ✅ Same as StudentSchedule - Get Monday of the current week
+  const getWeekMonday = (date: Date): Date => {
+    const d = new Date(date);
+    const day = d.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+    const diff = day === 0 ? -6 : 1 - day; // Adjust to Monday
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
   };
 
-  // Parse class schedule string (mock implementation)
-  const parseClassSchedule = (cls: any) => {
-    // This is a simplified parser - adjust based on actual data format
-    // Expected format: "THU_6_CA_1" or similar
-    return [
-      {
-        dayOfWeek: 6, // Friday
-        timeSlot: 'CA_1',
-        sessionPeriod: '1-3',
-        startTime: '06:45',
-        endTime: '09:15',
-      }
-    ];
+  // ✅ Same as StudentSchedule - Format date to YYYY-MM-DD
+  const formatDateForAPI = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
-  const extractLocation = (roomName: string) => {
-    if (!roomName) return '';
-    if (roomName.includes('E-Learning')) return 'E-Learning';
-    // Extract location like "(P.Thanh Mỹ Tây, TP.HCM)"
-    const match = roomName.match(/\(([^)]+)\)/);
-    return match ? match[1] : '';
-  };
-
-  // Get week dates
-  const getWeekDates = () => {
-    const curr = new Date(selectedDate);
-    const first = curr.getDate() - curr.getDay() + 1; // Monday
-    const dates = [];
+  // ✅ Same as StudentSchedule - Get 7 dates of the week
+  const getWeekDates = (): Date[] => {
+    const monday = getWeekMonday(selectedDate);
+    const dates: Date[] = [];
     
     for (let i = 0; i < 7; i++) {
-      const date = new Date(curr.setDate(first + i));
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
       dates.push(date);
     }
     
     return dates;
   };
 
-  const weekDates = getWeekDates();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const isToday = (date: Date) => {
-    const checkDate = new Date(date);
-    checkDate.setHours(0, 0, 0, 0);
-    return checkDate.getTime() === today.getTime();
+  const loadSchedule = async () => {
+    setLoading(true);
+    try {
+      // Get all teacher's classes
+      const classes = await classApi.getMyClasses();
+      
+      console.log('📦 Teacher classes received:', classes.length);
+      
+      // Transform classes to session format
+      const transformedSessions: ClassSession[] = classes.map((cls: any) => {
+        const dayOfWeek = cls.dayOfWeek; // Should be "MONDAY", "TUESDAY", etc. from API
+        const timeSlotId = mapTimeSlotToId(cls.timeSlot?.slotName); // Map "Ca 1" → "CA_1"
+        
+        // Debug log
+        const mapping = DAY_MAPPING[dayOfWeek as keyof typeof DAY_MAPPING];
+        console.log(
+          `📍 ${cls.classCode} | dayOfWeek: "${dayOfWeek}" → ${mapping?.display} (weekIndex ${mapping?.weekIndex}) | timeSlot: ${timeSlotId}`
+        );
+        
+        return {
+          classId: cls.classId,
+          classCode: cls.classCode,
+          subjectName: cls.subject?.subjectName || 'N/A',
+          dayOfWeek: dayOfWeek,
+          timeSlot: timeSlotId,
+          startTime: cls.timeSlot?.startTime || '00:00',
+          endTime: cls.timeSlot?.endTime || '00:00',
+          roomCode: cls.room || 'TBA',
+          roomName: cls.room || 'To Be Announced',
+          location: extractLocation(cls.room),
+          isOnline: cls.room === 'E-Learning' || cls.room?.includes('E-Learning'),
+          semester: cls.semester,
+          academicYear: cls.academicYear,
+          currentStudents: cls.currentStudents || 0,
+          maxStudents: cls.maxStudents || 0,
+        };
+      });
+      
+      setSessions(transformedSessions);
+    } catch (error) {
+      console.error('❌ Failed to load teacher schedule:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const formatDateHeader = (date: Date, dayIndex: number) => {
-    const dayNames = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
-    const day = dayNames[dayIndex === 0 ? 0 : dayIndex];
-    const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    return { day, date: dateStr };
+  // Map time slot name from API to our ID format
+  const mapTimeSlotToId = (slotName?: string): string => {
+    if (!slotName) return 'CA_1';
+    
+    // "Ca 1" → "CA_1", "Ca 2" → "CA_2", etc.
+    const match = slotName.match(/Ca\s*(\d+)/i);
+    if (match) {
+      return `CA_${match[1]}`;
+    }
+    
+    return 'CA_1'; // Default
   };
 
+  const extractLocation = (roomName?: string): string => {
+    if (!roomName) return '';
+    if (roomName.includes('E-Learning')) return 'E-Learning';
+    
+    // Extract location like "(P.Thanh Mỹ Tây, TP.HCM)"
+    const match = roomName.match(/\(([^)]+)\)/);
+    return match ? match[1] : '';
+  };
+
+  // ✅ CRITICAL: Same filter logic as StudentSchedule
+  const getSessionsForSlot = (weekDayIndex: number, timeSlotId: string): ClassSession[] => {
+    return sessions.filter(session => {
+      const dayMapping = DAY_MAPPING[session.dayOfWeek as keyof typeof DAY_MAPPING];
+      return dayMapping?.weekIndex === weekDayIndex && session.timeSlot === timeSlotId;
+    });
+  };
+
+  // Navigation (same as StudentSchedule)
   const goToToday = () => {
     setSelectedDate(new Date());
   };
@@ -155,10 +188,29 @@ const TeacherSchedule = () => {
     setSelectedDate(newDate);
   };
 
-  const getSessionsForSlot = (dayIndex: number, timeSlot: string) => {
-    const dayOfWeek = dayIndex === 0 ? 8 : dayIndex + 1; // Convert: 0=Sunday(8), 1=Monday(2), etc.
-    return sessions.filter(s => s.dayOfWeek === dayOfWeek && s.timeSlot === timeSlot);
+  // Format date for display
+  const formatDateHeader = (date: Date, weekDayIndex: number): { day: string; date: string } => {
+    const dayNames = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+    const day = dayNames[weekDayIndex];
+    const dateStr = date.toLocaleDateString('vi-VN', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric' 
+    });
+    return { day, date: dateStr };
   };
+
+  // Check if date is today
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
+  const weekDates = getWeekDates();
 
   return (
     <div className="teacher-schedule-container">
@@ -166,7 +218,7 @@ const TeacherSchedule = () => {
       <div className="schedule-controls">
         <input
           type="date"
-          value={selectedDate.toISOString().split('T')[0]}
+          value={formatDateForAPI(selectedDate)}
           onChange={(e) => setSelectedDate(new Date(e.target.value))}
           className="date-picker"
         />
@@ -198,7 +250,8 @@ const TeacherSchedule = () => {
           <table className="schedule-table">
             <thead>
               <tr>
-                <th className="period-header" rowSpan={2}>Ca học</th>
+                <th className="period-header" rowSpan={2}></th>
+                <th className="shift-header" rowSpan={2}>Ca học</th>
                 {weekDates.map((date, index) => {
                   const header = formatDateHeader(date, index);
                   const todayClass = isToday(date) ? 'today-column' : '';
@@ -214,15 +267,23 @@ const TeacherSchedule = () => {
             <tbody>
               {PERIODS.map(period => {
                 const periodSlots = TIME_SLOTS.filter(slot => slot.period === period);
+                
                 return periodSlots.map((slot, slotIndex) => (
                   <tr key={slot.id}>
+                    {/* Period label (merged cells) */}
                     {slotIndex === 0 && (
                       <td className="period-label-cell" rowSpan={periodSlots.length}>
                         {period}
                       </td>
                     )}
-                    <td className="shift-label-cell">{slot.label}</td>
                     
+                    {/* Time slot label */}
+                    <td className="shift-label-cell">
+                      <div className="shift-label">{slot.label}</div>
+                      <div className="shift-time">{slot.time}</div>
+                    </td>
+                    
+                    {/* Day cells */}
                     {weekDates.map((date, dayIndex) => {
                       const todayClass = isToday(date) ? 'today-cell' : '';
                       const daySessions = getSessionsForSlot(dayIndex, slot.id);
@@ -234,9 +295,6 @@ const TeacherSchedule = () => {
                               <div className="session-title">{session.subjectName}</div>
                               <div className="session-code">{session.classCode}</div>
                               <div className="session-info">
-                                📚 Tiết: {session.sessionPeriod}
-                              </div>
-                              <div className="session-info">
                                 🕐 {session.startTime} - {session.endTime}
                               </div>
                               <div className="session-info">
@@ -247,6 +305,9 @@ const TeacherSchedule = () => {
                                   📌 {session.location}
                                 </div>
                               )}
+                              <div className="session-info">
+                                👥 {session.currentStudents}/{session.maxStudents} SV
+                              </div>
                               {session.isOnline && (
                                 <div className="lms-badge">🎓 LMS</div>
                               )}
