@@ -26,19 +26,23 @@ import MyRegistrations from './pages/student/MyRegistrations';
 import SubjectSelection from './pages/student/SubjectSelection';
 import ClassSelection from './pages/student/ClassSelection';
 import StudentSchedule from './pages/student/StudentSchedule';
-import StudentProfile from './pages/student/profile/StudentProfile'; // ✅ ADDED
+import StudentProfile from './pages/student/profile/StudentProfile';
+import MyClasses from './pages/student/classes/MyClasses';
+import ClassDetail from './pages/student/courses/ClassDetail';
+import StudentHomeworkDetail from './pages/student/homeworks/HomeworkDetail'; // ✅ RENAMED
 
 // ✅ Teacher Pages - PHASE 4
 import HomeworkList from './pages/teacher/assignments/HomeworkList';
 import CreateHomework from './pages/teacher/assignments/CreateHomework';
-import HomeworkDetail from './pages/teacher/assignments/HomeworkDetail';
+import TeacherHomeworkDetail from './pages/teacher/assignments/HomeworkDetail'; // ✅ RENAMED
 import EditHomework from './pages/teacher/assignments/EditHomework';
 import SubmissionList from './pages/teacher/submissions/SubmissionList';
 import TeacherGrading from './pages/teacher/grading/TeacherGrading';
 import GradeStatistics from './pages/teacher/grading/GradeStatistics';
 import TeacherSchedule from './pages/teacher/schedule/TeacherSchedule';
 import TeacherClasses from './pages/teacher/classes/TeacherClasses';
-import TeacherProfile from './pages/teacher/profile/TeacherProfile'; // ✅ ADDED
+import TeacherClassDetail from './pages/teacher/TeacherClassDetail'; // ✅ NEW - Class detail with tabs
+import TeacherProfile from './pages/teacher/profile/TeacherProfile';
 
 // Placeholder
 const Placeholder = ({ title }: { title: string }) => (
@@ -171,28 +175,23 @@ function App() {
           }
         >
           <Route path="dashboard" element={<TeacherDashboard />} />
-          
-          {/* ✅ PHASE 4 - Classes - UPDATED */}
           <Route path="classes" element={<TeacherClasses />} />
           
-          <Route path="proposals" element={<Placeholder title="Đề xuất giảng dạy" />} />
+          {/* ✅ NEW - Class detail with tabs (MUST be before "schedule" to avoid conflict) */}
+          <Route path="classes/:classId" element={<TeacherClassDetail />} />
           
-          {/* ✅ PHASE 4 - Schedule - UPDATED */}
+          <Route path="proposals" element={<Placeholder title="Đề xuất giảng dạy" />} />
           <Route path="schedule" element={<TeacherSchedule />} />
           
           {/* ✅ PHASE 4 - Homework Management */}
           <Route path="assignments" element={<HomeworkList />} />
           <Route path="assignments/create" element={<CreateHomework />} />
-          <Route path="assignments/:id" element={<HomeworkDetail />} />
+          <Route path="assignments/:id" element={<TeacherHomeworkDetail />} /> {/* ✅ FIXED */}
           <Route path="assignments/edit/:id" element={<EditHomework />} />
           
           <Route path="submissions" element={<SubmissionList />} />
-          
-          {/* ✅ PHASE 4 - Grade Management - UPDATED */}
           <Route path="grading" element={<TeacherGrading />} />
           <Route path="grade-statistics" element={<GradeStatistics />} />
-          
-          {/* ✅ PHASE 4 - Profile - UPDATED */}
           <Route path="profile" element={<TeacherProfile />} />
         </Route>
 
@@ -206,6 +205,10 @@ function App() {
           }
         >
           <Route path="dashboard" element={<StudentDashboard />} />
+          <Route path="classes" element={<MyClasses />} />
+          <Route path="courses/:classId" element={<ClassDetail />} />
+          <Route path="courses/:classId/assignments" element={<ClassDetail />} />
+          <Route path="homeworks/:homeworkId" element={<StudentHomeworkDetail />} /> {/* ✅ FIXED */}
           
           {/* ✅ PHASE 5 - Course Registration (2-STEP) */}
           <Route path="subjects" element={<SubjectSelection />} />
@@ -224,8 +227,6 @@ function App() {
           <Route path="grades" element={<Placeholder title="Xem điểm" />} />
           <Route path="transcript" element={<Placeholder title="Bảng điểm tích lũy" />} />
           <Route path="feedback" element={<Placeholder title="Gửi Phản hồi" />} />
-          
-          {/* ✅ PHASE 5 - Profile - UPDATED */}
           <Route path="profile" element={<StudentProfile />} />
         </Route>
 

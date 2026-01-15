@@ -11,6 +11,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * HomeworkSubmission Entity
@@ -76,10 +78,13 @@ public class HomeworkSubmission {
      * URL to submitted file
      * Student can upload their homework file
      */
-    @Column(name = "submission_file_url", length = 500)
-    @Size(max = 500, message = "Submission file URL must not exceed 500 characters")
-    private String submissionFileUrl;
-    
+   @Deprecated
+@Column(name = "submission_file_url", length = 500)
+@Size(max = 500, message = "Submission file URL must not exceed 500 characters")
+private String submissionFileUrl;
+    @Deprecated
+@Column(name = "submission_file_name", length = 255)
+private String submissionFileName;
     /**
      * When student submitted
      * Automatically set when created
@@ -99,6 +104,8 @@ public class HomeworkSubmission {
     private String submissionText;
     
     // ========================================
+    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+private List<SubmissionFile> submissionFiles = new ArrayList<>();
     // GRADING INFO (filled by teacher)
     // ========================================
     
@@ -372,6 +379,70 @@ public class HomeworkSubmission {
         // If score is set, status should be GRADED
         if (score != null && status != SubmissionStatus.GRADED) {
             status = SubmissionStatus.GRADED;
+        }
+    }
+    public void addFile(SubmissionFile file) {
+        if (submissionFiles == null) {
+            submissionFiles = new ArrayList<>();
+        }
+        submissionFiles.add(file);
+        file.setSubmission(this);
+    }
+    
+    /**
+     * Remove a file from this submission
+     */
+    public void removeFile(SubmissionFile file) {
+        if (submissionFiles != null) {
+            submissionFiles.remove(file);
+            file.setSubmission(null);
+        }
+    }
+    
+    /**
+     * Remove a file by fileId
+     */
+    public void removeFileById(Long fileId) {
+        if (submissionFiles != null) {
+            submissionFiles.removeIf(f -> f.getFileId().equals(fileId));
+        }
+    }
+    
+    /**
+     * Get total file count
+     */
+    public int getFileCount() {
+        return submissionFiles != null ? submissionFiles.size() : 0;
+    }
+    
+    /**
+     * Check if has any files (new multi-file way)
+     */
+    public boolean hasMultipleFiles() {
+        return submissionFiles != null && !submissionFiles.isEmpty();
+    }
+    
+    /**
+     * Get total file size in bytes
+     */
+    public long getTotalFileSize() {
+        if (submissionFiles == null) return 0;
+        return submissionFiles.stream()
+                .mapToLong(f -> f.getFileSize() != null ? f.getFileSize() : 0)
+                .sum();
+    }
+    
+    /**
+     * Get formatted total file size
+     */
+    public String getFormattedTotalFileSize() {
+        long total = getTotalFileSize();
+        if (total < 1024) {
+            return total + " B";
+        } else if (total < 1024 * 1024) {
+            return String.format("%.2f KB", total / 1024.0);
+        } else {
+            return String.format("%.2f MB", total / (1024.0 * 1024.0));
         }
     }
 }

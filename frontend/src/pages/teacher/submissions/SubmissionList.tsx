@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import classApi, { ClassResponse } from '../../../services/api/classApi';
 import homeworkApi, { HomeworkResponse } from '../../../services/api/homeworkApi';
 import submissionApi, { SubmissionResponse } from '../../../services/api/submissionApi';
@@ -13,13 +12,13 @@ import './SubmissionList.css';
  * View and manage all student submissions
  * Filter by class, homework, status
  * Quick grading actions
+ * ✅ MULTI-FILE SUPPORT
+ * ✅ FIXED: Don't auto-select first homework
  */
 
 type StatusFilter = 'ALL' | 'SUBMITTED' | 'GRADED' | 'LATE';
 
 const SubmissionList = () => {
-  const navigate = useNavigate();
-  
   // State
   const [classes, setClasses] = useState<ClassResponse[]>([]);
   const [homework, setHomework] = useState<HomeworkResponse[]>([]);
@@ -56,14 +55,14 @@ const SubmissionList = () => {
     }
   }, [selectedClass]);
   
-  // Load submissions when homework changes
+  // Load submissions when class changes (not homework!)
   useEffect(() => {
-    if (selectedHomework) {
-      loadSubmissions();
+    if (selectedClass) {
+      loadAllSubmissionsForClass();
     } else {
       setSubmissions([]);
     }
-  }, [selectedHomework]);
+  }, [selectedClass]);
   
   const loadClasses = async () => {
     try {
@@ -89,18 +88,56 @@ const SubmissionList = () => {
     try {
       const data = await homeworkApi.getHomeworkByClass(selectedClass);
       setHomework(data);
-      
-      // Auto-select first homework
-      if (data.length > 0) {
-        setSelectedHomework(data[0].homeworkId);
-      } else {
-        setSelectedHomework(null);
-        setSubmissions([]);
-      }
     } catch (err: any) {
       console.error('[SubmissionList] Failed to load homework:', err);
       setHomework([]);
-      setSelectedHomework(null);
+    }
+  };
+  
+  const loadAllSubmissionsForClass = async () => {
+    if (!selectedClass) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Load all homework for class
+      const homeworkList = await homeworkApi.getHomeworkByClass(selectedClass);
+      setHomework(homeworkList);
+      
+      if (homeworkList.length === 0) {
+        setSubmissions([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Load submissions for ALL homeworks
+      const allSubmissions: SubmissionResponse[] = [];
+      
+      for (const hw of homeworkList) {
+        try {
+          const hwSubmissions = await submissionApi.getSubmissionsByHomework(hw.homeworkId);
+          // Attach homework info to each submission
+          const submissionsWithHomework = hwSubmissions.map(sub => ({
+            ...sub,
+            homeworkTitle: hw.title,
+            homeworkDeadline: hw.deadline
+          }));
+          allSubmissions.push(...submissionsWithHomework);
+        } catch (err: any) {
+          console.warn(`[SubmissionList] No submissions for homework ${hw.homeworkId}`);
+        }
+      }
+      
+      setSubmissions(allSubmissions);
+      console.log('[SubmissionList] ✅ Loaded', allSubmissions.length, 'total submissions from', homeworkList.length, 'homeworks');
+      
+    } catch (err: any) {
+      console.error('[SubmissionList] Failed to load submissions:', err);
+      setError('Không thể tải danh sách bài nộp!');
+      setSubmissions([]);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -176,8 +213,8 @@ const SubmissionList = () => {
   };
   
   const handleGradeSuccess = () => {
-    // Reload submissions after successful grading
-    loadSubmissions();
+    // Reload all submissions after successful grading
+    loadAllSubmissionsForClass();
   };
   
   // View detail handler
@@ -231,9 +268,16 @@ const SubmissionList = () => {
       <div className="page-header">
         <div>
           <h1>📥 Bài nộp của sinh viên</h1>
-          <p>Xem và quản lý bài nộp</p>
+          <p>Xem tất cả bài nộp của lớp học</p>
         </div>
       </div>
+      
+      {/* Error Message */}
+      {error && (
+        <div className="alert alert-error">
+          ❌ {error}
+        </div>
+      )}
       
       {/* Filters */}
       <div className="filters-section">
@@ -251,19 +295,7 @@ const SubmissionList = () => {
             ))}
           </select>
           
-          <select
-            value={selectedHomework || ''}
-            onChange={(e) => setSelectedHomework(Number(e.target.value) || null)}
-            className="filter-select"
-            disabled={!selectedClass || homework.length === 0}
-          >
-            <option value="">Chọn bài tập</option>
-            {homework.map(hw => (
-              <option key={hw.homeworkId} value={hw.homeworkId}>
-                {hw.title}
-              </option>
-            ))}
-          </select>
+          {/* ✅ REMOVED: Homework dropdown */}
           
           <input
             type="text"
@@ -279,13 +311,7 @@ const SubmissionList = () => {
         <div className="empty-state">
           <span className="empty-icon">📚</span>
           <h3>Chọn lớp học</h3>
-          <p>Vui lòng chọn lớp học để xem bài nộp</p>
-        </div>
-      ) : !selectedHomework ? (
-        <div className="empty-state">
-          <span className="empty-icon">📝</span>
-          <h3>Chọn bài tập</h3>
-          <p>Vui lòng chọn bài tập để xem bài nộp</p>
+          <p>Vui lòng chọn lớp học để xem tất cả bài nộp</p>
         </div>
       ) : (
         <>
@@ -356,6 +382,11 @@ const SubmissionList = () => {
               {filteredSubmissions.map((submission) => {
                 const statusBadge = getStatusBadge(submission.status);
                 
+                // ✅ Count files
+                const fileCount = submission.submissionFiles?.length || 0;
+                const hasLegacyFile = !!submission.submissionFileUrl;
+                const totalFiles = fileCount + (hasLegacyFile && fileCount === 0 ? 1 : 0);
+                
                 return (
                   <div key={submission.submissionId} className="submission-card">
                     <div className="submission-header">
@@ -379,6 +410,16 @@ const SubmissionList = () => {
                     </div>
                     
                     <div className="submission-info">
+                      {/* ✅ NEW: Show homework title */}
+                      {(submission as any).homeworkTitle && (
+                        <div className="info-row">
+                          <span className="info-label">Bài tập:</span>
+                          <span className="info-value" style={{ fontWeight: '600', color: '#0891b2' }}>
+                            {(submission as any).homeworkTitle}
+                          </span>
+                        </div>
+                      )}
+                      
                       <div className="info-row">
                         <span className="info-label">Ngày nộp:</span>
                         <span className="info-value">
@@ -398,17 +439,13 @@ const SubmissionList = () => {
                         </div>
                       )}
                       
-                      {submission.submissionFileUrl && (
+                      {/* ✅ MULTI-FILE DISPLAY */}
+                      {totalFiles > 0 && (
                         <div className="info-row">
-                          <span className="info-label">File:</span>
-                          <a
-                            href={submission.submissionFileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="file-link"
-                          >
-                            📎 Tải xuống
-                          </a>
+                          <span className="info-label">File đính kèm:</span>
+                          <span className="info-value">
+                            📁 {totalFiles} file{totalFiles > 1 ? 's' : ''}
+                          </span>
                         </div>
                       )}
                       
@@ -463,7 +500,7 @@ const SubmissionList = () => {
       <SubmissionDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
-        submission={detailSubmission as SubmissionResponse | null}
+        submission={detailSubmission}
         onGradeClick={() => {
           if (detailSubmission) {
             handleGradeClick(detailSubmission);

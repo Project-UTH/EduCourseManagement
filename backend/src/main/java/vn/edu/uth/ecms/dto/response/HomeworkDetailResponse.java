@@ -15,12 +15,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * HomeworkDetailResponse DTO
+ * HomeworkDetailResponse DTO - UPDATED VERSION
  * 
  * Detailed homework response with submissions list
- * Used for teacher's homework detail view
+ * Used for both teacher and student views
  * 
- * @author Phase 4 - Teacher Features
+ * @author Phase 4 - Teacher Features + Phase 5 Student Features
  * @since 2026-01-06
  */
 @Data
@@ -30,79 +30,71 @@ import java.util.stream.Collectors;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class HomeworkDetailResponse {
     
-    /**
-     * Homework ID
-     */
+    // ==================== BASIC INFO ====================
+    
     private Long homeworkId;
-    
-    /**
-     * Class information
-     */
-    private ClassInfo classInfo;
-    
-    /**
-     * Homework title
-     */
     private String title;
-    
-    /**
-     * Homework description
-     */
     private String description;
-    
-    /**
-     * Homework type
-     */
     private HomeworkType homeworkType;
-    
-    /**
-     * Homework type display name
-     */
     private String homeworkTypeDisplay;
-    
-    /**
-     * Maximum score
-     */
     private BigDecimal maxScore;
     
-    /**
-     * Submission deadline
-     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime deadline;
     
-    /**
-     * Attachment URL
-     */
     private String attachmentUrl;
+    private String attachmentName;
     
-    /**
-     * Created timestamp
-     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     
-    /**
-     * Updated timestamp
-     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     
+    // ==================== NEW FIELDS FOR STUDENT VIEW ====================
+    
     /**
-     * Status flags
+     * Class ID (for student view)
      */
-    private Boolean isOverdue;
-    private Boolean canSubmit;
+    private Long classId;
+    
+    /**
+     * Class name display (for student view)
+     */
+    private String className;
+    
+    /**
+     * Subject name (for student view)
+     */
+    private String subjectName;
+    
+    /**
+     * Teacher information (for student view)
+     */
+    private vn.edu.uth.ecms.dto.TeacherDto teacher;
+    
+    /**
+     * Student's submission (for student view)
+     */
+    private vn.edu.uth.ecms.dto.SubmissionDto submission;
+    
+    /**
+     * Is homework overdue
+     */
+    private boolean isOverdue;
+    
+    /**
+     * Can student submit
+     */
+    private boolean canSubmit;
+    
+    // ==================== EXISTING FIELDS FOR TEACHER VIEW ====================
+    
+    private ClassInfo classInfo;
+    private Boolean IsOverdue;  // Keep for backward compatibility
+    private Boolean CanSubmit;  // Keep for backward compatibility
     private String timeRemaining;
-    
-    /**
-     * Statistics
-     */
     private HomeworkStats statistics;
-    
-    /**
-     * List of submissions
-     */
     private List<SubmissionResponse> submissions;
     
     // ========================================
@@ -139,8 +131,8 @@ public class HomeworkDetailResponse {
         private BigDecimal averageScore;
         private BigDecimal highestScore;
         private BigDecimal lowestScore;
-        private Double submissionRate; // Percentage
-        private Double completionRate; // Percentage of graded
+        private Double submissionRate;
+        private Double completionRate;
     }
     
     // ========================================
@@ -148,10 +140,7 @@ public class HomeworkDetailResponse {
     // ========================================
     
     /**
-     * Convert Homework entity to detailed response
-     * 
-     * @param homework Homework entity with submissions
-     * @return HomeworkDetailResponse
+     * Convert Homework entity to detailed response (for teacher)
      */
     public static HomeworkDetailResponse fromEntity(Homework homework) {
         if (homework == null) return null;
@@ -169,8 +158,8 @@ public class HomeworkDetailResponse {
             .attachmentUrl(homework.getAttachmentUrl())
             .createdAt(homework.getCreatedAt())
             .updatedAt(homework.getUpdatedAt())
-            .isOverdue(homework.isOverdue())
-            .canSubmit(homework.canSubmit())
+            .IsOverdue(homework.isOverdue())
+            .CanSubmit(homework.canSubmit())
             .timeRemaining(homework.getTimeRemaining())
             .statistics(buildStatistics(homework))
             .submissions(homework.getSubmissions() != null ?
@@ -193,7 +182,7 @@ public class HomeworkDetailResponse {
                         homework.getClassEntity().getSubject().getSubjectName() : null)
             .subjectCode(homework.getClassEntity().getSubject() != null ?
                         homework.getClassEntity().getSubject().getSubjectCode() : null)
-            .totalStudents(null) // Will be set by service from course_registration
+            .totalStudents(null)
             .build();
     }
     
@@ -205,15 +194,11 @@ public class HomeworkDetailResponse {
         int gradedCount = homework.getGradedCount();
         int ungradedCount = homework.getUngradedCount();
         
-        // Calculate rates
-        // Note: totalStudents should be passed from service layer
-        // For now, use submission count as baseline
         int totalStudents = totalSubmissions > 0 ? totalSubmissions : 0;
-        double submissionRate = 100.0; // Will be calculated by service
+        double submissionRate = 100.0;
         double completionRate = totalSubmissions > 0 ?
                                (gradedCount * 100.0 / totalSubmissions) : 0.0;
         
-        // Count late submissions
         long lateCount = homework.getSubmissions() != null ?
                         homework.getSubmissions().stream()
                             .filter(s -> s.getStatus() == vn.edu.uth.ecms.entity.SubmissionStatus.LATE)
@@ -232,9 +217,6 @@ public class HomeworkDetailResponse {
             .build();
     }
     
-    /**
-     * Calculate highest score from submissions
-     */
     private static BigDecimal calculateHighestScore(Homework homework) {
         if (homework.getSubmissions() == null || homework.getSubmissions().isEmpty()) {
             return null;
@@ -247,9 +229,6 @@ public class HomeworkDetailResponse {
             .orElse(null);
     }
     
-    /**
-     * Calculate lowest score from submissions
-     */
     private static BigDecimal calculateLowestScore(Homework homework) {
         if (homework.getSubmissions() == null || homework.getSubmissions().isEmpty()) {
             return null;

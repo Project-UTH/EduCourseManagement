@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../services/api/apiClient';
+import registrationApi, { RegistrationResponse } from '../../services/api/registrationApi';
 import './SubjectSelection.css';
 
 interface Subject {
@@ -29,21 +30,22 @@ const SubjectSelection: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
+  
+  // ✅ My Registrations state
+  const [myRegistrations, setMyRegistrations] = useState<RegistrationResponse[]>([]);
+  const [loadingRegs, setLoadingRegs] = useState(false);
 
-  // Load semesters when component mounts
   useEffect(() => {
     fetchSemesters();
+    fetchSubjects();
+    fetchMyRegistrations(); // ✅ Load registrations on mount
   }, []);
 
-  // Load all subjects when component mounts (NO DEPENDENCY ON SEMESTER)
   useEffect(() => {
-    fetchSubjects();
-  }, []);
-  useEffect(() => {
-  if (selectedSemesterId !== null) {
-    fetchSubjects();
-  }
-}, [selectedSemesterId]);
+    if (selectedSemesterId !== null) {
+      fetchSubjects();
+    }
+  }, [selectedSemesterId]);
 
   const fetchSemesters = async () => {
     try {
@@ -55,58 +57,142 @@ const SubjectSelection: React.FC = () => {
         const sems = response.data.data || [];
         setSemesters(sems);
         
-        // Auto-select first active semester
-        const activeSem = sems.find((s: Semester) => s.status === 'ACTIVE');
-        if (activeSem) {
-          setSelectedSemesterId(activeSem.semesterId);
-        } else if (sems.length > 0) {
-          setSelectedSemesterId(sems[0].semesterId);
+        // Auto-select first UPCOMING semester for registration
+        const upcomingSem = sems.find((s: Semester) => s.status === 'UPCOMING');
+        if (upcomingSem) {
+          setSelectedSemesterId(upcomingSem.semesterId);
+        } else {
+          const activeSem = sems.find((s: Semester) => s.status === 'ACTIVE');
+          if (activeSem) {
+            setSelectedSemesterId(activeSem.semesterId);
+          } else if (sems.length > 0) {
+            setSelectedSemesterId(sems[0].semesterId);
+          }
         }
       }
     } catch (error) {
       console.error('❌ Error fetching semesters:', error);
-      // Not critical - can still show subjects
     }
   };
 
   const fetchSubjects = async () => {
-  setLoading(true);
-  try {
-    console.log('🔍 Fetching subjects for semester:', selectedSemesterId);
-    
-    // Gửi semesterId nếu có
-    const url = selectedSemesterId 
-      ? `/api/student/subjects/available?semesterId=${selectedSemesterId}`
-      : '/api/student/subjects/available';
-    
-    const response = await apiClient.get(url);
-    
-    console.log('📚 Subjects response:', response.data);
-    
-    if (response.data && response.data.success) {
-      const subjectList = response.data.data || [];
-      console.log(`✅ Received ${subjectList.length} subjects`);
-      setSubjects(subjectList);
+    setLoading(true);
+    try {
+      console.log('🔍 Fetching subjects for semester:', selectedSemesterId);
+      
+      const url = selectedSemesterId 
+        ? `/api/student/subjects/available?semesterId=${selectedSemesterId}`
+        : '/api/student/subjects/available';
+      
+      const response = await apiClient.get(url);
+      
+      console.log('📚 Subjects response:', response.data);
+      
+      if (response.data && response.data.success) {
+        const subjectList = response.data.data || [];
+        console.log(`✅ Received ${subjectList.length} subjects`);
+        setSubjects(subjectList);
+      }
+    } catch (error: any) {
+      console.error('❌ Error fetching subjects:', error);
+      setSubjects([]);
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    console.error('❌ Error fetching subjects:', error);
-    setSubjects([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
+  // ✅ Fetch my registrations
+  const fetchMyRegistrations = async () => {
+    setLoadingRegs(true);
+    try {
+      const response = await registrationApi.getMyRegistrations();
+      
+      if (response.data.success) {
+        const allRegs = response.data.data || [];
+        
+        // Filter: Only UPCOMING and ACTIVE semesters
+        const filteredRegs = allRegs.filter((reg: RegistrationResponse) => {
+          if (reg.status !== 'REGISTERED') return false;
+          if (reg.semesterStatus) {
+            return reg.semesterStatus === 'UPCOMING' || reg.semesterStatus === 'ACTIVE';
+          }
+          return true;
+        });
+        
+        console.log(`📋 My registrations (UPCOMING/ACTIVE): ${filteredRegs.length}`);
+        setMyRegistrations(filteredRegs);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching my registrations:', error);
+    } finally {
+      setLoadingRegs(false);
+    }
+  };
+
+  // ✅ Handle drop registration
+  const handleDrop = async (reg: RegistrationResponse) => {
+    const canDrop = !reg.semesterStatus || reg.semesterStatus === 'UPCOMING';
+    
+    if (!canDrop) {
+      alert('⚠️ Không thể hủy đăng ký lớp đang học!\n\nChỉ có thể hủy lớp của học kỳ chưa bắt đầu.');
+      return;
+    }
+    
+    if (!window.confirm(
+      `Bạn có chắc muốn hủy đăng ký?\n\n` +
+      `Môn: ${reg.subjectName}\n` +
+      `Lớp: ${reg.classCode}\n` +
+      `Học kỳ: ${reg.semesterName}`
+    )) {
+      return;
+    }
+
+    try {
+      const response = await registrationApi.dropClass(reg.registrationId);
+      
+      if (response.data.success) {
+        alert('✅ Hủy đăng ký thành công!');
+        fetchMyRegistrations(); // Reload
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || 'Hủy đăng ký thất bại!';
+      alert('❌ ' + errorMsg);
+    }
+  };
+
   const handleViewClasses = () => {
     if (!selectedSubjectId) {
       alert('⚠️ Vui lòng chọn môn học!');
       return;
     }
     
-    // Navigate to class selection with selected semester
     const url = selectedSemesterId 
       ? `/student/classes/${selectedSubjectId}?semesterId=${selectedSemesterId}`
       : `/student/classes/${selectedSubjectId}`;
     
     navigate(url);
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getSemesterBadge = (status?: string) => {
+    if (!status) return null;
+    const badges: Record<string, { text: string; className: string }> = {
+      'UPCOMING': { text: '⏰ Sắp diễn ra', className: 'upcoming' },
+      'ACTIVE': { text: '📚 Đang học', className: 'active' }
+    };
+    const badge = badges[status] || { text: status, className: 'default' };
+    return <span className={`semester-badge ${badge.className}`}>{badge.text}</span>;
   };
 
   const filteredSubjects = subjects.filter(subject =>
@@ -127,13 +213,13 @@ const SubjectSelection: React.FC = () => {
 
   return (
     <div className="subject-selection-page">
+      {/* ============ SECTION 1: SUBJECT SELECTION ============ */}
       <div className="page-header">
-        <h1>Học phần đang chờ đăng ký</h1>
+        <h1>📚 Đăng ký học phần</h1>
       </div>
 
       {/* Filters Section */}
       <div className="filters-section">
-        {/* Semester Dropdown */}
         <div className="semester-filter">
           <label htmlFor="semester-select">Học kỳ:</label>
           <select 
@@ -146,13 +232,13 @@ const SubjectSelection: React.FC = () => {
             {semesters.map(sem => (
               <option key={sem.semesterId} value={sem.semesterId}>
                 {sem.semesterName || sem.semesterCode}
+                {sem.status === 'UPCOMING' && ' (Sắp diễn ra)'}
                 {sem.status === 'ACTIVE' && ' (Đang diễn ra)'}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Search Box */}
         <div className="search-filter">
           <input
             type="text"
@@ -253,38 +339,105 @@ const SubjectSelection: React.FC = () => {
         </button>
       </div>
 
-      {/* Info Section */}
-      <div className="info-section">
-        <div className="info-box">
-          <h3>Lớp học phần đang chờ đăng ký</h3>
-          <div className="info-stats">
-            <p>
-              📚 Tổng số môn học: <strong>{filteredSubjects.length}</strong>
-            </p>
-            {selectedSemesterId && (
-              <p>
-                🎓 Học kỳ: <strong>
-                  {semesters.find(s => s.semesterId === selectedSemesterId)?.semesterName || 
-                   semesters.find(s => s.semesterId === selectedSemesterId)?.semesterCode}
-                </strong>
-              </p>
-            )}
-            {selectedSubjectId && (
-              <p>
-                ✅ Đã chọn: <strong>
-                  {subjects.find(s => s.subjectId === selectedSubjectId)?.subjectName}
-                </strong>
-              </p>
-            )}
+      {/* ============ SECTION 2: MY REGISTRATIONS ============ */}
+      {myRegistrations.length > 0 && (
+        <div className="my-registrations-section">
+          <div className="section-header">
+            <h2>📋 Lớp đã đăng ký ({myRegistrations.length})</h2>
+            <button onClick={fetchMyRegistrations} className="btn-refresh-small">
+              🔄 Làm mới
+            </button>
           </div>
-          <div className="checkbox-group">
-            <label>
-              <input type="checkbox" defaultChecked />
-              Lọc tất cả lịch trùng
-            </label>
+
+          <div className="registrations-grid">
+            {myRegistrations.map((reg) => {
+              const canDrop = !reg.semesterStatus || reg.semesterStatus === 'UPCOMING';
+              
+              return (
+                <div key={reg.registrationId} className="registration-card">
+                  <div className="card-header">
+                    <h3>{reg.subjectName}</h3>
+                    {getSemesterBadge(reg.semesterStatus)}
+                  </div>
+
+                  <div className="card-body">
+                    <div className="info-row">
+                      <span className="label">Mã lớp:</span>
+                      <span className="value">{reg.classCode}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="label">Mã môn:</span>
+                      <span className="value">{reg.subjectCode}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="label">Tín chỉ:</span>
+                      <span className="value">{reg.credits} TC</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="label">Giảng viên:</span>
+                      <span className="value">{reg.teacherName}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="label">Lịch học:</span>
+                      <span className="value">{reg.dayOfWeekDisplay}, {reg.timeSlotDisplay}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="label">Phòng:</span>
+                      <span className="value">{reg.room}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="label">Học kỳ:</span>
+                      <span className="value">{reg.semesterName}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="label">Đăng ký lúc:</span>
+                      <span className="value small">{formatDate(reg.registeredAt)}</span>
+                    </div>
+                  </div>
+
+                  <div className="card-footer">
+                    {canDrop ? (
+                      <button onClick={() => handleDrop(reg)} className="btn-drop">
+                        ❌ Hủy đăng ký
+                      </button>
+                    ) : (
+                      <div className="drop-disabled">
+                        🔒 Không thể hủy lớp đang học
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Summary */}
+          <div className="summary-stats">
+            <div className="stat-item">
+              <span className="stat-label">Tổng số lớp:</span>
+              <span className="stat-value">{myRegistrations.length}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Sắp diễn ra:</span>
+              <span className="stat-value upcoming">
+                {myRegistrations.filter(r => r.semesterStatus === 'UPCOMING').length}
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Đang học:</span>
+              <span className="stat-value active">
+                {myRegistrations.filter(r => r.semesterStatus === 'ACTIVE').length}
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Tổng tín chỉ:</span>
+              <span className="stat-value credits">
+                {myRegistrations.reduce((sum, r) => sum + r.credits, 0)} TC
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

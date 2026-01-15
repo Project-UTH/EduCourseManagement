@@ -38,8 +38,8 @@ const ClassSelection: React.FC = () => {
   
   const [subject, setSubject] = useState<Subject | null>(null);
   const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [loading, setLoading] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
   
   // Lấy semesterId từ URL query params
   const searchParams = new URLSearchParams(location.search);
@@ -65,7 +65,7 @@ const ClassSelection: React.FC = () => {
         setSubject(subjectRes.data.data);
       }
 
-      // Fetch classes với semesterId filter
+      // Fetch available classes
       const classUrl = semesterId 
         ? `/api/student/classes/by-subject/${id}?semesterId=${semesterId}`
         : `/api/student/classes/by-subject/${id}`;
@@ -117,6 +117,8 @@ const ClassSelection: React.FC = () => {
       
       if (response.data.success) {
         alert('✅ Đăng ký thành công!');
+        
+        // ✅ Navigate to MyRegistrations page
         navigate('/student/registrations');
       }
     } catch (error: any) {
@@ -165,21 +167,14 @@ const ClassSelection: React.FC = () => {
       {/* Classes Section */}
       <div className="classes-section">
         <div className="section-title">
-          <h2>Lớp học phần đang chờ đăng ký</h2>
+          <h2>📚 Lớp học phần đang chờ đăng ký</h2>
           {semesterId && (
             <div className="semester-info">
               <span>🎓 Học kỳ được chọn</span>
             </div>
           )}
-          <div className="filter-option">
-            <label>
-              <input type="checkbox" defaultChecked />
-              Lọc tất cả lịch trùng
-            </label>
-          </div>
         </div>
 
-        {/* Table */}
         <div className="table-container">
           <table className="classes-table">
             <thead>
@@ -188,7 +183,7 @@ const ClassSelection: React.FC = () => {
                 <th style={{ width: '60px' }}>STT</th>
                 <th style={{ width: '250px' }}>Tên lớp học phần</th>
                 <th style={{ width: '150px' }}>Mã lớp học phần</th>
-                <th style={{ width: '100px' }}>Đã đăng ký</th>
+                <th style={{ width: '100px' }}>Sĩ số</th>
               </tr>
             </thead>
             <tbody>
@@ -197,11 +192,6 @@ const ClassSelection: React.FC = () => {
                   <td colSpan={5} className="no-data">
                     <span className="no-data-icon">📚</span>
                     <p>Chưa có lớp học nào!</p>
-                    <small>
-                      {semesterId 
-                        ? 'Không có lớp nào trong học kỳ này' 
-                        : 'Vui lòng liên hệ phòng đào tạo'}
-                    </small>
                   </td>
                 </tr>
               ) : (
@@ -237,7 +227,7 @@ const ClassSelection: React.FC = () => {
                       <div className="class-code-main">{cls.classCode}</div>
                     </td>
                     <td className="text-center">
-                      <button className="btn-view-detail">∞</button>
+                      {cls.enrolledCount}/{cls.maxStudents}
                     </td>
                   </tr>
                 ))
@@ -245,55 +235,55 @@ const ClassSelection: React.FC = () => {
             </tbody>
           </table>
         </div>
-      </div>
 
-      {/* Detail */}
-      <div className="class-detail-section">
-        <h3>Chi tiết lớp học phần</h3>
-        {selectedClassId ? (
-          <div className="detail-content">
-            {(() => {
-              const selectedClass = classes.find(c => c.classId === selectedClassId);
-              if (!selectedClass) return <p>Chọn lớp để xem chi tiết</p>;
-              
-              return (
-                <div className="detail-grid">
-                  <div className="detail-item">
-                    <label>Giảng viên:</label>
-                    <span>{selectedClass.teacherName}</span>
+        {/* Class Detail */}
+        <div className="class-detail-section">
+          <h3>Chi tiết lớp học phần</h3>
+          {selectedClassId ? (
+            <div className="detail-content">
+              {(() => {
+                const selectedClass = classes.find(c => c.classId === selectedClassId);
+                if (!selectedClass) return <p>Chọn lớp để xem chi tiết</p>;
+                
+                return (
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <label>Giảng viên:</label>
+                      <span>{selectedClass.teacherName}</span>
+                    </div>
+                    <div className="detail-item">
+                      <label>Lịch học:</label>
+                      <span>{selectedClass.dayOfWeekDisplay}, {selectedClass.timeSlotDisplay}</span>
+                    </div>
+                    <div className="detail-item">
+                      <label>Phòng:</label>
+                      <span>{selectedClass.room}</span>
+                    </div>
+                    <div className="detail-item">
+                      <label>Sĩ số:</label>
+                      <span>{selectedClass.enrolledCount}/{selectedClass.maxStudents}</span>
+                    </div>
+                    <div className="detail-item">
+                      <label>Học kỳ:</label>
+                      <span>{selectedClass.semesterCode}</span>
+                    </div>
                   </div>
-                  <div className="detail-item">
-                    <label>Lịch học:</label>
-                    <span>{selectedClass.dayOfWeekDisplay}, {selectedClass.timeSlotDisplay}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Phòng:</label>
-                    <span>{selectedClass.room}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Sĩ số:</label>
-                    <span>{selectedClass.enrolledCount}/{selectedClass.maxStudents}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Học kỳ:</label>
-                    <span>{selectedClass.semesterCode}</span>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        ) : (
-          <div className="detail-content">
-            <p className="text-muted">Chọn lớp để xem chi tiết</p>
-          </div>
-        )}
-      </div>
+                );
+              })()}
+            </div>
+          ) : (
+            <div className="detail-content">
+              <p className="text-muted">Chọn lớp để xem chi tiết</p>
+            </div>
+          )}
+        </div>
 
-      {/* Actions */}
-      <div className="action-buttons">
-        <button onClick={handleRegister} disabled={!selectedClassId} className="btn-register">
-          ĐĂNG KÝ
-        </button>
+        {/* Register Button */}
+        <div className="action-buttons">
+          <button onClick={handleRegister} disabled={!selectedClassId} className="btn-register">
+            ✅ ĐĂNG KÝ
+          </button>
+        </div>
       </div>
     </div>
   );

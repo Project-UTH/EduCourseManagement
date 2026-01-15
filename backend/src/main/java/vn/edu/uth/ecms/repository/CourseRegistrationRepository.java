@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.CourseRegistration;
+import vn.edu.uth.ecms.entity.EnrollmentType;
 import vn.edu.uth.ecms.entity.RegistrationStatus;
 import vn.edu.uth.ecms.entity.Student;
 
@@ -120,4 +121,13 @@ public interface CourseRegistrationRepository extends JpaRepository<CourseRegist
      * This is the Spring Data JPA naming convention method
      */
     List<CourseRegistration> findByClassEntity_ClassIdAndStatus(Long classId, RegistrationStatus status);
+    
+    /**
+     * ✅ FIXED: Find all manual enrollments (for audit trail)
+     * Using Spring Data JPA naming convention: findByEnrollmentType
+     * 
+     * @param enrollmentType Enrollment type (pass EnrollmentType.MANUAL)
+     * @return List of manual enrollments ordered by registeredAt DESC
+     */
+    List<CourseRegistration> findByEnrollmentTypeOrderByRegisteredAtDesc(EnrollmentType enrollmentType);
 }

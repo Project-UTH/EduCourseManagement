@@ -318,6 +318,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .semesterId(semester.getSemesterId())
                 .semesterCode(semester.getSemesterCode())
                 .semesterName(semester.getSemesterName())
+                .semesterStatus(semester.getStatus().name())
                 // Schedule info
                 .dayOfWeek(classEntity.getDayOfWeek().toString())
                 .dayOfWeekDisplay(getDayOfWeekDisplay(classEntity.getDayOfWeek()))

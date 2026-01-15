@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import studentClassApi from '../../services/api/studentClassApi';
+import studentHomeworkApi from '../../services/api/studentHomeworkApi';
 import './RightSidebar.css';
 
 interface RightSidebarProps {
@@ -9,6 +11,7 @@ interface Deadline {
   id: number;
   title: string;
   courseName: string;
+  subjectName: string; // ✅ NEW
   dueDate: Date;
   type: 'assignment' | 'exam' | 'project';
 }
@@ -27,31 +30,65 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - will be replaced with real API calls
-  const mockDeadlines: Deadline[] = [
-    {
-      id: 1,
-      title: 'Bài tập tuần 5',
-      courseName: 'Lập trình Web',
-      dueDate: new Date(2024, 11, 25, 23, 59),
-      type: 'assignment'
-    },
-    {
-      id: 2,
-      title: 'Đồ án giữa kỳ',
-      courseName: 'Cơ sở dữ liệu',
-      dueDate: new Date(2024, 11, 28, 23, 59),
-      type: 'project'
-    },
-    {
-      id: 3,
-      title: 'Bài kiểm tra',
-      courseName: 'Mạng máy tính',
-      dueDate: new Date(2024, 11, 30, 14, 0),
-      type: 'exam'
-    },
-  ];
+  // ✅ Load REAL homework deadlines from API
+  useEffect(() => {
+    if (userRole === 'STUDENT') {
+      loadDeadlines();
+    }
+  }, [userRole]);
+
+  const loadDeadlines = async () => {
+    setLoading(true);
+    try {
+      console.log('[RightSidebar] Loading homework deadlines...');
+
+      // 1. Get all classes
+      const classes = await studentClassApi.getMyClasses();
+
+      // 2. Get all homeworks from all classes
+      const allHomeworks: any[] = [];
+      for (const cls of classes) {
+        try {
+          const classHomeworks = await studentHomeworkApi.getClassHomeworks(cls.classId);
+          // Attach class info
+          const homeworksWithClass = classHomeworks.map(hw => ({
+            ...hw,
+            classId: cls.classId,
+            className: cls.className,
+            subjectName: cls.subjectName || cls.className
+          }));
+          allHomeworks.push(...homeworksWithClass);
+        } catch (err) {
+          console.error(`Failed to load homeworks for class ${cls.classId}`, err);
+        }
+      }
+
+      // 3. Transform to Deadline format (only pending assignments)
+      const transformedDeadlines: Deadline[] = allHomeworks
+        .filter(hw => !hw.hasSubmitted) // Only unsubmitted
+        .map(hw => ({
+          id: hw.homeworkId,
+          title: hw.title,
+          courseName: hw.className,
+          subjectName: hw.subjectName,
+          dueDate: new Date(hw.deadline),
+          type: hw.homeworkType === 'MIDTERM' ? 'exam' as const : 
+                hw.homeworkType === 'FINAL' ? 'exam' as const : 
+                'assignment' as const
+        }));
+
+      setDeadlines(transformedDeadlines);
+      console.log('[RightSidebar] ✅ Loaded deadlines:', transformedDeadlines.length);
+
+    } catch (err) {
+      console.error('[RightSidebar] ❌ Failed to load deadlines:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const mockChatGroups: ChatGroup[] = [
     {
@@ -90,7 +127,7 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
   };
 
   const hasDeadline = (date: Date) => {
-    return mockDeadlines.some(deadline => 
+    return deadlines.some(deadline => 
       deadline.dueDate.getDate() === date.getDate() &&
       deadline.dueDate.getMonth() === date.getMonth() &&
       deadline.dueDate.getFullYear() === date.getFullYear()
@@ -163,7 +200,7 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + increment, 1));
   };
 
-  const sortedDeadlines = [...mockDeadlines]
+  const sortedDeadlines = [...deadlines]
     .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
     .slice(0, 5);
 
@@ -216,40 +253,48 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
           <button className="view-all-btn">Xem tất cả</button>
         </div>
         
-        <div className="deadline-list">
-          {sortedDeadlines.length === 0 ? (
-            <div className="empty-state">
-              <p>Không có deadline sắp tới</p>
-            </div>
-          ) : (
-            sortedDeadlines.map(deadline => (
-              <div key={deadline.id} className={`deadline-item ${getDeadlineColor(deadline.dueDate)}`}>
-                <div className="deadline-icon">
-                  {deadline.type === 'assignment' && '📝'}
-                  {deadline.type === 'exam' && '📊'}
-                  {deadline.type === 'project' && '💼'}
-                </div>
-                <div className="deadline-content">
-                  <h4>{deadline.title}</h4>
-                  <p className="deadline-course">{deadline.courseName}</p>
-                  <div className="deadline-time">
-                    <span className="deadline-date">
-                      {deadline.dueDate.toLocaleDateString('vi-VN', { 
-                        day: '2-digit', 
-                        month: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
-                    <span className={`time-left ${getDeadlineColor(deadline.dueDate)}`}>
-                      {formatTimeLeft(deadline.dueDate)}
-                    </span>
+        {loading ? (
+          <div className="deadline-loading">
+            <div className="spinner-small"></div>
+            <p>Đang tải...</p>
+          </div>
+        ) : (
+          <div className="deadline-list">
+            {sortedDeadlines.length === 0 ? (
+              <div className="empty-state">
+                <p>✅ Không có deadline sắp tới</p>
+              </div>
+            ) : (
+              sortedDeadlines.map(deadline => (
+                <div key={deadline.id} className={`deadline-item ${getDeadlineColor(deadline.dueDate)}`}>
+                  <div className="deadline-icon">
+                    {deadline.type === 'assignment' && '📝'}
+                    {deadline.type === 'exam' && '📊'}
+                    {deadline.type === 'project' && '💼'}
+                  </div>
+                  <div className="deadline-content">
+                    <h3 className="deadline-subject">{deadline.subjectName}</h3>
+                    <h4>{deadline.title}</h4>
+                    <p className="deadline-course">{deadline.courseName}</p>
+                    <div className="deadline-time">
+                      <span className="deadline-date">
+                        {deadline.dueDate.toLocaleDateString('vi-VN', { 
+                          day: '2-digit', 
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                      <span className={`time-left ${getDeadlineColor(deadline.dueDate)}`}>
+                        {formatTimeLeft(deadline.dueDate)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Chat Groups */}

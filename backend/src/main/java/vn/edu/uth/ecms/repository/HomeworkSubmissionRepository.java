@@ -2,6 +2,7 @@ package vn.edu.uth.ecms.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,12 +18,14 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * HomeworkSubmissionRepository
+ * HomeworkSubmissionRepository - MULTI-FILE SUPPORT
  * 
  * JPA Repository for HomeworkSubmission entity
  * Provides CRUD operations and custom queries for submissions
  * 
- * @author Phase 4 - Teacher Features
+ * ✅ FIXED: Added @EntityGraph to load submissionFiles eagerly
+ * 
+ * @author Phase 4 - Teacher Features (Updated 2026-01-13)
  * @since 2026-01-06
  */
 @Repository
@@ -116,6 +119,18 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
         Long homeworkId, Long studentId);
     
     /**
+     * ✅ FIXED: Find submission by homework and student code (WITH FILES)
+     * EntityGraph ensures submissionFiles are loaded eagerly to avoid lazy loading issues
+     * 
+     * @param homeworkId Homework ID
+     * @param studentCode Student code
+     * @return Optional submission with files loaded
+     */
+    @EntityGraph(attributePaths = {"submissionFiles"})
+    Optional<HomeworkSubmission> findByHomework_HomeworkIdAndStudent_StudentCode(
+        Long homeworkId, String studentCode);
+    
+    /**
      * Check if student has submitted for homework
      * 
      * @param homeworkId Homework ID
@@ -123,6 +138,15 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
      * @return true if submission exists
      */
     boolean existsByHomework_HomeworkIdAndStudent_StudentId(Long homeworkId, Long studentId);
+    
+    /**
+     * ✅ NEW: Check if student has submitted for homework (by student code)
+     * 
+     * @param homeworkId Homework ID
+     * @param studentCode Student code
+     * @return true if submission exists
+     */
+    boolean existsByHomework_HomeworkIdAndStudent_StudentCode(Long homeworkId, String studentCode);
     
     // ========================================
     // QUERIES - BY STATUS

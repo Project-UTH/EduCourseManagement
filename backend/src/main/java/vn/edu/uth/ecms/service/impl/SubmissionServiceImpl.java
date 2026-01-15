@@ -13,20 +13,24 @@ import vn.edu.uth.ecms.dto.response.SubmissionStatsResponse;
 import vn.edu.uth.ecms.entity.*;
 import vn.edu.uth.ecms.exception.*;
 import vn.edu.uth.ecms.repository.*;
+import vn.edu.uth.ecms.service.FileStorageService;
 import vn.edu.uth.ecms.service.GradeService;
 import vn.edu.uth.ecms.service.SubmissionService;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
+import java.util.Optional;
 
 /**
- * SubmissionServiceImpl
+ * SubmissionServiceImpl - MULTI-FILE SUPPORT
  * 
  * Implementation of homework submission business logic
+ * NOW SUPPORTS MULTIPLE FILES PER SUBMISSION
  * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author Phase 5 - Student Features (Updated)
+ * @since 2026-01-13
  */
 @Service
 @RequiredArgsConstructor
@@ -34,83 +38,333 @@ import java.util.stream.Collectors;
 @Transactional
 public class SubmissionServiceImpl implements SubmissionService {
     
+    private final FileStorageService fileStorageService;
     private final HomeworkSubmissionRepository submissionRepository;
     private final HomeworkRepository homeworkRepository;
     private final StudentRepository studentRepository;
+    private final SubmissionFileRepository submissionFileRepository;
     private final GradeService gradeService;
     
-    // ==================== STUDENT SUBMIT ====================
+    // ==================== STUDENT SUBMIT (MULTI-FILE) ====================
     
     @Override
-    public SubmissionResponse submitHomework(SubmissionRequest request, Long studentId) {
-        log.info("Student {} submitting homework {}", studentId, request.getHomeworkId());
-        
-        // Validate and sanitize
-        request.sanitize();
-        request.validateContent();
+    @Transactional
+    public SubmissionResponse submitHomework(
+            Long homeworkId, 
+            String studentCode, 
+            String submissionText, 
+            MultipartFile file
+    ) {
+        log.info("[SubmissionService] Submitting homework: {} by student: {}", homeworkId, studentCode);
         
         // Find homework
-        Homework homework = homeworkRepository.findById(request.getHomeworkId())
-            .orElseThrow(() -> new NotFoundException("Homework not found"));
+        Homework homework = homeworkRepository.findById(homeworkId)
+                .orElseThrow(() -> new RuntimeException("Homework not found"));
         
-        // Find student
-        Student student = studentRepository.findById(studentId)
-            .orElseThrow(() -> new NotFoundException("Student not found"));
+        // Find student by code
+        Student student = studentRepository.findByStudentCode(studentCode)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
         
-        // Check duplicate
-        if (submissionRepository.existsByHomework_HomeworkIdAndStudent_StudentId(
-            request.getHomeworkId(), studentId)) {
-            throw new ConflictException("You have already submitted this homework");
+        // Check if already submitted
+        Optional<HomeworkSubmission> existing = submissionRepository
+                .findByHomework_HomeworkIdAndStudent_StudentCode(homeworkId, studentCode);
+        
+        if (existing.isPresent()) {
+            throw new RuntimeException("Đã nộp bài tập này rồi!");
+        }
+        
+        // Validate content
+        if ((submissionText == null || submissionText.trim().isEmpty()) && 
+            (file == null || file.isEmpty())) {
+            throw new RuntimeException("Vui lòng nhập nội dung hoặc đính kèm file!");
         }
         
         // Create submission
         HomeworkSubmission submission = new HomeworkSubmission();
         submission.setHomework(homework);
         submission.setStudent(student);
-        submission.setSubmissionFileUrl(request.getSubmissionFileUrl());
-        submission.setSubmissionText(request.getSubmissionText());
+        submission.setSubmissionText(submissionText);
         submission.setSubmissionDate(LocalDateTime.now());
         
-        // Status will be auto-set by @PrePersist (LATE if after deadline)
+        // Set status (LATE if after deadline)
+        boolean isLateSub = LocalDateTime.now().isAfter(homework.getDeadline());
+        if (isLateSub) { 
+            submission.setStatus(SubmissionStatus.LATE);
+            log.warn("⚠️ Student {} submitting LATE homework {}", studentCode, homeworkId);
+        } else {
+            submission.setStatus(SubmissionStatus.SUBMITTED);
+            log.info("✅ Student {} submitting ON TIME homework {}", studentCode, homeworkId);
+        }
         
-        HomeworkSubmission saved = submissionRepository.save(submission);
-        log.info("Submission created: ID={}, Status={}", saved.getSubmissionId(), saved.getStatus());
+        // Save submission first to get ID
+        submission = submissionRepository.save(submission);
         
-        return SubmissionResponse.fromEntity(saved);
+        // ✅ Handle file upload (multi-file support)
+        if (file != null && !file.isEmpty()) {
+            addFileToSubmission(submission, file, homework.getHomeworkId(), studentCode);
+        }
+        
+        log.info("✅ Submission created: ID={}", submission.getSubmissionId());
+        
+        return SubmissionResponse.fromEntity(submission);
     }
     
-    // ==================== STUDENT UPDATE ====================
+    // ==================== STUDENT UPDATE (ADD MORE FILES) ====================
     
     @Override
-    public SubmissionResponse updateSubmission(Long submissionId, SubmissionRequest request, Long studentId) {
-        log.info("Student {} updating submission {}", studentId, submissionId);
+    @Transactional
+    public SubmissionResponse updateSubmissionByStudent(
+            Long homeworkId,
+            String studentCode,
+            String submissionText,
+            MultipartFile file
+    ) {
+        log.info("[SubmissionService] Updating submission for homework: {} by student: {}", homeworkId, studentCode);
         
-        request.sanitize();
-        request.validateContent();
+        // Find existing submission
+        HomeworkSubmission submission = submissionRepository
+                .findByHomework_HomeworkIdAndStudent_StudentCode(homeworkId, studentCode)
+                .orElseThrow(() -> new RuntimeException("Chưa có bài nộp để chỉnh sửa!"));
+        
+        // Check if already graded
+        if (submission.getScore() != null) {
+            throw new RuntimeException("Không thể chỉnh sửa bài đã được chấm điểm!");
+        }
+        
+        // Check deadline
+        boolean isLate = LocalDateTime.now().isAfter(submission.getHomework().getDeadline());
+        if (isLate) {
+            throw new RuntimeException("Đã quá hạn! Không thể chỉnh sửa bài nộp.");
+        }
+        
+        // Validate content
+        boolean hasNewText = submissionText != null && !submissionText.trim().isEmpty();
+        boolean hasNewFile = file != null && !file.isEmpty();
+        boolean hasExistingFiles = submission.getFileCount() > 0;
+        boolean hasExistingText = submission.getSubmissionText() != null && !submission.getSubmissionText().trim().isEmpty();
+        
+        if (!hasNewText && !hasNewFile && !hasExistingFiles && !hasExistingText) {
+            throw new RuntimeException("Vui lòng nhập nội dung hoặc đính kèm file!");
+        }
+        
+        // Update text content
+        if (hasNewText) {
+            submission.setSubmissionText(submissionText);
+        }
+        
+        // ✅ ADD new file (không xóa file cũ)
+        if (hasNewFile) {
+            addFileToSubmission(submission, file, homeworkId, studentCode);
+        }
+        
+        // Update submission date
+        submission.setSubmissionDate(LocalDateTime.now());
+        
+        submission = submissionRepository.save(submission);
+        
+        log.info("✅ Submission updated: ID={}, Total files: {}", 
+                submission.getSubmissionId(), submission.getFileCount());
+        
+        return SubmissionResponse.fromEntity(submission);
+    }
+    
+    // ==================== DELETE FILE ====================
+    
+    @Override
+    @Transactional
+    public void deleteSubmissionFile(Long homeworkId, String studentCode) {
+        log.info("[SubmissionService] Deleting file for homework: {} by student: {}", homeworkId, studentCode);
         
         // Find submission
+        HomeworkSubmission submission = submissionRepository
+                .findByHomework_HomeworkIdAndStudent_StudentCode(homeworkId, studentCode)
+                .orElseThrow(() -> new RuntimeException("Chưa có bài nộp!"));
+        
+        // Check if already graded
+        if (submission.getScore() != null) {
+            throw new RuntimeException("Không thể xóa file của bài đã được chấm điểm!");
+        }
+        
+        // Check deadline
+        boolean isLate = LocalDateTime.now().isAfter(submission.getHomework().getDeadline());
+        if (isLate) {
+            throw new RuntimeException("Đã quá hạn! Không thể xóa file.");
+        }
+        
+        // ✅ Delete ALL files
+        List<SubmissionFile> files = submission.getSubmissionFiles();
+        if (files == null || files.isEmpty()) {
+            throw new RuntimeException("Không có file để xóa!");
+        }
+        
+        // Delete physical files and database records
+        for (SubmissionFile file : files) {
+            deletePhysicalFile(file);
+        }
+        
+        submission.getSubmissionFiles().clear();
+        submissionRepository.save(submission);
+        
+        log.info("✅ All files deleted from submission: ID={}", submission.getSubmissionId());
+    }
+    
+    /**
+     * ✅ NEW: Delete a specific file by fileId
+     */
+    @Transactional
+    public void deleteSubmissionFileById(Long homeworkId, String studentCode, Long fileId) {
+        log.info("[SubmissionService] Deleting specific file {} for homework: {} by student: {}", 
+                fileId, homeworkId, studentCode);
+        
+        // Find submission
+        HomeworkSubmission submission = submissionRepository
+                .findByHomework_HomeworkIdAndStudent_StudentCode(homeworkId, studentCode)
+                .orElseThrow(() -> new RuntimeException("Chưa có bài nộp!"));
+        
+        // Check if already graded
+        if (submission.getScore() != null) {
+            throw new RuntimeException("Không thể xóa file của bài đã được chấm điểm!");
+        }
+        
+        // Check deadline
+        boolean isLate = LocalDateTime.now().isAfter(submission.getHomework().getDeadline());
+        if (isLate) {
+            throw new RuntimeException("Đã quá hạn! Không thể xóa file.");
+        }
+        
+        // Find file
+        SubmissionFile fileToDelete = submissionFileRepository.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File không tồn tại!"));
+        
+        // Verify file belongs to this submission
+        if (!fileToDelete.getSubmission().getSubmissionId().equals(submission.getSubmissionId())) {
+            throw new RuntimeException("File không thuộc bài nộp này!");
+        }
+        
+        // Delete physical file
+        deletePhysicalFile(fileToDelete);
+        
+        // Remove from database
+        submission.removeFile(fileToDelete);
+        submissionFileRepository.delete(fileToDelete);
+        
+        log.info("✅ File deleted: {} from submission: {}", fileId, submission.getSubmissionId());
+    }
+    
+    // ========================================
+    // HELPER METHODS
+    // ========================================
+    
+    /**
+     * ✅ NEW: Add a file to submission
+     */
+    private void addFileToSubmission(HomeworkSubmission submission, MultipartFile file, Long homeworkId, String studentCode) {
+        try {
+            // Store file using FileStorageService
+            String directory = "submissions/homework-" + homeworkId + "/" + studentCode;
+            String storedFilename = fileStorageService.storeFile(file, directory);
+            
+            // Build download URL
+            String fileUrl = "/api/files/submissions/" + homeworkId + "/" + studentCode + "/" + storedFilename;
+            
+            // Create SubmissionFile entity
+            SubmissionFile submissionFile = SubmissionFile.builder()
+                    .originalFilename(file.getOriginalFilename())
+                    .storedFilename(storedFilename)
+                    .fileUrl(fileUrl)
+                    .fileSize(file.getSize())
+                    .mimeType(file.getContentType())
+                    .build();
+            
+            // Add to submission
+            submission.addFile(submissionFile);
+            
+            log.info("✅ File added: {} -> {} (Size: {} bytes)", 
+                    file.getOriginalFilename(), storedFilename, file.getSize());
+            
+        } catch (Exception e) {
+            log.error("❌ Failed to upload file", e);
+            throw new RuntimeException("Không thể upload file: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * ✅ NEW: Delete physical file from filesystem
+     */
+    private void deletePhysicalFile(SubmissionFile file) {
+        try {
+            String fileUrl = file.getFileUrl();
+            String[] parts = fileUrl.split("/");
+            if (parts.length > 0) {
+                String filename = parts[parts.length - 1];
+                // Extract directory from URL
+                // Example: /api/files/submissions/2/054205009974/filename.pdf
+                // Directory: submissions/homework-2/054205009974
+                String homeworkId = parts[parts.length - 3];
+                String studentCode = parts[parts.length - 2];
+                String directory = "submissions/homework-" + homeworkId + "/" + studentCode;
+                
+                fileStorageService.deleteFile(filename, directory);
+                log.info("✅ Physical file deleted: {}", filename);
+            }
+        } catch (Exception e) {
+            log.warn("⚠️ Failed to delete physical file: {}", e.getMessage());
+        }
+    }
+    
+    // ==================== TEACHER GRADE (keep existing logic) ====================
+    
+    @Override
+    public SubmissionResponse gradeSubmission(Long submissionId, GradeSubmissionRequest request, Long teacherId) {
+        log.info("Teacher {} grading submission {}", teacherId, submissionId);
+        
+        request.sanitize();
+        
         HomeworkSubmission submission = submissionRepository.findById(submissionId)
             .orElseThrow(() -> new NotFoundException("Submission not found"));
         
-        // Validate ownership
-        if (!submission.getStudent().getStudentId().equals(studentId)) {
-            throw new UnauthorizedException("You can only update your own submission");
+        if (!submission.getHomework().getClassEntity().getTeacher().getTeacherId().equals(teacherId)) {
+            throw new UnauthorizedException("You can only grade submissions from your classes");
         }
         
-        // Check if can edit (not graded)
-        if (!submission.canEdit()) {
-            throw new ConflictException("Cannot edit graded submission");
+        if (!request.isScoreValid(submission.getHomework().getMaxScore())) {
+            throw new BadRequestException("Score must be between 0 and " + 
+                submission.getHomework().getMaxScore());
         }
         
-        // Update
-        submission.setSubmissionFileUrl(request.getSubmissionFileUrl());
-        submission.setSubmissionText(request.getSubmissionText());
+        submission.grade(request.getScore(), request.getTeacherFeedback());
+        HomeworkSubmission graded = submissionRepository.save(submission);
         
-        HomeworkSubmission updated = submissionRepository.save(submission);
-        return SubmissionResponse.fromEntity(updated);
+        updateGradeAfterGrading(submission);
+        
+        log.info("Graded submission {}: score={}", submissionId, request.getScore());
+        return SubmissionResponse.fromEntity(graded);
     }
     
-    // ==================== STUDENT DELETE ====================
+    // ==================== OTHER METHODS (keep existing) ====================
+    
+    @Override
+    public SubmissionResponse submitHomework(SubmissionRequest request, Long studentId) {
+        // Legacy method - delegate to new multi-file version
+        log.warn("Using legacy submitHomework method - consider using multi-file version");
+        
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new NotFoundException("Student not found"));
+        
+        return submitHomework(
+                request.getHomeworkId(),
+                student.getStudentCode(),
+                request.getSubmissionText(),
+                null // No file in legacy method
+        );
+    }
+    
+    @Override
+    public SubmissionResponse updateSubmission(Long submissionId, SubmissionRequest request, Long studentId) {
+        // Legacy method - not recommended
+        log.warn("Using legacy updateSubmission method");
+        throw new RuntimeException("Use updateSubmissionByStudent instead");
+    }
     
     @Override
     public void deleteSubmission(Long submissionId, Long studentId) {
@@ -130,40 +384,6 @@ public class SubmissionServiceImpl implements SubmissionService {
         submissionRepository.delete(submission);
     }
     
-    // ==================== TEACHER GRADE ====================
-    
-    @Override
-    public SubmissionResponse gradeSubmission(Long submissionId, GradeSubmissionRequest request, Long teacherId) {
-        log.info("Teacher {} grading submission {}", teacherId, submissionId);
-        
-        request.sanitize();
-        
-        // Find submission with homework
-        HomeworkSubmission submission = submissionRepository.findById(submissionId)
-            .orElseThrow(() -> new NotFoundException("Submission not found"));
-        
-        // Validate teacher owns homework
-        if (!submission.getHomework().getClassEntity().getTeacher().getTeacherId().equals(teacherId)) {
-            throw new UnauthorizedException("You can only grade submissions from your classes");
-        }
-        
-        // Validate score range
-        if (!request.isScoreValid(submission.getHomework().getMaxScore())) {
-            throw new BadRequestException("Score must be between 0 and " + 
-                submission.getHomework().getMaxScore());
-        }
-        
-        // Grade submission
-        submission.grade(request.getScore(), request.getTeacherFeedback());
-        HomeworkSubmission graded = submissionRepository.save(submission);
-        
-        // Update grade table if REGULAR, MIDTERM, or FINAL
-        updateGradeAfterGrading(submission);
-        
-        log.info("Graded submission {}: score={}", submissionId, request.getScore());
-        return SubmissionResponse.fromEntity(graded);
-    }
-    
     @Override
     public SubmissionResponse ungradeSubmission(Long submissionId, Long teacherId) {
         log.info("Teacher {} ungrading submission {}", teacherId, submissionId);
@@ -178,18 +398,14 @@ public class SubmissionServiceImpl implements SubmissionService {
         submission.ungrade();
         HomeworkSubmission ungraded = submissionRepository.save(submission);
         
-        // Update grade table
         updateGradeAfterGrading(submission);
         
         return SubmissionResponse.fromEntity(ungraded);
     }
     
-    // ==================== TEACHER GET SUBMISSIONS ====================
-    
     @Override
     @Transactional(readOnly = true)
     public List<SubmissionResponse> getSubmissionsForGrading(Long homeworkId, Long teacherId) {
-        // Validate teacher owns homework
         Homework homework = homeworkRepository.findById(homeworkId)
             .orElseThrow(() -> new NotFoundException("Homework not found"));
         
@@ -233,8 +449,6 @@ public class SubmissionServiceImpl implements SubmissionService {
         return submissions.map(SubmissionResponse::fromEntity);
     }
     
-    // ==================== BULK GRADE ====================
-    
     @Override
     public List<SubmissionResponse> bulkGrade(List<GradeSubmissionRequest> requests, Long teacherId) {
         log.info("Teacher {} bulk grading {} submissions", teacherId, requests.size());
@@ -243,8 +457,6 @@ public class SubmissionServiceImpl implements SubmissionService {
             .map(req -> gradeSubmission(req.getSubmissionId(), req, teacherId))
             .collect(Collectors.toList());
     }
-    
-    // ==================== STUDENT QUERIES ====================
     
     @Override
     @Transactional(readOnly = true)
@@ -265,13 +477,9 @@ public class SubmissionServiceImpl implements SubmissionService {
             .collect(Collectors.toList());
     }
     
-    // ==================== STATISTICS ====================
-    
     @Override
     @Transactional(readOnly = true)
     public SubmissionStatsResponse getSubmissionStats(Long homeworkId) {
-        // TODO: Implement full statistics
-        // For now, return basic stats
         long totalSubmissions = submissionRepository.countByHomework_HomeworkId(homeworkId);
         long gradedCount = submissionRepository.countGraded(homeworkId);
         
@@ -289,17 +497,14 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Override
     @Transactional(readOnly = true)
     public boolean canSubmit(Long homeworkId, Long studentId) {
-        // Check if already submitted
         if (submissionRepository.existsByHomework_HomeworkIdAndStudent_StudentId(homeworkId, studentId)) {
             return false;
         }
         
-        // Check homework exists and not overdue (or allow late)
         Homework homework = homeworkRepository.findById(homeworkId).orElse(null);
         if (homework == null) return false;
         
-        // You can decide: allow late submissions or not
-        return true; // Allow late submissions
+        return true;
     }
     
     @Override
@@ -312,14 +517,6 @@ public class SubmissionServiceImpl implements SubmissionService {
         return submission.canEdit();
     }
     
-    // ==================== HELPER METHODS ====================
-    
-    /**
-     * Update grade table after grading submission
-     * - REGULAR: Calculate average of all REGULAR homework
-     * - MIDTERM: Set midterm score
-     * - FINAL: Set final score
-     */
     private void updateGradeAfterGrading(HomeworkSubmission submission) {
         try {
             Long studentId = submission.getStudent().getStudentId();
@@ -329,10 +526,8 @@ public class SubmissionServiceImpl implements SubmissionService {
             if (type == HomeworkType.REGULAR) {
                 gradeService.calculateRegularScore(studentId, classId);
             } else if (type == HomeworkType.MIDTERM) {
-                // Set midterm score directly
                 gradeService.updateComponentScore(studentId, classId, "midterm", submission.getScore());
             } else if (type == HomeworkType.FINAL) {
-                // Set final score directly
                 gradeService.updateComponentScore(studentId, classId, "final", submission.getScore());
             }
         } catch (Exception e) {

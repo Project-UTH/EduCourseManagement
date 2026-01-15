@@ -2,6 +2,8 @@ package vn.edu.uth.ecms.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
+
 import vn.edu.uth.ecms.dto.request.GradeSubmissionRequest;
 import vn.edu.uth.ecms.dto.request.SubmissionRequest;
 import vn.edu.uth.ecms.dto.response.SubmissionResponse;
@@ -99,4 +101,17 @@ public interface SubmissionService {
      * Check if submission can be edited
      */
     boolean canEdit(Long submissionId, Long studentId);
+     SubmissionResponse submitHomework(
+        Long homeworkId, 
+        String studentCode, 
+        String submissionText, 
+        MultipartFile file
+    );
+     SubmissionResponse updateSubmissionByStudent(
+        Long homeworkId,
+        String studentCode,
+        String submissionText,
+        MultipartFile file
+    );
+    void deleteSubmissionFile(Long homeworkId, String studentCode);
 }

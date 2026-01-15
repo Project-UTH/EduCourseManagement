@@ -128,8 +128,7 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
             path: '/student/courses-menu',
             children: [
               { icon: '📚', label: 'Đăng ký học phần', path: '/student/subjects' },        // ✅ MỚI
-              { icon: '📋', label: 'Lớp đã đăng ký', path: '/student/registrations' },     // ✅ CÓ RỒI
-              { icon: '🔍', label: 'Tìm kiếm lớp học', path: '/student/search' },          // ✅ CŨ
+             // ✅ CŨ
             ]
           },
           { 

@@ -11,6 +11,8 @@ import vn.edu.uth.ecms.entity.SubmissionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * SubmissionResponse DTO
@@ -48,9 +50,24 @@ public class SubmissionResponse {
     private StudentInfo studentInfo;
     
     /**
-     * Submission file URL
+     * @deprecated Use submissionFiles instead
+     * Submission file URL (legacy single-file)
      */
+    @Deprecated
     private String submissionFileUrl;
+    
+    /**
+     * @deprecated Use submissionFiles instead
+     * Original filename (legacy single-file)
+     */
+    @Deprecated
+    private String submissionFileName;
+    
+    /**
+     * ✅ NEW: Multiple file attachments
+     * List of all files for this submission
+     */
+    private List<SubmissionFileResponse> submissionFiles;
     
     /**
      * Submission text content
@@ -81,7 +98,6 @@ public class SubmissionResponse {
     
     /**
      * Submission status (enum value: SUBMITTED, GRADED, LATE)
-     * ✅ FIX: Trả về enum name thay vì display name
      */
     private String status;
     
@@ -160,16 +176,21 @@ public class SubmissionResponse {
             .homeworkTitle(submission.getHomework() != null ?
                           submission.getHomework().getTitle() : null)
             .studentInfo(buildStudentInfo(submission))
+            // ✅ FIX: Map multiple files
+            .submissionFiles(submission.getSubmissionFiles() != null ?
+                           submission.getSubmissionFiles().stream()
+                               .map(SubmissionFileResponse::fromEntity)
+                               .collect(java.util.stream.Collectors.toList()) : null)
+            // Legacy fields (deprecated but keep for backward compatibility)
             .submissionFileUrl(submission.getSubmissionFileUrl())
+            .submissionFileName(submission.getSubmissionFileName())
             .submissionText(submission.getSubmissionText())
             .submissionDate(submission.getSubmissionDate())
             .score(submission.getScore())
             .teacherFeedback(submission.getTeacherFeedback())
             .gradedDate(submission.getGradedDate())
-            // ✅ FIX: Trả về enum name (SUBMITTED, GRADED, LATE)
             .status(submission.getStatus() != null ?
                    submission.getStatus().name() : null)
-            // Giữ lại statusDisplay cho UI display
             .statusDisplay(submission.getStatus() != null ?
                           submission.getStatus().getDisplayName() : null)
             .isLate(submission.isLate())

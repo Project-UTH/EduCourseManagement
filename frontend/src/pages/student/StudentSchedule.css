@@ -65,132 +65,206 @@
   font-weight: 500;
 }
 
-/* Grid */
-.schedule-grid-container {
+/* No schedule info */
+.no-schedule-info {
   background: white;
+  padding: 40px;
   border-radius: 8px;
-  overflow: hidden;
+  text-align: center;
+  margin-bottom: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.no-schedule-info p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.no-schedule-info small {
+  font-size: 14px;
+  color: #999;
+}
+
+/* Grid Container */
+.schedule-grid-container {
+  background: white;
+  border-radius: 8px;
+  overflow-x: auto;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* SIMPLE TABLE - NO COLLAPSE! */
 .schedule-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 1400px;
 }
 
-.schedule-table th {
-  background: #16a34a;
-  color: white;
+.schedule-table th,
+.schedule-table td {
+  border: 2px solid #0891b2;
   padding: 12px 8px;
   text-align: center;
-  font-weight: 600;
-  border: 1px solid #15803d;
+  vertical-align: top;
 }
 
-.col-timeslot {
-  width: 100px;
+/* Header Row */
+.schedule-table thead th {
+  background: #0891b2;
+  color: white;
+  font-weight: 700;
+  padding: 16px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.col-day {
-  width: calc((100% - 100px) / 7);
+.schedule-table thead th:first-child {
+  background: #0d9488;
+  width: 150px;
 }
 
+/* Time Slot Column */
+.schedule-table tbody td:first-child {
+  background: #0d9488;
+  color: white;
+  font-weight: 700;
+  width: 150px;
+  text-align: center;
+}
+
+/* Day Columns */
+.schedule-table tbody td:not(:first-child) {
+  background: #fef3c7;
+  min-width: 180px;
+  width: 180px;
+  height: 140px;
+}
+
+.schedule-table tbody tr:nth-child(even) td:not(:first-child) {
+  background: white;
+}
+
+/* Day Header */
 .day-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  text-align: center;
 }
 
 .day-name {
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
 }
 
 .day-date {
-  font-size: 12px;
-  opacity: 0.9;
+  font-size: 13px;
+  display: block;
 }
 
-.schedule-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  vertical-align: top;
-  min-height: 120px;
-}
-
-.timeslot-cell {
-  background: #f0fdf4;
-  text-align: center;
-}
-
+/* Time Slot */
 .timeslot-name {
-  font-weight: 600;
-  color: #16a34a;
+  font-size: 15px;
   margin-bottom: 4px;
+  display: block;
 }
 
 .timeslot-time {
   font-size: 12px;
-  color: #666;
+  display: block;
+  opacity: 0.9;
 }
 
-.schedule-cell {
-  background: white;
-}
-
+/* Schedule Item */
 .schedule-item {
-  background: #e0f2fe;
-  border-left: 4px solid #0891b2;
-  padding: 8px;
-  border-radius: 4px;
-  margin-bottom: 8px;
-}
-
-.schedule-item:last-child {
-  margin-bottom: 0;
+  background: #dbeafe;
+  border: 2px solid #3b82f6;
+  border-radius: 6px;
+  padding: 10px;
+  margin: 4px;
+  text-align: left;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .item-subject {
-  font-weight: 600;
-  color: #0c4a6e;
-  margin-bottom: 4px;
-  font-size: 13px;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 6px;
+  font-size: 14px;
 }
 
 .item-code {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 6px;
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 8px;
 }
 
 .item-info {
-  font-size: 11px;
-  color: #555;
-  margin-bottom: 2px;
+  font-size: 12px;
+  color: #374151;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.item-info:last-child {
+  margin-bottom: 0;
+}
+
+.item-info.campus {
+  color: #0891b2;
+  font-weight: 600;
 }
 
 .item-badge {
   display: inline-block;
   background: #fbbf24;
   color: #78350f;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 12px;
   font-size: 10px;
-  font-weight: 600;
-  margin-top: 4px;
+  font-weight: 700;
+  margin-top: 6px;
 }
 
-.empty-cell {
-  min-height: 80px;
+.item-badge.elearning {
+  background: #a855f7;
+  color: white;
 }
 
+/* Loading */
 .loading-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 400px;
-  font-size: 18px;
-  color: #666;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0891b2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .schedule-page {
+    padding: 12px;
+  }
+  
+  .schedule-table {
+    min-width: 1200px;
+  }
 }

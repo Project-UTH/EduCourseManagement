@@ -7,6 +7,7 @@ import vn.edu.uth.ecms.dto.response.HomeworkDetailResponse;
 import vn.edu.uth.ecms.dto.response.HomeworkResponse;
 import vn.edu.uth.ecms.dto.response.HomeworkStatsResponse;
 import vn.edu.uth.ecms.entity.HomeworkType;
+import vn.edu.uth.ecms.dto.response.HomeworkWithSubmissionResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -85,4 +86,8 @@ public interface HomeworkService {
      * Check if teacher owns homework
      */
     boolean isTeacherOwner(Long homeworkId, Long teacherId);
+    List<HomeworkResponse> getHomeworksByClass(Long classId);
+    HomeworkDetailResponse getHomeworkDetailForStudent(Long homeworkId, String studentCode);
+    List<HomeworkWithSubmissionResponse> getHomeworksByClassWithSubmissionStatus(
+        Long classId, String studentCode);
 }

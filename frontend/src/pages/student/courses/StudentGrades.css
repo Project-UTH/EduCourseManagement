@@ -1,0 +1,349 @@
+/* ========================================
+   STUDENT GRADES - COMPLETE STYLES
+   Display student's own grades
+   ======================================== */
+
+.student-grades-container {
+  padding: 0;
+}
+
+/* ========== HEADER ========== */
+.grades-header {
+  margin-bottom: 24px;
+}
+
+.grades-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.grades-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ========== CLASS INFO CARD ========== */
+.class-info-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.class-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.class-info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* ========== SCORES GRID ========== */
+.scores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.score-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.score-card:hover {
+  border-color: #0891b2;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.1);
+}
+
+.score-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.score-icon {
+  font-size: 20px;
+}
+
+.score-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.score-weight {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.score-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0891b2;
+  text-align: center;
+}
+
+/* ========== TOTAL SCORE CARD ========== */
+.total-score-card {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  color: white;
+}
+
+.total-score-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.total-score-info h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.total-score-formula {
+  font-size: 13px;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.total-score-display {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.total-score-number {
+  font-size: 48px;
+  font-weight: 700;
+}
+
+.letter-grade-badge {
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* ========== ADDITIONAL INFO ========== */
+.additional-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.info-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.info-card-icon {
+  font-size: 20px;
+}
+
+.info-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.info-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0891b2;
+}
+
+.comment-card {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 20px;
+  grid-column: 1 / -1;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.comment-icon {
+  font-size: 20px;
+}
+
+.comment-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.comment-content {
+  font-size: 14px;
+  color: #78350f;
+  line-height: 1.6;
+}
+
+/* ========== GRADE SCALE ========== */
+.grade-scale {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.grade-scale h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+.grade-scale-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.scale-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.scale-letter {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.scale-range {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* ========== EMPTY STATE ========== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.empty-state p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ========== LOADING STATE ========== */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f1f5f9;
+  border-top-color: #0891b2;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* ========== ERROR STATE ========== */
+.error-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.error-state p {
+  font-size: 16px;
+  color: #ef4444;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .scores-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .total-score-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .additional-info {
+    grid-template-columns: 1fr;
+  }
+  
+  .grade-scale-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

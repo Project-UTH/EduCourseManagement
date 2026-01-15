@@ -21,6 +21,20 @@ import vn.edu.uth.ecms.security.CustomUserDetailsService;
 import vn.edu.uth.ecms.security.JwtAuthenticationEntryPoint;
 import vn.edu.uth.ecms.security.JwtAuthenticationFilter;
 
+/**
+ * SecurityConfig
+ * 
+ * Spring Security configuration with JWT authentication
+ * 
+ * Security Rules:
+ * - Public: /api/auth/**, /api/files/**, /api/health
+ * - Admin: /api/admin/**
+ * - Teacher: /api/teacher/**
+ * - Student: /api/student/**
+ * 
+ * @author Education Course Management System
+ * @since 2026-01-11
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -60,23 +74,37 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ FIX: Allow OPTIONS requests for CORS preflight (correct syntax)
+                        // ==================== CORS PREFLIGHT ====================
+                        // Allow OPTIONS requests for CORS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Public endpoints - NO AUTHENTICATION REQUIRED
+                        // ==================== PUBLIC ENDPOINTS ====================
+                        // Authentication endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        
+                        // File download endpoints - PUBLIC ACCESS
+                        // Students/Teachers can download without re-authentication
+                        .requestMatchers("/api/files/**").permitAll()
+                        
+                        // Health check
                         .requestMatchers("/api/health").permitAll()
+                        
+                        // API Documentation (Swagger)
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // Admin endpoints - REQUIRE ADMIN ROLE
+                        // ==================== ADMIN ENDPOINTS ====================
+                        // Require ADMIN role
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // Teacher endpoints - REQUIRE TEACHER ROLE
+                        // ==================== TEACHER ENDPOINTS ====================
+                        // Require TEACHER role
                         .requestMatchers("/api/teacher/**").hasRole("TEACHER")
 
-                        // Student endpoints - REQUIRE STUDENT ROLE
+                        // ==================== STUDENT ENDPOINTS ====================
+                        // Require STUDENT role
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
 
+                        // ==================== DEFAULT ====================
                         // All other requests need authentication
                         .anyRequest().authenticated()
                 )

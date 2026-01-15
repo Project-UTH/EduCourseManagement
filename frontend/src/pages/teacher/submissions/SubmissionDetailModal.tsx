@@ -8,7 +8,7 @@ import './SubmissionDetailModal.css';
  * Features:
  * - Full student information
  * - Complete submission text
- * - File download
+ * - ✅ MULTI-FILE download support
  * - Score and feedback display
  * - Quick grade action
  */
@@ -22,10 +22,20 @@ interface SubmissionDetailModalProps {
     studentInfo: {
       fullName: string;
       studentCode: string;
-      email: string;
+      email?: string; // ✅ Made optional
     };
     submissionText?: string;
     submissionFileUrl?: string;
+    submissionFileName?: string;
+    submissionFiles?: Array<{  // ✅ NEW: Multi-file support
+      fileId: number;
+      originalFilename: string;
+      fileUrl: string;
+      fileSize: number;
+      formattedFileSize: string;
+      fileExtension: string;
+      uploadedAt: string;
+    }>;
     submissionDate: string;
     submissionTiming?: string;
     status: string;
@@ -93,9 +103,25 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
     }
   };
 
+  // ✅ Get file icon based on extension
+  const getFileIcon = (extension: string) => {
+    const ext = extension.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return '🖼️';
+    if (['pdf'].includes(ext)) return '📕';
+    if (['doc', 'docx'].includes(ext)) return '📘';
+    if (['xls', 'xlsx'].includes(ext)) return '📗';
+    if (['ppt', 'pptx'].includes(ext)) return '📙';
+    if (['zip', 'rar'].includes(ext)) return '📦';
+    return '📎';
+  };
+
   if (!isOpen || !submission) return null;
 
   const statusBadge = getStatusBadge(submission.status);
+  
+  // ✅ Check if has files
+  const hasNewFiles = submission.submissionFiles && submission.submissionFiles.length > 0;
+  const hasLegacyFile = !!submission.submissionFileUrl;
 
   return (
     <div className="detail-modal-overlay" onClick={onClose}>
@@ -138,11 +164,13 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
                     <span className="info-label">Mã SV:</span>
                     <span className="info-value">{submission.studentInfo.studentCode}</span>
                   </div>
-                  <div className="info-item">
-                    <span className="info-icon">📧</span>
-                    <span className="info-label">Email:</span>
-                    <span className="info-value">{submission.studentInfo.email}</span>
-                  </div>
+                  {submission.studentInfo.email && (
+                    <div className="info-item">
+                      <span className="info-icon">📧</span>
+                      <span className="info-label">Email:</span>
+                      <span className="info-value">{submission.studentInfo.email}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -198,7 +226,47 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
               Nội dung bài nộp
             </h3>
             
-            {submission.submissionFileUrl && (
+            {/* ✅ NEW: Multi-file display */}
+            {hasNewFiles && (
+              <div className="files-section">
+                <h4 className="files-section-title">
+                  📁 File đính kèm ({submission.submissionFiles!.length})
+                </h4>
+                <div className="files-grid">
+                  {submission.submissionFiles!.map((file) => (
+                    <a
+                      key={file.fileId}
+                      href={file.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-card"
+                    >
+                      <div className="file-card-icon">
+                        {getFileIcon(file.fileExtension)}
+                      </div>
+                      <div className="file-card-info">
+                        <div className="file-card-name" title={file.originalFilename}>
+                          {file.originalFilename}
+                        </div>
+                        <div className="file-card-meta">
+                          <span className="file-size">{file.formattedFileSize}</span>
+                          <span className="file-separator">•</span>
+                          <span className="file-ext">{file.fileExtension.toUpperCase()}</span>
+                        </div>
+                      </div>
+                      <div className="file-card-action">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Legacy single file (if no new files) */}
+            {!hasNewFiles && hasLegacyFile && (
               <div className="file-section">
                 <a
                   href={submission.submissionFileUrl}
@@ -208,21 +276,25 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
                 >
                   <div className="file-icon">📎</div>
                   <div className="file-info">
-                    <span className="file-label">File đính kèm</span>
+                    <span className="file-label">
+                      {submission.submissionFileName || 'File đính kèm'}
+                    </span>
                     <span className="file-action">Click để tải xuống →</span>
                   </div>
                 </a>
               </div>
             )}
             
+            {/* Submission text */}
             {submission.submissionText ? (
               <div className="submission-text-box">
+                <h4 className="text-box-title">📝 Nội dung văn bản</h4>
                 <pre className="submission-text-content">
                   {submission.submissionText}
                 </pre>
               </div>
             ) : (
-              !submission.submissionFileUrl && (
+              !hasNewFiles && !hasLegacyFile && (
                 <div className="empty-state">
                   <span className="empty-icon">📭</span>
                   <p>Không có nội dung văn bản</p>

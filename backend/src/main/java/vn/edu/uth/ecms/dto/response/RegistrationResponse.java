@@ -36,6 +36,7 @@ public class RegistrationResponse {
     private Long semesterId;
     private String semesterCode;
     private String semesterName;
+    private String semesterStatus; // ✅ ADDED: UPCOMING, ACTIVE, COMPLETED
     
     private String dayOfWeek;
     private String dayOfWeekDisplay;

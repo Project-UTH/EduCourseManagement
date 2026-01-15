@@ -1,9 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
+import classApi from '../../services/api/classApi';
+import homeworkApi from '../../services/api/homeworkApi';
 import './TeacherDashboard.css';
 
+/**
+ * TeacherDashboard - REAL DATA FROM API
+ * 
+ * Load từ: GET /api/teacher/classes
+ * Shows:
+ * - Classes taught by teacher
+ * - Quick stats (students, pending grading, etc)
+ * - Upcoming classes
+ * - Click class → Navigate to detail with tabs
+ */
+
 interface ClassCard {
-  id: number;
+  classId: number;
   subjectName: string;
   classCode: string;
   room: string;
@@ -11,79 +25,139 @@ interface ClassCard {
   enrolledStudents: number;
   maxStudents: number;
   nextClassDate: string;
-  progress: number;
+  dayOfWeekDisplay: string;
+  timeSlotDisplay: string;
+}
+
+interface UpcomingClass {
+  classId: number;
+  classCode: string;
+  subjectName: string;
+  time: string;
+  room: string;
 }
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((state: any) => state.user);
   const [selectedSemester, setSelectedSemester] = useState('current');
 
-  // Mock data - will be replaced with real API calls
-  const stats = [
-    { label: 'Tổng lớp học', value: '8', icon: '📚', color: 'blue' },
-    { label: 'Tổng sinh viên', value: '245', icon: '👨‍🎓', color: 'green' },
-    { label: 'Bài chưa chấm', value: '23', icon: '📝', color: 'orange' },
-    { label: 'Lớp tuần này', value: '12', icon: '📅', color: 'purple' },
-  ];
+  const [classes, setClasses] = useState<ClassCard[]>([]);
+  const [upcomingClasses, setUpcomingClasses] = useState<UpcomingClass[]>([]);
+  const [stats, setStats] = useState({
+    totalClasses: 0,
+    totalStudents: 0,
+    pendingGrading: 0,
+    weekClasses: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const myClasses: ClassCard[] = [
-    {
-      id: 1,
-      subjectName: 'Lập trình Web',
-      classCode: 'IT101-01',
-      room: 'A201',
-      schedule: 'Thứ 2, Ca 1 (06:45-09:15)',
-      enrolledStudents: 35,
-      maxStudents: 40,
-      nextClassDate: '25/12/2024',
-      progress: 60
-    },
-    {
-      id: 2,
-      subjectName: 'Cơ sở dữ liệu',
-      classCode: 'IT202-02',
-      room: 'B105',
-      schedule: 'Thứ 3, Ca 2 (09:25-11:55)',
-      enrolledStudents: 40,
-      maxStudents: 40,
-      nextClassDate: '26/12/2024',
-      progress: 75
-    },
-    {
-      id: 3,
-      subjectName: 'Mạng máy tính',
-      classCode: 'IT303-01',
-      room: 'C302',
-      schedule: 'Thứ 4, Ca 3 (12:10-14:40)',
-      enrolledStudents: 28,
-      maxStudents: 35,
-      nextClassDate: '27/12/2024',
-      progress: 45
-    },
-    {
-      id: 4,
-      subjectName: 'Lập trình Mobile',
-      classCode: 'IT404-01',
-      room: 'A301',
-      schedule: 'Thứ 5, Ca 4 (14:50-17:20)',
-      enrolledStudents: 32,
-      maxStudents: 35,
-      nextClassDate: '28/12/2024',
-      progress: 55
-    },
-  ];
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  const upcomingClasses = [
-    { subject: 'Lập trình Web', class: 'IT101-01', time: 'Hôm nay, 06:45', room: 'A201' },
-    { subject: 'Cơ sở dữ liệu', class: 'IT202-02', time: 'Ngày mai, 09:25', room: 'B105' },
-    { subject: 'Mạng máy tính', class: 'IT303-01', time: '27/12, 12:10', room: 'C302' },
-  ];
+  const loadDashboardData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('[TeacherDashboard] Loading classes...');
+
+      // 1. Load teacher's classes
+      const classesData = await classApi.getMyClasses();
+      console.log('[TeacherDashboard] ✅ Received classes:', classesData);
+
+      // 2. Transform to ClassCard format
+      const transformedClasses: ClassCard[] = classesData.map((c: any) => ({
+        classId: c.classId,
+        subjectName: c.subjectName || c.className,
+        classCode: c.classCode,
+        room: c.fixedRoom || c.roomName || 'Chưa có phòng',
+        schedule: `${c.dayOfWeekDisplay}, ${c.timeSlotDisplay}`,
+        dayOfWeekDisplay: c.dayOfWeekDisplay || 'Chưa xếp lịch',
+        timeSlotDisplay: c.timeSlotDisplay || '',
+        enrolledStudents: c.studentCount || 0,
+        maxStudents: c.maxStudents || 40,
+        nextClassDate: new Date().toLocaleDateString('vi-VN')
+      }));
+
+      setClasses(transformedClasses);
+
+      // 3. Calculate stats
+      const totalStudents = transformedClasses.reduce((sum, c) => sum + c.enrolledStudents, 0);
+      
+      setStats({
+        totalClasses: transformedClasses.length,
+        totalStudents: totalStudents,
+        pendingGrading: 23, // Mock - will calculate from homework API
+        weekClasses: transformedClasses.length // Mock - will filter by week
+      });
+
+      // 4. Mock upcoming classes (top 3)
+      const upcoming: UpcomingClass[] = transformedClasses.slice(0, 3).map((c, index) => ({
+        classId: c.classId,
+        classCode: c.classCode,
+        subjectName: c.subjectName,
+        time: index === 0 ? 'Hôm nay, ' + c.timeSlotDisplay : 
+              index === 1 ? 'Ngày mai, ' + c.timeSlotDisplay :
+              c.dayOfWeekDisplay + ', ' + c.timeSlotDisplay,
+        room: c.room
+      }));
+
+      setUpcomingClasses(upcoming);
+
+      console.log('[TeacherDashboard] ✅ Loaded successfully:', {
+        classes: transformedClasses.length,
+        students: totalStudents
+      });
+
+    } catch (err: any) {
+      console.error('[TeacherDashboard] ❌ Failed to load data:', err);
+      setError('Không thể tải dữ liệu. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClassClick = (classId: number) => {
+    // Navigate to class detail with tabs
+    navigate(`/teacher/classes/${classId}`);
+  };
+
+  const handleCreateAssignment = () => {
+    navigate('/teacher/assignments');
+  };
+
+  if (loading) {
+    return (
+      <div className="teacher-dashboard">
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="teacher-dashboard">
+        <div className="error-state">
+          <p>{error}</p>
+          <button onClick={loadDashboardData} className="btn-retry">
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="teacher-dashboard">
       <div className="dashboard-header">
         <div>
-          <h1>Lớp học của tôi</h1>
+          <h1>👨‍🏫 Lớp học của tôi</h1>
           <p>Quản lý và theo dõi các lớp học bạn đang giảng dạy</p>
         </div>
         <div className="header-actions">
@@ -96,7 +170,10 @@ const TeacherDashboard = () => {
             <option value="2024-1">Học kỳ 1 (2024-2025)</option>
             <option value="2023-2">Học kỳ 2 (2023-2024)</option>
           </select>
-          <button className="create-assignment-btn" onClick={() => navigate('/teacher/assignments')}>
+          <button 
+            className="create-assignment-btn" 
+            onClick={handleCreateAssignment}
+          >
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
@@ -107,22 +184,44 @@ const TeacherDashboard = () => {
 
       {/* Quick Stats */}
       <div className="stats-grid">
-        {stats.map((stat, index) => (
-          <div key={index} className={`stat-card ${stat.color}`}>
-            <div className="stat-icon">{stat.icon}</div>
-            <div className="stat-content">
-              <p className="stat-label">{stat.label}</p>
-              <h3 className="stat-value">{stat.value}</h3>
-            </div>
+        <div className="stat-card blue">
+          <div className="stat-icon">📚</div>
+          <div className="stat-content">
+            <p className="stat-label">Tổng lớp học</p>
+            <h3 className="stat-value">{stats.totalClasses}</h3>
           </div>
-        ))}
+        </div>
+
+        <div className="stat-card green">
+          <div className="stat-icon">👥</div>
+          <div className="stat-content">
+            <p className="stat-label">Tổng sinh viên</p>
+            <h3 className="stat-value">{stats.totalStudents}</h3>
+          </div>
+        </div>
+
+        <div className="stat-card orange">
+          <div className="stat-icon">📝</div>
+          <div className="stat-content">
+            <p className="stat-label">Bài chưa chấm</p>
+            <h3 className="stat-value">{stats.pendingGrading}</h3>
+          </div>
+        </div>
+
+        <div className="stat-card purple">
+          <div className="stat-icon">📅</div>
+          <div className="stat-content">
+            <p className="stat-label">Lớp tuần này</p>
+            <h3 className="stat-value">{stats.weekClasses}</h3>
+          </div>
+        </div>
       </div>
 
       <div className="dashboard-content">
         {/* Classes Grid */}
         <div className="classes-section">
           <div className="section-header">
-            <h2>Danh sách lớp học ({myClasses.length})</h2>
+            <h2>Danh sách lớp học ({classes.length})</h2>
             <div className="view-options">
               <button className="view-btn active">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
@@ -137,77 +236,60 @@ const TeacherDashboard = () => {
             </div>
           </div>
 
-          <div className="classes-grid">
-            {myClasses.map((classItem) => (
-              <div key={classItem.id} className="class-card">
-                <div className="class-header">
-                  <div className="class-info">
-                    <h3>{classItem.subjectName}</h3>
-                    <span className="class-code">{classItem.classCode}</span>
+          {classes.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📚</div>
+              <h3>Chưa có lớp học nào</h3>
+              <p>Bạn chưa được phân công giảng dạy lớp học nào.</p>
+            </div>
+          ) : (
+            <div className="classes-grid">
+              {classes.map((classItem) => (
+                <div 
+                  key={classItem.classId} 
+                  className="class-card"
+                  onClick={() => handleClassClick(classItem.classId)}
+                >
+                  <div className="class-header">
+                    <div className="class-info">
+                      <h3>{classItem.subjectName}</h3>
+                      <span className="class-code">{classItem.classCode}</span>
+                    </div>
                   </div>
-                  <button className="class-menu-btn">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                    </svg>
-                  </button>
-                </div>
 
-                <div className="class-details">
-                  <div className="detail-item">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>{classItem.schedule}</span>
+                  <div className="class-details">
+                    <div className="detail-item">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>{classItem.schedule}</span>
+                    </div>
+                    <div className="detail-item">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      <span>Phòng {classItem.room}</span>
+                    </div>
+                    <div className="detail-item">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                      <span>{classItem.enrolledStudents}/{classItem.maxStudents} sinh viên</span>
+                    </div>
                   </div>
-                  <div className="detail-item">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <span>Phòng {classItem.room}</span>
-                  </div>
-                  <div className="detail-item">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    <span>{classItem.enrolledStudents}/{classItem.maxStudents} sinh viên</span>
-                  </div>
-                </div>
 
-                <div className="class-progress">
-                  <div className="progress-header">
-                    <span className="progress-label">Tiến độ giảng dạy</span>
-                    <span className="progress-value">{classItem.progress}%</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill" 
-                      style={{ width: `${classItem.progress}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="class-footer">
-                  <span className="next-class">
-                    Lớp tiếp theo: {classItem.nextClassDate}
-                  </span>
-                  <div className="class-actions">
-                    <button 
-                      className="action-btn secondary"
-                      onClick={() => navigate(`/teacher/classes/${classItem.id}`)}
-                    >
-                      Xem danh sách
-                    </button>
-                    <button 
-                      className="action-btn primary"
-                      onClick={() => navigate(`/teacher/assignments?class=${classItem.id}`)}
-                    >
-                      Bài tập
+                  <div className="class-footer">
+                    <span className="next-class">
+                      Lớp tiếp theo: {classItem.nextClassDate}
+                    </span>
+                    <button className="btn-view-detail">
+                      Xem chi tiết →
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Upcoming Classes Sidebar */}
@@ -215,21 +297,32 @@ const TeacherDashboard = () => {
           <div className="section-header">
             <h2>Lớp sắp diễn ra</h2>
           </div>
-          <div className="upcoming-list">
-            {upcomingClasses.map((item, index) => (
-              <div key={index} className="upcoming-item">
-                <div className="upcoming-icon">📅</div>
-                <div className="upcoming-content">
-                  <h4>{item.subject}</h4>
-                  <p className="upcoming-class">{item.class}</p>
-                  <div className="upcoming-details">
-                    <span className="upcoming-time">{item.time}</span>
-                    <span className="upcoming-room">Phòng {item.room}</span>
+          
+          {upcomingClasses.length === 0 ? (
+            <div className="empty-state-small">
+              <p>📭 Không có lớp sắp diễn ra</p>
+            </div>
+          ) : (
+            <div className="upcoming-list">
+              {upcomingClasses.map((item) => (
+                <div 
+                  key={item.classId} 
+                  className="upcoming-item"
+                  onClick={() => handleClassClick(item.classId)}
+                >
+                  <div className="upcoming-icon">📅</div>
+                  <div className="upcoming-content">
+                    <h4>{item.subjectName}</h4>
+                    <p className="upcoming-class">{item.classCode}</p>
+                    <div className="upcoming-details">
+                      <span className="upcoming-time">{item.time}</span>
+                      <span className="upcoming-room">Phòng {item.room}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <button 
             className="view-schedule-btn"

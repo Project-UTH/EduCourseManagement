@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import vn.edu.uth.ecms.dto.request.StudentCreateRequest;
 import vn.edu.uth.ecms.dto.request.StudentUpdateRequest;
 import vn.edu.uth.ecms.dto.request.UpdateStudentProfileRequest;
+import vn.edu.uth.ecms.dto.response.ClassResponse;
 import vn.edu.uth.ecms.dto.response.StudentResponse;
 
 import java.util.List;
@@ -87,4 +88,23 @@ public interface StudentService {
      * @return Updated student response
      */
     StudentResponse updateProfile(String studentCode, UpdateStudentProfileRequest request);
+     /**
+     * Get all classes that student has enrolled in
+     */
+    List<ClassResponse> getEnrolledClasses(String studentCode);
+    
+    /**
+     * Get detailed information about a class that student has enrolled in
+     */
+    ClassResponse getEnrolledClassDetail(String studentCode, Long classId);
+    
+    /**
+     * Get student's schedule for current semester
+     */
+    List<ClassResponse> getCurrentSchedule(String studentCode);
+    
+    /**
+     * Get student's schedule for a specific semester
+     */
+    List<ClassResponse> getScheduleBySemester(String studentCode, Long semesterId);
 }

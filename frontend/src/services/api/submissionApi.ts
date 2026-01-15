@@ -5,9 +5,26 @@ import apiClient from './apiClient';
  * 
  * Xử lý các thao tác với bài nộp: xem, chấm điểm, thống kê
  * Map tới TeacherSubmissionController endpoints
+ * ✅ MULTI-FILE SUPPORT
  */
 
 // ==================== INTERFACES (từ backend DTOs) ====================
+
+// ✅ NEW: Multi-file support
+export interface SubmissionFileResponse {
+  fileId: number;
+  submissionId: number;
+  originalFilename: string;
+  storedFilename: string;
+  fileUrl: string;
+  fileSize: number;
+  formattedFileSize: string;
+  mimeType?: string;
+  fileExtension: string;
+  uploadedAt: string;
+  isImage: boolean;
+  isDocument: boolean;
+}
 
 export interface SubmissionResponse {
   submissionId: number;
@@ -21,7 +38,13 @@ export interface SubmissionResponse {
     email?: string;
   };
   
+  // Legacy single file (deprecated)
   submissionFileUrl?: string;
+  submissionFileName?: string;
+  
+  // ✅ NEW: Multiple files support
+  submissionFiles?: SubmissionFileResponse[];
+  
   submissionText?: string;
   submissionDate: string;
   

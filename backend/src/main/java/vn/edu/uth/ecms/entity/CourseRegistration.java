@@ -49,6 +49,22 @@ public class CourseRegistration extends BaseEntity {
     @Column(name = "dropped_at")
     private LocalDateTime droppedAt;
 
+    // ==================== ✅ ADD THESE ====================
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "enrollment_type", length = 20)
+    private EnrollmentType enrollmentType;
+
+    @Column(name = "manual_reason")
+    private String manualReason;
+
+    @Column(name = "manual_note")
+    private String manualNote;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "enrolled_by_admin_id")
+    private Admin enrolledByAdmin;
+
     // ==================== HELPER METHODS ====================
 
     public boolean isActive() {
