@@ -5,10 +5,11 @@ import homeworkApi, { HomeworkRequest } from '../../../services/api/homeworkApi'
 import './CreateHomework.css';
 
 /**
- * CreateHomework Page - COMPLETE FIX
+ * CreateHomework Page - WITH FILE UPLOAD
  * 
  * ✅ FIX 1: Use English enum (REGULAR, MIDTERM, FINAL)
  * ✅ FIX 2: Add seconds to deadline format (YYYY-MM-DDTHH:MM:SS)
+ * ✅ NEW: File upload instead of URL input
  */
 
 type HomeworkType = 'REGULAR' | 'MIDTERM' | 'FINAL';
@@ -21,6 +22,10 @@ const CreateHomework = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // ✅ NEW: File upload state
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string>('');
   
   // Form data
   const [formData, setFormData] = useState<HomeworkRequest>({
@@ -57,6 +62,66 @@ const CreateHomework = () => {
     } finally {
       setLoading(false);
     }
+  };
+  
+  // ✅ NEW: File upload handlers
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    
+    if (!file) {
+      setAttachmentFile(null);
+      setFileError('');
+      return;
+    }
+    
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setFileError(`File "${file.name}" vượt quá 10MB!`);
+      setAttachmentFile(null);
+      e.target.value = '';
+      return;
+    }
+    
+    // Validate file type
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/zip',
+      'application/x-rar-compressed'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      setFileError('Chỉ chấp nhận file PDF, Word, Excel, PowerPoint, ZIP');
+      setAttachmentFile(null);
+      e.target.value = '';
+      return;
+    }
+    
+    // Set file
+    setAttachmentFile(file);
+    setFileError('');
+  };
+  
+  const handleRemoveFile = () => {
+    setAttachmentFile(null);
+    setFileError('');
+    const fileInput = document.getElementById('homework-file-input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+  
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
   
   const validateForm = (): boolean => {
@@ -115,18 +180,29 @@ const CreateHomework = () => {
       // ✅ FIX: Add seconds to deadline if not present
       let deadline = formData.deadline;
       if (deadline && !deadline.includes(':00', deadline.lastIndexOf(':'))) {
-        // Format: "2026-01-23T02:48" → "2026-01-23T02:48:00"
         deadline = deadline + ':00';
       }
       
-      const backendRequest: HomeworkRequest = {
-        ...formData,
-        deadline: deadline
-      };
+      // ✅ NEW: Create FormData for file upload
+      const formDataToSend = new FormData();
       
-      console.log('[CreateHomework] Submitting:', backendRequest);
+      // Add text fields
+      formDataToSend.append('classId', formData.classId.toString());
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('description', formData.description || '');
+      formDataToSend.append('homeworkType', formData.homeworkType);
+      formDataToSend.append('deadline', deadline);
+      formDataToSend.append('maxScore', (formData.maxScore ?? 10).toString());
       
-      const result = await homeworkApi.createHomework(backendRequest);
+      // Add file if selected
+      if (attachmentFile) {
+        formDataToSend.append('file', attachmentFile);
+        console.log('[CreateHomework] Sending file:', attachmentFile.name);
+      }
+      
+      console.log('[CreateHomework] Submitting homework');
+      
+      const result = await homeworkApi.createHomework(formDataToSend as any);
       
       console.log('[CreateHomework] ✅ Created:', result.homeworkId);
       
@@ -357,21 +433,69 @@ const CreateHomework = () => {
             <span className="helper-text">Mặc định: 10.00 điểm</span>
           </div>
           
-          {/* Attachment URL */}
+          {/* ✅ NEW: File Upload Section */}
           <div className="form-group">
-            <label htmlFor="attachmentUrl">
-              File đính kèm (tùy chọn)
-            </label>
-            <input
-              type="url"
-              id="attachmentUrl"
-              value={formData.attachmentUrl || ''}
-              onChange={(e) => handleInputChange('attachmentUrl', e.target.value)}
-              placeholder="https://example.com/file.pdf"
-            />
-            <span className="helper-text">
-              Dán URL file đính kèm (PDF, DOC, DOCX, XLS, XLSX, PPT, ZIP)
-            </span>
+            <label>Tệp đính kèm (tùy chọn)</label>
+            
+            {/* File Input */}
+            <div className="file-upload-area">
+              <input
+                type="file"
+                id="homework-file-input"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+              <label 
+                htmlFor="homework-file-input" 
+                className="file-upload-button"
+              >
+                📎 Chọn file
+              </label>
+              <span className="file-upload-hint">
+                Tối đa 10MB
+              </span>
+            </div>
+            
+            {/* File Error */}
+            {fileError && (
+              <div className="file-error">
+                ⚠️ {fileError}
+              </div>
+            )}
+            
+            {/* File Preview */}
+            {attachmentFile && (
+              <div className="file-preview">
+                <div className="file-preview-content">
+                  <div className="file-info">
+                    <span className="file-icon">
+                      {attachmentFile.name.endsWith('.pdf') ? '📄' :
+                       attachmentFile.name.endsWith('.doc') || attachmentFile.name.endsWith('.docx') ? '📝' :
+                       attachmentFile.name.endsWith('.xls') || attachmentFile.name.endsWith('.xlsx') ? '📊' :
+                       attachmentFile.name.endsWith('.ppt') || attachmentFile.name.endsWith('.pptx') ? '📊' :
+                       attachmentFile.name.endsWith('.zip') || attachmentFile.name.endsWith('.rar') ? '🗜️' : '📎'}
+                    </span>
+                    <div className="file-details">
+                      <div className="file-name">{attachmentFile.name}</div>
+                      <div className="file-size">{formatFileSize(attachmentFile.size)}</div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={handleRemoveFile}
+                    className="btn-remove-file"
+                  >
+                    🗑️ Xóa
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <small className="helper-text">
+              Hỗ trợ: PDF, Word, Excel, PowerPoint, ZIP
+            </small>
           </div>
         </div>
         

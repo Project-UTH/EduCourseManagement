@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.uth.ecms.dto.request.HomeworkRequest;
 import vn.edu.uth.ecms.dto.response.HomeworkDetailResponse;
 import vn.edu.uth.ecms.dto.response.HomeworkResponse;
@@ -18,6 +19,11 @@ import vn.edu.uth.ecms.entity.HomeworkType;
 import vn.edu.uth.ecms.security.UserPrincipal;
 import vn.edu.uth.ecms.service.HomeworkService;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,6 +31,9 @@ import java.util.List;
  * TeacherHomeworkController
  * 
  * REST API endpoints for teacher homework management
+ * 
+ * ✅ UPDATED: Keep original filename + timestamp to avoid duplicates
+ * ✅ FIXED: File URL uses full backend URL (localhost:8080)
  * 
  * @author Phase 4 - Teacher Features
  * @since 2026-01-06
@@ -38,22 +47,98 @@ public class TeacherHomeworkController {
     
     private final HomeworkService homeworkService;
     
-    // ==================== CREATE HOMEWORK ====================
+    // ==================== CREATE HOMEWORK WITH FILE UPLOAD ====================
     
     /**
-     * Create new homework
+     * Create new homework with optional file upload
      * POST /api/teacher/homework
+     * 
+     * Accepts multipart/form-data with:
+     * - classId (required)
+     * - title (required)
+     * - description (optional)
+     * - homeworkType (required)
+     * - deadline (required)
+     * - maxScore (optional, default 10)
+     * - file (optional) - attachment file
      */
     @PostMapping
     public ResponseEntity<HomeworkResponse> createHomework(
-            @Valid @RequestBody HomeworkRequest request,
+            @RequestParam("classId") Long classId,
+            @RequestParam("title") String title,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam("homeworkType") String homeworkType,
+            @RequestParam("deadline") String deadline,
+            @RequestParam(value = "maxScore", required = false, defaultValue = "10") String maxScore,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             @AuthenticationPrincipal UserPrincipal principal) {
         
-        log.info("Teacher {} creating homework for class {}", 
-            principal.getId(), request.getClassId());
+        log.info("Teacher {} creating homework for class {}", principal.getId(), classId);
+        log.info("File received: {}", file != null ? file.getOriginalFilename() : "null");
         
-        HomeworkResponse response = homeworkService.createHomework(
-            request, principal.getId());
+        // Build HomeworkRequest from form data
+        HomeworkRequest request = HomeworkRequest.builder()
+            .classId(classId)
+            .title(title)
+            .description(description)
+            .homeworkType(HomeworkType.valueOf(homeworkType))
+            .deadline(LocalDateTime.parse(deadline))
+            .maxScore(new java.math.BigDecimal(maxScore))
+            .build();
+        
+        // ✅ HANDLE FILE UPLOAD - KEEP ORIGINAL FILENAME
+        if (file != null && !file.isEmpty()) {
+            try {
+                // Define upload directory
+                String uploadDir = "uploads/homework/";
+                Path uploadPath = Paths.get(uploadDir);
+                
+                // Create directory if not exists
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                    log.info("✅ Created directory: {}", uploadDir);
+                }
+                
+                // ✅ NEW: Keep original filename + add timestamp to avoid duplicates
+                String originalFilename = file.getOriginalFilename();
+                String fileNameWithoutExt = "";
+                String extension = "";
+                
+                if (originalFilename != null && originalFilename.contains(".")) {
+                    int lastDot = originalFilename.lastIndexOf(".");
+                    fileNameWithoutExt = originalFilename.substring(0, lastDot);
+                    extension = originalFilename.substring(lastDot);
+                } else if (originalFilename != null) {
+                    fileNameWithoutExt = originalFilename;
+                }
+                
+                // Add timestamp to prevent duplicates
+                long timestamp = System.currentTimeMillis();
+                String uniqueFilename = fileNameWithoutExt + "_" + timestamp + extension;
+                
+                // Save file to disk
+                Path filePath = uploadPath.resolve(uniqueFilename);
+                Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                
+                // ✅ FIX: Set FULL URL for file download (backend port 8080)
+                String fileUrl = "http://localhost:8080/uploads/homework/" + uniqueFilename;
+                request.setAttachmentUrl(fileUrl);
+                
+                log.info("✅ File saved with original name: {}", uniqueFilename);
+                log.info("✅ File URL: {}", fileUrl);
+                log.info("✅ File size: {} bytes", file.getSize());
+                
+            } catch (IOException e) {
+                log.error("❌ Failed to save file: {}", e.getMessage());
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        }
+        
+        // Call service to create homework
+        HomeworkResponse response = homeworkService.createHomework(request, principal.getId());
+        
+        log.info("✅ Homework created with ID: {}", response.getHomeworkId());
         
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

@@ -27,7 +27,7 @@ import vn.edu.uth.ecms.security.JwtAuthenticationFilter;
  * Spring Security configuration with JWT authentication
  * 
  * Security Rules:
- * - Public: /api/auth/**, /api/files/**, /api/health
+ * - Public: /api/auth/**, /api/files/**, /api/health, /uploads/**, /favicon.ico
  * - Admin: /api/admin/**
  * - Teacher: /api/teacher/**
  * - Student: /api/student/**
@@ -85,6 +85,13 @@ public class SecurityConfig {
                         // File download endpoints - PUBLIC ACCESS
                         // Students/Teachers can download without re-authentication
                         .requestMatchers("/api/files/**").permitAll()
+                        
+                        // ✅ ADDED: Uploaded homework files - PUBLIC ACCESS
+                        // Allow direct download of homework attachments
+                        .requestMatchers("/uploads/**").permitAll()
+                        
+                        // ✅ ADDED: Favicon and static resources
+                        .requestMatchers("/favicon.ico", "/*.png", "/*.ico").permitAll()
                         
                         // Health check
                         .requestMatchers("/api/health").permitAll()

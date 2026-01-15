@@ -183,6 +183,121 @@
   background: #f0fdf4;
 }
 
+/* ==================== FILE UPLOAD ==================== */
+
+.file-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.file-upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-upload-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.file-upload-hint {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* File Error */
+.file-error {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #fee2e2;
+  border: 1px solid #ef4444;
+  border-radius: 0.5rem;
+  color: #991b1b;
+  font-size: 0.875rem;
+}
+
+/* File Preview */
+.file-preview {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+}
+
+.file-preview-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.file-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.9375rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.btn-remove-file {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-remove-file:hover {
+  background: #fecaca;
+  transform: scale(1.05);
+}
+
 /* ==================== HELPER TEXT ==================== */
 
 .helper-text {
@@ -362,5 +477,24 @@
   
   .radio-label {
     width: 100%;
+  }
+  
+  /* File upload responsive */
+  .file-upload-area {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .file-upload-button {
+    justify-content: center;
+  }
+  
+  .file-preview-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn-remove-file {
+    justify-content: center;
   }
 }

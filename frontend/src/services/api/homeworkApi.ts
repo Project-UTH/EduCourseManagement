@@ -7,6 +7,7 @@ import apiClient from './apiClient';
  * Maps to TeacherHomeworkController endpoints
  * 
  * ✅ FIXED: Backend returns data directly, NOT wrapped in {data: {...}}
+ * ✅ NEW: Support FormData for file upload
  */
 
 // ==================== INTERFACES (from backend DTOs) ====================
@@ -132,15 +133,36 @@ export interface ApiResponse<T> {
 const homeworkApi = {
   
   /**
-   * ✅ FIXED: Create new homework
+   * ✅ FIXED: Create new homework with file upload
    * POST /api/teacher/homework
+   * 
+   * Accepts either:
+   * 1. HomeworkRequest (JSON) - for backward compatibility
+   * 2. FormData - for file upload
    */
-  createHomework: async (data: HomeworkRequest): Promise<HomeworkResponse> => {
-    console.log('[homeworkApi] Creating homework:', data.title);
-    console.log('[homeworkApi] Type:', data.homeworkType, 'Deadline:', data.deadline);
+  createHomework: async (data: HomeworkRequest | FormData): Promise<HomeworkResponse> => {
+    console.log('[homeworkApi] Creating homework');
     
     try {
-      const response = await apiClient.post('/api/teacher/homework', data);
+      let response;
+      
+      // Check if data is FormData (file upload)
+      if (data instanceof FormData) {
+        console.log('[homeworkApi] Uploading with file');
+        
+        // Send as multipart/form-data
+        response = await apiClient.post('/api/teacher/homework', data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        // Send as JSON (backward compatibility)
+        console.log('[homeworkApi] Creating without file');
+        console.log('[homeworkApi] Type:', data.homeworkType, 'Deadline:', data.deadline);
+        
+        response = await apiClient.post('/api/teacher/homework', data);
+      }
       
       // ✅ FIX: Backend returns {success, message, data: {...}}
       // Extract data from response
