@@ -15,9 +15,17 @@ import vn.edu.uth.ecms.service.RegistrationService;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * ✅ FIXED VERSION - RegistrationServiceImpl
+ * 
+ * CHANGES:
+ * 1. Check prerequisite từ bảng GRADE (thay vì completed_subjects)
+ * 2. Điều kiện: grade.status = PASSED
+ * 3. Không cần CompletedSubjectRepository nữa
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -28,6 +36,12 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final ClassRepository classRepository;
     private final StudentRepository studentRepository;
     private final ClassService classService;
+    
+    // ✅ CHECK PREREQUISITE
+    private final SubjectPrerequisiteRepository prerequisiteRepository;
+    
+    // ✅ NEW: Dùng GradeRepository thay vì CompletedSubjectRepository
+    private final GradeRepository gradeRepository;
 
     @Override
     public RegistrationResponse registerForClass(Long classId) {
@@ -44,7 +58,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         log.info("📚 Class: {} - {}", classEntity.getClassCode(), 
                 classEntity.getSubject().getSubjectName());
 
-        // ✅ CRITICAL: Get semester of THIS class
+        // Get semester of THIS class
         Semester semester = classEntity.getSemester();
         Subject subject = classEntity.getSubject();
         
@@ -53,24 +67,27 @@ public class RegistrationServiceImpl implements RegistrationService {
                 semester.getStatus(), 
                 semester.getRegistrationEnabled());
 
-        // ✅ VALIDATE: Semester of THIS class
+        // ✅ CRITICAL: CHECK PREREQUISITE FIRST
+        validatePrerequisites(student, subject);
+
+        // Validate registration
         validateRegistration(student, classEntity, semester, subject);
 
-        // ✅ CHECK: Already registered (and dropped)?
+        // Check already registered (and dropped)?
         Optional<CourseRegistration> existingReg = registrationRepository
                 .findByStudentAndClass(student.getStudentId(), classEntity.getClassId());
 
         CourseRegistration registration;
 
         if (existingReg.isPresent() && existingReg.get().getStatus() == RegistrationStatus.DROPPED) {
-            // ✅ RE-REGISTER (previously dropped)
+            // Re-register (previously dropped)
             log.info("♻️ Re-registering for previously dropped class");
             registration = existingReg.get();
             registration.setStatus(RegistrationStatus.REGISTERED);
             registration.setRegisteredAt(LocalDateTime.now());
             registration.setDroppedAt(null);
         } else {
-            // ✅ NEW REGISTRATION
+            // New registration
             log.info("✨ Creating new registration");
             registration = CourseRegistration.builder()
                     .student(student)
@@ -91,14 +108,80 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     /**
-     * ✅ VALIDATE REGISTRATION - CHECK SEMESTER OF CLASS
+     * ✅ FIXED: VALIDATE PREREQUISITES USING GRADE TABLE
+     * 
+     * Kiểm tra sinh viên đã hoàn thành các môn điều kiện chưa
+     * ĐIỀU KIỆN: grade.status = PASSED (tức là điểm >= 4.0)
+     */
+    private void validatePrerequisites(Student student, Subject subject) {
+        log.info("🔍 Checking prerequisites for subject: {} ({})", 
+                subject.getSubjectCode(), subject.getSubjectName());
+        
+        // Lấy danh sách môn điều kiện
+        List<SubjectPrerequisite> prerequisites = prerequisiteRepository
+                .findBySubject_SubjectId(subject.getSubjectId());
+        
+        if (prerequisites.isEmpty()) {
+            log.info("  ✓ No prerequisites required");
+            return;
+        }
+        
+        log.info("  📋 Found {} prerequisite(s)", prerequisites.size());
+        
+        // ✅ NEW: Lấy danh sách môn đã HOÀN THÀNH từ bảng GRADE
+        // Điều kiện: grade.status = PASSED
+        List<Grade> passedGrades = gradeRepository.findByStudent_StudentId(student.getStudentId())
+                .stream()
+                .filter(grade -> grade.getStatus() == GradeStatus.PASSED)
+                .toList();
+        
+        Set<Long> passedSubjectIds = passedGrades.stream()
+                .map(grade -> grade.getClassEntity().getSubject().getSubjectId())
+                .collect(Collectors.toSet());
+        
+        log.info("  📚 Student has PASSED {} subject(s)", passedSubjectIds.size());
+        
+        // Kiểm tra từng môn điều kiện
+        List<String> missingPrereqs = new ArrayList<>();
+        for (SubjectPrerequisite prereq : prerequisites) {
+            Subject prereqSubject = prereq.getPrerequisiteSubject();
+            Long prereqId = prereqSubject.getSubjectId();
+            
+            if (!passedSubjectIds.contains(prereqId)) {
+                String prereqInfo = prereqSubject.getSubjectCode() + " - " + prereqSubject.getSubjectName();
+                missingPrereqs.add(prereqInfo);
+                log.warn("  ❌ Missing prerequisite: {}", prereqInfo);
+            } else {
+                log.info("  ✓ PASSED: {} - {}", prereqSubject.getSubjectCode(), prereqSubject.getSubjectName());
+            }
+        }
+        
+        // Nếu thiếu môn điều kiện → throw exception
+        if (!missingPrereqs.isEmpty()) {
+            String errorMessage = String.format(
+                "❌ Bạn chưa hoàn thành các môn điều kiện của môn %s (%s):\n\n%s\n\n" +
+                "Vui lòng hoàn thành các môn trên (điểm >= 4.0) trước khi đăng ký môn này.",
+                subject.getSubjectCode(),
+                subject.getSubjectName(),
+                String.join("\n", missingPrereqs.stream().map(p -> "  • " + p).toList())
+            );
+            
+            log.error(errorMessage);
+            throw new BadRequestException(errorMessage);
+        }
+        
+        log.info("✅ All prerequisites satisfied");
+    }
+
+    /**
+     * VALIDATE REGISTRATION - CHECK SEMESTER OF CLASS
      */
     private void validateRegistration(Student student, ClassEntity classEntity,
                                      Semester semester, Subject subject) {
         
         log.info("🔍 Validating registration...");
         
-        // ✅ CHECK 1: Semester status must be UPCOMING
+        // CHECK 1: Semester status must be UPCOMING
         if (semester.getStatus() != SemesterStatus.UPCOMING) {
             log.error("❌ Semester status is {}, not UPCOMING", semester.getStatus());
             throw new BadRequestException(
@@ -108,7 +191,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         }
         log.info("  ✓ Semester status: UPCOMING");
 
-        // ✅ CHECK 2: Registration must be enabled
+        // CHECK 2: Registration must be enabled
         if (!semester.getRegistrationEnabled()) {
             log.error("❌ Registration disabled for semester {}", semester.getSemesterCode());
             throw new BadRequestException(
@@ -117,7 +200,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         }
         log.info("  ✓ Registration enabled");
 
-        // ✅ CHECK 3: Registration period (if set)
+        // CHECK 3: Registration period (if set)
         LocalDate now = LocalDate.now();
         if (semester.getRegistrationStartDate() != null && now.isBefore(semester.getRegistrationStartDate())) {
             log.error("❌ Registration starts on {}", semester.getRegistrationStartDate());
@@ -134,7 +217,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         }
         log.info("  ✓ Within registration period");
 
-        // ✅ CHECK 4: Class not full
+        // CHECK 4: Class not full
         if (classEntity.isFull()) {
             log.error("❌ Class is full ({}/{})", 
                     classEntity.getEnrolledCount(), classEntity.getMaxStudents());
@@ -146,14 +229,14 @@ public class RegistrationServiceImpl implements RegistrationService {
         log.info("  ✓ Class has space ({}/{})", 
                 classEntity.getEnrolledCount(), classEntity.getMaxStudents());
 
-        // ✅ CHECK 5: Not already registered (exclude DROPPED)
+        // CHECK 5: Not already registered (exclude DROPPED)
         if (registrationRepository.existsByStudentAndClass(student.getStudentId(), classEntity.getClassId())) {
             log.error("❌ Already registered for this class");
             throw new BadRequestException("You are already registered for this class");
         }
         log.info("  ✓ Not already registered");
 
-        // ✅ CHECK 6: No schedule conflict
+        // CHECK 6: No schedule conflict
         if (hasScheduleConflict(student, classEntity, semester)) {
             log.error("❌ Schedule conflict at {} {}", 
                     classEntity.getDayOfWeek(), classEntity.getTimeSlot());
@@ -180,7 +263,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         TimeSlot newSlot = newClass.getTimeSlot();
 
         for (CourseRegistration reg : registrations) {
-            // ✅ Only check REGISTERED classes (ignore DROPPED)
+            // Only check REGISTERED classes (ignore DROPPED)
             if (reg.getStatus() != RegistrationStatus.REGISTERED) {
                 continue;
             }

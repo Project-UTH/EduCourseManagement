@@ -2,6 +2,7 @@ package vn.edu.uth.ecms.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -49,16 +50,19 @@ public class CourseRegistration extends BaseEntity {
     @Column(name = "dropped_at")
     private LocalDateTime droppedAt;
 
-    // ==================== ✅ ADD THESE ====================
+    // ✅ NEW: Điểm tổng kết (được tính khi hoàn thành học kỳ)
+    @Column(name = "final_grade", columnDefinition = "DECIMAL(3,2)")
+    private BigDecimal finalGrade;
 
+    // Manual enrollment fields
     @Enumerated(EnumType.STRING)
     @Column(name = "enrollment_type", length = 20)
-    private EnrollmentType enrollmentType;
+    private EnrollmentType enrollmentType = EnrollmentType.NORMAL;
 
-    @Column(name = "manual_reason")
+    @Column(name = "manual_reason", length = 500)
     private String manualReason;
 
-    @Column(name = "manual_note")
+    @Column(name = "manual_note", length = 1000)
     private String manualNote;
 
     @ManyToOne(fetch = FetchType.LAZY)

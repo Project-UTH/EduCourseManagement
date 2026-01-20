@@ -107,27 +107,38 @@ public interface CourseRegistrationRepository extends JpaRepository<CourseRegist
            "AND r.status = 'REGISTERED'")
     Long countActiveStudents(@Param("classId") Long classId);
 
-    // ==================== NEW METHOD FOR PHASE 4 ====================
+    // ==================== PHASE 4 METHODS ====================
     
     /**
      * Find registrations by class ID
-     * Added for Phase 4 - Teacher Features
      */
     List<CourseRegistration> findByClassEntity_ClassId(Long classId);
     
     /**
      * Find registrations by class ID and status
-     * Added for Phase 4 - Teacher Features
-     * This is the Spring Data JPA naming convention method
      */
     List<CourseRegistration> findByClassEntity_ClassIdAndStatus(Long classId, RegistrationStatus status);
     
     /**
-     * ✅ FIXED: Find all manual enrollments (for audit trail)
-     * Using Spring Data JPA naming convention: findByEnrollmentType
-     * 
-     * @param enrollmentType Enrollment type (pass EnrollmentType.MANUAL)
-     * @return List of manual enrollments ordered by registeredAt DESC
+     * Find all manual enrollments (for audit trail)
      */
     List<CourseRegistration> findByEnrollmentTypeOrderByRegisteredAtDesc(EnrollmentType enrollmentType);
+
+    // ==================== ✅ NEW: SEMESTER COMPLETION ====================
+    
+    /**
+     * Find registrations by semester and status
+     * Used by SemesterCompletionService to calculate final grades
+     * 
+     * @param semesterId Semester ID
+     * @param status Registration status (e.g., REGISTERED)
+     * @return List of course registrations
+     */
+    @Query("SELECT cr FROM CourseRegistration cr " +
+           "WHERE cr.semester.semesterId = :semesterId " +
+           "AND cr.status = :status")
+    List<CourseRegistration> findBySemesterAndStatus(
+            @Param("semesterId") Long semesterId,
+            @Param("status") RegistrationStatus status
+    );
 }
