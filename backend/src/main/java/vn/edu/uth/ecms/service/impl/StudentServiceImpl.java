@@ -317,55 +317,42 @@ public class StudentServiceImpl implements StudentService {
         
         return mapToResponse(updated);
     }
-     @Override
-    @Transactional(readOnly = true)
-    public List<ClassResponse> getEnrolledClasses(String studentCode) {
-        log.info("[StudentService] Getting enrolled classes for student: {}", studentCode);
+    @Override
+@Transactional(readOnly = true)
+public List<ClassResponse> getEnrolledClasses(String studentCode) {
+    log.info("[StudentService] Getting enrolled classes for student: {}", studentCode);
+    
+    try {
+        Student student = studentRepository.findByStudentCode(studentCode)
+                .orElseThrow(() -> new RuntimeException("Student not found: " + studentCode));
         
-        try {
-            Student student = studentRepository.findByStudentCode(studentCode)
-                    .orElseThrow(() -> new RuntimeException("Student not found: " + studentCode));
-            
-            log.info("[StudentService] Found student ID: {}", student.getStudentId());
-            
-            Semester activeSemester = semesterRepository.findByStatus(SemesterStatus.ACTIVE)
-                    .orElse(null);
-            
-            if (activeSemester == null) {
-                log.warn("[StudentService] No active semester found");
-                return List.of();
-            }
-            
-            log.info("[StudentService] Active semester: {} (ID: {})", 
-                    activeSemester.getSemesterCode(), activeSemester.getSemesterId());
-            
-            List<CourseRegistration> registrations = registrationRepository
-                    .findByStudentAndStatus(
-                            student.getStudentId(), 
-                            RegistrationStatus.REGISTERED
-                    )
-                    .stream()
-                    .filter(reg -> reg.getSemester().getSemesterId().equals(activeSemester.getSemesterId()))
-                    .toList();
-            
-            log.info("[StudentService] Found {} registrations", registrations.size());
-            
-            List<ClassResponse> classes = registrations.stream()
-                    .map(registration -> {
-                        ClassEntity classEntity = registration.getClassEntity();
-                        return mapClassToResponse(classEntity);
-                    })
-                    .toList();
-            
-            log.info("[StudentService] ✅ Returning {} classes", classes.size());
-            
-            return classes;
-            
-        } catch (Exception e) {
-            log.error("[StudentService] ❌ Error getting enrolled classes", e);
-            throw new RuntimeException("Failed to get enrolled classes: " + e.getMessage(), e);
-        }
+        log.info("[StudentService] Found student ID: {}", student.getStudentId());
+        
+        // ✅ FIX: Lấy TẤT CẢ registrations (không filter semester)
+        List<CourseRegistration> registrations = registrationRepository
+                .findByStudentAndStatus(
+                        student.getStudentId(), 
+                        RegistrationStatus.REGISTERED
+                );
+        
+        log.info("[StudentService] Found {} registrations", registrations.size());
+        
+        List<ClassResponse> classes = registrations.stream()
+                .map(registration -> {
+                    ClassEntity classEntity = registration.getClassEntity();
+                    return mapClassToResponse(classEntity);
+                })
+                .toList();
+        
+        log.info("[StudentService] ✅ Returning {} classes", classes.size());
+        
+        return classes;
+        
+    } catch (Exception e) {
+        log.error("[StudentService] ❌ Error getting enrolled classes", e);
+        throw new RuntimeException("Failed to get enrolled classes: " + e.getMessage(), e);
     }
+}
 
     @Override
     @Transactional(readOnly = true)

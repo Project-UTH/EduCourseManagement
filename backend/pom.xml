@@ -105,6 +105,23 @@
 			<version>0.12.5</version>
 			<scope>runtime</scope>
 		</dependency>
+			<!-- WebSocket Support -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
+		<!-- STOMP Protocol -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-messaging</artifactId>
+		</dependency>
+
+		<!-- JSON Processing (nếu chưa có) -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
 
 
 		<!-- File Upload (Commons IO) -->
@@ -128,6 +145,7 @@
 			<version>2.3.0</version>
 		</dependency>
 	</dependencies>
+		
 
 	<build>
 		<plugins>

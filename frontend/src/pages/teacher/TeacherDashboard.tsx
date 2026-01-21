@@ -2,18 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import classApi from '../../services/api/classApi';
-import homeworkApi from '../../services/api/homeworkApi';
+import ChatList from '../../components/chat/ChatList';
 import './TeacherDashboard.css';
 
 /**
- * TeacherDashboard - REAL DATA FROM API
+ * TeacherDashboard - REAL DATA FROM API + CHAT INTEGRATION
  * 
- * Load từ: GET /api/teacher/classes
- * Shows:
- * - Classes taught by teacher
- * - Quick stats (students, pending grading, etc)
- * - Upcoming classes
- * - Click class → Navigate to detail with tabs
+ * ✅ Load từ: GET /api/teacher/classes
+ * ✅ Tích hợp ChatList cho giảng viên
  */
 
 interface ClassCard {
@@ -335,6 +331,12 @@ const TeacherDashboard = () => {
           </button>
         </div>
       </div>
+
+      {/* ✅ CHAT INTEGRATION - Floating button ở góc dưới phải */}
+      <ChatList 
+        currentUsername={user?.citizenId || user?.username || 'teacher'}
+        currentRole="TEACHER"
+      />
     </div>
   );
 };

@@ -74,6 +74,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                    
                         // ==================== CORS PREFLIGHT ====================
                         // Allow OPTIONS requests for CORS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -110,6 +111,8 @@ public class SecurityConfig {
                         // ==================== STUDENT ENDPOINTS ====================
                         // Require STUDENT role
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/api/chat/**").permitAll()
 
                         // ==================== DEFAULT ====================
                         // All other requests need authentication

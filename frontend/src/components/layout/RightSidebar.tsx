@@ -1,34 +1,25 @@
 import { useState, useEffect } from 'react';
 import studentClassApi from '../../services/api/studentClassApi';
 import studentHomeworkApi from '../../services/api/studentHomeworkApi';
+import ChatList from '../chat/ChatList';
 import './RightSidebar.css';
 
 interface RightSidebarProps {
   userRole: 'TEACHER' | 'STUDENT';
+  currentUsername: string;
 }
 
 interface Deadline {
   id: number;
   title: string;
   courseName: string;
-  subjectName: string; // ✅ NEW
+  subjectName: string;
   dueDate: Date;
   type: 'assignment' | 'exam' | 'project';
 }
 
-interface ChatGroup {
-  id: number;
-  name: string;
-  lastMessage: string;
-  lastMessageTime: string;
-  unreadCount: number;
-  avatar: string;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const RightSidebar = ({ userRole }: RightSidebarProps) => {
+const RightSidebar = ({ userRole, currentUsername }: RightSidebarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,33 +80,6 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
       setLoading(false);
     }
   };
-
-  const mockChatGroups: ChatGroup[] = [
-    {
-      id: 1,
-      name: 'Lập trình Web - IT101',
-      lastMessage: 'Thầy đã up slide bài mới lên rồi nhé',
-      lastMessageTime: '10:30',
-      unreadCount: 3,
-      avatar: '💻'
-    },
-    {
-      id: 2,
-      name: 'Cơ sở dữ liệu - IT202',
-      lastMessage: 'Nhóm 5 đã nộp báo cáo chưa?',
-      lastMessageTime: 'Hôm qua',
-      unreadCount: 0,
-      avatar: '🗄️'
-    },
-    {
-      id: 3,
-      name: 'Mạng máy tính - IT303',
-      lastMessage: 'Lịch thi đã ra rồi các bạn ơi',
-      lastMessageTime: '2 ngày trước',
-      unreadCount: 1,
-      avatar: '🌐'
-    },
-  ];
 
   // Calendar functions
   const getDaysInMonth = (date: Date) => {
@@ -297,31 +261,12 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
         )}
       </div>
 
-      {/* Chat Groups */}
-      <div className="widget chat-widget">
-        <div className="widget-header">
-          <h3>Nhóm Chat</h3>
-          <button className="view-all-btn">Xem tất cả</button>
-        </div>
-        
-        <div className="chat-group-list">
-          {mockChatGroups.map(group => (
-            <button key={group.id} className="chat-group-item">
-              <div className="chat-avatar">{group.avatar}</div>
-              <div className="chat-content">
-                <div className="chat-header">
-                  <h4>{group.name}</h4>
-                  <span className="chat-time">{group.lastMessageTime}</span>
-                </div>
-                <p className="chat-last-message">{group.lastMessage}</p>
-              </div>
-              {group.unreadCount > 0 && (
-                <span className="chat-unread-badge">{group.unreadCount}</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* 
+        ✅ THAY THẾ phần "Nhóm Chat" cũ bằng ChatList component
+        ChatList sẽ hiển thị floating button ở góc dưới phải
+        Không cần render trong RightSidebar nữa
+      */}
+      {/* ChatList được render ở Layout hoặc Dashboard level */}
     </aside>
   );
 };

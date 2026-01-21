@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import studentClassApi from '../../services/api/studentClassApi';
 import studentHomeworkApi from '../../services/api/studentHomeworkApi';
+import ChatList from '../../components/chat/ChatList';
 import './StudentDashboard.css';
 
 /**
- * StudentDashboard - REAL DATA FROM API
+ * StudentDashboard - REAL DATA FROM API + CHAT INTEGRATION
  * 
- * Load từ: GET /api/student/classes
- * Không dùng mock data!
+ * ✅ Load từ: GET /api/student/classes
+ * ✅ Tích hợp ChatList - floating button ở góc dưới phải
  */
 
 interface CourseCard {
@@ -61,7 +62,7 @@ const StudentDashboard = () => {
       console.log('[Dashboard] ✅ Received classes:', classesData);
 
       // 2. Transform to CourseCard format
-      const transformedCourses: CourseCard[] = classesData.map((c: any, index: number) => ({
+      const transformedCourses: CourseCard[] = classesData.map((c: any) => ({
         id: c.classId,
         subjectName: c.subjectName || c.className,
         classCode: c.classCode,
@@ -107,7 +108,7 @@ const StudentDashboard = () => {
             id: hw.homeworkId,
             title: hw.title,
             course: hw.className,
-            subjectName: hw.subjectName, // ✅ NOW AVAILABLE
+            subjectName: hw.subjectName,
             dueDate: deadline.toLocaleString('vi-VN'),
             timeLeft: daysLeft <= 0 ? 'Quá hạn' : `Còn ${daysLeft} ngày`,
             status: 'pending'
@@ -133,7 +134,7 @@ const StudentDashboard = () => {
   const stats = [
     { 
       label: 'Tín chỉ đã đăng ký', 
-      value: courses.reduce((sum, c) => sum + 3, 0).toString(), // Assume 3 credits each
+      value: courses.reduce((sum) => sum + 3, 0).toString(), // Assume 3 credits each
       icon: '📚', 
       color: 'blue' 
     },
@@ -374,6 +375,12 @@ const StudentDashboard = () => {
           </button>
         </div>
       </div>
+
+      {/* ✅ CHAT INTEGRATION - Floating button ở góc dưới phải */}
+      <ChatList 
+        currentUsername={user?.username || 'student'}
+        currentRole="STUDENT"
+      />
     </div>
   );
 };
