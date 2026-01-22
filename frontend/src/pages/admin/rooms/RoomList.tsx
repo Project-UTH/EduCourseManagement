@@ -34,7 +34,7 @@ const RoomList = () => {
   
   // Semester
   const [semesters, setSemesters] = useState<Array<{id: number, code: string, name: string}>>([]);
-  const [selectedSemester, setSelectedSemester] = useState<number>(1); // Default semester ID
+  const [selectedSemester, setSelectedSemester] = useState<number>(1);
 
   // ==================== FETCH DATA ====================
 
@@ -58,26 +58,47 @@ const RoomList = () => {
 
   const fetchSemesters = async () => {
     try {
-      // TODO: Replace with actual API call
       const response = await fetch('/api/admin/semesters', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch semesters');
+      }
+      
       const result = await response.json();
-      setSemesters(result.data || []);
+      console.log('📅 Semesters API response:', result);
+      
+      // Handle different response formats
+      let semestersData = [];
+      
+      if (Array.isArray(result)) {
+        semestersData = result;
+      } else if (result.data && Array.isArray(result.data)) {
+        semestersData = result.data;
+      } else if (result.content && Array.isArray(result.content)) {
+        semestersData = result.content;
+      } else {
+        console.warn('⚠️ Unexpected semesters response format:', result);
+        semestersData = [];
+      }
+      
+      console.log('✅ Processed semesters:', semestersData);
+      setSemesters(semestersData);
       
       // Set current active semester as default
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const activeSemester = result.data.find((s: any) => s.status === 'ACTIVE');
-      if (activeSemester) {
-        setSelectedSemester(activeSemester.id);
+      if (semestersData.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const activeSemester = semestersData.find((s: any) => s.status === 'ACTIVE');
+        if (activeSemester) {
+          setSelectedSemester(activeSemester.id);
+        } else {
+          setSelectedSemester(semestersData[0].id);
+        }
       }
     } catch (error) {
-      console.error('Error fetching semesters:', error);
-      // Fallback to mock data
-      setSemesters([
-        { id: 1, code: '2024-1', name: 'Học kỳ 1 năm 2024-2025' },
-        { id: 2, code: '2024-2', name: 'Học kỳ 2 năm 2024-2025' }
-      ]);
+      console.error('❌ Error fetching semesters:', error);
+      setSemesters([]);
     }
   };
 
@@ -204,7 +225,7 @@ const RoomList = () => {
 
       alert('✅ Xóa phòng thành công!');
       setDeletingRoom(null);
-      fetchRooms(); // Refresh list
+      fetchRooms();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('❌ Error deleting room:', error);
@@ -213,22 +234,18 @@ const RoomList = () => {
   };
 
   const handleModalSuccess = () => {
-    fetchRooms(); // Refresh list after create/edit
+    fetchRooms();
   };
 
   // ==================== RENDER HELPERS ====================
 
+  // ⭐ FIXED: Removed time remaining display
   const getStatusBadge = (room: RoomResponse) => {
     switch (room.currentStatus) {
       case 'IN_USE':
         return (
           <span className="room-status-badge status-in-use">
             🟢 Đang dùng
-            {room.currentSession && (
-              <span className="status-time-remaining">
-                {' '}({room.currentSession.minutesRemaining}')
-              </span>
-            )}
           </span>
         );
       case 'AVAILABLE':
@@ -319,7 +336,7 @@ const RoomList = () => {
           </button>
         </form>
 
-        {/* Semester Filter - PRIORITY */}
+        {/* Semester Filter */}
         <div className="semester-filter-wrapper">
           <label className="semester-label">📅 Học kỳ:</label>
           <select
@@ -327,11 +344,15 @@ const RoomList = () => {
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(Number(e.target.value))}
           >
-            {semesters.map(sem => (
-              <option key={sem.id} value={sem.id}>
-                {sem.name}
-              </option>
-            ))}
+            {semesters.length === 0 ? (
+              <option value={1}>Đang tải...</option>
+            ) : (
+              semesters.map(sem => (
+                <option key={sem.id} value={sem.id}>
+                  {sem.name}
+                </option>
+              ))
+            )}
           </select>
         </div>
 
@@ -342,7 +363,7 @@ const RoomList = () => {
             value={filterBuilding}
             onChange={(e) => {
               setFilterBuilding(e.target.value);
-              setFilterFloor(''); // Reset floor when building changes
+              setFilterFloor('');
             }}
           >
             <option value="">Tất cả tòa nhà</option>

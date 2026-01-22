@@ -133,8 +133,8 @@ const RoomDetail = () => {
               <p><strong>Lớp:</strong> {room.currentSession.classCode}</p>
               <p><strong>Môn:</strong> {room.currentSession.subjectName}</p>
               <p><strong>Giảng viên:</strong> {room.currentSession.teacherName}</p>
-              <p><strong>Thời gian:</strong> {room.currentSession.timeSlotDisplay}</p>
-              <p><strong>Còn lại:</strong> {room.currentSession.minutesRemaining} phút</p>
+              <p><strong>Ca học:</strong> {room.currentSession.timeSlotDisplay}</p>
+              {/* ⭐ REMOVED: Minutes remaining display */}
             </div>
           )}
         </div>
@@ -175,19 +175,19 @@ const RoomDetail = () => {
         </div>
       </div>
 
-      {/* SCHEDULE */}
+      {/*
       <div className="schedule-section">
-        <h2 className="section-title">📅 Lịch học trong học kỳ</h2>
+        <h2 className="section-title">📅 Lịch sử dụng phòng</h2>
         {scheduleLoading ? (
           <div className="schedule-loading">Đang tải lịch...</div>
         ) : schedule.length === 0 ? (
-          <div className="no-schedule">Không có lịch học</div>
+          <div className="no-schedule">Không có lịch sử dụng</div>
         ) : (
           <div className="schedule-table-wrapper">
             <table className="schedule-table">
               <thead>
                 <tr>
-                  <th>Buổi</th>
+                  <th>STT</th>
                   <th>Ngày</th>
                   <th>Thứ</th>
                   <th>Ca học</th>
@@ -218,7 +218,7 @@ const RoomDetail = () => {
             </table>
           </div>
         )}
-      </div>
+      </div>*/}
     </div>
   );
 };

@@ -22,13 +22,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * ✨ ENHANCED RoomServiceImpl with Real-time Status Logic
+ * ✅ FIXED: RoomServiceImpl with Proper Real-time Status Logic
  *
- * KEY FEATURES:
- * 1. Calculate real-time room status based on current sessions
- * 2. Determine if room is IN_USE or AVAILABLE right now
- * 3. Show current session info if room is in use
- * 4. Provide comprehensive statistics
+ * KEY FIXES:
+ * 1. Only IN_PERSON sessions can mark rooms as IN_USE
+ * 2. E_LEARNING sessions are EXCLUDED from room status calculation
+ * 3. ONLINE room is ALWAYS AVAILABLE (never IN_USE)
+ * 4. Real-time status based on current time matching session time slots
  */
 @Service
 @RequiredArgsConstructor
@@ -39,20 +39,22 @@ public class RoomServiceImpl implements RoomService {
     private final RoomRepository roomRepository;
     private final ClassSessionRepository sessionRepository;
 
-    // ==================== CRUD OPERATIONS IMPLEMENTATION ====================
+    // ==================== CONSTANTS ====================
+
+    private static final String ONLINE_ROOM_CODE = "ONLINE";
+
+    // ==================== CRUD OPERATIONS ====================
 
     @Override
     @Transactional
     public Room createRoom(Room room) {
         log.info("Creating room: {}", room.getRoomCode());
 
-        // Validate room code is unique
         if (roomRepository.existsByRoomCode(room.getRoomCode())) {
             throw new IllegalArgumentException("Room code already exists: " + room.getRoomCode());
         }
 
         Room saved = roomRepository.save(room);
-
         log.info("✅ Room created successfully: {}", saved.getRoomCode());
 
         return saved;
@@ -63,13 +65,11 @@ public class RoomServiceImpl implements RoomService {
     public Room updateRoom(Room room) {
         log.info("Updating room: {}", room.getRoomCode());
 
-        // Verify room exists
         if (!roomRepository.existsById(room.getRoomId())) {
             throw new NotFoundException("Room not found with ID: " + room.getRoomId());
         }
 
         Room updated = roomRepository.save(room);
-
         log.info("✅ Room updated successfully: {}", updated.getRoomCode());
 
         return updated;
@@ -79,17 +79,12 @@ public class RoomServiceImpl implements RoomService {
     @Transactional
     public void deleteRoom(Long roomId) {
         log.info("Deleting room ID: {}", roomId);
-
         Room room = getRoomById(roomId);
-
         roomRepository.delete(room);
-
         log.info("✅ Room deleted successfully: {}", room.getRoomCode());
     }
 
-// No new imports needed - all already imported
-
-    // ==================== EXISTING METHODS (Keep as is) ====================
+    // ==================== EXISTING METHODS ====================
 
     @Override
     @Transactional(readOnly = true)
@@ -184,7 +179,7 @@ public class RoomServiceImpl implements RoomService {
         return (sessionsInRoom.doubleValue() / totalSessions.doubleValue()) * 100.0;
     }
 
-    // ==================== ✨ NEW: ROOM MANAGEMENT WITH STATUS ====================
+    // ==================== ROOM MANAGEMENT WITH STATUS ====================
 
     @Override
     @Transactional(readOnly = true)
@@ -218,10 +213,8 @@ public class RoomServiceImpl implements RoomService {
 
         log.debug("Getting rooms by status: {}", status);
 
-        // Get all active rooms first
         Page<Room> allRooms = roomRepository.findByIsActiveOrderByRoomCodeAsc(true, pageable);
 
-        // Filter by real-time status
         List<RoomResponse> filteredRooms = allRooms.getContent().stream()
                 .map(room -> mapToResponseWithStatus(room, semesterId))
                 .filter(response -> response.getCurrentStatus().equals(status))
@@ -230,7 +223,7 @@ public class RoomServiceImpl implements RoomService {
         return new PageImpl<>(filteredRooms, pageable, filteredRooms.size());
     }
 
-    // ==================== ✨ NEW: SEARCH & FILTER ====================
+    // ==================== SEARCH & FILTER ====================
 
     @Override
     @Transactional(readOnly = true)
@@ -349,11 +342,7 @@ public class RoomServiceImpl implements RoomService {
         return new PageImpl<>(roomResponses, pageable, roomPage.getTotalElements());
     }
 
-    // ==================== CONTINUE IN PART 2 ====================
-
-    // ==================== PART 2: REAL-TIME STATUS LOGIC ====================
-
-    // ==================== ✨ SCHEDULE & SESSIONS ====================
+    // ==================== SCHEDULE & SESSIONS ====================
 
     @Override
     @Transactional(readOnly = true)
@@ -362,10 +351,11 @@ public class RoomServiceImpl implements RoomService {
 
         Room room = getRoomById(roomId);
 
-        // Find all sessions using this room in the semester
+        // KEY FIX: Only get IN_PERSON sessions
         List<ClassSession> sessions = sessionRepository.findByClass(roomId).stream()
                 .filter(session -> session.getClassEntity().getSemester().getSemesterId().equals(semesterId))
                 .filter(session -> !session.getIsPending())
+                .filter(session -> session.getSessionType() == SessionType.IN_PERSON)  //CRITICAL
                 .collect(Collectors.toList());
 
         return sessions.stream()
@@ -387,25 +377,27 @@ public class RoomServiceImpl implements RoomService {
 
         Room room = getRoomById(roomId);
 
-        // Find sessions on this date
+        // ⭐ KEY FIX: Only find IN_PERSON sessions on this date
         List<Object[]> results = roomRepository.findCurrentSessionsInRoom(roomId, date);
 
         return results.stream()
                 .map(row -> {
                     ClassSession session = (ClassSession) row[0];
-                    return mapToScheduleResponse(session);
+                    // Filter out E_LEARNING
+                    return session.getSessionType() == SessionType.IN_PERSON ?
+                            mapToScheduleResponse(session) : null;
                 })
+                .filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
-    // ==================== ✨ STATISTICS ====================
+    // ==================== STATISTICS ====================
 
     @Override
     @Transactional(readOnly = true)
     public RoomResponse.RoomStatistics getRoomStatistics(Long roomId, Long semesterId) {
         log.debug("Getting statistics for room {} in semester {}", roomId, semesterId);
 
-        // Get session counts by status
         List<Object[]> statusCounts = roomRepository.countSessionsByStatus(roomId, semesterId);
 
         long totalSessions = 0;
@@ -426,7 +418,6 @@ public class RoomServiceImpl implements RoomService {
         }
 
         long upcomingSessions = totalSessions - completedSessions - cancelledSessions;
-
         Double utilizationPercentage = getRoomUtilization(roomId, semesterId);
 
         return RoomResponse.RoomStatistics.builder()
@@ -450,38 +441,73 @@ public class RoomServiceImpl implements RoomService {
         return roomRepository.findDistinctFloorsByBuilding(building);
     }
 
-    // ==================== ✨ REAL-TIME STATUS CALCULATION ====================
+    // ==================== ✅ FIXED: REAL-TIME STATUS CALCULATION ====================
 
+    /**
+     * ✅ FIXED: Check if room is currently in use
+     * - ONLINE room: NEVER in use (always return false)
+     * - Physical rooms: Only check IN_PERSON sessions
+     * - Must match current time with session time slot
+     */
     @Override
     @Transactional(readOnly = true)
     public boolean isRoomCurrentlyInUse(Long roomId) {
-        LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
+        Room room = getRoomById(roomId);
 
-        // Check if room has session today
-        boolean hasSessionToday = roomRepository.isRoomInUseToday(roomId, today);
-        if (!hasSessionToday) {
+        // ⭐ RULE 1: ONLINE room is NEVER "in use"
+        if (ONLINE_ROOM_CODE.equals(room.getRoomCode()) || room.getRoomType() == RoomType.ONLINE) {
+            log.debug("ONLINE room {} is never IN_USE", room.getRoomCode());
             return false;
         }
 
-        // Get today's sessions and check if any is happening NOW
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        log.debug("Checking if room {} is in use at {} on {}", room.getRoomCode(), now, today);
+
+        // Get today's IN_PERSON sessions for this room
         List<Object[]> todaySessions = roomRepository.findCurrentSessionsInRoom(roomId, today);
 
         for (Object[] row : todaySessions) {
             ClassSession session = (ClassSession) row[0];
+
+            // RULE 2: Only check IN_PERSON sessions
+            if (session.getSessionType() != SessionType.IN_PERSON) {
+                log.debug("Skipping E_LEARNING session {} - doesn't occupy room", session.getSessionId());
+                continue;
+            }
+
+            // Check if session is happening NOW
             TimeSlot timeSlot = session.getEffectiveTimeSlot();
 
             if (timeSlot != null && isTimeSlotActive(timeSlot, now)) {
+                log.debug("✅ Room {} is IN_USE by session {} ({})",
+                        room.getRoomCode(), session.getSessionId(), timeSlot);
                 return true;
             }
         }
 
+        log.debug("Room {} is AVAILABLE - no active IN_PERSON session", room.getRoomCode());
         return false;
     }
 
+    /**
+     * ✅ FIXED: Get current session info
+     * - Returns null for ONLINE room
+     * - Returns null if no IN_PERSON session is active
+     * - Returns session info only for active IN_PERSON sessions
+     */
     @Override
     @Transactional(readOnly = true)
     public RoomResponse.CurrentSessionInfo getCurrentSession(Long roomId) {
+        Room room = getRoomById(roomId);
+
+        // RULE 1: ONLINE room has no "current session"
+        if (ONLINE_ROOM_CODE.equals(room.getRoomCode()) || room.getRoomType() == RoomType.ONLINE) {
+            log.debug("ONLINE room {} has no current session", room.getRoomCode());
+            return null;
+        }
+
         if (!isRoomCurrentlyInUse(roomId)) {
             return null;
         }
@@ -491,11 +517,19 @@ public class RoomServiceImpl implements RoomService {
 
         List<Object[]> todaySessions = roomRepository.findCurrentSessionsInRoom(roomId, today);
 
-        for (Object[]  row : todaySessions) {
+        for (Object[] row : todaySessions) {
             ClassSession session = (ClassSession) row[0];
+
+            // RULE 2: Only consider IN_PERSON sessions
+            if (session.getSessionType() != SessionType.IN_PERSON) {
+                continue;
+            }
+
             TimeSlot timeSlot = session.getEffectiveTimeSlot();
 
             if (timeSlot != null && isTimeSlotActive(timeSlot, now)) {
+                log.debug("Found current IN_PERSON session {} in room {}",
+                        session.getSessionId(), room.getRoomCode());
                 return mapToCurrentSessionInfo(session, timeSlot, now);
             }
         }
@@ -503,20 +537,38 @@ public class RoomServiceImpl implements RoomService {
         return null;
     }
 
+    /**
+     * ✅ FIXED: Calculate current status
+     * - ONLINE room: ALWAYS "AVAILABLE"
+     * - Admin disabled: "INACTIVE"
+     * - Has active IN_PERSON session: "IN_USE"
+     * - Otherwise: "AVAILABLE"
+     */
     @Override
     @Transactional(readOnly = true)
     public String calculateCurrentStatus(Room room) {
-        // If admin disabled room → INACTIVE
+        log.debug("Calculating status for room: {}", room.getRoomCode());
+
+        // RULE 1: ONLINE room is ALWAYS AVAILABLE
+        if (ONLINE_ROOM_CODE.equals(room.getRoomCode()) || room.getRoomType() == RoomType.ONLINE) {
+            log.debug("ONLINE room {} → AVAILABLE", room.getRoomCode());
+            return "AVAILABLE";
+        }
+
+        // RULE 2: Admin disabled room → INACTIVE
         if (!room.getIsActive()) {
+            log.debug("Room {} is disabled by admin → INACTIVE", room.getRoomCode());
             return "INACTIVE";
         }
 
-        // If room is currently in use → IN_USE
+        // RULE 3: Check if IN_PERSON session is active NOW
         if (isRoomCurrentlyInUse(room.getRoomId())) {
+            log.debug("Room {} has active IN_PERSON session → IN_USE", room.getRoomCode());
             return "IN_USE";
         }
 
-        // Otherwise → AVAILABLE
+        // RULE 4: Otherwise → AVAILABLE
+        log.debug("Room {} has no active session → AVAILABLE", room.getRoomCode());
         return "AVAILABLE";
     }
 
@@ -529,7 +581,12 @@ public class RoomServiceImpl implements RoomService {
         LocalTime start = LocalTime.parse(timeSlot.getStartTime());
         LocalTime end = LocalTime.parse(timeSlot.getEndTime());
 
-        return !now.isBefore(start) && !now.isAfter(end);
+        boolean isActive = !now.isBefore(start) && !now.isAfter(end);
+
+        log.debug("TimeSlot {} ({}-{}) active at {}? {}",
+                timeSlot, start, end, now, isActive);
+
+        return isActive;
     }
 
     /**
@@ -563,15 +620,15 @@ public class RoomServiceImpl implements RoomService {
     // ==================== MAPPERS ====================
 
     /**
-     * ✨ Map Room entity to RoomResponse with real-time status
+     * ✅ FIXED: Map Room entity to RoomResponse with real-time status
      */
     private RoomResponse mapToResponseWithStatus(Room room, Long semesterId) {
-        // Calculate real-time status
+        // Calculate real-time status (fixed to exclude E_LEARNING)
         String currentStatus = calculateCurrentStatus(room);
         RoomResponse.CurrentSessionInfo currentSession =
                 "IN_USE".equals(currentStatus) ? getCurrentSession(room.getRoomId()) : null;
 
-        // Get statistics
+        // Get statistics (should also exclude E_LEARNING in repository queries)
         Long totalSessions = roomRepository.countSessionsUsingRoom(room.getRoomId(), semesterId);
 
         List<Object[]> statusCounts = roomRepository.countSessionsByStatus(
@@ -608,7 +665,7 @@ public class RoomServiceImpl implements RoomService {
                 .isActive(room.getIsActive())
                 .adminStatus(room.getAdminStatus().name())
                 .adminStatusDisplay(room.getAdminStatusDisplay())
-                // Real-time status
+                // Real-time status (FIXED)
                 .currentStatus(currentStatus)
                 .currentStatusDisplay(getCurrentStatusDisplay(currentStatus))
                 .currentSession(currentSession)
