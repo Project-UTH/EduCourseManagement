@@ -152,7 +152,6 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="teachers" element={<TeacherList />} />
           <Route path="students" element={<StudentList />} />
-          <Route path="import" element={<Placeholder title="Import từ Excel" />} />
           <Route path="departments" element={<DepartmentList />} />
           <Route path="majors" element={<MajorList />} />
           <Route path="subjects" element={<SubjectList />} />
@@ -160,10 +159,6 @@ function App() {
           <Route path="classes" element={<ClassList />} />
           <Route path="rooms" element={<RoomList />} />
           <Route path="rooms/:id" element={<RoomDetail />} />
-          <Route path="assignments" element={<Placeholder title="Phân công giảng dạy" />} />
-          <Route path="proposals" element={<Placeholder title="Đề xuất giảng dạy" />} />
-          <Route path="registration-settings" element={<Placeholder title="Cài đặt Đăng ký" />} />
-          <Route path="settings" element={<Placeholder title="Cài đặt Hệ thống" />} />
         </Route>
 
         {/* TEACHER ROUTES */}
@@ -181,7 +176,6 @@ function App() {
           {/* ✅ NEW - Class detail with tabs (MUST be before "schedule" to avoid conflict) */}
           <Route path="classes/:classId" element={<TeacherClassDetail />} />
           
-          <Route path="proposals" element={<Placeholder title="Đề xuất giảng dạy" />} />
           <Route path="schedule" element={<TeacherSchedule />} />
           
           {/* ✅ PHASE 4 - Homework Management */}

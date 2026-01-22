@@ -33,7 +33,6 @@ const RoomList = () => {
   const [deletingRoom, setDeletingRoom] = useState<RoomResponse | null>(null);
   
   // Semester
-  const [semesters, setSemesters] = useState<Array<{id: number, code: string, name: string}>>([]);
   const [selectedSemester, setSelectedSemester] = useState<number>(1);
 
   // ==================== FETCH DATA ====================
@@ -84,7 +83,7 @@ const RoomList = () => {
       }
       
       console.log('✅ Processed semesters:', semestersData);
-      setSemesters(semestersData);
+
       
       // Set current active semester as default
       if (semestersData.length > 0) {
@@ -98,7 +97,6 @@ const RoomList = () => {
       }
     } catch (error) {
       console.error('❌ Error fetching semesters:', error);
-      setSemesters([]);
     }
   };
 
@@ -336,25 +334,7 @@ const RoomList = () => {
           </button>
         </form>
 
-        {/* Semester Filter */}
-        <div className="semester-filter-wrapper">
-          <label className="semester-label">📅 Học kỳ:</label>
-          <select
-            className="semester-select"
-            value={selectedSemester}
-            onChange={(e) => setSelectedSemester(Number(e.target.value))}
-          >
-            {semesters.length === 0 ? (
-              <option value={1}>Đang tải...</option>
-            ) : (
-              semesters.map(sem => (
-                <option key={sem.id} value={sem.id}>
-                  {sem.name}
-                </option>
-              ))
-            )}
-          </select>
-        </div>
+
 
         {/* Filter Controls */}
         <div className="room-filter-controls">

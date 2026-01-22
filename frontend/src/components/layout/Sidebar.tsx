@@ -33,7 +33,6 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
             children: [
               { icon: '👨‍🏫', label: 'Giảng viên', path: '/admin/teachers' },
               { icon: '👨‍🎓', label: 'Sinh viên', path: '/admin/students' },
-              { icon: '📥', label: 'Import từ Excel', path: '/admin/import' },
             ]
           },
           {
@@ -54,17 +53,6 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
             children: [
               { icon: '📋', label: 'Danh sách lớp', path: '/admin/classes' },
               { icon: '🏢', label: 'Phòng học', path: '/admin/rooms' },
-              { icon: '👨‍🏫', label: 'Phân công giảng dạy', path: '/admin/assignments' },
-              { icon: '📝', label: 'Đề xuất giảng dạy', path: '/admin/proposals' },
-            ]
-          },
-          {
-            icon: '⚙️',
-            label: 'Cài đặt Hệ thống',
-            path: '/admin/system',
-            children: [
-              { icon: '🔐', label: 'Khóa/Mở đăng ký', path: '/admin/registration-settings' },
-              { icon: '⚙️', label: 'Cấu hình', path: '/admin/settings' },
             ]
           },
         ];

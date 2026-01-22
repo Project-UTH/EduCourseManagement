@@ -1,179 +1,239 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import statisticsApi, { DashboardStatistics } from '../../services/api/statisticsApi';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
+  const [stats, setStats] = useState<DashboardStatistics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock statistics - will be replaced with real API calls
-  const statistics = [
-    { 
-      label: 'Tổng sinh viên', 
-      value: '1,234', 
-      icon: '👨‍🎓', 
-      color: 'blue',
-      change: '+12%',
-      changeType: 'increase'
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await statisticsApi.getDashboardStats();
+      setStats(data);
+    } catch (err) {
+      console.error('Failed to fetch dashboard stats:', err);
+      setError('Không thể tải thống kê. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="admin-dashboard">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !stats) {
+    return (
+      <div className="admin-dashboard">
+        <div className="error-message">
+          <span className="error-icon">⚠️</span>
+          <p>{error || 'Không thể tải dữ liệu'}</p>
+          <button onClick={fetchDashboardStats} className="retry-btn">
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Quick stats configuration
+  const quickStats = [
+    {
+      label: 'Sinh viên',
+      value: stats.totalStudents,
+      icon: '👨‍🎓',
+      color: '#3b82f6',
+      route: '/admin/students',
     },
-    { 
-      label: 'Tổng giảng viên', 
-      value: '156', 
-      icon: '👨‍🏫', 
-      color: 'green',
-      change: '+5%',
-      changeType: 'increase'
+    {
+      label: 'Giảng viên',
+      value: stats.totalTeachers,
+      icon: '👨‍🏫',
+      color: '#8b5cf6',
+      route: '/admin/teachers',
     },
-    { 
-      label: 'Tổng lớp học', 
-      value: '89', 
-      icon: '🏫', 
-      color: 'purple',
-      change: '+8%',
-      changeType: 'increase'
+    {
+      label: 'Khoa',
+      value: stats.totalDepartments,
+      icon: '🏢',
+      color: '#10b981',
+      route: '/admin/departments',
     },
-    { 
-      label: 'Tổng môn học', 
-      value: '245', 
-      icon: '📚', 
-      color: 'orange',
-      change: '+3%',
-      changeType: 'increase'
+    {
+      label: 'Chuyên ngành',
+      value: stats.totalMajors,
+      icon: '📖',
+      color: '#f59e0b',
+      route: '/admin/majors',
+    },
+    {
+      label: 'Môn học',
+      value: stats.totalSubjects,
+      icon: '📚',
+      color: '#ec4899',
+      route: '/admin/subjects',
+    },
+    {
+      label: 'Phòng học',
+      value: stats.totalRooms,
+      icon: '🏫',
+      color: '#06b6d4',
+      route: '/admin/rooms',
+    },
+    {
+      label: 'Lớp học',
+      value: stats.totalClasses,
+      icon: '📋',
+      color: '#84cc16',
+      route: '/admin/classes',
     },
   ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'registration',
-      message: 'Có 15 sinh viên mới đăng ký học phần',
-      time: '5 phút trước',
-      icon: '✏️'
-    },
-    {
-      id: 2,
-      type: 'proposal',
-      message: 'GV Nguyễn Văn A đã gửi đề xuất giảng dạy môn Lập trình Web',
-      time: '1 giờ trước',
-      icon: '📝'
-    },
-    {
-      id: 3,
-      type: 'class',
-      message: 'Lớp IT101-01 đã đủ sĩ số',
-      time: '2 giờ trước',
-      icon: '✅'
-    },
-    {
-      id: 4,
-      type: 'system',
-      message: 'Import thành công 50 sinh viên mới',
-      time: 'Hôm qua',
-      icon: '📥'
-    },
-  ];
-
+  // Quick actions configuration
   const quickActions = [
     {
-      title: 'Import Sinh viên',
-      description: 'Nhập danh sách sinh viên từ Excel',
-      icon: '📥',
-      color: 'blue',
-      path: '/admin/import'
+      title: 'Quản lý Sinh viên',
+      icon: '👨‍🎓',
+      color: '#3b82f6',
+      actions: [
+        { label: 'Danh sách sinh viên', route: '/admin/students' },
+        { label: 'Thêm sinh viên mới', route: '/admin/students?action=create' },
+        { label: 'Import từ Excel', route: '/admin/students?action=import' },
+      ],
     },
     {
-      title: 'Import Giảng viên',
-      description: 'Nhập danh sách giảng viên từ Excel',
-      icon: '📥',
-      color: 'green',
-      path: '/admin/import'
+      title: 'Quản lý Giảng viên',
+      icon: '👨‍🏫',
+      color: '#8b5cf6',
+      actions: [
+        { label: 'Danh sách giảng viên', route: '/admin/teachers' },
+        { label: 'Thêm giảng viên mới', route: '/admin/teachers?action=create' },
+        { label: 'Import từ Excel', route: '/admin/teachers?action=import' },
+      ],
     },
     {
-      title: 'Tạo Lớp học',
-      description: 'Tạo lớp học mới cho học kỳ',
-      icon: '➕',
-      color: 'purple',
-      path: '/admin/classes'
+      title: 'Quản lý Học vụ',
+      icon: '📚',
+      color: '#10b981',
+      actions: [
+        { label: 'Quản lý Khoa', route: '/admin/departments' },
+        { label: 'Quản lý Chuyên ngành', route: '/admin/majors' },
+        { label: 'Quản lý Môn học', route: '/admin/subjects' },
+        { label: 'Quản lý Học kỳ', route: '/admin/semesters' },
+      ],
     },
     {
-      title: 'Quản lý Học kỳ',
-      description: 'Cấu hình học kỳ và đăng ký',
-      icon: '📅',
-      color: 'orange',
-      path: '/admin/semesters'
+      title: 'Quản lý Lớp học',
+      icon: '🏫',
+      color: '#f59e0b',
+      actions: [
+        { label: 'Danh sách lớp học', route: '/admin/classes' },
+        { label: 'Tạo lớp học mới', route: '/admin/classes?action=create' },
+        { label: 'Quản lý Phòng học', route: '/admin/rooms' },
+      ],
     },
   ];
 
   return (
     <div className="admin-dashboard">
+      {/* Header */}
       <div className="dashboard-header">
-        <div>
-          <h1>Dashboard</h1>
-          <p>Chào mừng trở lại! Đây là tổng quan về hệ thống.</p>
+        <div className="header-content">
+          <h1>📊 Trang quản trị</h1>
+          <p className="header-subtitle">
+            Chào mừng bạn đến với hệ thống quản lý khóa học
+          </p>
         </div>
-        <button className="refresh-btn">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Làm mới
+        <button onClick={fetchDashboardStats} className="refresh-btn">
+          🔄 Làm mới
         </button>
       </div>
 
+      {/* Current Semester Info */}
+      {stats.currentSemester && (
+        <div className="current-semester-card">
+          <div className="semester-header">
+            <span className="semester-icon">📅</span>
+            <div className="semester-info">
+              <h3>{stats.currentSemester.semesterName}</h3>
+              <p className="semester-code">{stats.currentSemester.semesterCode}</p>
+            </div>
+            <span className={`semester-status status-${stats.currentSemester.status.toLowerCase()}`}>
+              {stats.currentSemester.status === 'ACTIVE' ? '🟢 Đang hoạt động' : 
+               stats.currentSemester.status === 'UPCOMING' ? '🟡 Sắp diễn ra' : 
+               '🔴 Đã kết thúc'}
+            </span>
+          </div>
+          <div className="semester-dates">
+            <span>📆 Từ {new Date(stats.currentSemester.startDate).toLocaleDateString('vi-VN')}</span>
+            <span>đến {new Date(stats.currentSemester.endDate).toLocaleDateString('vi-VN')}</span>
+          </div>
+        </div>
+      )}
+
       {/* Statistics Cards */}
       <div className="stats-grid">
-        {statistics.map((stat, index) => (
-          <div key={index} className={`stat-card ${stat.color}`}>
+        {quickStats.map((stat, index) => (
+          <Link
+            key={index}
+            to={stat.route}
+            className="stat-card"
+            style={{ '--card-color': stat.color } as React.CSSProperties}
+          >
             <div className="stat-icon">{stat.icon}</div>
             <div className="stat-content">
+              <h3 className="stat-value">
+                {stat.value.toLocaleString('vi-VN')}
+              </h3>
               <p className="stat-label">{stat.label}</p>
-              <h3 className="stat-value">{stat.value}</h3>
-              <div className={`stat-change ${stat.changeType}`}>
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-                <span>{stat.change} so với tháng trước</span>
-              </div>
             </div>
-          </div>
+            <div className="stat-arrow">→</div>
+          </Link>
         ))}
       </div>
 
-      <div className="dashboard-content">
-        {/* Recent Activities */}
-        <div className="activity-section">
-          <div className="section-header">
-            <h2>Hoạt động gần đây</h2>
-            <button className="view-all-link">Xem tất cả</button>
-          </div>
-          <div className="activity-list">
-            {recentActivities.map(activity => (
-              <div key={activity.id} className="activity-item">
-                <div className="activity-icon">{activity.icon}</div>
-                <div className="activity-content">
-                  <p className="activity-message">{activity.message}</p>
-                  <span className="activity-time">{activity.time}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="quick-actions-section">
-          <div className="section-header">
-            <h2>Thao tác nhanh</h2>
-          </div>
-          <div className="quick-actions-grid">
-            {quickActions.map((action, index) => (
-              <button
-                key={index}
-                className={`quick-action-card ${action.color}`}
-                onClick={() => navigate(action.path)}
+      {/* Quick Actions */}
+      <div className="quick-actions-section">
+        <h2 className="section-title">⚡ Thao tác nhanh</h2>
+        <div className="quick-actions-grid">
+          {quickActions.map((section, index) => (
+            <div key={index} className="action-card">
+              <div 
+                className="action-header"
+                style={{ backgroundColor: section.color }}
               >
-                <div className="action-icon">{action.icon}</div>
-                <h3>{action.title}</h3>
-                <p>{action.description}</p>
-              </button>
-            ))}
-          </div>
+                <span className="action-icon">{section.icon}</span>
+                <h3>{section.title}</h3>
+              </div>
+              <div className="action-list">
+                {section.actions.map((action, idx) => (
+                  <Link
+                    key={idx}
+                    to={action.route}
+                    className="action-item"
+                  >
+                    <span>→</span>
+                    {action.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
