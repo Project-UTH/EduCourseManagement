@@ -121,4 +121,8 @@ public interface StudentService {
      * Generate Excel template for import
      */
     ByteArrayOutputStream generateImportTemplate() throws IOException;
+
+    long countAll();
+
+    long countActive();
 }

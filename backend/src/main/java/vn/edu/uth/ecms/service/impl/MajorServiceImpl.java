@@ -193,6 +193,11 @@ public class MajorServiceImpl implements MajorService {
         return majorRepository.existsByMajorCode(majorCode);
     }
 
+    @Override
+    public long countAll() {
+        return majorRepository.count();
+    }
+
     /**
      * Map Major entity to MajorResponse DTO
      */

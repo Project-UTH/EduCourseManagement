@@ -597,6 +597,16 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
         return outputStream;
     }
 
+    @Override
+    public long countAll() {
+        return studentRepository.count();
+    }
+
+    @Override
+    public long countActive() {
+        return studentRepository.countByIsActive(true);
+    }
+
     private void addExampleRow(Sheet sheet, int rowNum, int stt, String studentCode,
                                String fullName, String gender, String dob, int year,
                                String eduLevel, String trainType, String majorCode,

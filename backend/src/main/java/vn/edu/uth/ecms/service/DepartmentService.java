@@ -69,4 +69,6 @@ public interface DepartmentService {
      * @return true if exists, false otherwise
      */
     boolean existsByDepartmentCode(String departmentCode);
+
+    long countAll();
 }

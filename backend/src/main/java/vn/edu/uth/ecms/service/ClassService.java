@@ -109,4 +109,6 @@ public interface ClassService {
      * Check if class can accept new registrations
      */
     boolean canRegister(Long classId);
+
+    long countAll();
 }

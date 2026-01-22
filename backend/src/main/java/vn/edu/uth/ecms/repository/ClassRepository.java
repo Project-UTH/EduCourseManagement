@@ -200,13 +200,13 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
             "ORDER BY cs.classEntity.classCode ASC")
     List<ClassEntity> findClassesWithPendingSessions(@Param("semesterId") Long semesterId);
     @Query("SELECT COUNT(c) > 0 FROM ClassEntity c WHERE c.subject.subjectId = :subjectId AND c.semester.semesterId = :semesterId")
-boolean existsBySubjectAndSemester(@Param("subjectId") Long subjectId, @Param("semesterId") Long semesterId);
-    
-    @Query("SELECT COUNT(c) > 0 FROM ClassEntity c " +
-       "WHERE c.subject.subjectId = :subjectId " +
-       "AND c.semester.semesterId = :semesterId")
-boolean existsBySubjectIdAndSemesterId(
-    @Param("subjectId") Long subjectId, 
-    @Param("semesterId") Long semesterId
-);
+    boolean existsBySubjectAndSemester(@Param("subjectId") Long subjectId, @Param("semesterId") Long semesterId);
+
+        @Query("SELECT COUNT(c) > 0 FROM ClassEntity c " +
+           "WHERE c.subject.subjectId = :subjectId " +
+           "AND c.semester.semesterId = :semesterId")
+    boolean existsBySubjectIdAndSemesterId(
+        @Param("subjectId") Long subjectId,
+        @Param("semesterId") Long semesterId
+    );
 }

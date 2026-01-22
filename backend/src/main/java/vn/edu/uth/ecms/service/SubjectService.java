@@ -78,4 +78,6 @@ public interface SubjectService {
      * @return List of teachers who can teach this subject
      */
     List<TeacherResponse> getTeachersForSubject(Long subjectId);
+
+    long countAll();
 }

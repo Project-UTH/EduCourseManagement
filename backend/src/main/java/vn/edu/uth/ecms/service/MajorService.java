@@ -76,4 +76,6 @@ public interface MajorService {
      * @return true if exists, false otherwise
      */
     boolean existsByMajorCode(String majorCode);
+
+    long countAll();
 }

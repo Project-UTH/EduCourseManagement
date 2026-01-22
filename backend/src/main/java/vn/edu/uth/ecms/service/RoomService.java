@@ -243,5 +243,7 @@ public interface RoomService {
      * @param roomId Room ID to delete
      */
     void deleteRoom(Long roomId);
+
+    long countAll();
 }
 

@@ -499,6 +499,11 @@ log.info("mapToResponse DONE");
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public long countAll() {
+        return subjectRepository.count();
+    }
+
     private TeacherResponse mapTeacherToResponse(Teacher teacher) {
         TeacherResponse.TeacherResponseBuilder builder = TeacherResponse.builder()
                 .teacherId(teacher.getTeacherId())

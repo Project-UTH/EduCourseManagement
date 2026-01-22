@@ -1,5 +1,6 @@
 package vn.edu.uth.ecms.repository;
 
+import ch.qos.logback.core.status.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -84,4 +85,5 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     @Query("SELECT s FROM Student s WHERE s.major.department.departmentId = :departmentId")
     List<Student> findByMajorDepartmentDepartmentId(@Param("departmentId") Long departmentId);
 
+    long countByIsActive(Boolean isActive);
 }

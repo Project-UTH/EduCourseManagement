@@ -1,5 +1,7 @@
 package vn.edu.uth.ecms.service.impl;
 
+import ch.qos.logback.core.status.Status;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -44,6 +46,7 @@ public class ClassServiceImpl implements ClassService {
     private final SemesterRepository semesterRepository;
     private final CourseRegistrationRepository courseRegistrationRepository;
     private final RoomService roomService;
+    private final StudentRepository studentRepository;
 
     // ==================== CREATE CLASS (UPDATED) ====================
 
@@ -486,6 +489,11 @@ public class ClassServiceImpl implements ClassService {
                 .orElseThrow(() -> new NotFoundException("Class not found"));
 
         return classEntity.canRegister();
+    }
+
+    @Override
+    public long countAll() {
+        return  classRepository.count();
     }
 
 // ==================== MAPPER (UPDATED) ====================

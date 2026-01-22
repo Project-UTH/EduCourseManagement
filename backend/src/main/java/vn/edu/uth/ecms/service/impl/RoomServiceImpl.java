@@ -84,6 +84,11 @@ public class RoomServiceImpl implements RoomService {
         log.info("✅ Room deleted successfully: {}", room.getRoomCode());
     }
 
+    @Override
+    public long countAll() {
+        return roomRepository.count();
+    }
+
     // ==================== EXISTING METHODS ====================
 
     @Override

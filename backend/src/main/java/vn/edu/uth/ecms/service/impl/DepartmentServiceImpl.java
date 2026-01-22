@@ -146,6 +146,11 @@ public class DepartmentServiceImpl implements DepartmentService {
         return departmentRepository.existsByDepartmentCode(departmentCode);
     }
 
+    @Override
+    public long countAll() {
+        return departmentRepository.count();
+    }
+
     /**
      * Map Department entity to DepartmentResponse DTO
      */

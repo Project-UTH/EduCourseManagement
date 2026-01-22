@@ -65,5 +65,6 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
     /**
      * Count active teachers
      */
-    long countByIsActiveTrue();
+
+    long countByIsActive(Boolean isActive);
 }

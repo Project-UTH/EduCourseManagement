@@ -567,6 +567,16 @@ public class TeacherServiceImpl implements TeacherService {
         return outputStream;
     }
 
+    @Override
+    public long countAll() {
+        return teacherRepository.count();
+    }
+
+    @Override
+    public long countActive() {
+        return teacherRepository.countByIsActive(true);
+    }
+
     private void addExampleRow(Sheet sheet, int rowNum, int stt, String citizenId,
                                String fullName, String gender, String dob, String deptCode,
                                String majorCode, String degree, String email,
