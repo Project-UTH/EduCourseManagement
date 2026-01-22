@@ -12,6 +12,18 @@ interface Subject {
   departmentName: string;
   departmentKnowledgeType?: string;
   majorName?: string;
+  // ✅ NEW: Prerequisites info
+  prerequisites?: PrerequisiteInfo[];
+}
+
+// ✅ NEW: Prerequisite interface
+interface PrerequisiteInfo {
+  subjectId: number;
+  subjectCode: string;
+  subjectName: string;
+  credits: number;
+  isCompleted: boolean;
+  totalScore: number | null;
 }
 
 interface Semester {
@@ -20,6 +32,45 @@ interface Semester {
   semesterName: string;
   status: string;
 }
+
+// ✅ NEW: Inline Prerequisites Badge Component
+const PrerequisitesBadge: React.FC<{ prerequisites: PrerequisiteInfo[] }> = ({ prerequisites }) => {
+  if (!prerequisites || prerequisites.length === 0) {
+    return <span className="text-muted">Không</span>;
+  }
+
+  const hasIncomplete = prerequisites.some(p => !p.isCompleted);
+
+  return (
+    <div className="prerequisites-inline">
+      {hasIncomplete && (
+        <span className="warning-icon" title="Chưa hoàn thành môn tiên quyết">
+          ⚠️
+        </span>
+      )}
+      <div className="prereq-list">
+        {prerequisites.map((prereq) => (
+          <div 
+            key={prereq.subjectId} 
+            className={`prereq-badge ${prereq.isCompleted ? 'completed' : 'incomplete'}`}
+            title={prereq.isCompleted 
+              ? `✅ Đã hoàn thành (Điểm: ${prereq.totalScore?.toFixed(1) || 'N/A'})`
+              : `❌ Chưa hoàn thành`
+            }
+          >
+            <span className="prereq-icon">
+              {prereq.isCompleted ? '✅' : '❌'}
+            </span>
+            <span className="prereq-text">
+              {prereq.subjectName}
+              <small> ({prereq.subjectCode})</small>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const SubjectSelection: React.FC = () => {
   const navigate = useNavigate();
@@ -91,6 +142,7 @@ const SubjectSelection: React.FC = () => {
       if (response.data && response.data.success) {
         const subjectList = response.data.data || [];
         console.log(`✅ Received ${subjectList.length} subjects`);
+        console.log('Sample subject with prerequisites:', subjectList[0]);
         setSubjects(subjectList);
       }
     } catch (error: any) {
@@ -194,11 +246,23 @@ const SubjectSelection: React.FC = () => {
     const badge = badges[status] || { text: status, className: 'default' };
     return <span className={`semester-badge ${badge.className}`}>{badge.text}</span>;
   };
+// ✅ Filter theo keyword
+const searchFilteredSubjects = subjects.filter(subject =>
+  subject.subjectCode.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+  subject.subjectName.toLowerCase().includes(searchKeyword.toLowerCase())
+);
 
-  const filteredSubjects = subjects.filter(subject =>
-    subject.subjectCode.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-    subject.subjectName.toLowerCase().includes(searchKeyword.toLowerCase())
-  );
+// ✅ Lấy danh sách subjectId đã đăng ký
+const registeredSubjectIds = new Set(
+  myRegistrations
+    .filter(reg => reg.status === 'REGISTERED')
+    .map(reg => reg.subjectId)
+);
+
+// ✅ Loại bỏ môn đã đăng ký
+const filteredSubjects = searchFilteredSubjects.filter(subject => 
+  !registeredSubjectIds.has(subject.subjectId)
+);
 
   if (loading && subjects.length === 0) {
     return (
@@ -261,7 +325,7 @@ const SubjectSelection: React.FC = () => {
               <th>Tên học phần</th>
               <th style={{ width: '60px' }}>TC</th>
               <th style={{ width: '100px' }}>Bắt buộc</th>
-              <th style={{ width: '200px' }}>Điều kiện đăng ký</th>
+              <th style={{ width: '250px' }}>Điều kiện đăng ký</th>
             </tr>
           </thead>
           <tbody>
@@ -312,15 +376,13 @@ const SubjectSelection: React.FC = () => {
                       <span className="badge badge-optional" title="Chuyên ngành">○</span>
                     )}
                   </td>
-                  <td className="prerequisites">
-                    {subject.departmentKnowledgeType === 'BASIC' ? (
-                      <span className="all-students">Tất cả sinh viên</span>
-                    ) : subject.majorName ? (
-                      <span className="major-tag">{subject.majorName}</span>
-                    ) : (
-                      <span className="text-muted">--</span>
-                    )}
-                  </td>
+                  <td className="prerequisites-cell">
+  {subject.prerequisites && subject.prerequisites.length > 0 ? (
+    <PrerequisitesBadge prerequisites={subject.prerequisites} />
+  ) : (
+    <span className="text-muted">—</span>
+  )}
+</td>
                 </tr>
               ))
             )}

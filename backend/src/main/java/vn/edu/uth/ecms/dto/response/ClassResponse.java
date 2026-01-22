@@ -7,11 +7,16 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- * Class Response DTO - UPDATED
+ * Class Response DTO - COMPLETE VERSION WITH PREREQUISITES
+ *
+ * ✅ UPDATED: Added prerequisites and isRegistered fields
  *
  * NEW FIELDS:
+ * - prerequisites (List<PrerequisiteInfo>) - Danh sách môn tiên quyết
+ * - isRegistered (Boolean) - Sinh viên đã đăng ký chưa
  * - fixedRoom (room code)
  * - fixedRoomName (display name)
  * - fixedRoomCapacity
@@ -76,17 +81,17 @@ public class ClassResponse {
     private String timeSlotDisplay;  // "Ca 1 (06:45-09:15)"
 
     /**
-     * ✅ NEW: Fixed room (auto-assigned by system)
+     * ✅ Fixed room (auto-assigned by system)
      */
     private String fixedRoom;        // Room code: "A201", "B105"
 
     /**
-     * ✅ NEW: Fixed room display name
+     * ✅ Fixed room display name
      */
     private String fixedRoomName;    // "A201 - Giảng đường lớn"
 
     /**
-     * ✅ NEW: Fixed room capacity
+     * ✅ Fixed room capacity
      */
     private Integer fixedRoomCapacity;
 
@@ -108,7 +113,7 @@ public class ClassResponse {
     private Long totalSessionsGenerated;
 
     /**
-     * ✅ NEW: Number of pending extra sessions
+     * ✅ Number of pending extra sessions
      * (not yet scheduled, waiting for semester activation)
      */
     private Long pendingSessionsCount;
@@ -127,4 +132,79 @@ public class ClassResponse {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // ==================== ✅ NEW: PREREQUISITES INFO ====================
+
+    /**
+     * ✅ NEW: Danh sách môn tiên quyết
+     * 
+     * Hiển thị các môn học cần hoàn thành trước khi đăng ký môn này
+     * Bao gồm thông tin trạng thái hoàn thành của sinh viên hiện tại
+     */
+    private List<PrerequisiteInfo> prerequisites;
+
+    /**
+     * ✅ NEW: Sinh viên đã đăng ký lớp này chưa
+     * 
+     * true = Đã đăng ký (status = REGISTERED)
+     * false = Chưa đăng ký
+     * null = Không áp dụng (dành cho admin/teacher)
+     */
+    private Boolean isRegistered;
+
+    // ==================== ✅ INNER CLASS: PREREQUISITE INFO ====================
+
+    /**
+     * ✅ Inner class: Thông tin môn tiên quyết
+     * 
+     * Chứa thông tin về môn học tiên quyết và trạng thái hoàn thành
+     * của sinh viên hiện tại
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PrerequisiteInfo {
+        
+        /**
+         * ID môn học tiên quyết
+         */
+        private Long subjectId;
+        
+        /**
+         * Mã môn học (vd: CS101)
+         */
+        private String subjectCode;
+        
+        /**
+         * Tên môn học (vd: "Lập trình căn bản")
+         */
+        private String subjectName;
+        
+        /**
+         * Số tín chỉ
+         */
+        private Integer credits;
+        
+        /**
+         * ✅ Sinh viên đã hoàn thành môn này chưa
+         * 
+         * Điều kiện hoàn thành:
+         * - Có điểm trong bảng Grade
+         * - totalScore >= 4.0
+         * - status = PASSED
+         * 
+         * true = Đã hoàn thành (có thể đăng ký)
+         * false = Chưa hoàn thành (không thể đăng ký)
+         */
+        private Boolean isCompleted;
+        
+        /**
+         * ✅ Điểm đã đạt (nếu có)
+         * 
+         * null = Chưa có điểm
+         * 0.0 - 10.0 = Điểm đã đạt
+         */
+        private Double totalScore;
+    }
 }

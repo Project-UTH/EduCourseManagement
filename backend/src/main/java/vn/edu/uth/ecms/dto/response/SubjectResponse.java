@@ -6,7 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+/**
+ * Subject Response DTO - Updated with Prerequisites
+ * 
+ * @author Phase 4 - Student Features
+ * @since 2026-01-22
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -43,4 +50,9 @@ public class SubjectResponse {
     private Integer totalStudents;
     
     private String departmentKnowledgeType; // BASIC or SPECIALIZED
+    
+    /**
+     * ✅ NEW: List of prerequisite subjects with completion status
+     */
+    private List<PrerequisiteInfo> prerequisites;
 }
