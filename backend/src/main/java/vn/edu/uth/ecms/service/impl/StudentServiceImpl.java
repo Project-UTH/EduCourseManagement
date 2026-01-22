@@ -54,6 +54,7 @@ public class StudentServiceImpl implements StudentService {
     private final CourseRegistrationRepository registrationRepository;
     private final SemesterRepository semesterRepository;
     private final ModelMapper modelMapper;
+    private final UsernameValidationService usernameValidationService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -108,6 +109,8 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public StudentResponse createStudent(StudentCreateRequest request) {
         log.info("Creating student with student code: {}", request.getStudentCode());
+
+        usernameValidationService.validateUsernameUnique(request.getStudentCode());
 
         // 1. Validate student code is unique
         if (studentRepository.existsByStudentCode(request.getStudentCode())) {
@@ -458,6 +461,11 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
                     // Validate required fields
                     if (studentCode.isEmpty()) {
                         throw new IllegalArgumentException("Mã sinh viên không được để trống");
+                    }
+                    try {
+                        usernameValidationService.validateUsernameUnique(studentCode);
+                    } catch (DuplicateException e) {
+                        throw new IllegalArgumentException("Mã sinh viên đã tồn tại trong hệ thống");
                     }
                     if (fullName.isEmpty()) {
                         throw new IllegalArgumentException("Họ và tên không được để trống");

@@ -50,6 +50,7 @@ public class TeacherServiceImpl implements TeacherService {
     private final MajorRepository majorRepository;
     private final PasswordEncoder passwordEncoder;
     private final TeacherSubjectRepository teacherSubjectRepository;
+    private final UsernameValidationService usernameValidationService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -137,6 +138,8 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     public TeacherResponse createTeacher(TeacherCreateRequest request) {
         log.info("Creating teacher with citizen ID: {}", request.getCitizenId());
+
+        usernameValidationService.validateUsernameUnique(request.getCitizenId());
 
         // 1. Validate citizen ID is unique
         if (teacherRepository.existsByCitizenId(request.getCitizenId())) {
@@ -415,6 +418,11 @@ public class TeacherServiceImpl implements TeacherService {
                     // Validate required fields
                     if (citizenId.isEmpty()) {
                         throw new IllegalArgumentException("CCCD không được để trống");
+                    }
+                    try {
+                        usernameValidationService.validateUsernameUnique(citizenId);
+                    } catch (DuplicateException e) {
+                        throw new IllegalArgumentException("CCCD đã tồn tại trong hệ thống");
                     }
                     if (citizenId.length() != 12) {
                         throw new IllegalArgumentException("CCCD phải có đúng 12 ký tự");
