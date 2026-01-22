@@ -56,6 +56,20 @@ export interface StudentResponse {
   updatedAt: string;
 }
 
+export interface ImportResult {
+  totalRows: number;
+  successCount: number;
+  failureCount: number;
+  errors: ImportError[];
+}
+
+export interface ImportError {
+  row: number;
+  identifier?: string; // studentCode or citizenId
+  field?: string;
+  message: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -300,7 +314,58 @@ const studentApi = {
     }
   },
 
-  // ==================== PROFILE METHODS (NEW) ====================
+  /**
+   * Import students from Excel file
+   * POST /api/admin/students/import
+   */
+  importFromExcel: async (file: File): Promise<ApiResponse<ImportResult>> => {
+    console.log('[studentApi] Importing students from Excel:', file.name);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiClient.post<ApiResponse<ImportResult>>(
+        '/api/admin/students/import',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      
+      console.log('[studentApi] Import completed:', response.data.data);
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[studentApi] Import failed:', apiError.response?.data || apiError.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Download Excel template for import
+   * GET /api/admin/students/import/template
+   */
+  downloadTemplate: async (): Promise<Blob> => {
+    console.log('[studentApi] Downloading import template');
+    
+    try {
+      const response = await apiClient.get('/api/admin/students/import/template', {
+        responseType: 'blob',
+      });
+      
+      console.log('[studentApi] Template downloaded');
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[studentApi] Failed to download template:', apiError.message);
+      throw error;
+    }
+  },
+
+  // ==================== PROFILE METHODS ====================
 
   /**
    * Get current student profile

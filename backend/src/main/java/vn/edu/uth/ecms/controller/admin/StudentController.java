@@ -3,19 +3,26 @@ package vn.edu.uth.ecms.controller.admin;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.uth.ecms.dto.request.StudentCreateRequest;
 import vn.edu.uth.ecms.dto.request.StudentUpdateRequest;
 import vn.edu.uth.ecms.dto.response.ApiResponse;
+import vn.edu.uth.ecms.dto.response.ImportResult;
 import vn.edu.uth.ecms.dto.response.StudentResponse;
 import vn.edu.uth.ecms.service.StudentService;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 /**
@@ -199,5 +206,48 @@ public class StudentController {
         Page<StudentResponse> response = studentService.searchStudents(keyword, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    /**
+     * Import students from Excel file
+     * POST /api/admin/students/import
+     */
+    @PostMapping("/import")
+    public ResponseEntity<ApiResponse<ImportResult>> importStudents(
+            @RequestParam("file") MultipartFile file) {
+        log.info("REST request to import students from Excel file: {}", file.getOriginalFilename());
+
+        try {
+            ImportResult result = studentService.importFromExcel(file);
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (Exception e) {
+            log.error("Error importing students: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Lỗi import: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Download Excel template for student import
+     * GET /api/admin/students/import/template
+     */
+    @GetMapping("/import/template")
+    public ResponseEntity<Resource> downloadStudentTemplate() {
+        log.info("REST request to download student import template");
+
+        try {
+            ByteArrayOutputStream outputStream = studentService.generateImportTemplate();
+            ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=student_import_template.xlsx")
+                    .contentType(MediaType.parseMediaType(
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error generating template: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

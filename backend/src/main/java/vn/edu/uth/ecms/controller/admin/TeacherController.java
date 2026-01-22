@@ -3,20 +3,27 @@ package vn.edu.uth.ecms.controller.admin;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.uth.ecms.dto.request.TeacherCreateRequest;
 import vn.edu.uth.ecms.dto.request.TeacherUpdateRequest;
 import vn.edu.uth.ecms.dto.response.ApiResponse;
+import vn.edu.uth.ecms.dto.response.ImportResult;
 import vn.edu.uth.ecms.dto.response.TeacherResponse;
 import vn.edu.uth.ecms.service.TeacherService;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 /**
@@ -170,5 +177,48 @@ public class TeacherController {
         teacherService.deleteTeacher(id);
 
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    /**
+     * Import teachers from Excel file
+     * POST /api/admin/teachers/import
+     */
+    @PostMapping("/import")
+    public ResponseEntity<ApiResponse<ImportResult>> importTeachers(
+            @RequestParam("file") MultipartFile file) {
+        log.info("REST request to import teachers from Excel file: {}", file.getOriginalFilename());
+
+        try {
+            ImportResult result = teacherService.importFromExcel(file);
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (Exception e) {
+            log.error("Error importing teachers: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Lỗi import: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Download Excel template for teacher import
+     * GET /api/admin/teachers/import/template
+     */
+    @GetMapping("/import/template")
+    public ResponseEntity<Resource> downloadTeacherTemplate() {
+        log.info("REST request to download teacher import template");
+
+        try {
+            ByteArrayOutputStream outputStream = teacherService.generateImportTemplate();
+            ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=teacher_import_template.xlsx")
+                    .contentType(MediaType.parseMediaType(
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error generating template: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

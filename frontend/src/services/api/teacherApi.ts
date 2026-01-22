@@ -67,6 +67,20 @@ export interface TeacherSubjectResponse {
   notes?: string;
 }
 
+export interface ImportResult {
+  totalRows: number;
+  successCount: number;
+  failureCount: number;
+  errors: ImportError[];
+}
+
+export interface ImportError {
+  row: number;
+  identifier?: string; // studentCode or citizenId
+  field?: string;
+  message: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -282,7 +296,58 @@ const teacherApi = {
     }
   },
 
-  // ==================== PROFILE METHODS (NEW) ====================
+  /**
+   * Import teachers from Excel file
+   * POST /api/admin/teachers/import
+   */
+  importFromExcel: async (file: File): Promise<ApiResponse<ImportResult>> => {
+    console.log('[teacherApi] Importing teachers from Excel:', file.name);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiClient.post<ApiResponse<ImportResult>>(
+        '/api/admin/teachers/import',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      
+      console.log('[teacherApi] Import completed:', response.data.data);
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[teacherApi] Import failed:', apiError.response?.data || apiError.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Download Excel template for import
+   * GET /api/admin/teachers/import/template
+   */
+  downloadTemplate: async (): Promise<Blob> => {
+    console.log('[teacherApi] Downloading import template');
+    
+    try {
+      const response = await apiClient.get('/api/admin/teachers/import/template', {
+        responseType: 'blob',
+      });
+      
+      console.log('[teacherApi] Template downloaded');
+      return response.data;
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('[teacherApi] Failed to download template:', apiError.message);
+      throw error;
+    }
+  },
+
+  // ==================== PROFILE METHODS ====================
 
   /**
    * Get current teacher profile

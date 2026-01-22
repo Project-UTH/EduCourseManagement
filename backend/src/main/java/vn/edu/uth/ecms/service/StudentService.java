@@ -2,12 +2,16 @@ package vn.edu.uth.ecms.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.uth.ecms.dto.request.StudentCreateRequest;
 import vn.edu.uth.ecms.dto.request.StudentUpdateRequest;
 import vn.edu.uth.ecms.dto.request.UpdateStudentProfileRequest;
 import vn.edu.uth.ecms.dto.response.ClassResponse;
+import vn.edu.uth.ecms.dto.response.ImportResult;
 import vn.edu.uth.ecms.dto.response.StudentResponse;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -107,4 +111,14 @@ public interface StudentService {
      * Get student's schedule for a specific semester
      */
     List<ClassResponse> getScheduleBySemester(String studentCode, Long semesterId);
+
+    /**
+     * Import students from Excel file
+     */
+    ImportResult importFromExcel(MultipartFile file);
+
+    /**
+     * Generate Excel template for import
+     */
+    ByteArrayOutputStream generateImportTemplate() throws IOException;
 }

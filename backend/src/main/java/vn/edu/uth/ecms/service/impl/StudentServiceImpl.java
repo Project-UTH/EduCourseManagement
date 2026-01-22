@@ -3,25 +3,23 @@ package vn.edu.uth.ecms.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.uth.ecms.dto.request.StudentCreateRequest;
 import vn.edu.uth.ecms.dto.request.StudentUpdateRequest;
 import vn.edu.uth.ecms.dto.request.UpdateStudentProfileRequest;
 import vn.edu.uth.ecms.dto.response.ClassResponse;
+import vn.edu.uth.ecms.dto.response.ImportError;
+import vn.edu.uth.ecms.dto.response.ImportResult;
 import vn.edu.uth.ecms.dto.response.StudentResponse;
-import vn.edu.uth.ecms.entity.ClassEntity;
-import vn.edu.uth.ecms.entity.CourseRegistration;
-import vn.edu.uth.ecms.entity.Major;
-import vn.edu.uth.ecms.entity.RegistrationStatus;
-import vn.edu.uth.ecms.entity.Semester;
-import vn.edu.uth.ecms.entity.SemesterStatus;
-import vn.edu.uth.ecms.entity.Student;
-import vn.edu.uth.ecms.entity.TimeSlot;
+import vn.edu.uth.ecms.entity.*;
 import vn.edu.uth.ecms.exception.DuplicateException;
 import vn.edu.uth.ecms.exception.NotFoundException;
 import vn.edu.uth.ecms.repository.CourseRegistrationRepository;
@@ -30,11 +28,16 @@ import vn.edu.uth.ecms.repository.SemesterRepository;
 import vn.edu.uth.ecms.repository.StudentRepository;
 import vn.edu.uth.ecms.service.StudentService;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Optional;
+
+import static javax.management.openmbean.SimpleType.STRING;
 
 /**
  * Implementation of StudentService
@@ -48,9 +51,11 @@ public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
     private final MajorRepository majorRepository;
     private final PasswordEncoder passwordEncoder;
-    private final CourseRegistrationRepository registrationRepository;  // ← THÊM
-    private final SemesterRepository semesterRepository;                // ← THÊM
-    private final ModelMapper modelMapper;  
+    private final CourseRegistrationRepository registrationRepository;
+    private final SemesterRepository semesterRepository;
+    private final ModelMapper modelMapper;
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     /**
      * Generate default password from date of birth
@@ -418,7 +423,260 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
             throw new RuntimeException("Failed to get schedule: " + e.getMessage(), e);
         }
     }
+    // FIX: Import method - dùng ngày sinh làm password (nhất quán với createStudent)
 
+    @Override
+    @Transactional
+    public ImportResult importFromExcel(MultipartFile file) {
+        List<ImportError> errors = new ArrayList<>();
+        int successCount = 0;
+        int failureCount = 0;
+        int totalRows = 0;
+
+        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            totalRows = sheet.getPhysicalNumberOfRows() - 1; // Exclude header
+
+            for (int i = 1; i <= totalRows; i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                try {
+                    // Parse row data
+                    String studentCode = getCellValueAsString(row.getCell(1));
+                    String fullName = getCellValueAsString(row.getCell(2));
+                    String genderStr = getCellValueAsString(row.getCell(3));
+                    String dateOfBirthStr = getCellValueAsString(row.getCell(4));
+                    int academicYear = (int) getCellValueAsNumeric(row.getCell(5));
+                    String educationLevelStr = getCellValueAsString(row.getCell(6));
+                    String trainingTypeStr = getCellValueAsString(row.getCell(7));
+                    String majorCode = getCellValueAsString(row.getCell(8));
+                    String email = getCellValueAsString(row.getCell(9));
+                    String phone = getCellValueAsString(row.getCell(10));
+                    String placeOfBirth = getCellValueAsString(row.getCell(11));
+
+                    // Validate required fields
+                    if (studentCode.isEmpty()) {
+                        throw new IllegalArgumentException("Mã sinh viên không được để trống");
+                    }
+                    if (fullName.isEmpty()) {
+                        throw new IllegalArgumentException("Họ và tên không được để trống");
+                    }
+
+                    // Check if student already exists
+                    if (studentRepository.existsByStudentCode(studentCode)) {
+                        throw new IllegalArgumentException("Mã sinh viên đã tồn tại");
+                    }
+
+                    // Find major
+                    Major major = majorRepository.findByMajorCode(majorCode)
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    "Không tìm thấy chuyên ngành với mã: " + majorCode));
+
+                    // Parse date
+                    LocalDate dateOfBirth = LocalDate.parse(dateOfBirthStr, DATE_FORMATTER);
+
+                    // Parse enums
+                    Gender gender = Gender.valueOf(genderStr.toUpperCase());
+                    EducationLevel educationLevel = EducationLevel.valueOf(educationLevelStr.toUpperCase());
+                    TrainingType trainingType = TrainingType.valueOf(trainingTypeStr.toUpperCase());
+
+                    String defaultPassword = generateDefaultPassword(dateOfBirth); // ddMMyyyy format
+                    String hashedPassword = passwordEncoder.encode(defaultPassword);
+
+                    // Create student
+                    Student student = Student.builder()
+                            .studentCode(studentCode)
+                            .fullName(fullName)
+                            .gender(gender)
+                            .dateOfBirth(dateOfBirth)
+                            .academicYear(academicYear)
+                            .educationLevel(educationLevel)
+                            .trainingType(trainingType)
+                            .major(major)
+                            .email(email.isEmpty() ? null : email)
+                            .phone(phone.isEmpty() ? null : phone)
+                            .placeOfBirth(placeOfBirth.isEmpty() ? null : placeOfBirth)
+                            .password(hashedPassword)
+                            .isActive(true)
+                            .isFirstLogin(true)
+                            .build();
+
+                    studentRepository.save(student);
+                    successCount++;
+
+                    log.info("✅ Imported student: {} - Default password: {}",
+                            studentCode, defaultPassword);
+
+                } catch (Exception e) {
+                    failureCount++;
+                    String studentCode = getCellValueAsString(row.getCell(1));
+
+                    errors.add(ImportError.builder()
+                            .row(i + 1)
+                            .identifier(studentCode.isEmpty() ? "N/A" : studentCode)
+                            .message(e.getMessage())
+                            .build());
+
+                    log.warn("Error importing student at row {}: {}", i + 1, e.getMessage());
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("Error reading Excel file: {}", e.getMessage());
+            throw new RuntimeException("Lỗi đọc file Excel: " + e.getMessage());
+        }
+
+        return ImportResult.builder()
+                .totalRows(totalRows)
+                .successCount(successCount)
+                .failureCount(failureCount)
+                .errors(errors)
+                .build();
+    }
+
+    @Override
+    public ByteArrayOutputStream generateImportTemplate() throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Students");
+
+        // Create header style
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setFontHeightInPoints((short) 12);
+        headerStyle.setFont(headerFont);
+        headerStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+        // Create header row
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {
+                "STT", "Mã sinh viên*", "Họ và tên*", "Giới tính*",
+                "Ngày sinh*", "Khóa học*", "Trình độ*", "Hình thức*",
+                "Mã chuyên ngành*", "Email", "Số điện thoại", "Nơi sinh"
+        };
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+            sheet.setColumnWidth(i, 4000);
+        }
+
+        // Add example rows
+        addExampleRow(sheet, 1, 1, "054205002348", "Nguyễn Văn A", "MALE",
+                "17/03/2005", 2024, "BACHELOR", "REGULAR", "7480201",
+                "student1@example.com", "0123456789", "TP. HCM");
+
+        addExampleRow(sheet, 2, 2, "054205002349", "Trần Thị B", "FEMALE",
+                "25/08/2005", 2024, "BACHELOR", "REGULAR", "7480201",
+                "student2@example.com", "0987654321", "Hà Nội");
+
+        addExampleRow(sheet, 3, 3, "054205002350", "Lê Văn C", "MALE",
+                "10/12/2004", 2023, "BACHELOR", "DISTANCE", "7480104",
+                "", "0369852147", "Đà Nẵng");
+
+        // Add instruction sheet
+        Sheet instructionSheet = workbook.createSheet("Hướng dẫn");
+        addInstructions(instructionSheet);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream;
+    }
+
+    private void addExampleRow(Sheet sheet, int rowNum, int stt, String studentCode,
+                               String fullName, String gender, String dob, int year,
+                               String eduLevel, String trainType, String majorCode,
+                               String email, String phone, String placeOfBirth) {
+        Row row = sheet.createRow(rowNum);
+        row.createCell(0).setCellValue(stt);
+        row.createCell(1).setCellValue(studentCode);
+        row.createCell(2).setCellValue(fullName);
+        row.createCell(3).setCellValue(gender);
+        row.createCell(4).setCellValue(dob);
+        row.createCell(5).setCellValue(year);
+        row.createCell(6).setCellValue(eduLevel);
+        row.createCell(7).setCellValue(trainType);
+        row.createCell(8).setCellValue(majorCode);
+        row.createCell(9).setCellValue(email);
+        row.createCell(10).setCellValue(phone);
+        row.createCell(11).setCellValue(placeOfBirth);
+    }
+
+    private void addInstructions(Sheet sheet) {
+        String[] instructions = {
+                "HƯỚNG DẪN IMPORT SINH VIÊN",
+                "",
+                "1. CÁC CỘT BẮT BUỘC (đánh dấu *):",
+                "   - Mã sinh viên: Tối đa 12 ký tự, không trùng lặp",
+                "   - Họ và tên: Tối đa 100 ký tự",
+                "   - Giới tính: MALE, FEMALE, hoặc OTHER",
+                "   - Ngày sinh: Định dạng DD/MM/YYYY (ví dụ: 17/03/2005)",
+                "   - Khóa học: Năm học (ví dụ: 2024)",
+                "   - Trình độ: BACHELOR (Đại học), MASTER (Thạc sĩ), DOCTOR (Tiến sĩ), ASSOCIATE (Cao đẳng)",
+                "   - Hình thức: REGULAR (Chính quy), DISTANCE (Từ xa), PART_TIME (Vừa làm vừa học)",
+                "   - Mã chuyên ngành: Phải tồn tại trong hệ thống",
+                "",
+                "2. CÁC CỘT TÙY CHỌN:",
+                "   - Email: Địa chỉ email hợp lệ",
+                "   - Số điện thoại: Tối đa 20 ký tự",
+                "   - Nơi sinh: Tối đa 200 ký tự",
+                "",
+                "3. LƯU Ý:",
+                "   - Không chỉnh sửa tên cột trong dòng header",
+                "   - Xóa các dòng ví dụ trước khi import dữ liệu thật",
+                "   - Mật khẩu mặc định sẽ là mã sinh viên",
+                "   - Sinh viên phải đổi mật khẩu khi đăng nhập lần đầu"
+        };
+
+        for (int i = 0; i < instructions.length; i++) {
+            Row row = sheet.createRow(i);
+            Cell cell = row.createCell(0);
+            cell.setCellValue(instructions[i]);
+        }
+
+        sheet.setColumnWidth(0, 15000);
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return "";
+
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue().trim();
+            case NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return DATE_FORMATTER.format(cell.getLocalDateTimeCellValue().toLocalDate());
+                }
+                return String.valueOf((long) cell.getNumericCellValue());
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            default:
+                return "";
+        }
+    }
+
+    private double getCellValueAsNumeric(Cell cell) {
+        if (cell == null) return 0;
+
+        switch (cell.getCellType()) {
+            case NUMERIC:
+                return cell.getNumericCellValue();
+            case STRING:
+                try {
+                    return Double.parseDouble(cell.getStringCellValue().trim());
+                } catch (NumberFormatException e) {
+                    return 0;
+                }
+            default:
+                return 0;
+        }
+    }
     // ==================== HELPER METHODS ====================
 
     private ClassResponse mapClassToResponse(ClassEntity classEntity) {

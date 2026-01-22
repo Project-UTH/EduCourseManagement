@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<poi.version>5.2.5</poi.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -143,6 +144,32 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.3.0</version>
+		</dependency>
+
+		<!-- Apache POI for Excel Import/Export -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>${poi.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>${poi.version}</version>
+		</dependency>
+
+		<!-- Supporting libraries -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.26.0</version>
 		</dependency>
 	</dependencies>
 		

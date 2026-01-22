@@ -2,12 +2,16 @@ package vn.edu.uth.ecms.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.uth.ecms.dto.request.ChangePasswordRequest;
 import vn.edu.uth.ecms.dto.request.TeacherCreateRequest;
 import vn.edu.uth.ecms.dto.request.TeacherUpdateRequest;
 import vn.edu.uth.ecms.dto.request.UpdateTeacherProfileRequest;
+import vn.edu.uth.ecms.dto.response.ImportResult;
 import vn.edu.uth.ecms.dto.response.TeacherResponse;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -102,4 +106,14 @@ public interface TeacherService {
      * @param request Change password request
      */
     void changePassword(String citizenId, ChangePasswordRequest request);
+
+    /**
+     * Import teachers from Excel file
+     */
+    ImportResult importFromExcel(MultipartFile file);
+
+    /**
+     * Generate Excel template for import
+     */
+    ByteArrayOutputStream generateImportTemplate() throws IOException;
 }

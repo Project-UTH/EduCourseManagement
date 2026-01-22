@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import studentApi, { StudentResponse } from '../../../services/api/studentApi';
 import majorApi from '../../../services/api/majorApi';
 import StudentModal from './StudentModal';
+import ImportModal from '../../admin/import/ImportModal';
 import './StudentList.css';
 
 interface Major {
@@ -22,6 +23,7 @@ const StudentList: React.FC = () => {
   const [filterMajorId, setFilterMajorId] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentResponse | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // Fetch majors for filter
   useEffect(() => {
@@ -133,6 +135,15 @@ const StudentList: React.FC = () => {
     }
   };
 
+  const handleImport = () => {
+    setIsImportModalOpen(true);
+  };
+
+  const handleImportClose = () => {
+    setIsImportModalOpen(false);
+  };
+
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN');
@@ -171,10 +182,16 @@ const StudentList: React.FC = () => {
       {/* HEADER */}
       <div className="page-header">
         <h1>Quản lý Sinh viên</h1>
-        <button className="btn btn-primary" onClick={handleCreate}>
-          <span className="icon">+</span>
-          Thêm Sinh viên
-        </button>
+        <div className="header-actions">
+          <button className="btn btn-secondary" onClick={handleImport}>
+            <span className="icon">📥</span>
+            Import Excel
+          </button>
+          <button className="btn btn-primary" onClick={handleCreate}>
+            <span className="icon">+</span>
+            Thêm Sinh viên
+          </button>
+        </div>
       </div>
 
       {/* FILTERS */}
@@ -225,14 +242,13 @@ const StudentList: React.FC = () => {
                   <th>Chuyên ngành</th>
                   <th>Email</th>
                   <th>SĐT</th>
-                  <th>Trạng thái</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {students.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="no-data">
+                    <td colSpan={11} className="no-data">
                       Không có dữ liệu
                     </td>
                   </tr>
@@ -264,13 +280,6 @@ const StudentList: React.FC = () => {
                       </td>
                       <td className="small">{student.email || '—'}</td>
                       <td>{student.phone || '—'}</td>
-                      <td className="center">
-                        {student.isActive ? (
-                          <span className="badge badge-success">Hoạt động</span>
-                        ) : (
-                          <span className="badge badge-inactive">Vô hiệu</span>
-                        )}
-                      </td>
                       <td className="actions">
                         <button
                           className="btn-edit"
@@ -326,6 +335,17 @@ const StudentList: React.FC = () => {
           student={editingStudent}
           onClose={handleModalClose}
           onSuccess={handleModalSuccess}
+        />
+      )}
+
+      {/* IMPORT MODAL */}
+      {isImportModalOpen && (
+        <ImportModal
+          title="Import Sinh viên từ Excel"
+          entityType="student"
+          onClose={handleImportClose}
+          onImport={studentApi.importFromExcel}
+          onDownloadTemplate={studentApi.downloadTemplate}
         />
       )}
     </div>

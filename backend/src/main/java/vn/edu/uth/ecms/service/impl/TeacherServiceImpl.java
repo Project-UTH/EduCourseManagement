@@ -2,21 +2,23 @@ package vn.edu.uth.ecms.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.uth.ecms.dto.request.ChangePasswordRequest;
 import vn.edu.uth.ecms.dto.request.TeacherCreateRequest;
 import vn.edu.uth.ecms.dto.request.TeacherUpdateRequest;
 import vn.edu.uth.ecms.dto.request.UpdateTeacherProfileRequest;
+import vn.edu.uth.ecms.dto.response.ImportError;
+import vn.edu.uth.ecms.dto.response.ImportResult;
 import vn.edu.uth.ecms.dto.response.TeacherResponse;
 import vn.edu.uth.ecms.dto.response.TeacherSubjectResponse;
-import vn.edu.uth.ecms.entity.Department;
-import vn.edu.uth.ecms.entity.Major;
-import vn.edu.uth.ecms.entity.Teacher;
-import vn.edu.uth.ecms.entity.TeacherSubject;
+import vn.edu.uth.ecms.entity.*;
 import vn.edu.uth.ecms.exception.BadRequestException;
 import vn.edu.uth.ecms.exception.DuplicateException;
 import vn.edu.uth.ecms.exception.NotFoundException;
@@ -26,8 +28,11 @@ import vn.edu.uth.ecms.repository.TeacherRepository;
 import vn.edu.uth.ecms.repository.TeacherSubjectRepository;
 import vn.edu.uth.ecms.service.TeacherService;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,6 +50,8 @@ public class TeacherServiceImpl implements TeacherService {
     private final MajorRepository majorRepository;
     private final PasswordEncoder passwordEncoder;
     private final TeacherSubjectRepository teacherSubjectRepository;
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     /**
      * Generate default password from date of birth
@@ -375,5 +382,263 @@ public class TeacherServiceImpl implements TeacherService {
         
         teacherRepository.save(teacher);
         log.info("✅ [TeacherService] Password changed successfully for: {}", teacher.getFullName());
+    }
+    @Override
+    @Transactional
+    public ImportResult importFromExcel(MultipartFile file) {
+        List<ImportError> errors = new ArrayList<>();
+        int successCount = 0;
+        int failureCount = 0;
+        int totalRows = 0;
+
+        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            totalRows = sheet.getPhysicalNumberOfRows() - 1; // Exclude header
+
+            for (int i = 1; i <= totalRows; i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                try {
+                    // Parse row data
+                    String citizenId = getCellValueAsString(row.getCell(1));
+                    String fullName = getCellValueAsString(row.getCell(2));
+                    String genderStr = getCellValueAsString(row.getCell(3));
+                    String dateOfBirthStr = getCellValueAsString(row.getCell(4));
+                    String departmentCode = getCellValueAsString(row.getCell(5));
+                    String majorCode = getCellValueAsString(row.getCell(6));
+                    String degree = getCellValueAsString(row.getCell(7));
+                    String email = getCellValueAsString(row.getCell(8));
+                    String phone = getCellValueAsString(row.getCell(9));
+                    String address = getCellValueAsString(row.getCell(10));
+
+                    // Validate required fields
+                    if (citizenId.isEmpty()) {
+                        throw new IllegalArgumentException("CCCD không được để trống");
+                    }
+                    if (citizenId.length() != 12) {
+                        throw new IllegalArgumentException("CCCD phải có đúng 12 ký tự");
+                    }
+                    if (fullName.isEmpty()) {
+                        throw new IllegalArgumentException("Họ và tên không được để trống");
+                    }
+
+                    // Check if teacher already exists
+                    if (teacherRepository.existsByCitizenId(citizenId)) {
+                        throw new IllegalArgumentException("CCCD đã tồn tại");
+                    }
+
+                    // Find department
+                    Department department = departmentRepository.findByDepartmentCode(departmentCode)
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    "Không tìm thấy khoa với mã: " + departmentCode));
+
+                    // Find major (optional)
+                    Major major = null;
+                    if (!majorCode.isEmpty()) {
+                        major = majorRepository.findByMajorCode(majorCode)
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                        "Không tìm thấy chuyên ngành với mã: " + majorCode));
+                    }
+
+                    // Parse date
+                    LocalDate dateOfBirth = LocalDate.parse(dateOfBirthStr, DATE_FORMATTER);
+
+                    // Parse gender
+                    Gender gender = Gender.valueOf(genderStr.toUpperCase());
+
+                    String defaultPassword = generateDefaultPassword(dateOfBirth); // ddMMyyyy format
+                    String hashedPassword = passwordEncoder.encode(defaultPassword);
+
+                    // Create teacher
+                    Teacher teacher = Teacher.builder()
+                            .citizenId(citizenId)
+                            .fullName(fullName)
+                            .gender(gender)
+                            .dateOfBirth(dateOfBirth)
+                            .department(department)
+                            .major(major)
+                            .degree(degree.isEmpty() ? null : degree)
+                            .email(email.isEmpty() ? null : email)
+                            .phone(phone.isEmpty() ? null : phone)
+                            .address(address.isEmpty() ? null : address)
+                            .password(hashedPassword)
+                            .isActive(true)
+                            .isFirstLogin(true)
+                            .build();
+
+                    teacherRepository.save(teacher);
+                    successCount++;
+
+                } catch (Exception e) {
+                    failureCount++;
+                    String citizenId = getCellValueAsString(row.getCell(1));
+
+                    errors.add(ImportError.builder()
+                            .row(i + 1)
+                            .identifier(citizenId.isEmpty() ? "N/A" : citizenId)
+                            .message(e.getMessage())
+                            .build());
+
+                    log.warn("Error importing teacher at row {}: {}", i + 1, e.getMessage());
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("Error reading Excel file: {}", e.getMessage());
+            throw new RuntimeException("Lỗi đọc file Excel: " + e.getMessage());
+        }
+
+        return ImportResult.builder()
+                .totalRows(totalRows)
+                .successCount(successCount)
+                .failureCount(failureCount)
+                .errors(errors)
+                .build();
+    }
+
+    @Override
+    public ByteArrayOutputStream generateImportTemplate() throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Teachers");
+
+        // Create header style
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setFontHeightInPoints((short) 12);
+        headerStyle.setFont(headerFont);
+        headerStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+        // Create header row
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {
+                "STT", "CCCD*", "Họ và tên*", "Giới tính*",
+                "Ngày sinh*", "Mã khoa*", "Mã chuyên ngành", "Học vị",
+                "Email", "Số điện thoại", "Địa chỉ"
+        };
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+            sheet.setColumnWidth(i, 4000);
+        }
+
+        // Add example rows with realistic Vietnamese teacher data
+        addExampleRow(sheet, 1, 1, "054205002349", "Nguyễn Văn Nam", "MALE",
+                "15/05/1985", "CNTT", "7480201", "Thạc sĩ",
+                "nguyenvannam@uth.edu.vn", "0912345678", "123 Đường Lý Thường Kiệt, Q.10, TP.HCM");
+
+        addExampleRow(sheet, 2, 2, "054205002350", "Trần Thị Lan", "FEMALE",
+                "22/09/1980", "CNTT", "7480104", "Tiến sĩ",
+                "tranthilan@uth.edu.vn", "0923456789", "456 Đường Nguyễn Thị Minh Khai, Q.3, TP.HCM");
+
+        addExampleRow(sheet, 3, 3, "054205002351", "Lê Hoàng Minh", "MALE",
+                "10/03/1988", "NN", "7220201", "Thạc sĩ",
+                "lehoangminh@uth.edu.vn", "0934567890", "789 Đường Điện Biên Phủ, Q.Bình Thạnh, TP.HCM");
+
+        addExampleRow(sheet, 4, 4, "054205002352", "Phạm Thị Hương", "FEMALE",
+                "28/11/1983", "CNTT", "7480201", "Tiến sĩ",
+                "phamthihuong@uth.edu.vn", "0945678901", "321 Đường Võ Văn Tần, Q.3, TP.HCM");
+
+        addExampleRow(sheet, 5, 5, "054205002353", "Đặng Quốc Tuấn", "MALE",
+                "05/07/1990", "NN", "", "Thạc sĩ",
+                "dangquoctuan@uth.edu.vn", "0956789012", "654 Đường Hai Bà Trưng, Q.1, TP.HCM");
+
+        // Add instruction sheet
+        Sheet instructionSheet = workbook.createSheet("Hướng dẫn");
+        addInstructions(instructionSheet);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream;
+    }
+
+    private void addExampleRow(Sheet sheet, int rowNum, int stt, String citizenId,
+                               String fullName, String gender, String dob, String deptCode,
+                               String majorCode, String degree, String email,
+                               String phone, String address) {
+        Row row = sheet.createRow(rowNum);
+        row.createCell(0).setCellValue(stt);
+        row.createCell(1).setCellValue(citizenId);
+        row.createCell(2).setCellValue(fullName);
+        row.createCell(3).setCellValue(gender);
+        row.createCell(4).setCellValue(dob);
+        row.createCell(5).setCellValue(deptCode);
+        row.createCell(6).setCellValue(majorCode);
+        row.createCell(7).setCellValue(degree);
+        row.createCell(8).setCellValue(email);
+        row.createCell(9).setCellValue(phone);
+        row.createCell(10).setCellValue(address);
+    }
+
+    private void addInstructions(Sheet sheet) {
+        String[] instructions = {
+                "HƯỚNG DẪN IMPORT GIẢNG VIÊN",
+                "",
+                "1. CÁC CỘT BẮT BUỘC (đánh dấu *):",
+                "   - CCCD: Đúng 12 ký tự, không trùng lặp",
+                "   - Họ và tên: Tối đa 100 ký tự",
+                "   - Giới tính: MALE, FEMALE, hoặc OTHER",
+                "   - Ngày sinh: Định dạng DD/MM/YYYY (ví dụ: 15/05/1985)",
+                "   - Mã khoa: Phải tồn tại trong hệ thống (ví dụ: CNTT, NN)",
+                "",
+                "2. CÁC CỘT TÙY CHỌN:",
+                "   - Mã chuyên ngành: Phải tồn tại trong hệ thống nếu có",
+                "   - Học vị: Ví dụ: Thạc sĩ, Tiến sĩ, Giáo sư, ...",
+                "   - Email: Địa chỉ email hợp lệ",
+                "   - Số điện thoại: Tối đa 15 ký tự",
+                "   - Địa chỉ: Địa chỉ liên hệ",
+                "",
+                "3. VÍ DỤ MÃ KHOA:",
+                "   - CNTT: Khoa Công Nghệ Thông Tin",
+                "   - NN: Khoa Ngoại Ngữ",
+                "   - KT: Khoa Kinh Tế",
+                "   - (Xem danh sách đầy đủ trong hệ thống)",
+                "",
+                "4. VÍ DỤ MÃ CHUYÊN NGÀNH:",
+                "   - 7480201: Công Nghệ Thông Tin",
+                "   - 7480104: Hệ Thống Thông Tin",
+                "   - 7220201: Ngôn Ngữ Anh",
+                "   - (Xem danh sách đầy đủ trong hệ thống)",
+                "",
+                "5. LƯU Ý:",
+                "   - Không chỉnh sửa tên cột trong dòng header",
+                "   - Xóa các dòng ví dụ trước khi import dữ liệu thật",
+                "   - Mật khẩu mặc định sẽ là số CCCD",
+                "   - Giảng viên phải đổi mật khẩu khi đăng nhập lần đầu",
+                "   - Nếu không có chuyên ngành, để trống cột 'Mã chuyên ngành'"
+        };
+
+        for (int i = 0; i < instructions.length; i++) {
+            Row row = sheet.createRow(i);
+            Cell cell = row.createCell(0);
+            cell.setCellValue(instructions[i]);
+        }
+
+        sheet.setColumnWidth(0, 18000);
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return "";
+
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue().trim();
+            case NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return DATE_FORMATTER.format(cell.getLocalDateTimeCellValue().toLocalDate());
+                }
+                return String.valueOf((long) cell.getNumericCellValue());
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            default:
+                return "";
+        }
     }
 }
