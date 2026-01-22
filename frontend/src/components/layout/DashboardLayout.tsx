@@ -13,6 +13,7 @@ const DashboardLayout = ({ userRole }: DashboardLayoutProps) => {
   // ⭐ KHÔNG CẦN STATE - Sidebar tự động collapsed bằng CSS
   // Chỉ cần state cho mobile
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const currentUsername = localStorage.getItem('username') || 'User';
 
   return (
     <div className="dashboard-layout">
@@ -32,7 +33,7 @@ const DashboardLayout = ({ userRole }: DashboardLayoutProps) => {
         </main>
         
         {(userRole === 'TEACHER' || userRole === 'STUDENT') && (
-          <RightSidebar userRole={userRole} />
+          <RightSidebar userRole={userRole} currentUsername={currentUsername} />
         )}
       </div>
     </div>

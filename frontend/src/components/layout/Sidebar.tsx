@@ -151,7 +151,7 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
             path: '/student/grades-menu',
             children: [
               { icon: '📈', label: 'Xem điểm', path: '/student/grades' },
-              { icon: '📄', label: 'Bảng điểm tích lũy', path: '/student/transcript' },
+              { icon: '📄', label: 'Bảng điểm tích lũy', path: '/student/transcript' },  // ✅ UPDATED - Link đến trang mới
             ]
           },
           { 

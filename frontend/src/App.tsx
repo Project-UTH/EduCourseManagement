@@ -30,6 +30,7 @@ import StudentProfile from './pages/student/profile/StudentProfile';
 import MyClasses from './pages/student/classes/MyClasses';
 import ClassDetail from './pages/student/courses/ClassDetail';
 import StudentHomeworkDetail from './pages/student/homeworks/HomeworkDetail'; // ✅ RENAMED
+import StudentTranscript from './pages/student/StudentTranscript'; // ✅ NEW - Bảng điểm tích lũy
 
 // ✅ Teacher Pages - PHASE 4
 import HomeworkList from './pages/teacher/assignments/HomeworkList';
@@ -225,7 +226,10 @@ function App() {
           <Route path="assignments" element={<Placeholder title="Danh sách Bài tập" />} />
           <Route path="submissions" element={<Placeholder title="Bài đã nộp" />} />
           <Route path="grades" element={<Placeholder title="Xem điểm" />} />
-          <Route path="transcript" element={<Placeholder title="Bảng điểm tích lũy" />} />
+          
+          {/* ✅ NEW - Bảng điểm tích lũy */}
+          <Route path="transcript" element={<StudentTranscript />} />
+          
           <Route path="feedback" element={<Placeholder title="Gửi Phản hồi" />} />
           <Route path="profile" element={<StudentProfile />} />
         </Route>
