@@ -8,52 +8,15 @@ interface HeaderProps {
   onToggleSidebar: () => void;
 }
 
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  time: string;
-  unread: boolean;
-  type: 'assignment' | 'grade' | 'announcement' | 'system';
-}
 
 const Header = ({ userRole, onToggleSidebar }: HeaderProps) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const notificationRef = useRef<HTMLDivElement>(null);
 
   // Mock notifications - will be replaced with real data
-  const [notifications] = useState<Notification[]>([
-    { 
-      id: 1, 
-      title: 'Bài tập mới', 
-      message: 'Môn Lập trình Web có bài tập mới', 
-      time: '5 phút trước', 
-      unread: true,
-      type: 'assignment'
-    },
-    { 
-      id: 2, 
-      title: 'Thông báo', 
-      message: 'Lịch học tuần tới có thay đổi', 
-      time: '1 giờ trước', 
-      unread: true,
-      type: 'announcement'
-    },
-    { 
-      id: 3, 
-      title: 'Điểm số', 
-      message: 'Điểm bài thi giữa kỳ đã được cập nhật', 
-      time: '2 giờ trước', 
-      unread: false,
-      type: 'grade'
-    },
-  ]);
 
-  const unreadCount = notifications.filter(n => n.unread).length;
 
   const handleLogout = () => {
     logout();
@@ -66,27 +29,12 @@ const Header = ({ userRole, onToggleSidebar }: HeaderProps) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
       }
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-        setShowNotifications(false);
-      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'assignment':
-        return '📝';
-      case 'grade':
-        return '📊';
-      case 'announcement':
-        return '📢';
-      default:
-        return '🔔';
-    }
-  };
 
   return (
     <header className="dashboard-header">
@@ -109,63 +57,9 @@ const Header = ({ userRole, onToggleSidebar }: HeaderProps) => {
       </div>
 
       <div className="header-right">
-        {/* Search Bar - Will be implemented in Phase 9 */}
-        <div className="search-bar">
-          <svg className="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input type="text" placeholder="Tìm kiếm..." disabled />
-        </div>
 
         {/* Notifications */}
-        <div className="notification-wrapper" ref={notificationRef}>
-          <button 
-            className="icon-btn notification-btn"
-            onClick={() => {
-              setShowNotifications(!showNotifications);
-              setShowUserMenu(false);
-            }}
-          >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            {unreadCount > 0 && (
-              <span className="notification-badge">{unreadCount}</span>
-            )}
-          </button>
-
-          {showNotifications && (
-            <div className="notification-dropdown">
-              <div className="notification-header">
-                <h3>Thông báo</h3>
-                <button className="mark-read-btn">Đánh dấu đã đọc</button>
-              </div>
-              <div className="notification-list">
-                {notifications.length === 0 ? (
-                  <div className="notification-empty">
-                    <p>Không có thông báo mới</p>
-                  </div>
-                ) : (
-                  notifications.map(notif => (
-                    <div key={notif.id} className={`notification-item ${notif.unread ? 'unread' : ''}`}>
-                      <div className="notification-icon">
-                        {getNotificationIcon(notif.type)}
-                      </div>
-                      <div className="notification-content">
-                        <h4>{notif.title}</h4>
-                        <p>{notif.message}</p>
-                        <span className="notification-time">{notif.time}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <div className="notification-footer">
-                <button className="view-all-btn">Xem tất cả</button>
-              </div>
-            </div>
-          )}
-        </div>
+        
 
         {/* User Menu */}
         <div className="user-menu-wrapper" ref={userMenuRef}>
@@ -173,7 +67,6 @@ const Header = ({ userRole, onToggleSidebar }: HeaderProps) => {
             className="user-menu-btn"
             onClick={() => {
               setShowUserMenu(!showUserMenu);
-              setShowNotifications(false);
             }}
           >
             <div className={`user-avatar ${userRole.toLowerCase()}`}>

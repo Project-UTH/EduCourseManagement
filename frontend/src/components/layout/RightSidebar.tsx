@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import studentClassApi from '../../services/api/studentClassApi';
 import studentHomeworkApi from '../../services/api/studentHomeworkApi';
-import ChatList from '../chat/ChatList';
+import ChatList from '../chat/ChatList';  
 import './RightSidebar.css';
 
 interface RightSidebarProps {

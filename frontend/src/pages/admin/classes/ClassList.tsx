@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import './ClassList.css';
+import './ClassList.css'; // File CSS độc lập
 
-// Import modals
+// Import modals (Giả định các file này đã tồn tại)
 import SessionListModal from './SessionListModal';
 import StudentListModal from './StudentListModal';
 import ClassModal from './ClassModal';
@@ -111,24 +111,22 @@ const ClassList: React.FC = () => {
         }
       });
       
-      if (!response.ok) throw new Error('Failed to fetch classes');
+      if (!response.ok) throw new Error('Không thể tải danh sách lớp học');
       
       const data = await response.json();
       
       if (selectedSemester) {
-        // Semester filter returns array directly
         setClasses(data.data);
         setTotalElements(data.data.length);
         setTotalPages(1);
       } else {
-        // Paginated response
         setClasses(data.data.content);
         setTotalElements(data.data.totalElements);
         setTotalPages(data.data.totalPages);
       }
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : 'Lỗi không xác định');
     } finally {
       setLoading(false);
     }
@@ -146,14 +144,11 @@ const ClassList: React.FC = () => {
       
       const data = await response.json();
       
-      // Handle different response structures
       if (Array.isArray(data.data)) {
         setSemesters(data.data);
       } else if (data.data && Array.isArray(data.data.content)) {
-        // Paginated response
         setSemesters(data.data.content);
       } else {
-        console.warn('Unexpected semester data structure:', data);
         setSemesters([]);
       }
     } catch (err) {
@@ -164,7 +159,6 @@ const ClassList: React.FC = () => {
   
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!searchKeyword.trim()) {
       fetchClasses();
       return;
@@ -181,7 +175,7 @@ const ClassList: React.FC = () => {
         }
       );
       
-      if (!response.ok) throw new Error('Search failed');
+      if (!response.ok) throw new Error('Tìm kiếm thất bại');
       
       const data = await response.json();
       setClasses(data.data.content);
@@ -245,15 +239,15 @@ const ClassList: React.FC = () => {
       'CLOSED': { className: 'badge-closed', text: 'Đóng' }
     };
     
-    const badge = badges[status] || { className: '', text: status };
+    const badge = badges[status] || { className: 'badge-closed', text: status };
     return <span className={`badge ${badge.className}`}>{badge.text}</span>;
   };
   
   const getSemesterBadge = (status: string) => {
     const badges: Record<string, { className: string; text: string }> = {
-      'UPCOMING': { className: 'badge-upcoming', text: 'Sắp diễn ra' },
-      'ACTIVE': { className: 'badge-active', text: 'Đang diễn ra' },
-      'COMPLETED': { className: 'badge-completed', text: 'Đã kết thúc' }
+      'UPCOMING': { className: 'badge-upcoming', text: 'Sắp tới' },
+      'ACTIVE': { className: 'badge-active', text: 'Đang học' },
+      'COMPLETED': { className: 'badge-completed', text: 'Đã xong' }
     };
     
     const badge = badges[status] || { className: '', text: status };
@@ -263,21 +257,36 @@ const ClassList: React.FC = () => {
   // ==================== RENDER ====================
   
   return (
-    <div className="page-container">
+    // Scope tất cả vào class-list-page để CSS độc lập
+    <div className="class-list-page">
       {/* HEADER */}
       <div className="page-header">
-        <h1>Quản lý Lớp học</h1>
-        <button 
-          className="btn btn-primary"
-          onClick={() => {
-            setSelectedClass(null);
-            setShowClassModal(true);
-          }}
-        >
-          <span className="icon">+</span>
-          Tạo lớp học
-        </button>
-      </div>
+    <h1>Quản lý Lớp học</h1>
+
+    <button
+      className="btn btn-add"
+      onClick={() => {
+        setSelectedClass(null);
+        setShowClassModal(true);
+      }}
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2.5}
+          d="M12 5v14m7-7H5"
+        />
+      </svg>
+      <span>Tạo lớp mới</span>
+    </button>
+  </div>
       
       {/* FILTERS */}
       <div className="filters-bar">
@@ -302,7 +311,7 @@ const ClassList: React.FC = () => {
             setCurrentPage(0);
           }}
         >
-          <option value="">Tất cả học kỳ</option>
+          <option value="">-- Tất cả học kỳ --</option>
           {Array.isArray(semesters) && semesters.map(sem => (
             <option key={sem.semesterId} value={sem.semesterId}>
               {sem.semesterCode} - {sem.semesterName}
@@ -314,123 +323,131 @@ const ClassList: React.FC = () => {
       {/* TABLE */}
       <div className="table-container">
         {loading ? (
-          <div className="loading">⏳ Đang tải...</div>
+          <div className="loading">⏳ Đang tải dữ liệu...</div>
         ) : error ? (
           <div className="error-message">❌ {error}</div>
         ) : classes.length === 0 ? (
-          <div className="no-data">Không có lớp học nào</div>
+          <div className="no-data">Không tìm thấy lớp học nào</div>
         ) : (
           <>
-            <table className="data-table class-table">
+            <table className="class-table">
               <thead>
                 <tr>
                   <th>Mã lớp</th>
                   <th>Môn học</th>
                   <th>Giảng viên</th>
                   <th>Học kỳ</th>
-                  <th>Lịch học</th>
+                  <th>Lịch & Phòng</th>
                   <th>Sĩ số</th>
-                  <th>Buổi học</th>
+                  <th>Tiến độ</th>
                   <th>Trạng thái</th>
-                  <th>Thao tác</th>
+                  <th style={{ textAlign: 'center' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {classes.map(cls => (
                   <tr key={cls.classId}>
-                    <td>
+                    <td data-label="Mã lớp">
                       <strong>{cls.classCode}</strong>
                     </td>
-                    <td>
+                    <td data-label="Môn học">
                       <div className="subject-info">
                         <span className="subject-code">{cls.subjectCode}</span>
                         <span className="subject-name">{cls.subjectName}</span>
                         <span className="credits">({cls.credits} TC)</span>
                       </div>
                     </td>
-                    <td>{cls.teacherName}</td>
-                    <td>
+                    <td data-label="Giảng viên">
+                      {cls.teacherName || <span style={{color:'#999'}}>Chưa phân công</span>}
+                    </td>
+                    <td data-label="Học kỳ">
                       <div className="semester-info">
                         <span>{cls.semesterCode}</span>
                         {getSemesterBadge(cls.semesterStatus)}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Lịch học">
                       <div className="schedule-info">
                         <div>{cls.dayOfWeekDisplay}, {cls.timeSlotDisplay}</div>
-                        <div className="room">{cls.room}</div>
+                        <div className="room">{cls.room || 'Chưa xếp phòng'}</div>
                         {cls.rescheduledSessionsCount > 0 && (
                           <div className="rescheduled-badge">
-                            🔄 {cls.rescheduledSessionsCount} buổi đã đổi
+                            🔄 {cls.rescheduledSessionsCount} đổi lịch
                           </div>
                         )}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Sĩ số">
                       <div className="enrollment-info">
                         <div className="enrollment-count">
                           <strong>{cls.enrolledCount}</strong> / {cls.maxStudents}
                         </div>
                         <div className="seats-available">
-                          Còn: {cls.availableSeats} chỗ
+                          Còn {cls.availableSeats} chỗ
                         </div>
                         <div className="progress-bar">
                           <div 
                             className="progress-fill"
                             style={{ 
-                              width: `${(cls.enrolledCount / cls.maxStudents) * 100}%`,
-                              backgroundColor: cls.enrolledCount >= cls.maxStudents ? '#ef4444' : '#22c55e'
+                              width: `${Math.min((cls.enrolledCount / cls.maxStudents) * 100, 100)}%`,
+                              backgroundColor: cls.enrolledCount >= cls.maxStudents ? '#ef4444' : '#10b981'
                             }}
                           />
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Tiến độ">
                       <div className="sessions-info">
                         <div>{cls.totalSessionsGenerated} buổi</div>
-                        {cls.rescheduledSessionsCount > 0 && (
-                          <small className="text-warning">
-                            ({cls.rescheduledSessionsCount} đã đổi)
-                          </small>
+                        {cls.completedSessions > 0 && (
+                          <small style={{color: '#6b7280'}}>Đã xong: {cls.completedSessions}</small>
                         )}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Trạng thái">
                       {getStatusBadge(cls.status)}
                     </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn-action btn-view"
-                          onClick={() => handleViewSessions(cls)}
-                          title="Xem lịch học"
-                        >
-                          📅 Lịch
-                        </button>
-                        <button
-                          className="btn-action btn-students"
-                          onClick={() => handleViewStudents(cls)}
-                          title="Xem sinh viên"
-                        >
-                          👥 SV ({cls.enrolledCount})
-                        </button>
-                        <button
-                          className="btn-action btn-edit"
-                          onClick={() => handleEditClass(cls)}
-                          title="Sửa lớp"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          className="btn-action btn-delete"
-                          onClick={() => handleDeleteClass(cls.classId, cls.classCode)}
-                          title="Xóa lớp"
-                          disabled={cls.enrolledCount > 0}
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
+
+<td data-label="Thao tác">
+  <div className="action-buttons">
+    {/* Nút 1: Lịch (Góc trên trái) */}
+    <button
+      className="btn-action btn-view"
+      onClick={() => handleViewSessions(cls)}
+      title="Xem lịch chi tiết"
+    >
+      📅 Lịch
+    </button>
+
+    {/* Nút 2: Sinh viên (Góc trên phải) */}
+    <button
+      className="btn-action btn-students"
+      onClick={() => handleViewStudents(cls)}
+      title={`Xem danh sách sinh viên (${cls.enrolledCount})`}
+    >
+      👥 SV
+    </button>
+
+    {/* Nút 3: Sửa (Góc dưới trái) */}
+    <button
+      className="btn-action btn-edit"
+      onClick={() => handleEditClass(cls)}
+      title="Chỉnh sửa thông tin"
+    >
+      ✏️ Sửa
+    </button>
+
+    {/* Nút 4: Xóa (Góc dưới phải) */}
+    <button
+      className="btn-action btn-delete"
+      onClick={() => handleDeleteClass(cls.classId, cls.classCode)}
+      title="Xóa lớp học"
+      disabled={cls.enrolledCount > 0}
+    >
+      🗑️ Xóa
+    </button>
+  </div>
+</td>
                   </tr>
                 ))}
               </tbody>
@@ -438,29 +455,17 @@ const ClassList: React.FC = () => {
             
             {/* PAGINATION */}
             <div className="pagination">
-              <div className="pagination-info">
-                Hiển thị {classes.length} / {totalElements} lớp học
+                <div className="pagination-info">
+                 Hiện thị {classes.length}/{totalElements} lớp học
+                </div>
+                <div className="pagination-controls">
+                  <button className="btn-page" onClick={() => setCurrentPage(0)} disabled={currentPage === 0}>«</button>
+                  <button className="btn-page" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 0}>‹</button>
+                  <span style={{margin: '0 10px', fontWeight: 600}}>{currentPage + 1}</span>
+                  <button className="btn-page" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage >= totalPages - 1}>›</button>
+                  <button className="btn-page" onClick={() => setCurrentPage(totalPages - 1)} disabled={currentPage >= totalPages - 1}>»</button>
+                </div>
               </div>
-              <div className="pagination-controls">
-                <button
-                  className="btn-page"
-                  onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                  disabled={currentPage === 0}
-                >
-                  ← Trước
-                </button>
-                <span className="page-number">
-                  Trang {currentPage + 1} / {totalPages}
-                </span>
-                <button
-                  className="btn-page"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-                  disabled={currentPage >= totalPages - 1}
-                >
-                  Sau →
-                </button>
-              </div>
-            </div>
           </>
         )}
       </div>
@@ -481,11 +486,10 @@ const ClassList: React.FC = () => {
         />
       )}
       
-      {/* ✅ FIX: isOpen should use showClassModal state */}
       {showClassModal && (
         <ClassModal
           isOpen={showClassModal}
-          classData={selectedClass === null ? undefined : selectedClass}
+          classData={selectedClass || undefined}
           onClose={() => {
             setShowClassModal(false);
             setSelectedClass(null);

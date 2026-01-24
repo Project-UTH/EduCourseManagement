@@ -1,642 +1,317 @@
 /**
- * Department List CSS - FIXED WIDTH
+ * Department List CSS - 3D BUTTONS & CENTERED
  * File: frontend/src/pages/admin/departments/DepartmentList.css
- * 
- * FIX: Giới hạn width các cột để vừa màn hình
  */
 
-/* ================================================================
-   PAGE CONTAINER
-   ================================================================ */
+/* ... Các phần layout chung giữ nguyên như cũ ... */
 
-.page-container {
-  padding: 1.5rem;
-  max-width: 100%;
+.department-list-page {
+  padding: 2rem;
+  max-width: 1280px;
   margin: 0 auto;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #374151;
+  box-sizing: border-box;
+  width: 100%;
 }
 
-.page-header {
+.department-list-page .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  gap: 1rem;
 }
 
-.page-header h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
+.department-list-page .page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
   color: #111827;
   margin: 0;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Bóng chữ nhẹ */
+}
+
+/* MAIN CARD */
+.department-list-page .main-card {
+  background: white;
+  border-radius: 1rem; /* Bo tròn mềm mại hơn */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f3f4f6;
+  overflow: hidden;
+}
+
+.department-list-page .filters-bar {
+  padding: 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  background-color: #fff;
+}
+
+.department-list-page .search-form {
+  display: flex;
+  gap: 0.75rem;
+  flex: 1;
+  max-width: 500px;
+}
+
+.department-list-page .search-input {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.department-list-page .search-input:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
 }
 
 /* ================================================================
-   BUTTONS
+   ⭐ 3D BUTTONS STYLES (CẬP NHẬT MỚI)
    ================================================================ */
 
-.btn {
+.department-list-page .btn {
+  /* Căn giữa nội dung nút */
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  
   padding: 0.625rem 1.25rem;
   border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-primary {
-  background: #16a34a;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #15803d;
-}
-
-.btn-primary .icon {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.btn-edit {
-  padding: 0.375rem 0.75rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.btn-edit:hover {
-  background: #2563eb;
-}
-
-.btn-delete {
-  padding: 0.375rem 0.75rem;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.btn-delete:hover {
-  background: #dc2626;
-}
-
-.btn-delete:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-.btn-icon-info {
-  padding: 0.25rem 0.5rem;
-  background: #e0f2fe;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.15s;
-  line-height: 1;
-}
-
-.btn-icon-info:hover {
-  background: #bae6fd;
-  transform: scale(1.15);
-}
-
-/* ================================================================
-   FILTERS BAR
-   ================================================================ */
-
-.filters-bar {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.search-form {
-  display: flex;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 300px;
-}
-
-.search-input {
-  flex: 1;
-  padding: 0.625rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #16a34a;
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
-}
-
-.btn-search {
-  padding: 0.625rem 1rem;
-  background: #16a34a;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.btn-search:hover {
-  background: #15803d;
-}
-
-.btn-clear {
-  padding: 0.625rem 1rem;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.btn-clear:hover {
-  background: #dc2626;
-}
-
-/* ================================================================
-   TABLE - FIXED COLUMN WIDTHS
-   ================================================================ */
-
-.table-container {
-  background: white;
   border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
   font-size: 0.875rem;
-  table-layout: fixed; /* ⭐ CRITICAL: Fixed table layout */
-}
-
-.data-table th,
-.data-table td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.data-table th {
-  background: #f9fafb;
   font-weight: 600;
-  color: #374151;
-}
-
-.data-table tbody tr:hover {
-  background: #f9fafb;
-}
-
-/* ⭐ COLUMN WIDTHS - Department List (6 cột) */
-.data-table th:nth-child(1),
-.data-table td:nth-child(1) {
-  width: 100px; /* Mã Khoa */
-}
-
-.data-table th:nth-child(2),
-.data-table td:nth-child(2) {
-  width: 280px; /* Tên Khoa - GIỚI HẠN */
-}
-
-.data-table th:nth-child(3),
-.data-table td:nth-child(3) {
-  width: 140px; /* Loại Kiến thức */
-}
-
-.data-table th:nth-child(4),
-.data-table td:nth-child(4) {
-  width: 60px; /* MT (Mô tả button) */
-  text-align: center;
-}
-
-.data-table th:nth-child(5),
-.data-table td:nth-child(5) {
-  width: 110px; /* Ngày tạo */
-}
-
-.data-table th:nth-child(6),
-.data-table td:nth-child(6) {
-  width: 160px; /* Thao tác */
-}
-
-.sortable {
   cursor: pointer;
-  user-select: none;
-}
-
-.sortable:hover {
-  background: #f3f4f6;
-}
-
-.code {
-  font-family: 'Courier New', monospace;
-  font-weight: 600;
-  color: #1e40af;
-}
-
-.center {
-  text-align: center;
-}
-
-.text-muted {
-  color: #9ca3af;
-}
-
-.date-cell {
-  font-size: 0.8125rem;
-  color: #6b7280;
-}
-
-.actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-
-/* ================================================================
-   BADGES
-   ================================================================ */
-
-.badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.badge-department {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-/* ================================================================
-   LOADING & MESSAGES
-   ================================================================ */
-
-.loading,
-.no-data,
-.error-message {
-  padding: 2rem;
-  text-align: center;
-  color: #6b7280;
-}
-
-.error-message {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-/* ================================================================
-   PAGINATION
-   ================================================================ */
-
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-top: 1px solid #e5e7eb;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.pagination-info {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.pagination-controls {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.btn-page {
-  padding: 0.5rem 0.75rem;
-  background: white;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-page:hover:not(:disabled) {
-  background: #f9fafb;
-  border-color: #16a34a;
-}
-
-.btn-page:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-number {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  color: #374151;
-  font-weight: 500;
-}
-
-/* ================================================================
-   DESCRIPTION TOOLTIP
-   ================================================================ */
-
-.description-tooltip {
-  position: fixed;
-  z-index: 9999;
-  background: #1f2937;
-  color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  max-width: 350px;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-  pointer-events: none;
-  animation: tooltipFadeIn 0.2s;
-}
-
-@keyframes tooltipFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ================================================================
-   MODAL STYLES
-   ================================================================ */
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  padding: 1rem;
-  overflow-y: auto;
-  animation: fadeIn 0.2s;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.modal-content {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  animation: slideUp 0.3s;
+  line-height: 1.25rem;
+  
+  /* Hiệu ứng chuyển động mượt */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  z-index: 10001;
+  overflow: hidden;
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Hiệu ứng khi bấm (Active) chung cho các nút */
+.department-list-page .btn:active:not(:disabled) {
+  transform: translateY(1px); /* Nút lún xuống khi bấm */
+  box-shadow: none;
 }
 
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+/* --- PRIMARY BUTTON (Xanh lá - Thêm mới/Search) --- */
+.department-list-page .btn-primary,
+.department-list-page .btn-search {
+  color: white;
+  /* Gradient tạo độ cong bề mặt */
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+  /* Bóng đổ màu xanh (Colored Shadow) */
+  box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3), 
+              0 2px 4px -1px rgba(22, 163, 74, 0.15),
+              inset 0 1px 0 rgba(255,255,255,0.2); /* Highlight cạnh trên */
 }
 
-.modal-header h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
+.department-list-page .btn-primary:hover,
+.department-list-page .btn-search:hover {
+  background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+  box-shadow: 0 6px 8px -1px rgba(22, 163, 74, 0.4);
+  transform: translateY(-1px); /* Nổi lên nhẹ khi hover */
 }
 
-.btn-close {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-  border: none;
+/* --- EDIT BUTTON (Xanh dương - Sửa) --- */
+.department-list-page .btn-edit {
+  color: white;
+  padding: 0.4rem 0.85rem; /* Nhỏ hơn nút chính một chút */
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3),
+              inset 0 1px 0 rgba(255,255,255,0.2);
   border-radius: 0.375rem;
-  font-size: 1.5rem;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.15s;
+  font-size: 0.8125rem;
 }
 
-.btn-close:hover {
+.department-list-page .btn-edit:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
+}
+
+/* --- DELETE BUTTON (Đỏ - Xóa) --- */
+.department-list-page .btn-delete {
+  color: white;
+  padding: 0.4rem 0.85rem;
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3),
+              inset 0 1px 0 rgba(255,255,255,0.2);
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+}
+
+.department-list-page .btn-delete:hover {
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 4px 6px rgba(220, 38, 38, 0.4);
+  transform: translateY(-1px);
+}
+
+.department-list-page .btn-delete:disabled {
   background: #e5e7eb;
-  color: #111827;
+  color: #9ca3af;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.modal-body {
-  flex: 1;
-  padding: 1.5rem;
-  overflow-y: auto;
-}
-
-.modal-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-  background: #f3f4f6;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
-}
-
-.form-group {
-  margin-bottom: 1.25rem;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.5rem;
-}
-
-.form-group label .required {
-  color: #ef4444;
-  margin-left: 0.25rem;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 0.625rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  transition: all 0.15s;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #16a34a;
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
-}
-
-.form-group textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.error-text {
-  display: block;
-  color: #ef4444;
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding: 1.5rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.btn-cancel {
-  padding: 0.625rem 1.25rem;
+/* --- CLEAR BUTTON (Trắng/Xám - Xóa lọc) --- */
+.department-list-page .btn-clear {
   background: white;
+  color: #4b5563;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.btn-cancel:hover {
+.department-list-page .btn-clear:hover {
   background: #f9fafb;
   border-color: #9ca3af;
+  color: #111827;
 }
 
-.btn-submit {
-  padding: 0.625rem 1.25rem;
-  background: #16a34a;
-  border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: white;
+/* --- INFO ICON BUTTON (Tròn) --- */
+.department-list-page .btn-icon-info {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #0284c7;
+  border-radius: 50%;
+  border: 1px solid #bae6fd;
   cursor: pointer;
-  transition: all 0.15s;
+  box-shadow: 0 2px 4px rgba(14, 165, 233, 0.15);
+  transition: all 0.2s;
+  font-size: 0.875rem;
 }
 
-.btn-submit:hover {
-  background: #15803d;
-}
-
-.btn-submit:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
+.department-list-page .btn-icon-info:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 6px rgba(14, 165, 233, 0.25);
+  background: linear-gradient(180deg, #bae6fd 0%, #7dd3fc 100%);
 }
 
 /* ================================================================
-   RESPONSIVE
+   TABLE ALIGNMENT (CĂN GIỮA)
    ================================================================ */
 
-@media (max-width: 1200px) {
-  /* Giảm width tên khoa */
-  .data-table th:nth-child(2),
-  .data-table td:nth-child(2) {
-    width: 200px;
-  }
+.department-list-page .table-responsive {
+  width: 100%;
+  overflow-x: auto;
 }
 
-@media (max-width: 768px) {
-  .page-container {
-    padding: 1rem;
-  }
-  
-  .page-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .filters-bar {
-    flex-direction: column;
-  }
-  
-  .search-form {
-    min-width: 100%;
-  }
-  
-  /* Hide Ngày tạo on mobile */
-  .data-table th:nth-child(5),
-  .data-table td:nth-child(5) {
-    display: none;
-  }
-  
-  .modal-content {
-    max-width: 100%;
-    margin: 0;
-    border-radius: 0;
-    max-height: 100vh;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-  }
+.department-list-page .data-table {
+  width: 100%;
+  border-collapse: separate; /* Để border radius hoạt động tốt hơn nếu cần */
+  border-spacing: 0;
+  min-width: 900px;
+  table-layout: fixed;
+}
+
+.department-list-page .data-table th {
+  background: #f8fafc;
+  padding: 1rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e2e8f0;
+  text-align: left; /* Mặc định căn trái tiêu đề */
+}
+
+/* Căn giữa tiêu đề của các cột đặc biệt */
+.department-list-page .data-table th.center {
+  text-align: center;
+}
+
+.department-list-page .data-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+  vertical-align: middle; /* Căn giữa theo chiều dọc */
+}
+
+/* ⭐ Căn giữa nội dung cột Hành động */
+.department-list-page .actions {
+  display: flex;
+  justify-content: center; /* Căn giữa chiều ngang */
+  align-items: center;     /* Căn giữa chiều dọc */
+  gap: 0.75rem;            /* Khoảng cách giữa 2 nút */
+  height: 100%;
+}
+
+/* Các cột cần căn giữa chữ */
+.department-list-page .center {
+  text-align: center;
+}
+
+/* Code styling */
+.department-list-page .code {
+  font-family: 'Monaco', monospace;
+  font-weight: 600;
+  color: #4f46e5;
+  background: #eef2ff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #e0e7ff;
+  font-size: 0.8125rem;
+}
+
+/* Badge styling */
+.department-list-page .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.department-list-page .badge-department {
+  background: linear-gradient(to bottom, #eff6ff, #dbeafe);
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+/* Pagination Buttons (Cũng thêm shadow nhẹ) */
+.department-list-page .btn-page {
+  width: 36px; 
+  height: 36px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0.375rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: all 0.2s;
+  padding: 0; /* Reset padding để width/height hoạt động chuẩn */
+}
+
+.department-list-page .btn-page:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.department-list-page .pagination-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ... Phần Tooltip và Modal giữ nguyên ... */
+.dl-description-tooltip,
+.dl-modal-overlay, .dl-modal-content, /* ... */ 
+.dl-btn-close, .dl-btn-cancel, .dl-btn-submit {
+    /* (Giữ nguyên code modal từ bước trước, 
+       chỉ cần chú ý nút submit modal cũng nên có class btn-primary mới) */
 }

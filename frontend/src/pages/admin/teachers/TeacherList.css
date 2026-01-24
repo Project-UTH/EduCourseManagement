@@ -1,155 +1,187 @@
-/* TeacherList.css - Custom styles for Teacher management */
-
-/* Reuse shared styles from admin-components.css */
-
-/**
- * Teacher List CSS - NO CONFLICT
- * File: frontend/src/pages/admin/teachers/TeacherList.css
- * 
- * Uses .teacher-* prefix to avoid conflicts with Department/Subject CSS
- */
-
 /* ================================================================
-   TEACHER TABLE - 12 COLUMNS
+   TEACHER LIST PAGE - ISOLATED SCOPE
+   File: frontend/src/pages/admin/teachers/TeacherList.css
+   Root Class: .teacher-list-page
    ================================================================ */
 
-.teacher-table-container {
+/* Tất cả style đều nằm trong .teacher-list-page để tránh xung đột */
+
+/* Container chính */
+.teacher-list-page .teacher-table-container {
   background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 12px; /* Bo góc giống Student */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Đổ bóng */
   overflow-x: auto;
   overflow-y: visible;
+  margin-top: 1rem;
+  border: 1px solid #f1f5f9;
 }
 
-.teacher-data-table {
+/* Table layout */
+.teacher-list-page .teacher-data-table {
   width: 100%;
   min-width: 1570px; /* 12 cột */
-  border-collapse: collapse;
-  font-size: 0.75rem;
+  
+  /* ⭐ SỬA: Thay đổi border model và font-size giống Student */
+  border-collapse: separate; 
+  border-spacing: 0;
+  font-size: 0.8rem; /* Tăng từ 0.75rem lên 0.8rem */
   table-layout: fixed;
 }
 
-.teacher-data-table th,
-.teacher-data-table td {
-  padding: 0.5rem 0.3rem;
-  text-align: left;
+/* Table Cells & Headers */
+.teacher-list-page .teacher-data-table th,
+.teacher-list-page .teacher-data-table td {
+  /* ⭐ SỬA: Tăng padding một chút để chữ 0.8rem dễ thở hơn */
+  padding: 0.75rem 0.5rem; 
+  text-align: center;
   border-bottom: 1px solid #e5e7eb;
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: middle;
 }
 
-.teacher-data-table th {
+/* Header Styling */
+.teacher-list-page .teacher-data-table th {
   background: #f9fafb;
   font-weight: 600;
   color: #374151;
-  font-size: 0.7rem;
+  
+  /* ⭐ SỬA: Tăng kích thước font header và thêm viết hoa cho đẹp */
+  font-size: 0.75rem; /* Tăng từ 0.7rem lên 0.75rem (hoặc 0.8rem nếu muốn bằng body) */
+  text-transform: uppercase; /* Thêm cái này nhìn cho chuyên nghiệp giống admin dashboard */
+  letter-spacing: 0.05em;
+  
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.teacher-data-table tbody tr:hover {
+.teacher-list-page .teacher-data-table tbody tr:hover {
   background: #f9fafb;
 }
 
-/* COLUMN WIDTHS - 12 cột */
-.teacher-data-table th:nth-child(1),
-.teacher-data-table td:nth-child(1) {
-  width: 100px; /* CCCD */
+/* ==================== COLUMN WIDTHS (12 CỘT) ==================== */
+/* Sử dụng child selector cụ thể để đảm bảo độ ưu tiên */
+
+/* 1. CCCD */
+.teacher-list-page .teacher-data-table th:nth-child(1),
+.teacher-list-page .teacher-data-table td:nth-child(1) {
+  width: 100px;
   min-width: 100px;
 }
 
-.teacher-data-table th:nth-child(2),
-.teacher-data-table td:nth-child(2) {
-  width: 150px; /* Họ tên */
+/* 2. Họ tên */
+.teacher-list-page .teacher-data-table th:nth-child(2),
+.teacher-list-page .teacher-data-table td:nth-child(2) {
+  width: 150px;
   min-width: 150px;
+  font-weight: 500;
+  color: #111827;
 }
 
-.teacher-data-table th:nth-child(3),
-.teacher-data-table td:nth-child(3) {
-  width: 70px; /* Giới tính */
+/* 3. Giới tính */
+.teacher-list-page .teacher-data-table th:nth-child(3),
+.teacher-list-page .teacher-data-table td:nth-child(3) {
+  width: 70px;
   min-width: 70px;
   text-align: center;
 }
 
-.teacher-data-table th:nth-child(4),
-.teacher-data-table td:nth-child(4) {
-  width: 90px; /* Ngày sinh */
+/* 4. Ngày sinh */
+.teacher-list-page .teacher-data-table th:nth-child(4),
+.teacher-list-page .teacher-data-table td:nth-child(4) {
+  width: 90px;
   min-width: 90px;
 }
 
-.teacher-data-table th:nth-child(5),
-.teacher-data-table td:nth-child(5) {
-  width: 120px; /* Khoa */
+/* 5. Khoa */
+.teacher-list-page .teacher-data-table th:nth-child(5),
+.teacher-list-page .teacher-data-table td:nth-child(5) {
+  width: 120px;
   min-width: 120px;
 }
 
-.teacher-data-table th:nth-child(6),
-.teacher-data-table td:nth-child(6) {
-  width: 120px; /* Chuyên ngành */
+/* 6. Chuyên ngành */
+.teacher-list-page .teacher-data-table th:nth-child(6),
+.teacher-list-page .teacher-data-table td:nth-child(6) {
+  width: 120px;
   min-width: 120px;
 }
 
-.teacher-data-table th:nth-child(7),
-.teacher-data-table td:nth-child(7) {
-  width: 180px; /* Các môn dạy - NEW */
+/* 7. Các môn dạy (Complex content) */
+.teacher-list-page .teacher-data-table th:nth-child(7),
+.teacher-list-page .teacher-data-table td:nth-child(7) {
+  width: 180px;
   min-width: 180px;
 }
 
-.teacher-data-table th:nth-child(8),
-.teacher-data-table td:nth-child(8) {
-  width: 80px; /* Học vị */
+/* 8. Học vị */
+.teacher-list-page .teacher-data-table th:nth-child(8),
+.teacher-list-page .teacher-data-table td:nth-child(8) {
+  width: 80px;
   min-width: 80px;
   text-align: center;
 }
 
-.teacher-data-table th:nth-child(9),
-.teacher-data-table td:nth-child(9) {
-  width: 150px; /* Email */
+/* 9. Email */
+.teacher-list-page .teacher-data-table th:nth-child(9),
+.teacher-list-page .teacher-data-table td:nth-child(9) {
+  width: 150px;
   min-width: 150px;
   font-size: 0.85rem;
+  color: #4b5563;
 }
 
-.teacher-data-table th:nth-child(10),
-.teacher-data-table td:nth-child(10) {
-  width: 100px; /* SĐT */
+/* 10. SĐT */
+.teacher-list-page .teacher-data-table th:nth-child(10),
+.teacher-list-page .teacher-data-table td:nth-child(10) {
+  width: 100px;
   min-width: 100px;
 }
 
-.teacher-data-table th:nth-child(11),
-.teacher-data-table td:nth-child(11) {
-  width: 90px; /* Trạng thái */
+/* 11. Trạng thái */
+.teacher-list-page .teacher-data-table th:nth-child(11),
+.teacher-list-page .teacher-data-table td:nth-child(11) {
+  width: 90px;
   min-width: 90px;
   text-align: center;
 }
 
-.teacher-data-table th:nth-child(12),
-.teacher-data-table td:nth-child(12) {
-  width: 120px; /* Thao tác */
+/* 12. Thao tác */
+.teacher-list-page .teacher-data-table th:nth-child(12),
+.teacher-list-page .teacher-data-table td:nth-child(12) {
+  width: 120px;
   min-width: 120px;
+  text-align: center;
 }
 
-/* ================================================================
-   TEACHER SUBJECTS COLUMN STYLING
-   ================================================================ */
+/* ==================== TEACHER SUBJECTS STYLING ==================== */
+/* Nested selectors để tránh conflict với module Môn Học */
 
-.subjects-list {
+.teacher-list-page .subjects-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0px;
+  align-items: center; 
 }
 
-.subjects-count {
+.teacher-list-page .subjects-count {
   font-size: 0.75rem;
   color: #6b7280;
   font-weight: 600;
+  text-align: center;
 }
 
-.subjects-preview {
+.teacher-list-page .subjects-preview {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+  justify-content: center;
 }
 
-.subject-tag {
+.teacher-list-page .subject-tag {
   display: inline-block;
   padding: 2px 6px;
   background-color: #dbeafe;
@@ -160,13 +192,14 @@
   white-space: nowrap;
 }
 
-.subject-tag.primary {
+/* Override style cho primary tag */
+.teacher-list-page .subject-tag.primary {
   background-color: #fef3c7;
   color: #92400e;
   border: 1px solid #fcd34d;
 }
 
-.more-subjects {
+.teacher-list-page .more-subjects {
   display: inline-block;
   padding: 2px 6px;
   background-color: #f3f4f6;
@@ -176,66 +209,165 @@
   font-weight: 500;
 }
 
-/* ================================================================
-   RESPONSIVE
-   ================================================================ */
+/* ==================== STATUS BADGES ==================== */
+/* Scoped badges để không bị ảnh hưởng bởi Bootstrap/Global CSS */
 
-@media (max-width: 1600px) {
-  .teacher-data-table th:nth-child(9),
-  .teacher-data-table td:nth-child(9) {
-    width: 120px;
-  }
-}
-
-@media (max-width: 1400px) {
-  .teacher-data-table th:nth-child(10),
-  .teacher-data-table td:nth-child(10) {
-    display: none;
-  }
-  
-  .teacher-data-table {
-    min-width: 1470px;
-  }
-}
-
-@media (max-width: 1200px) {
-  .teacher-data-table th:nth-child(9),
-  .teacher-data-table td:nth-child(9) {
-    display: none;
-  }
-  
-  .teacher-data-table {
-    min-width: 1320px;
-  }
-}
-
-@media (max-width: 768px) {
-  .teacher-data-table th:nth-child(7),
-  .teacher-data-table td:nth-child(7),
-  .teacher-data-table th:nth-child(8),
-  .teacher-data-table td:nth-child(8) {
-    display: none;
-  }
-  
-  .teacher-data-table {
-    min-width: 900px;
-  }
-}
-
-.badge-success {
+.teacher-list-page .badge-success {
   background-color: #dcfce7;
   color: #166534;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
+  display: inline-block;
 }
 
-.badge-inactive {
+.teacher-list-page .badge-inactive {
   background-color: #fee2e2;
   color: #991b1b;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
+  display: inline-block;
 }
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1600px) {
+  .teacher-list-page .teacher-data-table th:nth-child(9),
+  .teacher-list-page .teacher-data-table td:nth-child(9) {
+    width: 120px;
+  }
+}
+
+@media (max-width: 1400px) {
+  /* Ẩn cột SĐT */
+  .teacher-list-page .teacher-data-table th:nth-child(10),
+  .teacher-list-page .teacher-data-table td:nth-child(10) {
+    display: none;
+  }
+  
+  .teacher-list-page .teacher-data-table {
+    min-width: 1470px;
+  }
+}
+
+@media (max-width: 1200px) {
+  /* Ẩn cột Email */
+  .teacher-list-page .teacher-data-table th:nth-child(9),
+  .teacher-list-page .teacher-data-table td:nth-child(9) {
+    display: none;
+  }
+  
+  .teacher-list-page .teacher-data-table {
+    min-width: 1320px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Ẩn cột Môn dạy và Học vị trên mobile */
+  .teacher-list-page .teacher-data-table th:nth-child(7),
+  .teacher-list-page .teacher-data-table td:nth-child(7),
+  .teacher-list-page .teacher-data-table th:nth-child(8),
+  .teacher-list-page .teacher-data-table td:nth-child(8) {
+    display: none;
+  }
+  
+  .teacher-list-page .teacher-data-table {
+    min-width: 900px;
+  }
+}
+/* ==================== ACTION BUTTONS (SIMPLE - NO EFFECTS) ==================== */
+
+/* Container: Xếp ngang hàng */
+.teacher-list-page .action-buttons {
+  display: flex;
+  flex-direction: row;   /* ❗ Xếp dọc */
+  align-items: center;      /* ❗ Canh giữa */
+  gap: 6px;                 /* Khoảng cách trên dưới */
+}
+
+.teacher-list-page .btn-text {
+  width: 56px;              /* ❗ ép 2 nút bằng nhau */
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+
+/* --- Nút Sửa (Màu Xanh) --- */
+.teacher-list-page .btn-edit {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-color: #dbeafe;
+}
+
+/* Khi di chuột vào chỉ hiện hình bàn tay, không đổi màu/hiệu ứng */
+.teacher-list-page .btn-edit:hover {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-color: #dbeafe;
+}
+
+/* --- Nút Xóa (Màu Đỏ) --- */
+.teacher-list-page .btn-delete {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #fee2e2;
+}
+
+/* Khi di chuột vào chỉ hiện hình bàn tay, không đổi màu/hiệu ứng */
+.teacher-list-page .btn-delete:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #fee2e2;
+}
+.teacher-list-page .btn-icon {
+  display: inline-flex;     /* ❗ inline-flex để không chiếm full dòng */
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 12px;
+  font-size: 0.75rem;
+}
+.teacher-list-page td.actions {
+  white-space: nowrap;     /* Không cho xuống dòng */
+  overflow: visible;       /* ❗ Không cắt nút */
+  min-width: 130px;        /* ❗ Đủ chỗ cho 2 nút */
+  text-align: center;
+}
+.teacher-list-page .filter-select {
+  height: 36px;                 /* Đồng bộ chiều cao */
+  padding: 0 12px;              /* Gọn hơn */
+  min-width: 180px;             /* Vừa đủ, không quá to */
+
+  font-size: 0.875rem;
+  color: #374151;
+
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffffff;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.teacher-list-page .filter-select:hover {
+  border-color: #2563eb;
+}
+
+.teacher-list-page .filter-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+

@@ -39,9 +39,7 @@ const RoomList = () => {
 
   useEffect(() => {
     fetchRooms();
-    
-    // Auto-refresh every 60 seconds to update real-time status
-    const interval = setInterval(fetchRooms, 60000);
+    const interval = setInterval(fetchRooms, 60000); // Auto-refresh status
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, searchKeyword, filterBuilding, filterFloor, filterType, filterAdminStatus, filterCurrentStatus, selectedSemester]);
@@ -57,43 +55,22 @@ const RoomList = () => {
 
   const fetchSemesters = async () => {
     try {
+      // Mocking fetch logic for brevity based on your provided code
       const response = await fetch('/api/admin/semesters', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch semesters');
-      }
-      
+      if (!response.ok) throw new Error('Failed to fetch semesters');
       const result = await response.json();
-      console.log('📅 Semesters API response:', result);
       
-      // Handle different response formats
       let semestersData = [];
-      
-      if (Array.isArray(result)) {
-        semestersData = result;
-      } else if (result.data && Array.isArray(result.data)) {
-        semestersData = result.data;
-      } else if (result.content && Array.isArray(result.content)) {
-        semestersData = result.content;
-      } else {
-        console.warn('⚠️ Unexpected semesters response format:', result);
-        semestersData = [];
-      }
-      
-      console.log('✅ Processed semesters:', semestersData);
+      if (Array.isArray(result)) semestersData = result;
+      else if (result.data) semestersData = result.data;
+      else if (result.content) semestersData = result.content;
 
-      
-      // Set current active semester as default
       if (semestersData.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const activeSemester = semestersData.find((s: any) => s.status === 'ACTIVE');
-        if (activeSemester) {
-          setSelectedSemester(activeSemester.id);
-        } else {
-          setSelectedSemester(semestersData[0].id);
-        }
+        setSelectedSemester(activeSemester ? activeSemester.id : semestersData[0].id);
       }
     } catch (error) {
       console.error('❌ Error fetching semesters:', error);
@@ -103,17 +80,11 @@ const RoomList = () => {
   const fetchRooms = async () => {
     try {
       setLoading(true);
-      
       let data: PageData<RoomResponse>;
       
-      // Search mode
       if (searchKeyword.trim()) {
-        console.log('🔍 Searching rooms:', searchKeyword);
         data = await roomApi.searchRooms(searchKeyword, selectedSemester, currentPage, 10);
-      }
-      // Advanced filter mode
-      else if (filterBuilding || filterFloor || filterType || filterAdminStatus || filterCurrentStatus) {
-        console.log('🔎 Filtering rooms');
+      } else if (filterBuilding || filterFloor || filterType || filterAdminStatus || filterCurrentStatus) {
         data = await roomApi.filterRooms(
           {
             building: filterBuilding || undefined,
@@ -127,10 +98,7 @@ const RoomList = () => {
           currentPage,
           10
         );
-      }
-      // Default: get all
-      else {
-        console.log('📋 Getting all rooms');
+      } else {
         data = await roomApi.getAllRooms(selectedSemester, currentPage, 10);
       }
       
@@ -139,7 +107,6 @@ const RoomList = () => {
       setTotalElements(data.totalElements);
     } catch (error) {
       console.error('❌ Error fetching rooms:', error);
-      alert('Lỗi khi tải danh sách phòng');
     } finally {
       setLoading(false);
     }
@@ -147,11 +114,8 @@ const RoomList = () => {
 
   const fetchLookups = async () => {
     try {
-      // Fetch buildings
       const buildingsData = await roomApi.getAllBuildings();
       setBuildings(buildingsData);
-      
-      // Fetch floors if building selected
       if (filterBuilding) {
         const floorsData = await roomApi.getFloorsByBuilding(filterBuilding);
         setFloors(floorsData);
@@ -186,7 +150,6 @@ const RoomList = () => {
   };
 
   const handleRefresh = () => {
-    console.log('🔄 Manual refresh');
     fetchRooms();
   };
 
@@ -206,28 +169,19 @@ const RoomList = () => {
 
   const confirmDelete = async () => {
     if (!deletingRoom) return;
-
     try {
       const response = await fetch(`/api/admin/rooms/${deletingRoom.roomId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Có lỗi xảy ra');
-      }
-
+      if (!response.ok) throw new Error('Error deleting');
       alert('✅ Xóa phòng thành công!');
       setDeletingRoom(null);
       fetchRooms();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('❌ Error deleting room:', error);
-      alert(error.message || 'Lỗi khi xóa phòng');
+      alert('Lỗi khi xóa phòng');
     }
   };
 
@@ -237,15 +191,10 @@ const RoomList = () => {
 
   // ==================== RENDER HELPERS ====================
 
-  // ⭐ FIXED: Removed time remaining display
   const getStatusBadge = (room: RoomResponse) => {
     switch (room.currentStatus) {
       case 'IN_USE':
-        return (
-          <span className="room-status-badge status-in-use">
-            🟢 Đang dùng
-          </span>
-        );
+        return <span className="room-status-badge status-in-use">🟢 Đang dùng</span>;
       case 'AVAILABLE':
         return <span className="room-status-badge status-available">⚪ Trống</span>;
       case 'INACTIVE':
@@ -256,12 +205,8 @@ const RoomList = () => {
   };
 
   const renderCurrentSession = (room: RoomResponse) => {
-    if (!room.currentSession) {
-      return <span className="no-session-indicator">—</span>;
-    }
-
+    if (!room.currentSession) return <span className="no-session-indicator">—</span>;
     const { classCode, subjectName, timeSlotDisplay } = room.currentSession;
-    
     return (
       <div className="current-session-info">
         <div className="session-class-code">{classCode}</div>
@@ -275,22 +220,18 @@ const RoomList = () => {
     return (
       <div className="utilization-container">
         <div className="utilization-bar-wrapper">
-          <div 
-            className="utilization-bar-fill"
-            style={{ width: `${percentage}%` }}
-          ></div>
+          <div className="utilization-bar-fill" style={{ width: `${percentage}%` }}></div>
         </div>
-        <span className="utilization-percentage">
-          {percentage.toFixed(1)}%
-        </span>
+        <span className="utilization-percentage">{percentage.toFixed(1)}%</span>
       </div>
     );
   };
 
-  // ==================== RENDER ====================
+  // ==================== MAIN RENDER ====================
 
   return (
-    <div className="room-list-page">
+    <div className="room-list-page"> {/* ROOT CLASS FOR CSS SCOPING */}
+      
       {/* HEADER */}
       <div className="room-list-header">
         <h1 className="page-title">
@@ -298,28 +239,17 @@ const RoomList = () => {
           Quản lý Phòng học
         </h1>
         <div className="header-actions">
-          <button 
-            className="create-room-button"
-            onClick={handleCreate}
-          >
-            <span className="create-icon">➕</span>
-            Thêm phòng
+          <button className="create-room-button" onClick={handleCreate}>
+            <span className="create-icon"></span>+Thêm phòng
           </button>
-          <button 
-            className="refresh-button"
-            onClick={handleRefresh}
-            disabled={loading}
-            title="Làm mới dữ liệu"
-          >
-            <span className="refresh-icon">🔄</span>
-            Làm mới
+          <button className="refresh-button" onClick={handleRefresh} disabled={loading} title="Làm mới dữ liệu">
+            <span className="refresh-icon">🔄</span> Làm mới
           </button>
         </div>
       </div>
 
       {/* FILTERS */}
       <div className="room-filters-section">
-        {/* Search Bar */}
         <form className="room-search-form" onSubmit={handleSearch}>
           <input
             type="text"
@@ -329,46 +259,31 @@ const RoomList = () => {
             onChange={(e) => setSearchKeyword(e.target.value)}
           />
           <button type="submit" className="room-search-button">
-            <span className="search-icon">🔍</span>
-            Tìm kiếm
+            <span className="search-icon">🔍</span> Tìm kiếm
           </button>
         </form>
 
-
-
-        {/* Filter Controls */}
         <div className="room-filter-controls">
-          <select
+          <select 
             className="room-filter-select"
             value={filterBuilding}
-            onChange={(e) => {
-              setFilterBuilding(e.target.value);
-              setFilterFloor('');
-            }}
+            onChange={(e) => { setFilterBuilding(e.target.value); setFilterFloor(''); }}
           >
             <option value="">Tất cả tòa nhà</option>
-            {buildings.map(building => (
-              <option key={building} value={building}>{building}</option>
-            ))}
+            {buildings.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
 
-          <select
+          <select 
             className="room-filter-select"
             value={filterFloor}
             onChange={(e) => setFilterFloor(e.target.value)}
             disabled={!filterBuilding}
           >
             <option value="">Tất cả tầng</option>
-            {floors.map(floor => (
-              <option key={floor} value={floor}>Tầng {floor}</option>
-            ))}
+            {floors.map(f => <option key={f} value={f}>Tầng {f}</option>)}
           </select>
 
-          <select
-            className="room-filter-select"
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-          >
+          <select className="room-filter-select" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
             <option value="">Tất cả loại</option>
             <option value="LECTURE_HALL">Giảng đường</option>
             <option value="LAB">Phòng thực hành</option>
@@ -377,34 +292,21 @@ const RoomList = () => {
             <option value="ONLINE">Trực tuyến</option>
           </select>
 
-          <select
-            className="room-filter-select"
-            value={filterAdminStatus}
-            onChange={(e) => setFilterAdminStatus(e.target.value)}
-          >
+          <select className="room-filter-select" value={filterAdminStatus} onChange={(e) => setFilterAdminStatus(e.target.value)}>
             <option value="">Admin: Tất cả</option>
             <option value="ACTIVE">Hoạt động</option>
             <option value="INACTIVE">Ngừng HĐ</option>
           </select>
 
-          {/* Real-time Status Filter */}
-          <select
-            className="room-filter-select filter-status-special"
-            value={filterCurrentStatus}
-            onChange={(e) => setFilterCurrentStatus(e.target.value)}
-          >
+          <select className="room-filter-select filter-status-special" value={filterCurrentStatus} onChange={(e) => setFilterCurrentStatus(e.target.value)}>
             <option value="">Trạng thái: Tất cả</option>
             <option value="IN_USE">🟢 Đang dùng</option>
             <option value="AVAILABLE">⚪ Trống</option>
             <option value="INACTIVE">⚫ Ngừng HĐ</option>
           </select>
 
-          <button
-            className="room-clear-filters-button"
-            onClick={handleClearFilters}
-          >
-            <span className="clear-icon">✖</span>
-            Xóa bộ lọc
+          <button className="room-clear-filters-button" onClick={handleClearFilters}>
+            <span className="clear-icon">✖</span> Xóa bộ lọc
           </button>
         </div>
       </div>
@@ -441,58 +343,57 @@ const RoomList = () => {
                 <th className="col-room-name">Tên phòng</th>
                 <th className="col-location">Vị trí</th>
                 <th className="col-type">Loại phòng</th>
-                <th className="col-capacity">Sức chứa</th>
-                <th className="col-status">⭐ Trạng thái</th>
-                <th className="col-current-session">⭐ Đang dùng</th>
-                <th className="col-utilization">Sử dụng</th>
-                <th className="col-actions">Thao tác</th>
+                <th className="col-capacity center-text">Sức chứa</th>
+                <th className="col-status">Trạng thái</th>
+                <th className="col-current-session">Đang dùng</th>
+                <th className="col-utilization center-text">Sử dụng</th>
+                <th className="col-actions center-text">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {rooms.map((room) => (
                 <tr key={room.roomId} className="room-table-row">
-                  <td className="col-room-code">
-                    <strong className="room-code-text">{room.roomCode}</strong>
-                  </td>
-                  <td className="col-room-name">
-                    {room.roomName || '—'}
-                  </td>
+                  <td className="col-room-code"><strong>{room.roomCode}</strong></td>
+                  <td className="col-room-name">{room.roomName || '—'}</td>
                   <td className="col-location">
-                    {room.building && room.floor ? (
-                      <span>Tòa {room.building} - Tầng {room.floor}</span>
-                    ) : '—'}
+                    {room.building && room.floor ? `Tòa ${room.building} - Tầng ${room.floor}` : '—'}
                   </td>
                   <td className="col-type">{room.roomTypeDisplay}</td>
                   <td className="col-capacity center-text">{room.capacityInfo}</td>
                   <td className="col-status">{getStatusBadge(room)}</td>
                   <td className="col-current-session">{renderCurrentSession(room)}</td>
-                  <td className="col-utilization center-text">
-                    {renderUtilization(room.utilizationPercentage)}
-                  </td>
+                  <td className="col-utilization center-text">{renderUtilization(room.utilizationPercentage)}</td>
                   <td className="col-actions">
                     <div className="action-buttons">
-                      <button
-                        className="btn-view"
-                        onClick={() => handleViewDetails(room.roomId)}
-                        title="Xem chi tiết"
-                      >
-                        👁️
-                      </button>
-                      <button
-                        className="btn-edit"
-                        onClick={() => handleEdit(room)}
-                        title="Sửa phòng"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        className="btn-delete"
-                        onClick={() => handleDelete(room)}
-                        title="Xóa phòng"
-                      >
-                        🗑️
-                      </button>
-                    </div>
+  <div className="action-row top">
+    <button
+      className="btn-view"
+      onClick={() => handleViewDetails(room.roomId)}
+      title="Xem chi tiết"
+    >
+      Xem
+    </button>
+
+    <button
+      className="btn-delete"
+      onClick={() => handleDelete(room)}
+      title="Xóa phòng"
+    >
+      🗑️ Xóa
+    </button>
+  </div>
+
+  <div className="action-row bottom">
+    <button
+      className="btn-edit"
+      onClick={() => handleEdit(room)}
+      title="Sửa phòng"
+    >
+      ✏️ Sửa
+    </button>
+  </div>
+</div>
+
                   </td>
                 </tr>
               ))}
@@ -502,41 +403,56 @@ const RoomList = () => {
       </div>
 
       {/* PAGINATION */}
-      {totalPages > 1 && (
-        <div className="room-pagination">
-          <div className="pagination-info">
-            Hiển thị {rooms.length} / {totalElements} phòng
-          </div>
-          <div className="pagination-controls">
-            <button
-              className="pagination-button"
-              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-              disabled={currentPage === 0}
-            >
-              ‹ Trước
-            </button>
-            <span className="pagination-page-number">
-              Trang {currentPage + 1} / {totalPages}
-            </span>
-            <button
-              className="pagination-button"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-              disabled={currentPage >= totalPages - 1}
-            >
-              Sau ›
-            </button>
-          </div>
-        </div>
-      )}
+   <div className="room-pagination">
+  <div className="pagination-info">
+    Hiển thị {rooms.length} / {totalElements} phòng
+  </div>
+
+  <div className="pagination-controls">
+    <button
+      className="pagination-button"
+      onClick={() => setCurrentPage(0)}
+      disabled={currentPage === 0}
+    >
+      «
+    </button>
+
+    <button
+      className="pagination-button"
+      onClick={() => setCurrentPage(currentPage - 1)}
+      disabled={currentPage === 0}
+    >
+      ‹
+    </button>
+
+    <span className="pagination-current">
+      {currentPage + 1}
+    </span>
+
+    <button
+      className="pagination-button"
+      onClick={() => setCurrentPage(currentPage + 1)}
+      disabled={currentPage >= totalPages - 1}
+    >
+      ›
+    </button>
+
+    <button
+      className="pagination-button"
+      onClick={() => setCurrentPage(totalPages - 1)}
+      disabled={currentPage >= totalPages - 1}
+    >
+      »
+    </button>
+  </div>
+</div>
+
 
       {/* MODALS */}
       {isModalOpen && (
         <RoomModal
           room={editingRoom}
-          onClose={() => {
-            setIsModalOpen(false);
-            setEditingRoom(null);
-          }}
+          onClose={() => { setIsModalOpen(false); setEditingRoom(null); }}
           onSuccess={handleModalSuccess}
         />
       )}

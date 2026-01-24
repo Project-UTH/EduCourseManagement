@@ -3,7 +3,7 @@ import studentApi, { StudentResponse } from '../../../services/api/studentApi';
 import majorApi from '../../../services/api/majorApi';
 import StudentModal from './StudentModal';
 import ImportModal from '../../admin/import/ImportModal';
-import './StudentList.css';
+import './StudentList.css'; // Đảm bảo đã import file CSS mới
 
 interface Major {
   majorId: number;
@@ -21,6 +21,8 @@ const StudentList: React.FC = () => {
   const [totalElements, setTotalElements] = useState(0);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterMajorId, setFilterMajorId] = useState('');
+  
+  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentResponse | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -51,13 +53,9 @@ const StudentList: React.FC = () => {
       let response;
 
       if (searchKeyword.trim()) {
-        // Search mode
         response = await studentApi.search(searchKeyword, currentPage, 10);
       } else if (filterMajorId) {
-        // Filter by major (returns array, not paginated)
         response = await studentApi.getByMajor(Number(filterMajorId));
-        
-        // Convert to page format
         const data = response.data;
         setStudents(Array.isArray(data) ? data : []);
         setTotalPages(1);
@@ -65,7 +63,6 @@ const StudentList: React.FC = () => {
         setLoading(false);
         return;
       } else {
-        // Get all with pagination
         response = await studentApi.getAll(currentPage, 10);
       }
 
@@ -84,12 +81,12 @@ const StudentList: React.FC = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(0);
-    setFilterMajorId(''); // Clear filter when searching
+    setFilterMajorId('');
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFilterMajorId(e.target.value);
-    setSearchKeyword(''); // Clear search when filtering
+    setSearchKeyword('');
     setCurrentPage(0);
   };
 
@@ -107,7 +104,6 @@ const StudentList: React.FC = () => {
     if (!window.confirm(`Xác nhận xóa sinh viên "${fullName}"?`)) {
       return;
     }
-
     try {
       await studentApi.delete(id);
       alert('Xóa sinh viên thành công!');
@@ -143,8 +139,8 @@ const StudentList: React.FC = () => {
     setIsImportModalOpen(false);
   };
 
-
   const formatDate = (dateString: string) => {
+    if (!dateString) return '—';
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN');
   };
@@ -177,8 +173,9 @@ const StudentList: React.FC = () => {
     }
   };
 
+  // QUAN TRỌNG: Root class phải là 'student-list-page' để khớp CSS
   return (
-    <div className="page-container">
+    <div className="student-list-page">
       {/* HEADER */}
       <div className="page-header">
         <h1>Quản lý Sinh viên</h1>
@@ -194,7 +191,7 @@ const StudentList: React.FC = () => {
         </div>
       </div>
 
-      {/* FILTERS */}
+      {/* FILTERS - Đã cập nhật class để sống động hơn */}
       <div className="filters-bar">
         <form className="search-form" onSubmit={handleSearch}>
           <input
@@ -226,12 +223,15 @@ const StudentList: React.FC = () => {
       {/* TABLE */}
       <div className="student-table-container">
         {loading ? (
-          <div className="loading">Đang tải dữ liệu...</div>
+          <div className="loading" style={{ padding: '3rem', textAlign: 'center', color: '#6b7280' }}>
+            Đang tải dữ liệu...
+          </div>
         ) : (
           <>
             <table className="student-data-table">
               <thead>
                 <tr>
+                  {/* Định nghĩa 12 cột khớp với CSS nth-child */}
                   <th>MSSV</th>
                   <th>Họ và tên</th>
                   <th>Giới tính</th>
@@ -242,58 +242,88 @@ const StudentList: React.FC = () => {
                   <th>Chuyên ngành</th>
                   <th>Email</th>
                   <th>SĐT</th>
-                  <th>Thao tác</th>
+                  <th>Thao tác</th>   {/* Cột 12 */}
                 </tr>
               </thead>
               <tbody>
                 {students.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="no-data">
+                    <td colSpan={12} className="no-data" style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
                       Không có dữ liệu
                     </td>
                   </tr>
                 ) : (
                   students.map((student) => (
                     <tr key={student.studentId}>
-                      <td className="code">{student.studentCode}</td>
-                      <td className="font-semibold">{student.fullName}</td>
-                      <td className="center">{getGenderLabel(student.gender)}</td>
+                      {/* 1. MSSV */}
+                      <td style={{ fontWeight: 600, color: '#0f172a' }}>{student.studentCode}</td>
+                      
+                      {/* 2. Họ tên */}
+                      <td style={{ fontWeight: 500 }}>{student.fullName}</td>
+                      
+                      {/* 3. Giới tính */}
+                      <td style={{ textAlign: 'center' }}>{getGenderLabel(student.gender)}</td>
+                      
+                      {/* 4. Ngày sinh */}
                       <td>{formatDate(student.dateOfBirth)}</td>
-                      <td className="center">{student.academicYear}</td>
+                      
+                      {/* 5. Khóa */}
+                      <td style={{ textAlign: 'center', fontWeight: 600 }}>{student.academicYear}</td>
+                      
+                      {/* 6. Trình độ */}
                       <td>
-                        <span className="badge badge-education">
+                        <span className="badge-education">
                           {getEducationLevelLabel(student.educationLevel)}
                         </span>
                       </td>
+                      
+                      {/* 7. Hình thức */}
                       <td>
-                        <span className="badge badge-training">
+                        <span className="badge-training">
                           {getTrainingTypeLabel(student.trainingType)}
                         </span>
                       </td>
-                      <td>
-                        <span className="badge badge-major">
-                          {student.majorCode}
-                        </span>
-                        <div className="text-muted small">
-                          {student.majorName}
-                        </div>
+                      
+                      {/* 8. Chuyên ngành */}
+                       <td>
+                        {student.majorId ? (
+                          <>
+                            <span className="badge badge-major">
+                              {student.majorCode || 'N/A'}
+                            </span>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                              {student.majorName || '—'}
+                            </div>
+                          </>
+                        ) : (
+                          <span style={{ color: '#9ca3af' }}>—</span>
+                        )}
                       </td>
-                      <td className="small">{student.email || '—'}</td>
+                      
+                      {/* 9. Email */}
+                      <td>{student.email || '—'}</td>
+                      
+                      {/* 10. SĐT */}
                       <td>{student.phone || '—'}</td>
+
+                      {/* 12. Thao tác - Nút Text đơn giản nằm ngang */}
                       <td className="actions">
-                        <button
-                          className="btn-edit"
-                          onClick={() => handleEdit(student)}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          className="btn-delete"
-                          onClick={() => handleDelete(student.studentId, student.fullName)}
-                        >
-                          Xóa
-                        </button>
-                      </td>
+  <div className="action-buttons">
+    <button
+      className="btn-text btn-edit"
+      onClick={() => handleEdit(student)}
+    >
+      Sửa
+    </button>
+    
+    <button
+      className="btn-text btn-delete"
+      onClick={() => handleDelete(student.studentId, student.fullName)}
+    >
+      Xóa
+    </button>
+  </div>
+</td>
                     </tr>
                   ))
                 )}

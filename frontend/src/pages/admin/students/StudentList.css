@@ -1,189 +1,337 @@
-/**
- * Student List CSS - NO CONFLICT
- * File: frontend/src/pages/admin/students/StudentList.css
- * 
- * Uses .student-* prefix to avoid conflicts
- */
-
 /* ================================================================
-   STUDENT TABLE - 12 COLUMNS
+   STUDENT LIST PAGE - FINAL CSS
+   File: frontend/src/pages/admin/students/StudentList.css
+   Root Class: .student-list-page
    ================================================================ */
 
-.student-table-container {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
-  overflow-y: visible;
+/* Animation xuất hiện */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.student-data-table {
+.student-list-page {
+  animation: fadeIn 0.4s ease-out;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #374151;
+}
+
+/* ==================== 1. SEARCH & FILTER BAR ==================== */
+
+.student-list-page .filters-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.student-list-page .search-form {
+  display: flex;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Input Search */
+.student-list-page .search-input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.student-list-page .search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Button Search */
+/* Button Search - Green */
+.student-list-page .btn-search {
+  padding: 0 1.5rem;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+
+  border: none;
+  border-radius: 8px;
+
+  font-weight: 600;
+  font-size: 0.9rem;
+
+  cursor: pointer;
+  white-space: nowrap;
+
+  box-shadow: 0 4px 6px rgba(22, 163, 74, 0.25);
+  transition: all 0.2s ease;
+}
+
+.student-list-page .btn-search:hover {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  box-shadow: 0 6px 12px rgba(22, 163, 74, 0.35);
+  transform: translateY(-2px);
+}
+
+.student-list-page .btn-search:active {
+  transform: translateY(0);
+}
+
+/* Select Box */
+.student-list-page .filter-select {
+  height: 42px;
+  padding: 0 12px;
+  min-width: 180px;
+  font-size: 0.875rem;
+  color: #374151;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.student-list-page .filter-select:hover {
+  border-color: #3b82f6;
+}
+
+.student-list-page .filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+/* ==================== 2. TABLE CONTAINER ==================== */
+
+.student-list-page .student-table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+  overflow-y: visible;
+  margin-top: 1rem;
+  border: 1px solid #f1f5f9;
+}
+
+.student-list-page .student-data-table {
   width: 100%;
-  min-width: 1500px; /* 12 cột */
-  border-collapse: collapse;
-  font-size: 0.75rem;
+  min-width: 1570px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8rem;
   table-layout: fixed;
 }
 
-.student-data-table th,
-.student-data-table td {
-  padding: 0.5rem 0.3rem;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
+/* ==================== 3. HEADERS & CELLS ==================== */
+
+.student-list-page .student-data-table th,
+.student-list-page .student-data-table td {
+  padding: 0.85rem 0.5rem;
+  text-align: center;
+  border-bottom: 1px solid #f1f5f9;
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: middle;
 }
 
-.student-data-table th {
-  background: #f9fafb;
-  font-weight: 600;
-  color: #374151;
+/* Sticky Header */
+.student-list-page .student-data-table th {
+  background: #f8fafc;
+  font-weight: 700;
+  color: #64748b;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Hover Row */
+.student-list-page .student-data-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.student-list-page .student-data-table tbody tr:hover {
+  background-color: #eff6ff;
+}
+
+/* ==================== 4. COLUMN WIDTHS (11 CỘT - Đã bỏ Trạng thái) ==================== */
+
+.student-list-page .student-data-table th:nth-child(1), .student-list-page .student-data-table td:nth-child(1) { width: 100px; min-width: 100px; font-weight: 600; color: #0f172a; } /* MSSV */
+.student-list-page .student-data-table th:nth-child(2), .student-list-page .student-data-table td:nth-child(2) { width: 150px; min-width: 150px; font-weight: 500; } /* Họ tên */
+.student-list-page .student-data-table th:nth-child(3), .student-list-page .student-data-table td:nth-child(3) { width: 70px; min-width: 70px; text-align: center; } /* Giới tính */
+.student-list-page .student-data-table th:nth-child(4), .student-list-page .student-data-table td:nth-child(4) { width: 90px; min-width: 90px; } /* Ngày sinh */
+.student-list-page .student-data-table th:nth-child(5), .student-list-page .student-data-table td:nth-child(5) { width: 60px; min-width: 60px; text-align: center; font-weight: 600; } /* Khóa */
+.student-list-page .student-data-table th:nth-child(6), .student-list-page .student-data-table td:nth-child(6) { width: 100px; min-width: 100px; } /* Trình độ */
+.student-list-page .student-data-table th:nth-child(7), .student-list-page .student-data-table td:nth-child(7) { width: 110px; min-width: 110px; } /* Hình thức */
+.student-list-page .student-data-table th:nth-child(8), .student-list-page .student-data-table td:nth-child(8) { width: 150px; min-width: 150px; } /* Chuyên ngành */
+.student-list-page .student-data-table th:nth-child(9), .student-list-page .student-data-table td:nth-child(9) { width: 150px; min-width: 150px; font-size: 0.75rem; color: #64748b; } /* Email */
+.student-list-page .student-data-table th:nth-child(10), .student-list-page .student-data-table td:nth-child(10) { width: 100px; min-width: 100px; } /* SĐT */
+/* Cột 11 bây giờ là Thao tác (Vì đã xóa Trạng thái) */
+.student-list-page .student-data-table th:nth-child(11), .student-list-page .student-data-table td:nth-child(11) { width: 130px; min-width: 130px; text-align: center; }
+
+/* ==================== 5. BADGES (Cập nhật khớp TSX) ==================== */
+
+/* Badge: Trình độ (Education Level) - Xanh Dương */
+.student-list-page .badge-education {
+  background-color: #dbeafe;
+  color: #1e40af;
   font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 9999px; /* Viên thuốc */
+  font-weight: 600;
+  border: 1px solid #bfdbfe;
+  display: inline-block;
   white-space: nowrap;
 }
 
-.student-data-table tbody tr:hover {
-  background: #f9fafb;
-}
-
-/* COLUMN WIDTHS - 12 cột */
-.student-data-table th:nth-child(1),
-.student-data-table td:nth-child(1) {
-  width: 100px; /* MSSV */
-  min-width: 100px;
-}
-
-.student-data-table th:nth-child(2),
-.student-data-table td:nth-child(2) {
-  width: 150px; /* Họ tên */
-  min-width: 150px;
-}
-
-.student-data-table th:nth-child(3),
-.student-data-table td:nth-child(3) {
-  width: 70px; /* Giới tính */
-  min-width: 70px;
-  text-align: center;
-}
-
-.student-data-table th:nth-child(4),
-.student-data-table td:nth-child(4) {
-  width: 90px; /* Ngày sinh */
-  min-width: 90px;
-}
-
-.student-data-table th:nth-child(5),
-.student-data-table td:nth-child(5) {
-  width: 60px; /* Khóa */
-  min-width: 60px;
-  text-align: center;
-}
-
-.student-data-table th:nth-child(6),
-.student-data-table td:nth-child(6) {
-  width: 100px; /* Trình độ */
-  min-width: 100px;
-}
-
-.student-data-table th:nth-child(7),
-.student-data-table td:nth-child(7) {
-  width: 110px; /* Hình thức */
-  min-width: 110px;
-}
-
-.student-data-table th:nth-child(8),
-.student-data-table td:nth-child(8) {
-  width: 150px; /* Chuyên ngành */
-  min-width: 150px;
-}
-
-.student-data-table th:nth-child(9),
-.student-data-table td:nth-child(9) {
-  width: 150px; /* Email */
-  min-width: 150px;
-  font-size: 0.7rem;
-}
-
-.student-data-table th:nth-child(10),
-.student-data-table td:nth-child(10) {
-  width: 100px; /* SĐT */
-  min-width: 100px;
-}
-
-.student-data-table th:nth-child(11),
-.student-data-table td:nth-child(11) {
-  width: 90px; /* Trạng thái */
-  min-width: 90px;
-  text-align: center;
-}
-
-.student-data-table th:nth-child(12),
-.student-data-table td:nth-child(12) {
-  width: 120px; /* Thao tác */
-  min-width: 120px;
-}
-
-/* Badge variations for Student */
-.badge-education {
-  background-color: #dbeafe;
-  color: #1e40af;
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-weight: 600;
-}
-
-.badge-training {
+/* Badge: Hình thức (Training Type) - Vàng/Cam */
+.student-list-page .badge-training {
   background-color: #fef3c7;
   color: #92400e;
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  border-radius: 3px;
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 9999px;
   font-weight: 600;
+  border: 1px solid #fde68a;
+  display: inline-block;
+  white-space: nowrap;
 }
 
-/* ================================================================
-   RESPONSIVE
-   ================================================================ */
+.student-list-page .badge-inactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  margin-right: 10px;
+}
+
+/* ==================== 6. ACTION BUTTONS (CLEAN & FIXED) ==================== */
+
+.student-list-page .action-buttons {
+  display: flex;
+  flex-direction: column;   /* ❗ Xếp dọc */
+  align-items: center;      /* ❗ Canh giữa */
+  gap: 6px;                 /* Khoảng cách trên dưới */
+}
+
+.student-list-page .btn-text {
+  width: 56px;              /* ❗ ép 2 nút bằng nhau */
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+
+/* --- Nút Sửa (Màu Xanh) --- */
+.student-list-page .btn-edit {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-color: #dbeafe;
+}
+
+/* Khi di chuột vào chỉ hiện hình bàn tay, không đổi màu/hiệu ứng */
+.student-list-page .btn-edit:hover {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-color: #dbeafe;
+}
+
+/* --- Nút Xóa (Màu Đỏ) --- */
+.student-list-page .btn-delete {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #fee2e2;
+}
+
+/* Khi di chuột vào chỉ hiện hình bàn tay, không đổi màu/hiệu ứng */
+.student-list-page .btn-delete:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #fee2e2;
+}
+.student-list-page .btn-icon {
+  display: inline-flex;     /* ❗ inline-flex để không chiếm full dòng */
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 12px;
+  font-size: 0.75rem;
+}
+.student-list-page td.actions {
+  white-space: nowrap;     /* Không cho xuống dòng */
+  overflow: visible;       /* ❗ Không cắt nút */
+  min-width: 130px;        /* ❗ Đủ chỗ cho 2 nút */
+  text-align: center;
+}
+.student-list-page .filter-select {
+  height: 36px;                 /* Đồng bộ chiều cao */
+  padding: 0 12px;              /* Gọn hơn */
+  min-width: 180px;             /* Vừa đủ, không quá to */
+
+  font-size: 0.875rem;
+  color: #374151;
+
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffffff;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.student-list-page .filter-select:hover {
+  border-color: #2563eb;
+}
+
+.student-list-page .filter-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+/* ==================== 7. RESPONSIVE ==================== */
 
 @media (max-width: 1600px) {
-  .student-data-table th:nth-child(9),
-  .student-data-table td:nth-child(9) {
-    width: 120px;
-  }
+  .student-list-page .student-data-table th:nth-child(9), .student-list-page .student-data-table td:nth-child(9) { width: 120px; }
 }
 
 @media (max-width: 1400px) {
-  .student-data-table th:nth-child(10),
-  .student-data-table td:nth-child(10) {
-    display: none;
-  }
-  
-  .student-data-table {
-    min-width: 1400px;
-  }
+  /* Ẩn SĐT (10) */
+  .student-list-page .student-data-table th:nth-child(10), .student-list-page .student-data-table td:nth-child(10) { display: none; }
+  .student-list-page .student-data-table { min-width: 1400px; }
 }
 
 @media (max-width: 1200px) {
-  .student-data-table th:nth-child(9),
-  .student-data-table td:nth-child(9) {
-    display: none;
-  }
-  
-  .student-data-table {
-    min-width: 1250px;
-  }
+  /* Ẩn Email (9) */
+  .student-list-page .student-data-table th:nth-child(9), .student-list-page .student-data-table td:nth-child(9) { display: none; }
+  .student-list-page .student-data-table { min-width: 1250px; }
 }
 
 @media (max-width: 768px) {
-  .student-data-table th:nth-child(6),
-  .student-data-table td:nth-child(6),
-  .student-data-table th:nth-child(7),
-  .student-data-table td:nth-child(7) {
-    display: none;
-  }
-  
-  .student-data-table {
-    min-width: 900px;
-  }
+  /* Ẩn Trình độ (6) và Hình thức (7) trên mobile */
+  .student-list-page .student-data-table th:nth-child(6), .student-list-page .student-data-table td:nth-child(6),
+  .student-list-page .student-data-table th:nth-child(7), .student-list-page .student-data-table td:nth-child(7) { display: none; }
+  .student-list-page .student-data-table { min-width: 900px; }
 }

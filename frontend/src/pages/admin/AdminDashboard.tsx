@@ -151,18 +151,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
-      {/* Header */}
-      <div className="dashboard-header">
-        <div className="header-content">
-          <h1>📊 Trang quản trị</h1>
-          <p className="header-subtitle">
-            Chào mừng bạn đến với hệ thống quản lý khóa học
-          </p>
-        </div>
-        <button onClick={fetchDashboardStats} className="refresh-btn">
-          🔄 Làm mới
-        </button>
-      </div>
 
       {/* Current Semester Info */}
       {stats.currentSemester && (

@@ -105,10 +105,15 @@
 }
 
 .sidebar-icon {
-  font-size: 1.25rem;
-  flex-shrink: 0;
-  width: 24px;
-  text-align: center;
+  width: 40px;                /* CỐ ĐỊNH chiều rộng */
+  height: 40px;
+
+  display: flex;
+  align-items: center;        /* căn giữa dọc */
+  justify-content: center;    /* căn giữa ngang */
+
+  font-size: 22px;
+  flex-shrink: 0;             /* không bị co */
 }
 
 .sidebar-label {

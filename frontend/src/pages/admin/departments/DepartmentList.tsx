@@ -21,42 +21,31 @@ const DepartmentList: React.FC = () => {
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  // ⭐ TOOLTIP STATE
   const [descriptionTooltip, setDescriptionTooltip] = useState<{
-    show: boolean;
-    content: string;
-    x: number;
-    y: number;
+    show: boolean; content: string; x: number; y: number;
   }>({ show: false, content: '', x: 0, y: 0 });
 
   const fetchDepartments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
       let response;
       if (searchKeyword.trim()) {
         response = await departmentApi.search(searchKeyword, currentPage, pageSize);
       } else {
         response = await departmentApi.getAll(currentPage, pageSize, sortBy, sortDir);
       }
-      
       if (response) {
         setDepartments(Array.isArray(response.data) ? response.data : []);
         setTotalPages(response.totalPages || 0);
         setTotalItems(response.totalItems || 0);
       } else {
-        setDepartments([]);
-        setTotalPages(0);
-        setTotalItems(0);
+        setDepartments([]); setTotalPages(0); setTotalItems(0);
       }
     } catch (err) {
-      console.error('[DepartmentList] Error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách khoa';
-      setError(errorMessage);
+      console.error(err);
+      setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
       setDepartments([]);
-      setTotalPages(0);
-      setTotalItems(0);
     } finally {
       setLoading(false);
     }
@@ -71,256 +60,167 @@ const DepartmentList: React.FC = () => {
     setCurrentPage(0);
   };
 
-  const handleCreate = () => {
-    setEditingDepartment(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEdit = (department: Department) => {
-    setEditingDepartment(department);
-    setIsModalOpen(true);
-  };
-
+  const handleCreate = () => { setEditingDepartment(null); setIsModalOpen(true); };
+  const handleEdit = (department: Department) => { setEditingDepartment(department); setIsModalOpen(true); };
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa khoa này?')) {
-      return;
-    }
-    
+    if (!window.confirm('Bạn có chắc chắn muốn xóa khoa này?')) return;
     try {
       setDeletingId(id);
       await departmentApi.delete(id);
-      alert('Xóa khoa thành công!');
+      alert('Xóa thành công!');
       fetchDepartments();
-    } catch (err) {
-      console.error('[DepartmentList] Error deleting:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Không thể xóa khoa';
-      alert(errorMessage);
+    } catch {
+      alert('Không thể xóa khoa');
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleModalSuccess = () => {
-    setIsModalOpen(false);
-    setEditingDepartment(null);
-    fetchDepartments();
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setEditingDepartment(null);
-  };
+  const handleModalSuccess = () => { setIsModalOpen(false); setEditingDepartment(null); fetchDepartments(); };
+  const handleModalClose = () => { setIsModalOpen(false); setEditingDepartment(null); };
 
   const handleSort = (field: string) => {
-    if (sortBy === field) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortDir('asc');
-    }
+    if (sortBy === field) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    else { setSortBy(field); setSortDir('asc'); }
   };
 
-  const getKnowledgeTypeLabel = (type: string): string => {
-    const labels: { [key: string]: string } = {
-      GENERAL: 'Đại cương',
-      SPECIALIZED: 'Chuyên ngành',
-    };
+  const getKnowledgeTypeLabel = (type: string) => {
+    const labels: { [key: string]: string } = { GENERAL: 'Đại cương', SPECIALIZED: 'Chuyên ngành' };
     return labels[type] || type;
   };
 
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
-  };
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('vi-VN');
 
-  // ⭐ TOOLTIP HANDLERS
-  const showDescription = (description: string | undefined, event: React.MouseEvent) => {
-    if (!description) return;
-    const button = event.currentTarget as HTMLElement;
-    const rect = button.getBoundingClientRect();
-    setDescriptionTooltip({
-      show: true,
-      content: description,
-      x: rect.left,
-      y: rect.bottom + 5
-    });
-  };
-
-  const hideDescription = () => {
-    setDescriptionTooltip({ show: false, content: '', x: 0, y: 0 });
+  const showDescription = (desc: string | undefined, e: React.MouseEvent) => {
+    if (!desc) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDescriptionTooltip({ show: true, content: desc, x: rect.left - 80, y: rect.top - 40 });
   };
 
   return (
-    <div className="page-container">
+    <div className="department-list-page">
       <div className="page-header">
         <h1>Quản lý Khoa</h1>
-        <button className="btn btn-primary" onClick={handleCreate}>
-          <span className="icon">+</span>
-          Thêm Khoa
-        </button>
+        <button className="btn btn-add" onClick={handleCreate}>
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2.5}
+      d="M12 5v14m7-7H5"
+    />
+  </svg>
+  <span>Thêm Khoa</span>
+</button>
       </div>
 
-      <div className="filters-bar">
-        <form onSubmit={handleSearch} className="search-form">
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo mã khoa hoặc tên khoa..."
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            className="search-input"
-          />
-          <button type="submit" className="btn-search">Tìm kiếm</button>
-          {searchKeyword && (
-            <button
-              type="button"
-              className="btn-clear"
-              onClick={() => {
-                setSearchKeyword('');
-                setCurrentPage(0);
-              }}
-            >
-              Xóa
-            </button>
-          )}
-        </form>
-      </div>
+      <div className="main-card">
+        <div className="filters-bar">
+          <form onSubmit={handleSearch} className="search-form">
+            <input
+              type="text"
+              placeholder="🔍 Tìm kiếm..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className="search-input"
+            />
+            <button type="submit" className="btn btn-search">Tìm kiếm</button>
+            {searchKeyword && (
+              <button type="button" className="btn btn-clear" onClick={() => { setSearchKeyword(''); setCurrentPage(0); }}>
+                Xóa lọc
+              </button>
+            )}
+          </form>
+        </div>
 
-      {error && (
-        <div className="error-message">Lỗi: {error}</div>
-      )}
+        {error && <div className="error-message">{error}</div>}
 
-      <div className="table-container">
-        {loading ? (
-          <div className="loading">Đang tải...</div>
-        ) : !departments || departments.length === 0 ? (
-          <div className="no-data">
-            {searchKeyword ? 'Không tìm thấy kết quả' : 'Chưa có khoa nào'}
-          </div>
-        ) : (
-          <>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th onClick={() => handleSort('departmentCode')} className="sortable">
-                    Mã Khoa {sortBy === 'departmentCode' && (sortDir === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th onClick={() => handleSort('departmentName')} className="sortable">
-                    Tên Khoa {sortBy === 'departmentName' && (sortDir === 'asc' ? '↑' : '↓')}
-                  </th>
-                  <th>Loại Kiến thức</th>
-                  <th className="center">MT</th>
-                  <th>Ngày tạo</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {departments.map((dept) => (
-                  <tr key={dept.departmentId}>
-                    <td className="code">{dept.departmentCode}</td>
-                    <td>{dept.departmentName}</td>
-                    <td>
-                      <span className="badge badge-department">
-                        {getKnowledgeTypeLabel(dept.knowledgeType)}
-                      </span>
-                    </td>
-                    {/* ⭐ MÔ TẢ - TOOLTIP BUTTON */}
-                    <td className="center">
-                      {dept.description ? (
-                        <button
-                          className="btn-icon-info"
-                          onMouseEnter={(e) => showDescription(dept.description, e)}
-                          onMouseLeave={hideDescription}
-                          title="Xem mô tả"
-                        >
-                          ℹ️
-                        </button>
-                      ) : (
-                        <span className="text-muted">—</span>
-                      )}
-                    </td>
-                    <td className="date-cell">{formatDate(dept.createdAt)}</td>
-                    <td className="actions">
-                      <button
-                        className="btn-edit"
-                        onClick={() => handleEdit(dept)}
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        className="btn-delete"
-                        onClick={() => handleDelete(dept.departmentId)}
-                        disabled={deletingId === dept.departmentId}
-                      >
-                        {deletingId === dept.departmentId ? '...' : 'Xóa'}
-                      </button>
-                    </td>
+        <div className="table-responsive">
+          {loading ? (
+            <div className="loading">Đang tải dữ liệu...</div>
+          ) : !departments.length ? (
+            <div className="no-data">Không có dữ liệu</div>
+          ) : (
+            <>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th style={{width: '120px'}} onClick={() => handleSort('departmentCode')} className="sortable">
+                      Mã Khoa {sortBy === 'departmentCode' }
+                    </th>
+                    <th style={{width: '300px'}} onClick={() => handleSort('departmentName')} className="sortable">
+                      Tên Khoa {sortBy === 'departmentName'}
+                    </th>
+                    <th style={{width: '160px'}}>Loại</th>
+                    <th style={{width: '80px'}} className="center">Mô tả</th>
+                    <th style={{width: '140px'}}>Ngày tạo</th>
+                    <th style={{width: '180px'}} className="center">Hành động</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {departments.map((dept) => (
+                    <tr key={dept.departmentId}>
+                      <td><span className="code">{dept.departmentCode}</span></td>
+                      <td style={{fontWeight: 500}}>{dept.departmentName}</td>
+                      <td>
+                        <span className="badge badge-department">{getKnowledgeTypeLabel(dept.knowledgeType)}</span>
+                      </td>
+                      <td className="center">
+                        {dept.description ? (
+                          <button
+                            className="btn-icon-info"
+                            onMouseEnter={(e) => showDescription(dept.description, e)}
+                            onMouseLeave={() => setDescriptionTooltip({ ...descriptionTooltip, show: false })}
+                          >
+                            i
+                          </button>
+                        ) : <span className="text-muted">-</span>}
+                      </td>
+                      <td>{formatDate(dept.createdAt)}</td>
+                      
+                      {/* Cột Hành động được căn giữa bởi CSS .actions */}
+                      <td>
+                        <div className="actions">
+                          <button className="btn btn-edit" onClick={() => handleEdit(dept)}>
+                            Sửa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-            <div className="pagination">
-              <div className="pagination-info">
-                Hiển thị {departments.length} / {totalItems} khoa
+              <div className="pagination">
+                <div className="pagination-info">
+                 Hiện thị {departments.length}/{totalItems}  khoa
+                </div>
+                <div className="pagination-controls">
+                  <button className="btn-page" onClick={() => setCurrentPage(0)} disabled={currentPage === 0}>«</button>
+                  <button className="btn-page" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 0}>‹</button>
+                  <span style={{margin: '0 10px', fontWeight: 600}}>{currentPage + 1}</span>
+                  <button className="btn-page" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage >= totalPages - 1}>›</button>
+                  <button className="btn-page" onClick={() => setCurrentPage(totalPages - 1)} disabled={currentPage >= totalPages - 1}>»</button>
+                </div>
               </div>
-              <div className="pagination-controls">
-                <button
-                  className="btn-page"
-                  onClick={() => setCurrentPage(0)}
-                  disabled={currentPage === 0}
-                >
-                  Đầu
-                </button>
-                <button
-                  className="btn-page"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 0}
-                >
-                  Trước
-                </button>
-                <span className="page-number">
-                  Trang {currentPage + 1} / {totalPages || 1}
-                </span>
-                <button
-                  className="btn-page"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage >= totalPages - 1 || totalPages === 0}
-                >
-                  Sau
-                </button>
-                <button
-                  className="btn-page"
-                  onClick={() => setCurrentPage(totalPages - 1)}
-                  disabled={currentPage >= totalPages - 1 || totalPages === 0}
-                >
-                  Cuối
-                </button>
-              </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
 
-      {/* ⭐ DESCRIPTION TOOLTIP */}
       {descriptionTooltip.show && (
-        <div
-          className="description-tooltip"
-          style={{
-            left: `${descriptionTooltip.x}px`,
-            top: `${descriptionTooltip.y}px`
-          }}
-        >
+        <div className="dl-description-tooltip" style={{ left: descriptionTooltip.x, top: descriptionTooltip.y }}>
           {descriptionTooltip.content}
         </div>
       )}
 
-      {isModalOpen && (
-        <DepartmentModal
-          department={editingDepartment}
-          onClose={handleModalClose}
-          onSuccess={handleModalSuccess}
-        />
-      )}
+      {isModalOpen && <DepartmentModal department={editingDepartment} onClose={handleModalClose} onSuccess={handleModalSuccess} />}
     </div>
   );
 };

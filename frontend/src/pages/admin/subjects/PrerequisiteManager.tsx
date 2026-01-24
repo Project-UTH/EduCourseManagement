@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import subjectApi, { Subject } from '../../../services/api/subjectApi';
-import './PrerequisiteManager.css';
+import './PrerequisiteManager.css'; // File CSS độc lập
 
 interface PrerequisiteManagerProps {
   subject: Subject;
@@ -13,165 +13,125 @@ const PrerequisiteManager: React.FC<PrerequisiteManagerProps> = ({
   onClose,
   onSuccess
 }) => {
+  // State
   const [prerequisites, setPrerequisites] = useState<Subject[]>([]);
   const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        console.log('[PrerequisiteManager] Fetching data for subject:', subject.subjectId);
-        
-        // Fetch prerequisites và all subjects song song
-        const [prereqsRes, allSubjectsRes] = await Promise.all([
-          subjectApi.getPrerequisites(subject.subjectId),
-          subjectApi.getAll(0, 100, 'subjectName', 'asc')
-        ]);
-        
-        console.log('[PrerequisiteManager] Prerequisites response:', prereqsRes);
-        console.log('[PrerequisiteManager] All subjects response:', allSubjectsRes);
-        
-        // Set prerequisites
-        const prereqList = Array.isArray(prereqsRes.data) ? prereqsRes.data : [];
-        setPrerequisites(prereqList);
-        
-        // Set available subjects (exclude current subject and existing prerequisites)
-        const allSubjects = Array.isArray(allSubjectsRes.data) 
-          ? allSubjectsRes.data 
-          : (typeof allSubjectsRes.data === 'object' && allSubjectsRes.data !== null && 'content' in allSubjectsRes.data ? (allSubjectsRes.data as { content: Subject[] }).content : []);
-        
-        const existingIds = [subject.subjectId, ...prereqList.map(p => p.subjectId)];
-        const available = allSubjects.filter((s: Subject) => !existingIds.includes(s.subjectId));
-        
-        console.log('[PrerequisiteManager] Available subjects:', available.length);
-        setAvailableSubjects(available);
-        
-      } catch (err) {
-        console.error('[PrerequisiteManager] Failed to fetch data:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Lỗi tải danh sách môn điều kiện';
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [subject.subjectId]);
-
-  const handleAdd = async () => {
-    if (!selectedSubjectId) {
-      alert('Vui lòng chọn môn điều kiện');
-      return;
-    }
-
+  // ==================== FETCH DATA LOGIC ====================
+  
+  // Tách hàm fetch ra để tái sử dụng sau khi Add/Delete
+  const fetchData = useCallback(async () => {
     try {
-      console.log('[PrerequisiteManager] Adding prerequisite:', selectedSubjectId, 'to', subject.subjectId);
+      setLoading(true);
+      setError(null);
       
-      await subjectApi.addPrerequisite(subject.subjectId, Number(selectedSubjectId));
-      
-      alert('Thêm môn điều kiện thành công!');
-      setSelectedSubjectId('');
-      
-      // Reload data by re-fetching
+      // Fetch prerequisites và all subjects song song
       const [prereqsRes, allSubjectsRes] = await Promise.all([
         subjectApi.getPrerequisites(subject.subjectId),
-        subjectApi.getAll(0, 100, 'subjectName', 'asc')
+        subjectApi.getAll(0, 1000, 'subjectName', 'asc') // Tăng limit để lấy hết môn
       ]);
       
+      // 1. Xử lý Prerequisites
       const prereqList = Array.isArray(prereqsRes.data) ? prereqsRes.data : [];
       setPrerequisites(prereqList);
       
-      const allSubjects = Array.isArray(allSubjectsRes.data) 
-        ? allSubjectsRes.data 
-        : (typeof allSubjectsRes.data === 'object' && allSubjectsRes.data !== null && 'content' in allSubjectsRes.data ? (allSubjectsRes.data as { content: Subject[] }).content : []);
+      // 2. Xử lý Available Subjects
+      // Kiểm tra kỹ cấu trúc trả về (có thể là mảng trực tiếp hoặc object phân trang)
+      let allSubjects: Subject[] = [];
+      if (Array.isArray(allSubjectsRes.data)) {
+        allSubjects = allSubjectsRes.data;
+      } else if (allSubjectsRes.data && typeof allSubjectsRes.data === 'object') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dataAny = allSubjectsRes.data as any;
+        if (Array.isArray(dataAny.content)) {
+          allSubjects = dataAny.content;
+        }
+      }
+
+      // Lọc bỏ môn hiện tại và các môn đã là điều kiện
+      const existingIds = new Set([subject.subjectId, ...prereqList.map(p => p.subjectId)]);
+      const available = allSubjects.filter((s: Subject) => !existingIds.has(s.subjectId));
       
-      const existingIds = [subject.subjectId, ...prereqList.map(p => p.subjectId)];
-      const available = allSubjects.filter((s: Subject) => !existingIds.includes(s.subjectId));
       setAvailableSubjects(available);
       
-      onSuccess(); // Notify parent
     } catch (err: unknown) {
-      console.error('[PrerequisiteManager] Failed to add prerequisite:', err);
+      console.error('[PrerequisiteManager] Error:', err);
+      const msg = err instanceof Error ? err.message : 'Không thể tải dữ liệu';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, [subject.subjectId]);
+
+  // Initial Load
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // ==================== HANDLERS ====================
+
+  const handleAdd = async () => {
+    if (!selectedSubjectId) return;
+
+    try {
+      setLoading(true); // Hiển thị loading nhẹ hoặc disable nút
+      await subjectApi.addPrerequisite(subject.subjectId, Number(selectedSubjectId));
       
-      // ✅ FIX ERROR 1: Type-safe error handling
-      let message = 'Lỗi thêm môn điều kiện';
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        message = axiosError.response?.data?.message || message;
-      }
-      
-      alert(message);
+      // Refresh dữ liệu
+      await fetchData();
+      setSelectedSubjectId('');
+      alert('Thêm môn điều kiện thành công!');
+      onSuccess(); // Báo cho component cha cập nhật nếu cần
+    } catch (err: unknown) {
+      // Xử lý lỗi từ API response
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errorMsg = (err as any)?.response?.data?.message || 'Lỗi khi thêm môn điều kiện';
+      alert(errorMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleRemove = async (prerequisiteId: number) => {
-    if (!confirm('Bạn có chắc muốn xóa môn điều kiện này?')) {
-      return;
-    }
+    if (!window.confirm('Bạn có chắc muốn xóa môn điều kiện này?')) return;
 
     try {
-      console.log('[PrerequisiteManager] Removing prerequisite:', prerequisiteId);
-      
+      setLoading(true);
       await subjectApi.removePrerequisite(subject.subjectId, prerequisiteId);
       
-      alert('Xóa môn điều kiện thành công!');
-      
-      // Reload data by re-fetching
-      const [prereqsRes, allSubjectsRes] = await Promise.all([
-        subjectApi.getPrerequisites(subject.subjectId),
-        subjectApi.getAll(0, 100, 'subjectName', 'asc')
-      ]);
-      
-      const prereqList = Array.isArray(prereqsRes.data) ? prereqsRes.data : [];
-      setPrerequisites(prereqList);
-      
-      // ✅ FIX ERROR 2 & 3: Type-safe array handling
-      const allSubjects = Array.isArray(allSubjectsRes.data) 
-        ? allSubjectsRes.data 
-        : (typeof allSubjectsRes.data === 'object' && allSubjectsRes.data !== null && 'content' in allSubjectsRes.data 
-            ? (allSubjectsRes.data as { content: Subject[] }).content 
-            : []);
-      
-      const existingIds = [subject.subjectId, ...prereqList.map(p => p.subjectId)];
-      const available = allSubjects.filter((s: Subject) => !existingIds.includes(s.subjectId));
-      setAvailableSubjects(available);
-      
-      onSuccess(); // Notify parent
+      // Refresh dữ liệu
+      await fetchData();
+      alert('Đã xóa môn điều kiện.');
+      onSuccess();
     } catch (err) {
-      console.error('[PrerequisiteManager] Failed to remove prerequisite:', err);
-      alert('Lỗi xóa môn điều kiện');
+      console.error(err);
+      alert('Lỗi khi xóa môn điều kiện');
+    } finally {
+      setLoading(false);
     }
   };
 
+  // ==================== RENDER ====================
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content prerequisite-modal" onClick={e => e.stopPropagation()}>
+    <div className="prerequisite-manager modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        
+        {/* HEADER */}
         <div className="modal-header">
-          <h2>Quản lý Môn điều kiện</h2>
-          <button className="btn-close" onClick={onClose}>×</button>
+          <h2>Quản lý Tiên quyết: {subject.subjectCode}</h2>
+          <button className="btn-close" onClick={onClose}>&times;</button>
         </div>
 
+        {/* BODY */}
         <div className="modal-body">
-          {/* Subject Info */}
-          <div className="subject-info">
-            <h3>{subject.subjectName}</h3>
-            <p>Mã môn: {subject.subjectCode}</p>
-          </div>
-
-          {error && (
-            <div className="error-message" style={{ marginBottom: '1rem', padding: '0.75rem', background: '#fee', color: '#c00', borderRadius: '4px' }}>
-              {error}
-            </div>
-          )}
-
-          {/* Add Prerequisite */}
-          <div className="add-prerequisite">
-            <h4>Thêm môn điều kiện</h4>
+          
+          {/* ADD SECTION */}
+          <div className="add-section">
+            <h4 className="section-title">Thêm môn điều kiện</h4>
             <div className="form-row">
               <select
                 className="form-select"
@@ -179,53 +139,67 @@ const PrerequisiteManager: React.FC<PrerequisiteManagerProps> = ({
                 onChange={e => setSelectedSubjectId(e.target.value)}
                 disabled={loading}
               >
-                <option value="">-- Chọn môn học --</option>
+                <option value="">-- Chọn môn học để thêm --</option>
                 {availableSubjects.map(s => (
                   <option key={s.subjectId} value={s.subjectId}>
-                    {s.subjectCode} - {s.subjectName}
+                    {s.subjectCode} - {s.subjectName} ({s.credits}TC)
                   </option>
                 ))}
               </select>
+              
+              {/* Nút Thêm gọn gàng */}
               <button 
-                className="btn btn-primary" 
+                className="btn btn-primary btn-add" 
                 onClick={handleAdd}
                 disabled={!selectedSubjectId || loading}
               >
-                Thêm
+                + Thêm
               </button>
             </div>
           </div>
 
-          {/* Current Prerequisites */}
-          <div className="current-prerequisites">
-            <h4>Danh sách môn điều kiện ({prerequisites.length})</h4>
+          {/* LIST SECTION */}
+          <div>
+            <h4 className="section-title" style={{marginBottom: '8px'}}>
+              Danh sách đã chọn ({prerequisites.length})
+            </h4>
             
-            {loading ? (
+            {loading && prerequisites.length === 0 ? (
               <div className="loading">Đang tải...</div>
             ) : prerequisites.length === 0 ? (
-              <div className="no-data">Chưa có môn điều kiện nào</div>
+              <div className="no-data" style={{padding: '16px'}}>Chưa có môn điều kiện nào.</div>
             ) : (
-              <table className="data-table">
+              // Bảng Compact
+              <table className="compact-table">
+                {/* Định nghĩa độ rộng cột để tối ưu không gian */}
+                <colgroup>
+                    <col style={{ width: '20%' }} /> {/* Mã môn */}
+                    <col style={{ width: 'auto' }} /> {/* Tên môn (giãn tự do) */}
+                    <col style={{ width: '10%' }} /> {/* TC */}
+                    <col style={{ width: '10%' }} /> {/* Action (nhỏ nhất có thể) */}
+                </colgroup>
                 <thead>
                   <tr>
                     <th>Mã môn</th>
                     <th>Tên môn học</th>
-                    <th>Tín chỉ</th>
-                    <th>Thao tác</th>
+                    <th style={{textAlign: 'center'}}>TC</th>
+                    <th style={{textAlign: 'center'}}>Xóa</th>
                   </tr>
                 </thead>
                 <tbody>
                   {prerequisites.map(prereq => (
                     <tr key={prereq.subjectId}>
-                      <td>{prereq.subjectCode}</td>
+                      <td style={{fontWeight: 600}}>{prereq.subjectCode}</td>
                       <td>{prereq.subjectName}</td>
-                      <td>{prereq.credits}</td>
-                      <td>
+                      <td style={{textAlign: 'center'}}>{prereq.credits}</td>
+                      <td style={{textAlign: 'center'}}>
                         <button
-                          className="btn-delete"
+                          className="btn-icon-delete"
                           onClick={() => handleRemove(prereq.subjectId)}
+                          disabled={loading}
+                          title="Gỡ bỏ môn này"
                         >
-                          Xóa
+                          &times; {/* Dấu nhân thay vì chữ "Xóa" */}
                         </button>
                       </td>
                     </tr>
@@ -236,11 +210,13 @@ const PrerequisiteManager: React.FC<PrerequisiteManagerProps> = ({
           </div>
         </div>
 
+        {/* FOOTER */}
         <div className="modal-footer">
-          <button className="btn-cancel" onClick={onClose}>
+          <button className="btn btn-cancel" onClick={onClose}>
             Đóng
           </button>
         </div>
+
       </div>
     </div>
   );

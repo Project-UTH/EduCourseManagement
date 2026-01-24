@@ -1,134 +1,301 @@
-.prerequisite-modal {
+/* ==========================================================================
+   PREREQUISITE MANAGER - STANDALONE CSS
+   Scope: .prerequisite-manager
+   ========================================================================== */
+
+/* Wrapper để cô lập style */
+.prerequisite-manager {
+  font-family: inherit;
+  --pm-primary: #16a34a;
+  --pm-danger: #dc2626;
+  --pm-bg: #ffffff;
+  --pm-border: #e5e7eb;
+  --pm-text: #374151;
+  --pm-overlay: rgba(0, 0, 0, 0.5);
+}
+
+/* Modal Overlay & Content */
+.prerequisite-manager.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--pm-overlay);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: pm-fadeIn 0.2s ease-out;
+}
+
+.prerequisite-manager .modal-content {
+  background: var(--pm-bg);
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  width: 100%;
   min-width: 600px;
   max-width: 800px;
   max-height: 90vh;
-  overflow-y: auto;
-}
-
-.subject-info {
-  background: #f0fdf4;
-  border-left: 4px solid #16a34a;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  border-radius: 4px;
-}
-
-.subject-info h3 {
-  margin: 0 0 0.5rem 0;
-  color: #166534;
-  font-size: 1.125rem;
-}
-
-.subject-info p {
-  margin: 0;
-  color: #65a30d;
-  font-size: 0.875rem;
-}
-
-.add-prerequisite {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.add-prerequisite h4 {
-  margin: 0 0 1rem 0;
-  color: #111827;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.form-row {
   display: flex;
-  gap: 0.75rem;
+  flex-direction: column;
+  animation: pm-slideIn 0.3s ease-out;
+}
+
+@keyframes pm-fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pm-slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Header & Footer */
+.prerequisite-manager .modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--pm-border);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.form-select {
-  flex: 1;
-  padding: 0.625rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  background: white;
+.prerequisite-manager .modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.prerequisite-manager .btn-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9ca3af;
   cursor: pointer;
+  line-height: 1;
 }
 
-.form-select:disabled {
-  background: #f3f4f6;
-  cursor: not-allowed;
+.prerequisite-manager .modal-body {
+  padding: 24px;
+  overflow-y: auto;
 }
 
-.form-select:focus {
+.prerequisite-manager .modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--pm-border);
+  display: flex;
+  justify-content: flex-end;
+  background: #f9fafb;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Subject Info Box */
+.prerequisite-manager .subject-info {
+  background: #f0fdf4;
+  border-left: 4px solid var(--pm-primary);
+  padding: 16px;
+  margin-bottom: 24px;
+  border-radius: 4px;
+}
+
+.prerequisite-manager .subject-info h3 {
+  margin: 0 0 4px 0;
+  color: #15803d;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.prerequisite-manager .subject-info p {
+  margin: 0;
+  color: #166534;
+  font-size: 14px;
+}
+
+/* Forms */
+.prerequisite-manager .add-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--pm-border);
+}
+
+.prerequisite-manager .section-title {
+  margin: 0 0 12px 0;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.prerequisite-manager .form-row {
+  display: flex;
+  gap: 8px; /* Giảm khoảng cách giữa select và nút */
+  align-items: center;
+  width: 100%;
+}
+
+.prerequisite-manager .form-select {
+  flex: 1; /* Chiếm toàn bộ không gian còn lại */
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px; /* Bo góc nhỏ hơn xíu cho gọn */
+  font-size: 14px;
+  background: white;
+  text-overflow: ellipsis; /* Nếu tên quá dài sẽ hiện ... */
+}
+.prerequisite-manager .btn-add {
+  flex-shrink: 0; /* Không cho phép nút bị co lại */
+  width: auto; /* Độ rộng vừa đủ nội dung */
+  min-width: 80px; /* Đặt độ rộng tối thiểu nhỏ gọn */
+  padding: 8px 12px; 
+  white-space: nowrap;
+}
+
+.prerequisite-manager .form-select:focus {
   outline: none;
-  border-color: #16a34a;
+  border-color: var(--pm-primary);
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
-.current-prerequisites h4 {
-  margin: 0 0 1rem 0;
-  color: #111827;
-  font-size: 1rem;
-  font-weight: 600;
+/* Buttons */
+.prerequisite-manager .btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
 }
 
-.prerequisite-modal .data-table {
-  margin-top: 0;
-  width: 100%;
-  border-collapse: collapse;
+.prerequisite-manager .btn-primary {
+  background: var(--pm-primary);
+  color: white;
 }
 
-.prerequisite-modal .data-table th,
-.prerequisite-modal .data-table td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
+.prerequisite-manager .btn-primary:hover:not(:disabled) {
+  background: #15803d;
 }
 
-.prerequisite-modal .data-table th {
-  background: #f9fafb;
-  font-weight: 600;
-  font-size: 0.875rem;
+.prerequisite-manager .btn-primary:disabled {
+  background: #86efac;
+  cursor: not-allowed;
+}
+
+.prerequisite-manager .btn-cancel {
+  background: white;
+  border: 1px solid #d1d5db;
   color: #374151;
 }
 
-.prerequisite-modal .data-table tbody tr:hover {
+.prerequisite-manager .btn-cancel:hover {
+  background: #f3f4f6;
+}
+
+.prerequisite-manager .btn-delete {
+  padding: 6px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.prerequisite-manager .btn-delete:hover {
+  background: var(--pm-danger);
+  color: white;
+  border-color: var(--pm-danger);
+}
+
+/* Table */
+.prerequisite-manager .data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.prerequisite-manager .data-table th,
+.prerequisite-manager .data-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--pm-border);
+  font-size: 14px;
+}
+
+.prerequisite-manager .data-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.prerequisite-manager .data-table tbody tr:hover {
   background: #f9fafb;
 }
 
-.btn-delete {
-  padding: 0.375rem 0.75rem;
+/* States */
+.prerequisite-manager .loading,
+.prerequisite-manager .no-data {
+  text-align: center;
+  padding: 32px;
+  color: #6b7280;
+  font-size: 14px;
+  background: #f9fafb;
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
+.prerequisite-manager .error-message {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.prerequisite-manager .compact-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 13px; /* Giảm cỡ chữ xuống 1 chút */
+}
+
+.prerequisite-manager .compact-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+  padding: 8px 10px; /* Padding nhỏ hơn */
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.prerequisite-manager .compact-table td {
+  padding: 6px 10px; /* Padding dọc nhỏ để dòng mỏng hơn */
+  border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.prerequisite-manager .compact-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Nút xóa icon (gọn hơn nút chữ) */
+.prerequisite-manager .btn-icon-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid #fca5a5;
+  background: #fff1f2;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.prerequisite-manager .btn-icon-delete:hover {
   background: #dc2626;
   color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.btn-delete:hover {
-  background: #b91c1c;
-}
-
-.btn-delete:active {
-  background: #991b1b;
-}
-
-.loading,
-.no-data {
-  text-align: center;
-  padding: 2rem;
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.loading {
-  font-style: italic;
-}
-
-.no-data {
-  border: 1px dashed #d1d5db;
-  border-radius: 0.375rem;
-  background: #f9fafb;
 }

@@ -1,416 +1,310 @@
 /**
- * Semester List CSS - NO CONFLICT
+ * Semester List CSS - ISOLATED, MAIN CARD & 3D
  * File: frontend/src/pages/admin/semesters/SemesterList.css
- * 
- * Uses .semester-* prefix to avoid conflicts
  */
 
 /* ================================================================
-   PAGE CONTAINER
+   PAGE ROOT (Namespace: .semester-list-page)
    ================================================================ */
 
-.semester-page-container {
-  padding: 1.5rem;
-  background: #f9fafb;
-  min-height: 100vh;
+.semester-list-page {
+  padding: 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #374151;
+  box-sizing: border-box;
+  width: 100%;
 }
 
-/* ================================================================
-   HEADER
-   ================================================================ */
-
-.semester-page-header {
+/* Header */
+.semester-list-page .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
 }
 
-.semester-page-header h1 {
-  font-size: 1.875rem;
+.semester-list-page .page-header h1 {
+  font-size: 1.75rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
-}
-
-.semester-btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background: #16a34a;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.semester-btn-primary:hover {
-  background: #15803d;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.semester-icon {
-  font-size: 1.25rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 /* ================================================================
-   FILTERS BAR
+   MAIN CARD (Khung chứa chính)
    ================================================================ */
 
-.semester-filters-bar {
+.semester-list-page .main-card {
   background: white;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.semester-search-form {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.semester-search-input {
-  flex: 1;
-  padding: 0.625rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  transition: border-color 0.2s;
-}
-
-.semester-search-input:focus {
-  outline: none;
-  border-color: #16a34a;
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
-}
-
-.semester-btn-search {
-  padding: 0.625rem 1.5rem;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.semester-btn-search:hover {
-  background: #2563eb;
-}
-
-/* ================================================================
-   TABLE CONTAINER
-   ================================================================ */
-
-.semester-table-container {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f3f4f6;
   overflow: hidden;
 }
 
-.semester-data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-}
-
-.semester-data-table th,
-.semester-data-table td {
-  padding: 0.75rem 1rem;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.semester-data-table th {
-  background: #f9fafb;
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.8125rem;
-  white-space: nowrap;
-}
-
-.semester-data-table tbody tr:hover {
-  background: #f9fafb;
-}
-
-.semester-code {
-  font-weight: 700;
-  color: #1e40af;
-  font-family: 'Courier New', monospace;
-}
-
-.semester-font-semibold {
-  font-weight: 600;
-}
-
-.semester-center {
-  text-align: center;
-}
-
-/* ================================================================
-   DATE RANGE DISPLAY
-   ================================================================ */
-
-.semester-date-range {
+/* Filters Bar */
+.semester-list-page .filters-bar {
+  padding: 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  background-color: #fff;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
-}
-
-.semester-date-range.semester-small {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.semester-arrow {
-  color: #9ca3af;
-  font-weight: bold;
-}
-
-/* ================================================================
-   BADGES
-   ================================================================ */
-
-.semester-badge {
-  display: inline-block;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* Status badges */
-.semester-badge-upcoming {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.semester-badge-active {
-  background: #dcfce7;
-  color: #166534;
-  animation: semester-pulse 2s ease-in-out infinite;
-}
-
-.semester-badge-completed {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-/* Registration badges */
-.semester-badge-reg-open {
-  background: #d1fae5;
-  color: #065f46;
-  font-weight: 700;
-  animation: semester-pulse 2s ease-in-out infinite;
-}
-
-.semester-badge-reg-enabled {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.semester-badge-reg-closed {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-/* Pulse animation */
-@keyframes semester-pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* ================================================================
-   ACTIONS
-   ================================================================ */
-
-.semester-actions {
-  display: flex;
-  gap: 0.375rem;
-  justify-content: center;
-}
-
-.semester-actions button {
-  padding: 0.375rem 0.625rem;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.2s;
-}
-
-.semester-btn-activate {
-  background: #3b82f6;
-  color: white;
-}
-
-.semester-btn-activate:hover {
-  background: #2563eb;
-  transform: scale(1.05);
-}
-
-.semester-btn-complete {
-  background: #10b981;
-  color: white;
-}
-
-.semester-btn-complete:hover {
-  background: #059669;
-  transform: scale(1.05);
-}
-
-.semester-btn-reg-on {
-  background: #10b981;
-  color: white;
-}
-
-.semester-btn-reg-on:hover {
-  background: #059669;
-}
-
-.semester-btn-reg-off {
-  background: #ef4444;
-  color: white;
-}
-
-.semester-btn-reg-off:hover {
-  background: #dc2626;
-}
-
-.semester-btn-edit {
-  background: #f59e0b;
-  color: white;
-}
-
-.semester-btn-edit:hover {
-  background: #d97706;
-}
-
-.semester-btn-delete {
-  background: #ef4444;
-  color: white;
-}
-
-.semester-btn-delete:hover {
-  background: #dc2626;
-}
-
-/* ================================================================
-   PAGINATION
-   ================================================================ */
-
-.semester-pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-.semester-pagination-info {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.semester-pagination-controls {
-  display: flex;
-  align-items: center;
   gap: 1rem;
 }
 
-.semester-btn-page {
-  padding: 0.5rem 1rem;
-  background: white;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  cursor: pointer;
+.semester-list-page .search-form {
+  display: flex;
+  gap: 0.75rem;
+  flex: 1;
+  max-width: 500px;
+}
+
+.semester-list-page .search-input {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
   transition: all 0.2s;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.semester-btn-page:hover:not(:disabled) {
-  background: #f3f4f6;
+.semester-list-page .search-input:focus {
+  outline: none;
   border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
 }
 
-.semester-btn-page:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* ================================================================
+   3D BUTTONS STYLES
+   ================================================================ */
 
-.semester-page-info {
+.semester-list-page .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #374151;
+  cursor: pointer;
+  line-height: 1.25rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
+
+.semester-list-page .btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+/* Primary (Add, Search) */
+.semester-list-page .btn-primary,
+.semester-list-page .btn-search {
+  color: white;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.semester-list-page .btn-primary:hover,
+.semester-list-page .btn-search:hover {
+  background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+  transform: translateY(-1px);
+}
+
+/* --- ACTION BUTTONS (Small & Compact) --- */
+.semester-list-page .btn-action-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* ✅ 2 nút / hàng */
+  gap: 6px;                              /* khoảng cách ngang & dọc */
+  justify-content: center;
+  align-items: center;
+}
+
+
+.semester-list-page .btn-sm {
+  width: 40px;          /* ✅ tất cả nút cùng chiều rộng */
+  height: 36px;         /* ✅ cùng chiều cao */
+
+  display: flex;
+  align-items: center;  /* căn giữa dọc */
+  justify-content: center; /* căn giữa ngang */
+
+  padding: 0;           /* ❗ bỏ padding riêng */
+  margin: 0;
+
+  font-size: 14px;      /* icon + chữ đều cân */
+  line-height: 1;
+
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+
+
+
+.semester-list-page .btn-sm:hover {
+  transform: translateY(-1px);
+}
+
+/* Activate (Blue) */
+.semester-list-page .btn-activate {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+}
+.semester-list-page .btn-activate:hover { background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%); }
+
+/* Complete / Reg On (Green) */
+.semester-list-page .btn-complete,
+.semester-list-page .btn-reg-on {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+}
+.semester-list-page .btn-complete:hover,
+.semester-list-page .btn-reg-on:hover { background: linear-gradient(180deg, #059669 0%, #047857 100%); }
+
+/* Reg Off (Orange/Red mix or just Red) */
+.semester-list-page .btn-reg-off {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+}
+.semester-list-page .btn-reg-off:hover { background: linear-gradient(180deg, #d97706 0%, #b45309 100%); }
+
+/* Edit (Yellow/Orange) */
+.semester-list-page .btn-edit {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+  padding: 0.35rem 0.25rem; /* Hẹp lại */
+}
+.semester-list-page .btn-edit:hover { background: linear-gradient(180deg, #d97706 0%, #b45309 100%); }
+
+/* Delete (Red) */
+.semester-list-page .btn-delete {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+  padding: 0.35rem 0.25rem; /* Hẹp lại */
+}
+.semester-list-page .btn-delete:hover { background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%); }
 
 /* ================================================================
-   LOADING & NO DATA
+   TABLE STYLES
    ================================================================ */
 
-.semester-loading {
-  padding: 3rem;
-  text-align: center;
-  color: #6b7280;
-  font-size: 1rem;
+.semester-list-page .table-responsive {
+  width: 100%;
+  overflow-x: auto;
 }
 
-.semester-no-data {
-  padding: 3rem !important;
-  text-align: center !important;
-  color: #9ca3af;
-  font-size: 1rem;
+.semester-list-page .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 900px;
+  table-layout: fixed;
+  font-size: 0.8rem;
 }
+
+.semester-list-page .data-table th,
+.semester-list-page .data-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.semester-list-page .data-table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.semester-list-page .data-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Helpers */
+.semester-list-page .center { text-align: center; }
+.semester-list-page .code {
+  font-family: 'Monaco', monospace;
+  font-weight: 700;
+  color: #4f46e5;
+  font-size: 0.85rem;
+}
+.semester-list-page .semester-name { font-weight: 600; color: #111827; }
+
+/* Date Range Display */
+.semester-list-page .date-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #4b5563;
+}
+.semester-list-page .arrow { color: #9ca3af; font-weight: bold; }
+
+/* Badges */
+.semester-list-page .badge {
+  display: inline-flex;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Status Colors */
+.semester-list-page .badge-UPCOMING { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+.semester-list-page .badge-ACTIVE { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; animation: pulse 2s infinite; }
+.semester-list-page .badge-COMPLETED { background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+
+/* Reg Colors */
+.semester-list-page .badge-reg-open { background: #dcfce7; color: #15803d; font-weight: 700; }
+.semester-list-page .badge-reg-enabled { background: #fef3c7; color: #b45309; }
+.semester-list-page .badge-reg-closed { background: #fee2e2; color: #b91c1c; }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
 /* ================================================================
-   RESPONSIVE
+   PAGINATION (Square & 3D)
    ================================================================ */
 
-@media (max-width: 768px) {
-  .semester-page-container {
-    padding: 1rem;
-  }
-
-  .semester-page-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .semester-page-header h1 {
-    font-size: 1.5rem;
-  }
-
-  .semester-data-table {
-    font-size: 0.75rem;
-  }
-
-  .semester-data-table th,
-  .semester-data-table td {
-    padding: 0.5rem;
-  }
-
-  .semester-actions {
-    flex-wrap: wrap;
-  }
-
-  .semester-pagination {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
+.semester-list-page .pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  background-color: #fff;
 }
+
+.semester-list-page .pagination-controls { display: flex; gap: 0.5rem; }
+
+.semester-list-page .btn-page {
+  width: 36px; height: 36px;
+  display: inline-flex; justify-content: center; align-items: center;
+  background: white; border: 1px solid #cbd5e1; border-radius: 0.375rem;
+  color: #334155; font-size: 1.25rem; cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05); padding: 0;
+}
+
+.semester-list-page .btn-page:hover:not(:disabled) {
+  background: #f0fdf4; border-color: #16a34a; color: #16a34a;
+  transform: translateY(-1px);
+}
+
+.semester-list-page .btn-page:disabled {
+  background: #f1f5f9; color: #cbd5e1; cursor: not-allowed;
+}
+
+/* Modal styles overrides if needed (use .semester-modal-...) */

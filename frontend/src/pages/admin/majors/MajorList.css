@@ -1,56 +1,489 @@
 /**
- * Major List CSS - FIXED WIDTH
+ * Major List CSS - ISOLATED & STYLED
  * File: frontend/src/pages/admin/majors/MajorList.css
- * 
- * FIX: Giới hạn width tên ngành để vừa màn hình (7 cột)
+ * * STYLE: 3D Buttons, Card Layout, Centered.
+ * * COLUMNS: Fixed widths as requested.
  */
 
-/* Import base styles from Department */
-@import url('../departments/DepartmentList.css');
+/* ================================================================
+   PAGE ROOT (Namespace: .major-list-page)
+   ================================================================ */
 
-/* ⭐ COLUMN WIDTHS - Major List (7 cột) */
-.data-table th:nth-child(1),
-.data-table td:nth-child(1) {
-  width: 90px; /* Mã CN */
+.major-list-page {
+  padding: 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #374151;
+  box-sizing: border-box;
+  width: 100%;
 }
 
-.data-table th:nth-child(2),
-.data-table td:nth-child(2) {
-  width: 250px; /* Tên CN - GIỚI HẠN */
+/* Header */
+.major-list-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
-.data-table th:nth-child(3),
-.data-table td:nth-child(3) {
-  width: 180px; /* Khoa (badge + name) */
+.major-list-page .page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.data-table th:nth-child(4),
-.data-table td:nth-child(4) {
-  width: 60px; /* MT (Mô tả button) */
+/* ================================================================
+   MAIN CARD (White box container)
+   ================================================================ */
+
+.major-list-page .main-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f3f4f6;
+  overflow: hidden;
+}
+
+/* Filters Bar */
+.major-list-page .filters-bar {
+  padding: 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  background-color: #fff;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.major-list-page .search-form {
+  display: flex;
+  gap: 0.75rem;
+  flex: 1;
+  max-width: 600px; /* Rộng hơn chút để chứa thêm dropdown khoa nếu cần */
+}
+
+.major-list-page .search-input,
+.major-list-page .filter-select {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.major-list-page .search-input:focus,
+.major-list-page .filter-select:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+
+/* ================================================================
+   3D BUTTONS STYLES
+   ================================================================ */
+
+.major-list-page .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.25rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.major-list-page .btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+/* Primary (Add, Search) */
+.major-list-page .btn-primary,
+.major-list-page .btn-search {
+  color: white;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.major-list-page .btn-primary:hover,
+.major-list-page .btn-search:hover {
+  background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+  box-shadow: 0 6px 8px -1px rgba(22, 163, 74, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Clear Button */
+.major-list-page .btn-clear {
+  background: white;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.major-list-page .btn-clear:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #111827;
+}
+
+/* Edit Button */
+.major-list-page .btn-edit {
+  color: white;
+  padding: 0.4rem 0.85rem;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+}
+
+.major-list-page .btn-edit:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+}
+
+/* Delete Button */
+.major-list-page .btn-delete {
+  color: white;
+  padding: 0.4rem 0.85rem;
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+}
+
+.major-list-page .btn-delete:hover {
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+}
+
+.major-list-page .btn-delete:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Info Icon Button */
+.major-list-page .btn-icon-info {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #0284c7;
+  border-radius: 50%;
+  border: 1px solid #bae6fd;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(14, 165, 233, 0.15);
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.major-list-page .btn-icon-info:hover {
+  transform: scale(1.1) rotate(5deg);
+  background: linear-gradient(180deg, #bae6fd 0%, #7dd3fc 100%);
+}
+
+/* ================================================================
+   TABLE & COLUMNS
+   ================================================================ */
+
+.major-list-page .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.major-list-page .data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  /* Min width đảm bảo bảng không bị co dúm */
+  min-width: 900px; 
+  table-layout: fixed;
+  font-size: 0.7rem;
+}
+
+.major-list-page .data-table th,
+.major-list-page .data-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle; /* Căn giữa dọc */
+}
+
+.major-list-page .data-table th {
+  background: #f8fafc;
+  font-weight: 6000;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 0.7rem;
+}
+
+.major-list-page .data-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* ⭐ MAJOR COLUMN WIDTHS (Defined via classes preferred, or nth-child) */
+
+/* 1. Mã Ngành */
+.major-list-page .data-table th:nth-child(1),
+.major-list-page .data-table td:nth-child(1) {
+  width: 90px;
+}
+
+/* 2. Tên Ngành (Rộng nhất) */
+.major-list-page .data-table th:nth-child(2),
+.major-list-page .data-table td:nth-child(2) {
+  width: 250px;
+  font-size: 1rem;
+}
+
+/* 3. Khoa (Badge + Text) */
+.major-list-page .data-table th:nth-child(3),
+.major-list-page .data-table td:nth-child(3) {
+  width: 180px;
+}
+
+/* 4. Mô tả (Icon) */
+.major-list-page .data-table th:nth-child(4),
+.major-list-page .data-table td:nth-child(4) {
+  width: 70px;
   text-align: center;
 }
 
-.data-table th:nth-child(5),
-.data-table td:nth-child(5) {
-  width: 110px; /* Ngày tạo */
+/* 5. Ngày tạo */
+.major-list-page .data-table th:nth-child(5),
+.major-list-page .data-table td:nth-child(5) {
+  width: 120px;
 }
 
-.data-table th:nth-child(6),
-.data-table td:nth-child(6) {
-  width: 160px; /* Thao tác */
+/* 6. Thao tác */
+.major-list-page .data-table th:nth-child(6),
+.major-list-page .data-table td:nth-child(6) {
+  width: 160px;
+  text-align: center;
 }
 
-/* Department name below badge */
-.department-name {
+/* Helpers */
+.major-list-page .center { text-align: center; }
+.major-list-page .code {
+  font-family: 'Monaco', monospace;
+  font-weight: 600;
+  color: #d97706; /* Màu cam khác với Department cho dễ phân biệt */
+  background: #fffbeb;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #fcd34d;
+  font-size: 0.8125rem;
+}
+
+.major-list-page .department-name {
   display: block;
   font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 0.25rem;
+  color: #64748b;
+  margin-top: 0.35rem;
+  font-style: italic;
 }
 
+.major-list-page .actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Badge Khoa (trong bảng Ngành) */
+.major-list-page .badge-dept {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+/* ================================================================
+   PAGINATION (Square & 3D)
+   ================================================================ */
+
+.major-list-page .pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  background-color: #fff;
+}
+
+.major-list-page .pagination-info {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.major-list-page .pagination-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.major-list-page .btn-page {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  color: #334155;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.major-list-page .btn-page:hover:not(:disabled) {
+  background: #f0fdf4;
+  border-color: #16a34a;
+  color: #16a34a;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.major-list-page .btn-page:disabled {
+  background: #f1f5f9;
+  color: #cbd5e1;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.major-list-page .page-number {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+/* ================================================================
+   TOOLTIP & MODAL (Prefix .ml- for Major List)
+   ================================================================ */
+
+.ml-description-tooltip {
+  position: fixed;
+  z-index: 9999;
+  background: #1f2937;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  max-width: 300px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  pointer-events: none;
+  animation: mlFadeIn 0.2s;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes mlFadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal styles with .ml- prefix */
+.ml-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+  animation: mlFadeIn 0.2s;
+}
+
+.ml-modal-content {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 650px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: mlSlideUp 0.3s;
+  position: relative;
+}
+
+@keyframes mlSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ml-modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ml-modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.ml-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.ml-modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.ml-btn-close { /* Giống btn-clear */
+  background: transparent; border: none; font-size: 1.5rem; color: #9ca3af; cursor: pointer;
+}
+.ml-btn-cancel { /* Giống btn-clear */
+  padding: 0.625rem 1.25rem; background: white; border: 1px solid #d1d5db; border-radius: 0.5rem; cursor: pointer;
+}
+.ml-btn-submit { /* Giống btn-primary */
+  padding: 0.625rem 1.25rem; background: #16a34a; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 500;
+}
+
+/* Responsive */
 @media (max-width: 1200px) {
-  .data-table th:nth-child(2),
-  .data-table td:nth-child(2) {
-    width: 180px;
+  .major-list-page .data-table th:nth-child(2),
+  .major-list-page .data-table td:nth-child(2) {
+    width: 200px; /* Thu nhỏ tên ngành */
   }
 }

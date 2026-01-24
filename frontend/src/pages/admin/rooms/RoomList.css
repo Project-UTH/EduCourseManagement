@@ -1,15 +1,15 @@
 /* ========================================
    ROOM LIST - STANDALONE CSS
-   NO DEPENDENCIES - COMPLETELY INDEPENDENT
+   SCOPE: .room-list-page ONLY
    ======================================== */
 
-/* ==================== RESET & BASE ==================== */
-
+/* ==================== BASE LAYOUT ==================== */
 .room-list-page {
   padding: 24px;
   background-color: #f9fafb;
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #1f2937;
 }
 
 .room-list-page * {
@@ -17,8 +17,7 @@
 }
 
 /* ==================== HEADER ==================== */
-
-.room-list-header {
+.room-list-page .room-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -29,12 +28,12 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.header-actions {
+.room-list-page .header-actions {
   display: flex;
   gap: 12px;
 }
 
-.page-title {
+.room-list-page .page-title {
   font-size: 28px;
   font-weight: 700;
   color: #1a202c;
@@ -44,82 +43,80 @@
   gap: 12px;
 }
 
-.title-icon {
+.room-list-page .title-icon {
   font-size: 32px;
 }
 
-.create-room-button {
-  display: flex;
+/* Buttons */
+.room-list-page .create-room-button,
+.room-list-page .refresh-button {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #16a34a;
-  color: white;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px; /* bo mềm hơn */
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+
+  /* 👇 đổ bóng mặc định */
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 6px 12px rgba(22, 163, 74, 0.35);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
-.create-room-button:hover {
-  background: #15803d;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(22, 163, 74, 0.2);
+/* Hover */
+.room-list-page .create-room-button:hover,
+.room-list-page .refresh-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.18),
+    0 12px 24px rgba(22, 163, 74, 0.45);
 }
 
-.create-icon {
-  font-size: 16px;
-}
-
-.refresh-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: #16a34a;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.refresh-button:hover:not(:disabled) {
-  background: #15803d;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(22, 163, 74, 0.2);
-}
-
-.refresh-button:active:not(:disabled) {
+/* Active (khi click) */
+.room-list-page .create-room-button:active,
+.room-list-page .refresh-button:active:not(:disabled) {
   transform: translateY(0);
+
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    0 4px 8px rgba(22, 163, 74, 0.3);
 }
 
-.refresh-button:disabled {
-  opacity: 0.6;
+/* Disabled */
+.room-list-page .refresh-button:disabled {
+  background: #86efac;
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  opacity: 0.7;
 }
 
-.refresh-icon {
-  font-size: 16px;
-  display: inline-block;
+
+/* Animations */
+.room-list-page .refresh-button:hover .refresh-icon {
+  animation: roomListSpin 0.6s linear;
 }
 
-.refresh-button:hover .refresh-icon {
-  animation: spin 0.6s linear;
-}
-
-@keyframes spin {
+@keyframes roomListSpin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
 /* ==================== FILTERS SECTION ==================== */
-
-.room-filters-section {
+.room-list-page .room-filters-section {
   background: white;
   padding: 24px;
   border-radius: 8px;
@@ -128,13 +125,13 @@
 }
 
 /* Search Form */
-.room-search-form {
+.room-list-page .room-search-form {
   display: flex;
   gap: 12px;
   margin-bottom: 16px;
 }
 
-.room-search-input {
+.room-list-page .room-search-input {
   flex: 1;
   padding: 12px 16px;
   border: 2px solid #e5e7eb;
@@ -144,50 +141,54 @@
   transition: all 0.2s ease;
 }
 
-.room-search-input:focus {
+.room-list-page .room-search-input:focus {
   outline: none;
   border-color: #16a34a;
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
-.room-search-input::placeholder {
-  color: #9ca3af;
-}
-
-.room-search-button {
-  display: flex;
+.room-list-page .room-search-button {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: #16a34a;
-  color: white;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
   white-space: nowrap;
+
+  /* 👇 shadow mặc định */
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 6px 12px rgba(22, 163, 74, 0.35);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
-.room-search-button:hover {
-  background: #15803d;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(22, 163, 74, 0.2);
-}
-
-.search-icon {
-  font-size: 16px;
+/* Hover */
+.room-list-page .room-search-button:hover {
+  background: linear-gradient(135deg);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.18),
+    0 12px 24px  rgba(0, 0, 0, 0.18);
 }
 
 /* Filter Controls */
-.room-filter-controls {
+.room-list-page .room-filter-controls {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.room-filter-select {
+.room-list-page .room-filter-select {
   padding: 12px 16px;
   border: 2px solid #e5e7eb;
   border-radius: 8px;
@@ -199,59 +200,56 @@
   transition: all 0.2s ease;
 }
 
-.room-filter-select:hover:not(:disabled) {
+.room-list-page .room-filter-select:hover:not(:disabled) {
   border-color: #d1d5db;
 }
 
-.room-filter-select:focus {
+.room-list-page .room-filter-select:focus {
   outline: none;
-  border-color: #16a34a;
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
-.room-filter-select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: #f9fafb;
-}
-
-/* Special styling for status filter */
-.filter-status-special {
-  border-color: #16a34a;
+.room-list-page .filter-status-special {
   border-width: 2px;
   font-weight: 600;
-  color: #16a34a;
 }
 
-.room-clear-filters-button {
-  display: flex;
+.room-list-page .room-clear-filters-button {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: #ef4444;
-  color: white;
+  background: linear-gradient(135deg, #f87171, #ef4444);
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
   white-space: nowrap;
+
+  /* 👇 shadow mặc định */
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.14),
+    0 6px 12px rgba(239, 68, 68, 0.35);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
-.room-clear-filters-button:hover {
-  background: #dc2626;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
-}
-
-.clear-icon {
-  font-size: 14px;
+/* Hover */
+.room-list-page .room-clear-filters-button:hover {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.2),
+    0 12px 24px rgba(239, 68, 68, 0.45);
 }
 
 /* ==================== STATISTICS BAR ==================== */
-
-.room-stats-bar {
+.room-list-page .room-stats-bar {
   display: flex;
   gap: 32px;
   padding: 16px 24px;
@@ -261,47 +259,47 @@
   margin-bottom: 20px;
 }
 
-.stat-item {
+.room-list-page .stat-item {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.stat-label {
+.room-list-page .stat-label {
   font-size: 14px;
   color: #6b7280;
   font-weight: 500;
 }
 
-.stat-value {
+.room-list-page .stat-value {
   font-size: 20px;
   font-weight: 700;
   color: #16a34a;
 }
 
 /* ==================== TABLE ==================== */
-
-.room-table-wrapper {
+.room-list-page .room-table-wrapper {
   background: white;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  width: 100%;
 }
 
-.room-data-table {
+.room-list-page .room-data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.room-data-table thead {
+.room-list-page .room-data-table thead {
   background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
   border-bottom: 2px solid #e5e7eb;
 }
 
-.room-data-table th {
+.room-list-page .room-data-table th {
   padding: 16px 12px;
-  text-align: left;
+  text-align: center;
   font-size: 13px;
   font-weight: 700;
   color: #374151;
@@ -309,71 +307,34 @@
   letter-spacing: 0.05em;
 }
 
-.room-data-table td {
+.room-list-page .room-data-table td {
   padding: 16px 12px;
   color: #1f2937;
   border-bottom: 1px solid #f3f4f6;
   vertical-align: middle;
-}
-
-.room-table-row:hover {
-  background: #f9fafb;
-}
-
-.room-table-row:last-child td {
-  border-bottom: none;
-}
-
-/* Column Specific Styles */
-.col-room-code {
-  width: 100px;
-}
-
-.col-room-name {
-  width: 180px;
-}
-
-.col-location {
-  width: 150px;
-}
-
-.col-type {
-  width: 140px;
-}
-
-.col-capacity {
-  width: 100px;
-}
-
-.col-status {
-  width: 140px;
-}
-
-.col-current-session {
-  width: 200px;
-}
-
-.col-utilization {
-  width: 120px;
-}
-
-.col-actions {
-  width: 100px;
-}
-
-.center-text {
   text-align: center;
 }
 
-.room-code-text {
-  color: #16a34a;
-  font-weight: 600;
-  font-size: 14px;
+.room-list-page .room-table-row:hover {
+  background: #f9fafb;
 }
 
-/* ==================== STATUS BADGES ==================== */
+.room-list-page .room-table-row:last-child td {
+  border-bottom: none;
+}
 
-.room-status-badge {
+/* Column Specifics */
+.room-list-page .col-room-code strong {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.room-list-page .center-text {
+  text-align: center;
+}
+
+/* Status Badges */
+.room-list-page .room-status-badge {
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
@@ -383,88 +344,78 @@
   white-space: nowrap;
 }
 
-.status-in-use {
+.room-list-page .status-in-use {
   background: #dcfce7;
   color: #15803d;
   border: 1px solid #86efac;
 }
 
-.status-available {
+.room-list-page .status-available {
   background: #f3f4f6;
   color: #6b7280;
   border: 1px solid #d1d5db;
 }
 
-.status-inactive {
+.room-list-page .status-inactive {
   background: #fee2e2;
   color: #991b1b;
   border: 1px solid #fca5a5;
 }
 
-.status-time-remaining {
-  font-size: 12px;
-  opacity: 0.85;
-  margin-left: 4px;
-  font-weight: 500;
-}
-
-/* ==================== CURRENT SESSION INFO ==================== */
-
-.current-session-info {
+/* Current Session Info */
+.room-list-page .current-session-info {
   font-size: 13px;
   line-height: 1.5;
 }
 
-.session-class-code {
+.room-list-page .session-class-code {
   font-weight: 700;
   color: #16a34a;
   margin-bottom: 2px;
 }
 
-.session-subject-name {
+.room-list-page .session-subject-name {
   color: #6b7280;
   margin-bottom: 2px;
   font-size: 12px;
 }
 
-.session-time-slot {
+.room-list-page .session-time-slot {
   color: #9ca3af;
   font-size: 11px;
 }
 
-.no-session-indicator {
+.room-list-page .no-session-indicator {
   color: #d1d5db;
   font-size: 20px;
   font-weight: 300;
 }
 
-/* ==================== UTILIZATION BAR ==================== */
-
-.utilization-container {
+/* Utilization Bar */
+.room-list-page .utilization-container {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 0 8px;
 }
 
-.utilization-bar-wrapper {
+.room-list-page .utilization-bar-wrapper {
   flex: 1;
   height: 10px;
   background: #e5e7eb;
   border-radius: 5px;
   overflow: hidden;
   min-width: 60px;
-  position: relative;
 }
 
-.utilization-bar-fill {
+.room-list-page .utilization-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
   transition: width 0.4s ease;
   border-radius: 5px;
 }
 
-.utilization-percentage {
+.room-list-page .utilization-percentage {
   font-size: 13px;
   font-weight: 600;
   color: #6b7280;
@@ -472,126 +423,114 @@
   text-align: right;
 }
 
-/* ==================== ACTIONS ==================== */
-
-.col-actions {
-  width: 140px;
+/* Actions */
+/* Container */
+.room-list-page .action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
 }
 
-.action-buttons {
+/* Mỗi hàng */
+.room-list-page .action-row {
   display: flex;
   gap: 6px;
   justify-content: center;
 }
 
-.btn-view,
-.btn-edit,
-.btn-delete {
-  width: 36px;
-  height: 36px;
+/* Chuẩn hóa kích thước nút */
+.room-list-page .btn-view,
+.room-list-page .btn-edit,
+.room-list-page .btn-delete {
+  min-width: 64px;
+  height: 32px;
+  padding: 0 10px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
+
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.btn-view {
-  background: #3b82f6;
-  color: white;
+
+
+/* Nếu dùng SVG icon */
+.room-list-page .btn-view svg,
+.room-list-page .btn-edit svg,
+.room-list-page .btn-delete svg {
+  width: 18px;
+  height: 18px;
+  display: block;           /* 👈 tránh inline lệch */
+}
+.room-list-page .btn-square {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 0;        /* ẩn text */
 }
 
-.btn-view:hover {
+
+/* Colors */
+.room-list-page .btn-view { background: #3b82f6; color: #fff; }
+.room-list-page .btn-edit { background: #f59e0b; color: #fff; }
+.room-list-page .btn-delete { background: #ef4444; color: #fff; }
+
+/* Hover */
+.room-list-page .btn-view:hover {
   background: #2563eb;
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
 }
 
-.btn-edit {
-  background: #f59e0b;
-  color: white;
-}
-
-.btn-edit:hover {
+.room-list-page .btn-edit:hover {
   background: #d97706;
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
 }
 
-.btn-delete {
-  background: #ef4444;
-  color: white;
-}
-
-.btn-delete:hover {
+.room-list-page .btn-delete:hover {
   background: #dc2626;
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
 }
 
-.btn-view:active,
-.btn-edit:active,
-.btn-delete:active {
-  transform: translateY(0);
-}
 
 /* ==================== LOADING & EMPTY STATES ==================== */
-
-.room-loading-state {
+.room-list-page .room-loading-state,
+.room-list-page .room-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 80px 20px;
-  color: #6b7280;
   gap: 16px;
 }
 
-.loading-spinner {
+.room-list-page .loading-spinner {
   width: 40px;
   height: 40px;
   border: 4px solid #e5e7eb;
   border-top-color: #16a34a;
   border-radius: 50%;
-  animation: spinner-rotate 0.8s linear infinite;
+  animation: roomListSpinnerRotate 0.8s linear infinite;
 }
 
-@keyframes spinner-rotate {
+@keyframes roomListSpinnerRotate {
   to { transform: rotate(360deg); }
 }
 
-.room-loading-state span {
-  font-size: 15px;
-  font-weight: 500;
-}
-
-.room-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  color: #9ca3af;
-}
-
-.empty-icon {
+.room-list-page .empty-icon {
   font-size: 64px;
   margin-bottom: 16px;
   opacity: 0.5;
 }
 
-.room-empty-state p {
-  font-size: 16px;
-  font-weight: 500;
-  margin: 0;
-}
-
 /* ==================== PAGINATION ==================== */
-
-.room-pagination {
+.room-list-page .room-pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -602,19 +541,19 @@
   margin-top: 20px;
 }
 
-.pagination-info {
+.room-list-page .pagination-info {
   font-size: 14px;
   color: #6b7280;
   font-weight: 500;
 }
 
-.pagination-controls {
+.room-list-page .pagination-controls {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.pagination-button {
+.room-list-page .pagination-button {
   padding: 10px 18px;
   background: white;
   color: #374151;
@@ -626,246 +565,64 @@
   transition: all 0.2s ease;
 }
 
-.pagination-button:hover:not(:disabled) {
+.room-list-page .pagination-button:hover:not(:disabled) {
   background: #f9fafb;
   border-color: #16a34a;
   color: #16a34a;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.pagination-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.pagination-button:disabled {
+.room-list-page .pagination-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   background: #f9fafb;
 }
 
-.pagination-page-number {
-  font-size: 14px;
-  color: #374151;
-  font-weight: 600;
-  padding: 0 8px;
-}
+/* ==================== RESPONSIVE ==================== */
 
-/* ==================== RESPONSIVE DESIGN ==================== */
-
-/* Tablet (1024px and below) */
+/* Tablet */
 @media (max-width: 1024px) {
-  .room-data-table {
-    font-size: 13px;
-  }
-  
-  .room-data-table th,
-  .room-data-table td {
-    padding: 12px 10px;
-  }
-  
-  .page-title {
-    font-size: 24px;
-  }
-  
-  .room-filter-controls {
-    gap: 10px;
-  }
-  
-  .room-filter-select {
-    min-width: 160px;
-  }
+  .room-list-page .room-data-table { font-size: 13px; }
+  .room-list-page .room-data-table th,
+  .room-list-page .room-data-table td { padding: 12px 10px; }
+  .room-list-page .page-title { font-size: 24px; }
 }
 
-/* Mobile (768px and below) */
+/* Mobile */
 @media (max-width: 768px) {
-  .room-list-page {
-    padding: 16px;
-  }
+  .room-list-page { padding: 16px; }
+  .room-list-page .room-list-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .room-list-page .header-actions { width: 100%; }
+  .room-list-page .create-room-button,
+  .room-list-page .refresh-button { flex: 1; justify-content: center; }
   
-  .room-list-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 16px;
-  }
+  .room-list-page .room-search-form { flex-direction: column; }
+  .room-list-page .room-filter-controls { flex-direction: column; }
+  .room-list-page .room-filter-select { width: 100%; min-width: unset; }
+  .room-list-page .room-clear-filters-button { width: 100%; justify-content: center; }
   
-  .page-title {
-    font-size: 22px;
-  }
+  .room-list-page .room-stats-bar { flex-direction: column; gap: 12px; }
   
-  .header-actions {
-    width: 100%;
-  }
+  .room-list-page .room-table-wrapper { overflow-x: auto; }
+  .room-list-page .room-data-table { min-width: 1100px; }
   
-  .create-room-button,
-  .refresh-button {
-    flex: 1;
-    justify-content: center;
-  }
-  
-  .room-filters-section {
-    padding: 16px;
-  }
-  
-  .room-search-form {
-    flex-direction: column;
-  }
-  
-  .room-search-button {
-    justify-content: center;
-  }
-  
-  .room-filter-controls {
-    flex-direction: column;
-  }
-  
-  .room-filter-select {
-    width: 100%;
-    min-width: unset;
-  }
-  
-  .room-clear-filters-button {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .room-stats-bar {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .room-table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .room-data-table {
-    min-width: 1100px;
-  }
-  
-  .room-pagination {
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px;
-  }
-  
-  .pagination-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
+  .room-list-page .room-pagination { flex-direction: column; gap: 16px; }
+  .room-list-page .pagination-controls { width: 100%; justify-content: space-between; }
 }
 
-/* Small Mobile (480px and below) */
+/* Small Mobile */
 @media (max-width: 480px) {
-  .room-list-page {
-    padding: 12px;
-  }
-  
-  .room-list-header {
-    padding: 12px;
-  }
-  
-  .page-title {
-    font-size: 20px;
-  }
-  
-  .title-icon {
-    font-size: 24px;
-  }
-  
-  .room-filters-section {
-    padding: 12px;
-  }
-  
-  .room-stats-bar {
-    padding: 12px;
-  }
-  
-  .stat-value {
-    font-size: 18px;
-  }
-  
-  .room-data-table {
-    min-width: 900px;
-    font-size: 12px;
-  }
+  .room-list-page { padding: 12px; }
+  .room-list-page .page-title { font-size: 20px; }
+  .room-list-page .room-data-table { min-width: 900px; font-size: 12px; }
 }
 
-/* ==================== PRINT STYLES ==================== */
-
-@media print {
-  .room-list-header,
-  .room-filters-section,
-  .room-pagination,
-  .refresh-button,
-  .view-detail-button {
-    display: none;
-  }
-  
-  .room-list-page {
-    padding: 0;
-    background: white;
-  }
-  
-  .room-table-wrapper {
-    box-shadow: none;
-  }
-  
-  .room-data-table {
-    font-size: 10px;
-  }
-  
-  .room-table-row:hover {
-    background: transparent;
-  }
-}
-
-/* ==================== ACCESSIBILITY ==================== */
-
-.room-search-input:focus-visible,
-.room-filter-select:focus-visible,
-.refresh-button:focus-visible,
-.room-search-button:focus-visible,
-.room-clear-filters-button:focus-visible,
-.pagination-button:focus-visible,
-.view-detail-button:focus-visible {
+/* Accessibility Focus States */
+.room-list-page .room-search-input:focus-visible,
+.room-list-page .room-filter-select:focus-visible,
+.room-list-page .refresh-button:focus-visible,
+.room-list-page .room-search-button:focus-visible,
+.room-list-page .pagination-button:focus-visible {
   outline: 3px solid #16a34a;
   outline-offset: 2px;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .room-data-table th {
-    border: 2px solid #000;
-  }
-  
-  .room-data-table td {
-    border: 1px solid #000;
-  }
-  
-  .room-status-badge {
-    border-width: 2px;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .refresh-button,
-  .room-search-button,
-  .room-clear-filters-button,
-  .pagination-button,
-  .view-detail-button,
-  .utilization-bar-fill {
-    transition: none;
-  }
-  
-  .loading-spinner {
-    animation: none;
-    border-top-color: #16a34a;
-  }
-  
-  .refresh-button:hover .refresh-icon {
-    animation: none;
-  }
 }

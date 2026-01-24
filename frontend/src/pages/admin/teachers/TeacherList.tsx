@@ -3,7 +3,7 @@ import teacherApi, { TeacherResponse } from '../../../services/api/teacherApi';
 import departmentApi from '../../../services/api/departmentApi';
 import TeacherModal from './TeacherModal';
 import ImportModal from '../../admin/import/ImportModal';
-import './TeacherList.css';
+import './TeacherList.css'; // Đảm bảo đã import file CSS đã sửa
 
 interface Department {
   departmentId: number;
@@ -12,7 +12,7 @@ interface Department {
 }
 
 const TeacherList: React.FC = () => {
-  // State
+  // State quản lý dữ liệu và giao diện
   const [teachers, setTeachers] = useState<TeacherResponse[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,11 +21,13 @@ const TeacherList: React.FC = () => {
   const [totalElements, setTotalElements] = useState(0);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterDepartmentId, setFilterDepartmentId] = useState('');
+  
+  // State cho Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<TeacherResponse | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
-  // Fetch departments for filter
+  // Fetch departments for filter on mount
   useEffect(() => {
     fetchDepartments();
   }, []);
@@ -54,10 +56,10 @@ const TeacherList: React.FC = () => {
         // Search mode
         response = await teacherApi.search(searchKeyword, currentPage, 10);
       } else if (filterDepartmentId) {
-        // Filter by department (returns array, not paginated)
+        // Filter by department
         response = await teacherApi.getByDepartment(Number(filterDepartmentId));
         
-        // Convert to page format
+        // Manual pagination for filter results if API returns array
         const data = response.data;
         setTeachers(Array.isArray(data) ? data : []);
         setTotalPages(1);
@@ -145,6 +147,7 @@ const TeacherList: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '—';
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN');
   };
@@ -158,12 +161,13 @@ const TeacherList: React.FC = () => {
     }
   };
 
+  // --- RENDER ---
   return (
-    <div className="page-container">
+    <div className="teacher-list-page">
       {/* HEADER */}
-      <div className="page-header">
-        <h1>Quản lý Giảng viên</h1>
-        <div className="header-actions">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>Quản lý Giảng viên</h1>
+        <div className="header-actions" style={{ display: 'flex', gap: '0.75rem' }}>
           <button className="btn btn-secondary" onClick={handleImport}>
             <span className="icon">📥</span>
             Import Excel
@@ -176,43 +180,49 @@ const TeacherList: React.FC = () => {
       </div>
 
       {/* FILTERS */}
-      <div className="filters-bar">
-        <form className="search-form" onSubmit={handleSearch}>
+      <div className="filters-bar" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        <form className="search-form" onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem', flex: 1 }}>
           <input
             type="text"
             className="search-input"
             placeholder="Tìm theo tên, email, SĐT, CCCD..."
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
+            style={{ flex: 1, padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}
           />
           <button type="submit" className="btn-search">
-            Tìm kiếm
-          </button>
+  Tìm kiếm
+</button>
+
         </form>
 
         <select
-          className="filter-select"
-          value={filterDepartmentId}
-          onChange={handleFilterChange}
-        >
-          <option value="">Tất cả các khoa</option>
-          {departments.map((dept) => (
-            <option key={dept.departmentId} value={dept.departmentId}>
-              {dept.departmentCode} - {dept.departmentName}
-            </option>
-          ))}
-        </select>
+  className="filter-select"
+  value={filterDepartmentId}
+  onChange={handleFilterChange}
+>
+  <option value="">Tất cả các khoa</option>
+  {departments.map((dept) => (
+    <option key={dept.departmentId} value={dept.departmentId}>
+      {dept.departmentCode} - {dept.departmentName}
+    </option>
+  ))}
+</select>
+
       </div>
 
       {/* TABLE */}
       <div className="teacher-table-container">
         {loading ? (
-          <div className="loading">Đang tải dữ liệu...</div>
+          <div className="loading" style={{ padding: '3rem', textAlign: 'center', color: '#6b7280' }}>
+            <div className="spinner"></div> Đang tải dữ liệu...
+          </div>
         ) : (
           <>
             <table className="teacher-data-table">
               <thead>
                 <tr>
+                  {/* Định nghĩa 12 cột khớp với CSS */}
                   <th>CCCD</th>
                   <th>Họ và tên</th>
                   <th>Giới tính</th>
@@ -229,39 +239,52 @@ const TeacherList: React.FC = () => {
               <tbody>
                 {teachers.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="no-data">
+                    <td colSpan={12} className="no-data" style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
                       Không có dữ liệu
                     </td>
                   </tr>
                 ) : (
                   teachers.map((teacher) => (
                     <tr key={teacher.teacherId}>
+                      {/* 1. CCCD */}
                       <td>{teacher.citizenId}</td>
+
+                      {/* 2. Họ tên */}
                       <td className="font-semibold">{teacher.fullName}</td>
+
+                      {/* 3. Giới tính */}
                       <td>{getGenderLabel(teacher.gender)}</td>
+
+                      {/* 4. Ngày sinh */}
                       <td>{formatDate(teacher.dateOfBirth)}</td>
+
+                      {/* 5. Khoa */}
                       <td>
                         <span className="badge badge-department">
                           {teacher.departmentCode}
                         </span>
-                        <div className="text-muted small">
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '2px' }}>
                           {teacher.departmentName}
                         </div>
                       </td>
+
+                      {/* 6. Chuyên ngành */}
                       <td>
                         {teacher.majorId ? (
                           <>
                             <span className="badge badge-major">
                               {teacher.majorCode || 'N/A'}
                             </span>
-                            <div className="text-muted small">
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '2px' }}>
                               {teacher.majorName || '—'}
                             </div>
                           </>
                         ) : (
-                          <span className="text-muted">—</span>
+                          <span style={{ color: '#9ca3af' }}>—</span>
                         )}
                       </td>
+
+                      {/* 7. Các môn dạy */}
                       <td>
                         {teacher.subjects && teacher.subjects.length > 0 ? (
                           <div className="subjects-list">
@@ -287,26 +310,39 @@ const TeacherList: React.FC = () => {
                             </div>
                           </div>
                         ) : (
-                          <span className="text-muted">Chưa có</span>
+                          <span style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '0.8rem' }}>Chưa có</span>
                         )}
                       </td>
+
+                      {/* 8. Học vị */}
                       <td>{teacher.degree || '—'}</td>
-                      <td className="small">{teacher.email || '—'}</td>
+
+                      {/* 9. Email */}
+                      <td>{teacher.email || '—'}</td>
+
+                      {/* 10. SĐT */}
                       <td>{teacher.phone || '—'}</td>
-                      <td className="actions">
-                        <button
-                          className="btn-edit"
-                          onClick={() => handleEdit(teacher)}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          className="btn-delete"
-                          onClick={() => handleDelete(teacher.teacherId, teacher.fullName)}
-                        >
-                          Xóa
-                        </button>
-                      </td>
+
+                      {/* 12. Thao tác - NÚT ICON MỚI */}
+                     {/* 12. Thao tác - Icon Buttons */}
+{/* 12. Thao tác - Text Buttons Horizontal */}
+<td className="actions">
+  <div className="action-buttons">
+    <button
+      className="btn-text btn-edit"
+      onClick={() => handleEdit(teacher)}
+    >
+      Sửa
+    </button>
+    
+    <button
+      className="btn-text btn-delete"
+      onClick={() => handleDelete(teacher.teacherId, teacher.fullName)}
+    >
+      Xóa
+    </button>
+  </div>
+</td>
                     </tr>
                   ))
                 )}
@@ -315,34 +351,38 @@ const TeacherList: React.FC = () => {
 
             {/* PAGINATION */}
             <div className="pagination">
-              <div className="pagination-info">
-                Hiển thị {teachers.length} / {totalElements} giảng viên
-              </div>
-              <div className="pagination-controls">
-                <button
-                  className="btn-page"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 0}
-                >
-                  Trước
-                </button>
-                <span className="page-info">
-                  Trang {currentPage + 1} / {totalPages || 1}
-                </span>
-                <button
-                  className="btn-page"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage >= totalPages - 1}
-                >
-                  Sau
-                </button>
+  <div className="pagination-info">
+    Hiển thị {teachers.length} / {totalElements} giảng viên
+  </div>
+
+  <div className="pagination-controls">
+    <button
+      className="btn-page"
+      onClick={() => handlePageChange(currentPage - 1)}
+      disabled={currentPage === 0}
+    >
+      Trước
+    </button>
+
+    <span className="page-info">
+      Trang {currentPage + 1} / {totalPages || 1}
+    </span>
+
+    <button
+      className="btn-page"
+      onClick={() => handlePageChange(currentPage + 1)}
+      disabled={currentPage >= totalPages - 1}
+    >
+      Sau
+    </button>
+
               </div>
             </div>
           </>
         )}
       </div>
 
-      {/* MODAL */}
+      {/* MODAL EDIT/CREATE */}
       {isModalOpen && (
         <TeacherModal
           teacher={editingTeacher}
@@ -351,7 +391,7 @@ const TeacherList: React.FC = () => {
         />
       )}
 
-      {/* IMPORT MODAL */}
+      {/* MODAL IMPORT */}
       {isImportModalOpen && (
         <ImportModal
           title="Import Giảng viên từ Excel"

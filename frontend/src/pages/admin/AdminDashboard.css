@@ -1,17 +1,22 @@
+/* ==================== MAIN CONTAINER (ROOT) ==================== */
+/* Class gốc định danh cho trang này - tạo scope độc lập */
 .admin-dashboard {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  animation: fadeIn 0.3s ease-in;
+  /* Đổi tên animation để tránh trùng lặp global */
+  animation: adminDashboardFadeIn 0.3s ease-in;
 }
 
-@keyframes fadeIn {
+/* Định nghĩa keyframe riêng biệt cho trang admin */
+@keyframes adminDashboardFadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 /* ==================== HEADER ==================== */
-.dashboard-header {
+/* Sử dụng selector lồng nhau (Descendant selector) để cô lập style */
+.admin-dashboard .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -20,20 +25,20 @@
   border-bottom: 2px solid #e5e7eb;
 }
 
-.header-content h1 {
+.admin-dashboard .header-content h1 {
   font-size: 2rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 0.5rem 0;
 }
 
-.header-subtitle {
+.admin-dashboard .header-subtitle {
   color: #6b7280;
   font-size: 1rem;
   margin: 0;
 }
 
-.refresh-btn {
+.admin-dashboard .refresh-btn {
   padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
@@ -46,17 +51,17 @@
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
 
-.refresh-btn:hover {
+.admin-dashboard .refresh-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
-.refresh-btn:active {
+.admin-dashboard .refresh-btn:active {
   transform: translateY(0);
 }
 
 /* ==================== CURRENT SEMESTER ==================== */
-.current-semester-card {
+.admin-dashboard .current-semester-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1.5rem;
@@ -65,30 +70,30 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.semester-header {
+.admin-dashboard .semester-header {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.semester-icon {
+.admin-dashboard .semester-icon {
   font-size: 2rem;
 }
 
-.semester-info h3 {
+.admin-dashboard .semester-info h3 {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
-.semester-code {
+.admin-dashboard .semester-code {
   margin: 0.25rem 0 0 0;
   opacity: 0.9;
   font-size: 0.9rem;
 }
 
-.semester-status {
+.admin-dashboard .semester-status {
   margin-left: auto;
   padding: 0.5rem 1rem;
   background: rgba(255, 255, 255, 0.2);
@@ -97,7 +102,7 @@
   font-weight: 500;
 }
 
-.semester-dates {
+.admin-dashboard .semester-dates {
   display: flex;
   gap: 1rem;
   font-size: 0.95rem;
@@ -105,14 +110,14 @@
 }
 
 /* ==================== STATISTICS GRID ==================== */
-.stats-grid {
+.admin-dashboard .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.stat-card {
+.admin-dashboard .stat-card {
   background: white;
   padding: 1.5rem;
   border-radius: 1rem;
@@ -128,7 +133,7 @@
   overflow: hidden;
 }
 
-.stat-card::before {
+.admin-dashboard .stat-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -139,32 +144,32 @@
   transition: width 0.3s;
 }
 
-.stat-card:hover {
+.admin-dashboard .stat-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   border-color: var(--card-color);
 }
 
-.stat-card:hover::before {
+.admin-dashboard .stat-card:hover::before {
   width: 8px;
 }
 
-.stat-icon {
+.admin-dashboard .stat-icon {
   font-size: 3rem;
   filter: grayscale(0.2);
   transition: all 0.3s;
 }
 
-.stat-card:hover .stat-icon {
+.admin-dashboard .stat-card:hover .stat-icon {
   transform: scale(1.1);
   filter: grayscale(0);
 }
 
-.stat-content {
+.admin-dashboard .stat-content {
   flex: 1;
 }
 
-.stat-value {
+.admin-dashboard .stat-value {
   font-size: 2rem;
   font-weight: 700;
   color: #1f2937;
@@ -172,21 +177,21 @@
   line-height: 1;
 }
 
-.stat-label {
+.admin-dashboard .stat-label {
   font-size: 0.95rem;
   color: #6b7280;
   margin: 0;
   font-weight: 500;
 }
 
-.stat-active {
+.admin-dashboard .stat-active {
   font-size: 0.85rem;
   color: #10b981;
   margin: 0.5rem 0 0 0;
   font-weight: 500;
 }
 
-.stat-arrow {
+.admin-dashboard .stat-arrow {
   font-size: 1.5rem;
   color: var(--card-color);
   opacity: 0;
@@ -194,20 +199,20 @@
   transition: all 0.3s;
 }
 
-.stat-card:hover .stat-arrow {
+.admin-dashboard .stat-card:hover .stat-arrow {
   opacity: 1;
   transform: translateX(0);
 }
 
 /* ==================== METRICS ROW ==================== */
-.metrics-row {
+.admin-dashboard .metrics-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.metric-card {
+.admin-dashboard .metric-card {
   background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
   padding: 1.5rem;
   border-radius: 1rem;
@@ -217,18 +222,18 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.metric-icon {
+.admin-dashboard .metric-icon {
   font-size: 2.5rem;
 }
 
-.metric-info h4 {
+.admin-dashboard .metric-info h4 {
   margin: 0 0 0.5rem 0;
   font-size: 1rem;
   color: #6b7280;
   font-weight: 500;
 }
 
-.metric-value {
+.admin-dashboard .metric-value {
   font-size: 1.75rem;
   font-weight: 700;
   color: #1f2937;
@@ -236,24 +241,24 @@
 }
 
 /* ==================== QUICK ACTIONS ==================== */
-.quick-actions-section {
+.admin-dashboard .quick-actions-section {
   margin-top: 3rem;
 }
 
-.section-title {
+.admin-dashboard .section-title {
   font-size: 1.5rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 1.5rem 0;
 }
 
-.quick-actions-grid {
+.admin-dashboard .quick-actions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
 }
 
-.action-card {
+.admin-dashboard .action-card {
   background: white;
   border-radius: 1rem;
   overflow: hidden;
@@ -261,12 +266,12 @@
   transition: all 0.3s;
 }
 
-.action-card:hover {
+.admin-dashboard .action-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   transform: translateY(-4px);
 }
 
-.action-header {
+.admin-dashboard .action-header {
   padding: 1.25rem;
   color: white;
   display: flex;
@@ -274,21 +279,21 @@
   gap: 0.75rem;
 }
 
-.action-icon {
+.admin-dashboard .action-icon {
   font-size: 1.75rem;
 }
 
-.action-header h3 {
+.admin-dashboard .action-header h3 {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
 }
 
-.action-list {
+.admin-dashboard .action-list {
   padding: 0.5rem 0;
 }
 
-.action-item {
+.admin-dashboard .action-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -299,25 +304,25 @@
   border-left: 3px solid transparent;
 }
 
-.action-item:hover {
+.admin-dashboard .action-item:hover {
   background: #f9fafb;
   border-left-color: currentColor;
   padding-left: 1.5rem;
 }
 
-.action-item span {
+.admin-dashboard .action-item span {
   color: #9ca3af;
   font-weight: 600;
   transition: all 0.2s;
 }
 
-.action-item:hover span {
+.admin-dashboard .action-item:hover span {
   color: inherit;
   transform: translateX(4px);
 }
 
 /* ==================== LOADING & ERROR ==================== */
-.loading-spinner {
+.admin-dashboard .loading-spinner {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -326,25 +331,26 @@
   gap: 1rem;
 }
 
-.spinner {
+/* Đổi tên keyframe spinner để tránh trùng lặp */
+.admin-dashboard .spinner {
   width: 48px;
   height: 48px;
   border: 4px solid #e5e7eb;
   border-top-color: #3b82f6;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: adminSpinnerSpin 0.8s linear infinite;
 }
 
-@keyframes spin {
+@keyframes adminSpinnerSpin {
   to { transform: rotate(360deg); }
 }
 
-.loading-spinner p {
+.admin-dashboard .loading-spinner p {
   color: #6b7280;
   font-size: 1rem;
 }
 
-.error-message {
+.admin-dashboard .error-message {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -353,17 +359,17 @@
   gap: 1rem;
 }
 
-.error-icon {
+.admin-dashboard .error-icon {
   font-size: 4rem;
 }
 
-.error-message p {
+.admin-dashboard .error-message p {
   color: #ef4444;
   font-size: 1.1rem;
   font-weight: 500;
 }
 
-.retry-btn {
+.admin-dashboard .retry-btn {
   padding: 0.75rem 1.5rem;
   background: #3b82f6;
   color: white;
@@ -374,7 +380,7 @@
   transition: all 0.2s;
 }
 
-.retry-btn:hover {
+.admin-dashboard .retry-btn:hover {
   background: #2563eb;
   transform: translateY(-2px);
 }
@@ -385,62 +391,76 @@
     padding: 1rem;
   }
 
-  .dashboard-header {
+  .admin-dashboard .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
 
-  .header-content h1 {
+  .admin-dashboard .header-content h1 {
     font-size: 1.5rem;
   }
 
-  .stats-grid {
+  .admin-dashboard .stats-grid {
     grid-template-columns: 1fr;
   }
 
-  .quick-actions-grid {
+  .admin-dashboard .quick-actions-grid {
     grid-template-columns: 1fr;
   }
 
-  .semester-header {
+  .admin-dashboard .semester-header {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .semester-status {
+  .admin-dashboard .semester-status {
     margin-left: 0;
     margin-top: 0.5rem;
   }
 
-  .semester-dates {
+  .admin-dashboard .semester-dates {
     flex-direction: column;
     gap: 0.5rem;
   }
 
-  .metrics-row {
+  .admin-dashboard .metrics-row {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
-  .stat-card {
+  .admin-dashboard .stat-card {
     padding: 1rem;
   }
 
-  .stat-icon {
+  .admin-dashboard .stat-icon {
     font-size: 2rem;
   }
 
-  .stat-value {
+  .admin-dashboard .stat-value {
     font-size: 1.5rem;
   }
 
-  .action-header {
+  .admin-dashboard .action-header {
     padding: 1rem;
   }
 
-  .action-icon {
+  .admin-dashboard .action-icon {
     font-size: 1.5rem;
   }
 }
+.quick-action-icon {
+  display: flex;
+  align-items: center;      /* căn giữa theo chiều dọc */
+  justify-content: center;  /* căn giữa theo chiều ngang */
+  font-size: 32px;          /* chỉnh kích thước icon */
+  width: 56px;              /* hoặc theo thiết kế */
+  height: 56px;
+}
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
