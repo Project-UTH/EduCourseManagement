@@ -2,16 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import homeworkApi, { HomeworkResponse } from '../../../services/api/homeworkApi';
 import classApi from '../../../services/api/classApi';
-import { StatCard, LoadingSpinner } from '../../../components/common';
+import { LoadingSpinner } from '../../../components/common';
 import './HomeworkList.css';
+import ChatList from '../../../components/chat/ChatList';
+import { useAuthStore } from '@/store/authStore';
+
 
 /**
- * HomeworkList Component - Fixed Version
- * 
- * ✅ Better error handling - NO auto redirect
- * ✅ Shows detailed error messages
- * ✅ Tab-specific empty state messages
- * ✅ Token refresh support
+ * HomeworkList Component - Namespaced (thl-)
  */
 
 const HomeworkList = () => {
@@ -39,81 +37,47 @@ const HomeworkList = () => {
     }
   }, [selectedClass, selectedType, searchKeyword]);
   
-  /**
-   * Load teacher's classes - IMPROVED ERROR HANDLING
-   */
   const loadTeacherClasses = async () => {
     setLoading(true);
     setClassLoadError(null);
     
     try {
-      console.log('[HomeworkList] 🔄 Loading my classes...');
-      
       const response = await classApi.getMyClasses();
-      
-      console.log('[HomeworkList] ✅ My classes loaded:', response.length);
       setClasses(response);
       
       if (response.length > 0 && !selectedClass) {
         setSelectedClass(response[0].classId);
       }
-      
-      setClassLoadError(null);
     } catch (err: any) {
-      console.error('[HomeworkList] ❌ Failed to load classes:', err);
-      
+      console.error('[HomeworkList] Failed to load classes:', err);
       const status = err.response?.status;
       const message = err.response?.data?.message || err.message;
       
       let errorMessage = '';
-      
-      // Detailed error messages based on status code
-      if (status === 401) {
-        errorMessage = '🔒 Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
-        console.error('[HomeworkList] 401 Unauthorized - Token expired or invalid');
-      } else if (status === 403) {
-        errorMessage = '🚫 Bạn không có quyền truy cập. Vui lòng kiểm tra tài khoản.';
-        console.error('[HomeworkList] 403 Forbidden - Insufficient permissions');
-      } else if (status === 404) {
-        errorMessage = '❓ Không tìm thấy endpoint API. Backend có thể chưa được cập nhật.';
-        console.error('[HomeworkList] 404 Not Found - Endpoint does not exist');
-      } else if (status === 500) {
-        errorMessage = '💥 Lỗi server. Vui lòng thử lại sau.';
-        console.error('[HomeworkList] 500 Server Error');
-      } else if (err.code === 'ERR_NETWORK') {
-        errorMessage = '🌐 Không thể kết nối tới server. Kiểm tra backend đang chạy?';
-        console.error('[HomeworkList] Network Error - Backend offline?');
-      } else {
-        errorMessage = `⚠️ ${message}`;
-      }
+      if (status === 401) errorMessage = '🔒 Phiên đăng nhập đã hết hạn.';
+      else if (status === 403) errorMessage = '🚫 Bạn không có quyền truy cập.';
+      else if (status === 404) errorMessage = '❓ Không tìm thấy dữ liệu lớp học.';
+      else if (status === 500) errorMessage = '💥 Lỗi server. Vui lòng thử lại sau.';
+      else if (err.code === 'ERR_NETWORK') errorMessage = '🌐 Không thể kết nối tới server.';
+      else errorMessage = `⚠️ ${message}`;
       
       setClassLoadError(errorMessage);
       setClasses([]);
-      
-      // ⚠️ DO NOT REDIRECT - Let user see the error!
-      console.log('[HomeworkList] Continuing with fallback mode (no classes)');
     } finally {
       setLoading(false);
     }
   };
   
-  /**
-   * Load homework - IMPROVED ERROR HANDLING
-   */
   const loadHomework = async () => {
     setError(null);
     
     try {
-      console.log('[HomeworkList] 🔄 Loading homework...');
-      
       let data: HomeworkResponse[];
       
       if (selectedClass && classes.length > 0) {
         data = await homeworkApi.getHomeworkByClass(selectedClass);
-        console.log('[HomeworkList] ✅ Homework loaded for class:', selectedClass);
       } else {
         data = await homeworkApi.getMyHomework();
-        console.log('[HomeworkList] ✅ All homework loaded');
       }
       
       // Filter by type
@@ -133,29 +97,11 @@ const HomeworkList = () => {
       }
       
       setHomework(filtered);
-      console.log('[HomeworkList] 📊 Homework displayed:', filtered.length);
-      setError(null);
-      
     } catch (err: any) {
-      console.error('[HomeworkList] ❌ Failed to load homework:', err);
-      
-      const status = err.response?.status;
+      console.error('[HomeworkList] Failed to load homework:', err);
       const message = err.response?.data?.message || err.message;
-      
-      let errorMessage = '';
-      
-      if (status === 401) {
-        errorMessage = '🔒 Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
-      } else if (status === 403) {
-        errorMessage = '🚫 Bạn không có quyền truy cập bài tập.';
-      } else {
-        errorMessage = `⚠️ Không thể tải danh sách bài tập: ${message}`;
-      }
-      
-      setError(errorMessage);
+      setError(`⚠️ Không thể tải danh sách bài tập: ${message}`);
       setHomework([]);
-      
-      // ⚠️ DO NOT REDIRECT - Show error in UI
     }
   };
   
@@ -175,83 +121,40 @@ const HomeworkList = () => {
   };
   
   const handleRetry = () => {
-    console.log('[HomeworkList] 🔄 Retrying...');
     setError(null);
     setClassLoadError(null);
     loadTeacherClasses();
   };
   
   const handleLogout = () => {
-    // Clear token and redirect to login
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     navigate('/login');
   };
   
-  /**
-   * ✅ Get tab-specific empty state message
-   */
-  const getEmptyStateMessage = (): { title: string; description: string } => {
+  const getEmptyStateMessage = () => {
     if (searchKeyword.trim()) {
-      return {
-        title: 'Không tìm thấy bài tập',
-        description: 'Không có bài tập nào phù hợp với từ khóa tìm kiếm của bạn'
-      };
+      return { title: 'Không tìm thấy bài tập', description: 'Không có bài tập nào phù hợp với từ khóa tìm kiếm của bạn' };
     }
     
     switch (selectedType) {
-      case 'REGULAR':
-        return {
-          title: 'Chưa có bài tập thường xuyên nào',
-          description: 'Nhấn nút "Tạo bài tập mới" để thêm bài tập thường xuyên cho lớp học này'
-        };
-      case 'MIDTERM':
-        return {
-          title: 'Chưa có bài tập giữa kỳ nào',
-          description: 'Nhấn nút "Tạo bài tập mới" để thêm bài tập giữa kỳ cho lớp học này'
-        };
-      case 'FINAL':
-        return {
-          title: 'Chưa có bài tập cuối kỳ nào',
-          description: 'Nhấn nút "Tạo bài tập mới" để thêm bài tập cuối kỳ cho lớp học này'
-        };
-      default:
-        return {
-          title: 'Chưa có bài tập nào',
-          description: 'Hãy tạo bài tập đầu tiên cho lớp học của bạn'
-        };
+      case 'REGULAR': return { title: 'Chưa có bài tập thường xuyên', description: 'Tạo bài tập mới để sinh viên bắt đầu làm bài' };
+      case 'MIDTERM': return { title: 'Chưa có bài tập giữa kỳ', description: 'Chuẩn bị bài tập giữa kỳ cho sinh viên' };
+      case 'FINAL': return { title: 'Chưa có bài tập cuối kỳ', description: 'Tạo bài thi cuối kỳ cho lớp học' };
+      default: return { title: 'Chưa có bài tập nào', description: 'Hãy tạo bài tập đầu tiên cho lớp học của bạn' };
     }
   };
   
   const getDeadlineStatus = (deadline: string, isOverdue: boolean) => {
     if (isOverdue) {
-      const deadlineDate = new Date(deadline);
-      const now = new Date();
-      const diffDays = Math.floor((now.getTime() - deadlineDate.getTime()) / (1000 * 60 * 60 * 24));
-      return { 
-        text: `⚠️ Quá hạn ${diffDays} ngày`, 
-        color: '#ef4444',
-        className: 'deadline-overdue'
-      };
+      const diffDays = Math.floor((new Date().getTime() - new Date(deadline).getTime()) / (86400000));
+      return { text: `⚠️ Quá hạn ${diffDays} ngày`, className: 'thl-status-overdue' };
     }
     
-    const deadlineDate = new Date(deadline);
-    const now = new Date();
-    const diffDays = Math.floor((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor((new Date(deadline).getTime() - new Date().getTime()) / (86400000));
+    if (diffDays <= 3) return { text: `⚡ Còn ${diffDays} ngày`, className: 'thl-status-urgent' };
     
-    if (diffDays <= 3) {
-      return { 
-        text: `⚡ Còn ${diffDays} ngày`, 
-        color: '#f59e0b',
-        className: 'deadline-urgent'
-      };
-    }
-    
-    return { 
-      text: `📅 Còn ${diffDays} ngày`, 
-      color: '#10b981',
-      className: 'deadline-normal'
-    };
+    return { text: `📅 Còn ${diffDays} ngày`, className: 'thl-status-normal' };
   };
   
   const getTypeColor = (type: string) => {
@@ -259,9 +162,11 @@ const HomeworkList = () => {
       case 'REGULAR': return '#3b82f6';
       case 'MIDTERM': return '#f59e0b';
       case 'FINAL': return '#ef4444';
-      default: return '#6b7280';
+      default: return '#64748b';
     }
   };
+  const user = useAuthStore((state: any) => state.user);
+
   
   // Calculate statistics
   const stats = {
@@ -271,7 +176,6 @@ const HomeworkList = () => {
     overdue: homework.filter(hw => hw.isOverdue).length,
   };
   
-  // Show loading spinner during initial load
   if (loading) {
     return (
       <div style={{ padding: '2rem' }}>
@@ -281,157 +185,71 @@ const HomeworkList = () => {
   }
   
   return (
-    <div className="homework-list-container">
+    <div className="thl-container">
       {/* Header */}
-      <div className="page-header">
-        <div>
+      <div className="thl-header">
+        <div className="thl-header-content">
           <h1>📝 Quản lý Bài tập</h1>
           <p>Tạo, chỉnh sửa và theo dõi bài tập của sinh viên</p>
         </div>
         <button 
-          className="btn-primary"
+          className="thl-btn-create"
           onClick={() => navigate('/teacher/assignments/create')}
         >
-          + Tạo bài tập mới
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Tạo bài tập mới
         </button>
       </div>
       
-      {/* ⭐ CLASS LOAD ERROR - Prominent Display */}
+      {/* Class Load Error Banner */}
       {classLoadError && (
-        <div style={{
-          background: classLoadError.includes('401') || classLoadError.includes('hết hạn') 
-            ? '#fee2e2' 
-            : '#fef3c7',
-          border: `2px solid ${classLoadError.includes('401') ? '#ef4444' : '#f59e0b'}`,
-          borderRadius: '0.75rem',
-          padding: '1.5rem',
-          marginBottom: '1.5rem',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-            <div style={{ fontSize: '2rem' }}>
-              {classLoadError.includes('401') || classLoadError.includes('hết hạn') ? '🔒' : '⚠️'}
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ 
-                margin: '0 0 0.5rem 0', 
-                color: classLoadError.includes('401') ? '#991b1b' : '#92400e',
-                fontSize: '1.1rem'
-              }}>
-                Lỗi tải danh sách lớp học
-              </h3>
-              <p style={{ 
-                margin: '0 0 1rem 0', 
-                color: classLoadError.includes('401') ? '#991b1b' : '#92400e' 
-              }}>
-                {classLoadError}
-              </p>
-              
-              {/* Debug Info */}
-              <details style={{ 
-                marginBottom: '1rem', 
-                padding: '0.75rem', 
-                background: 'rgba(0,0,0,0.05)', 
-                borderRadius: '0.5rem',
-                fontSize: '0.875rem'
-              }}>
-                <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>
-                  🔍 Thông tin Debug
-                </summary>
-                <div style={{ marginTop: '0.5rem', fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                  <p>• Endpoint: GET /api/teacher/classes/my</p>
-                  <p>• Token: {localStorage.getItem('access_token') ? '✅ Có' : '❌ Không có'}</p>
-                  <p>• Backend: {classLoadError.includes('Network') ? '❌ Offline?' : '✅ Online'}</p>
-                  <p>• Time: {new Date().toLocaleTimeString()}</p>
-                </div>
-              </details>
-              
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <button 
-                  onClick={handleRetry}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  🔄 Thử lại
-                </button>
-                
-                {classLoadError.includes('401') && (
-                  <button 
-                    onClick={handleLogout}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      background: '#ef4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    🚪 Đăng nhập lại
-                  </button>
-                )}
-                
-                <button 
-                  onClick={() => navigate('/teacher')}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  🏠 Về trang chủ
-                </button>
+        <div className={`thl-error-banner ${classLoadError.includes('401') ? 'auth-error' : 'network-error'}`}>
+          <div className="thl-error-icon">
+            {classLoadError.includes('401') ? '🔒' : '⚠️'}
+          </div>
+          <div className="thl-error-content">
+            <h3 className="thl-error-title">Lỗi tải danh sách lớp học</h3>
+            <p className="thl-error-text">{classLoadError}</p>
+            
+            <details className="thl-debug-info">
+              <summary className="thl-debug-summary">🔍 Thông tin Debug</summary>
+              <div style={{ marginTop: '8px', fontFamily: 'monospace' }}>
+                <p>• Token: {localStorage.getItem('access_token') ? '✅ Có' : '❌ Không có'}</p>
+                <p>• Time: {new Date().toLocaleTimeString()}</p>
               </div>
+            </details>
+            
+            <div className="thl-error-actions">
+              <button onClick={handleRetry} className="thl-btn-retry">🔄 Thử lại</button>
+              {classLoadError.includes('401') && (
+                <button onClick={handleLogout} className="thl-btn-logout">🚪 Đăng nhập lại</button>
+              )}
             </div>
           </div>
         </div>
       )}
       
-      {/* HOMEWORK LOAD ERROR */}
-      {error && (
-        <div style={{
-          background: '#fee2e2',
-          border: '2px solid #ef4444',
-          borderRadius: '0.75rem',
-          padding: '1rem',
-          marginBottom: '1rem'
-        }}>
-          <strong style={{ color: '#991b1b' }}>❌ Lỗi:</strong> {error}
+      {/* Homework Load Error */}
+      {error && !classLoadError && (
+        <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '12px', padding: '16px', marginBottom: '24px', color: '#b91c1c' }}>
+          <strong>❌ Lỗi:</strong> {error}
           <button 
             onClick={handleRetry}
-            style={{
-              marginLeft: '1rem',
-              padding: '0.25rem 0.75rem',
-              background: '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: 'pointer'
-            }}
+            style={{ marginLeft: '12px', padding: '4px 12px', background: '#fff', border: '1px solid #b91c1c', borderRadius: '4px', cursor: 'pointer', color: '#b91c1c' }}
           >
-            🔄 Thử lại
+            Thử lại
           </button>
         </div>
       )}
       
       {/* Filters */}
-      <div className="filters">
+      <div className="thl-filters">
         <select 
           value={selectedClass || ''}
           onChange={(e) => setSelectedClass(e.target.value ? Number(e.target.value) : null)}
-          className="filter-select"
+          className="thl-select"
           disabled={classes.length === 0}
         >
           <option value="">
@@ -446,19 +264,19 @@ const HomeworkList = () => {
         
         <input
           type="text"
-          placeholder="🔍 Tìm kiếm bài tập..."
+          placeholder="🔍 Tìm kiếm bài tập (Tên, môn học)..."
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
-          className="search-input"
+          className="thl-search"
         />
       </div>
       
-      {/* Type Tabs */}
-      <div className="tabs">
+      {/* Tabs */}
+      <div className="thl-tabs">
         {(['ALL', 'REGULAR', 'MIDTERM', 'FINAL'] as const).map(type => (
           <button
             key={type}
-            className={`tab ${selectedType === type ? 'active' : ''}`}
+            className={`thl-tab-btn ${selectedType === type ? 'active' : ''}`}
             onClick={() => setSelectedType(type)}
           >
             {type === 'ALL' ? '📚 Tất cả' : 
@@ -468,31 +286,59 @@ const HomeworkList = () => {
         ))}
       </div>
       
-      {/* Statistics Cards */}
-      <div className="stats-grid">
-        <StatCard icon="📝" label="Tổng bài tập" value={stats.total} color="#10b981" />
-        <StatCard icon="✅" label="Đã chấm hoàn tất" value={stats.completed} color="#3b82f6" />
-        <StatCard icon="⏳" label="Chờ chấm" value={stats.needsGrading} color="#f59e0b" />
-        <StatCard icon="⚠️" label="Quá hạn" value={stats.overdue} color="#ef4444" />
+      {/* Stats Grid - Using raw HTML to match CSS */}
+      <div className="thl-stats-grid">
+        <div className="thl-stat-card" style={{ borderLeft: '4px solid #10b981' }}>
+          <div className="thl-stat-icon-wrapper" style={{ background: '#ecfdf5', color: '#10b981' }}>📝</div>
+          <div className="thl-stat-content">
+            <div className="thl-stat-value">{stats.total}</div>
+            <div className="thl-stat-label">Tổng bài tập</div>
+          </div>
+        </div>
+        
+        <div className="thl-stat-card" style={{ borderLeft: '4px solid #3b82f6' }}>
+          <div className="thl-stat-icon-wrapper" style={{ background: '#eff6ff', color: '#3b82f6' }}>✅</div>
+          <div className="thl-stat-content">
+            <div className="thl-stat-value">{stats.completed}</div>
+            <div className="thl-stat-label">Đã chấm xong</div>
+          </div>
+        </div>
+        
+        <div className="thl-stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
+          <div className="thl-stat-icon-wrapper" style={{ background: '#fffbeb', color: '#f59e0b' }}>⏳</div>
+          <div className="thl-stat-content">
+            <div className="thl-stat-value">{stats.needsGrading}</div>
+            <div className="thl-stat-label">Cần chấm</div>
+          </div>
+        </div>
+        
+        <div className="thl-stat-card" style={{ borderLeft: '4px solid #ef4444' }}>
+          <div className="thl-stat-icon-wrapper" style={{ background: '#fef2f2', color: '#ef4444' }}>⚠️</div>
+          <div className="thl-stat-content">
+            <div className="thl-stat-value">{stats.overdue}</div>
+            <div className="thl-stat-label">Quá hạn</div>
+          </div>
+        </div>
       </div>
       
-      {/* ✅ Homework List or Empty State with Tab-Specific Messages */}
+      {/* Homework List */}
       {homework.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">📭</div>
+        <div className="thl-empty-state">
+          <div className="thl-empty-icon">📭</div>
           <h3>{getEmptyStateMessage().title}</h3>
           <p>{getEmptyStateMessage().description}</p>
           {!searchKeyword && (
             <button 
-              className="btn-primary"
+              className="thl-btn-create" 
+              style={{ margin: '0 auto' }}
               onClick={() => navigate('/teacher/assignments/create')}
             >
-              + Tạo bài tập mới
+              + Tạo bài tập ngay
             </button>
           )}
         </div>
       ) : (
-        <div className="homework-list">
+        <div className="thl-homework-list">
           {homework.map(hw => {
             const deadlineStatus = getDeadlineStatus(hw.deadline, hw.isOverdue);
             const submissionRate = hw.submissionCount && hw.submissionCount > 0 
@@ -503,50 +349,51 @@ const HomeworkList = () => {
               : 0;
             
             return (
-              <div key={hw.homeworkId} className="homework-card">
-                <div className="card-header">
-                  <div className="title-section">
-                    <h3>{hw.title}</h3>
-                    <span 
-                      className="type-badge"
-                      style={{ 
-                        background: `${getTypeColor(hw.homeworkType)}20`,
-                        color: getTypeColor(hw.homeworkType)
-                      }}
-                    >
-                      {hw.homeworkTypeDisplay}
-                    </span>
+              <div key={hw.homeworkId} className="thl-card">
+                <div className="thl-card-header">
+                  <div className="thl-title-section">
+                    <div className="thl-title-row">
+                      <h3 className="thl-card-title">{hw.title}</h3>
+                      <span 
+                        className="thl-type-badge"
+                        style={{ 
+                          background: `${getTypeColor(hw.homeworkType)}15`,
+                          color: getTypeColor(hw.homeworkType)
+                        }}
+                      >
+                        {hw.homeworkTypeDisplay}
+                      </span>
+                    </div>
                   </div>
-                  <div className={`deadline-status ${deadlineStatus.className}`}>
+                  <div className={`thl-deadline-badge ${deadlineStatus.className}`}>
                     {deadlineStatus.text}
                   </div>
                 </div>
                 
-                <div className="card-body">
-                  <div className="info-row">
-                    <span>🏫 {hw.classCode}</span>
-                    <span>📚 {hw.subjectName}</span>
-                    <span>💯 Điểm tối đa: {hw.maxScore}</span>
+                <div className="thl-card-body">
+                  <div className="thl-info-row">
+                    <span className="thl-info-item">🏫 {hw.classCode}</span>
+                    <span className="thl-info-item">📚 {hw.subjectName}</span>
+                    <span className="thl-info-item">💯 Max: {hw.maxScore} điểm</span>
                   </div>
                   
                   {hw.description && (
-                    <div className="description">
-                      {hw.description.length > 100 
-                        ? hw.description.substring(0, 100) + '...' 
+                    <div className="thl-description">
+                      {hw.description.length > 120 
+                        ? hw.description.substring(0, 120) + '...' 
                         : hw.description}
                     </div>
                   )}
                   
-                  <div className="stats-row">
-                    <div className="stat">
-                      <span className="label">Đã nộp:</span>
-                      <span className="value">
-                        {hw.submissionCount || 0} 
-                        {submissionRate > 0 && ` (${submissionRate.toFixed(0)}%)`}
-                      </span>
-                      <div className="progress-bar">
+                  <div className="thl-progress-section">
+                    <div className="thl-stat-box">
+                      <div className="thl-stat-header">
+                        <span>Đã nộp</span>
+                        <span className="thl-stat-number">{hw.submissionCount || 0} SV</span>
+                      </div>
+                      <div className="thl-progress-bar">
                         <div 
-                          className="progress-fill"
+                          className="thl-progress-fill"
                           style={{ 
                             width: `${submissionRate}%`,
                             background: submissionRate > 80 ? '#10b981' : submissionRate > 50 ? '#f59e0b' : '#ef4444'
@@ -555,15 +402,14 @@ const HomeworkList = () => {
                       </div>
                     </div>
                     
-                    <div className="stat">
-                      <span className="label">Đã chấm:</span>
-                      <span className="value">
-                        {hw.gradedCount || 0}/{hw.submissionCount || 0}
-                        {gradingRate > 0 && ` (${gradingRate.toFixed(0)}%)`}
-                      </span>
-                      <div className="progress-bar">
+                    <div className="thl-stat-box">
+                      <div className="thl-stat-header">
+                        <span>Đã chấm</span>
+                        <span className="thl-stat-number">{hw.gradedCount || 0}/{hw.submissionCount || 0} bài</span>
+                      </div>
+                      <div className="thl-progress-bar">
                         <div 
-                          className="progress-fill"
+                          className="thl-progress-fill"
                           style={{ 
                             width: `${gradingRate}%`,
                             background: gradingRate === 100 ? '#10b981' : gradingRate > 50 ? '#3b82f6' : '#f59e0b'
@@ -573,37 +419,40 @@ const HomeworkList = () => {
                     </div>
                     
                     {hw.averageScore !== undefined && hw.averageScore !== null && (
-                      <div className="stat">
-                        <span className="label">Điểm TB:</span>
-                        <span className="value score">
-                          {hw.averageScore.toFixed(2)}
-                        </span>
+                      <div className="thl-stat-box">
+                        <div className="thl-stat-header">
+                          <span>Điểm TB</span>
+                          <span className="thl-stat-number" style={{ color: '#10b981' }}>{hw.averageScore.toFixed(2)}</span>
+                        </div>
+                        <div className="thl-progress-bar">
+                          <div 
+                            className="thl-progress-fill"
+                            style={{ 
+                              width: `${(hw.averageScore / hw.maxScore) * 100}%`,
+                              background: '#10b981'
+                            }}
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
                 
-                <div className="card-footer">
+                <div className="thl-card-footer">
                   <button 
-                    className="btn-action btn-view"
+                    className="thl-btn-action thl-btn-view"
                     onClick={() => navigate(`/teacher/assignments/${hw.homeworkId}`)}
                   >
-                    👁️ Xem chi tiết
+                    👁️ Chi tiết
                   </button>
                   <button 
-                    className="btn-action btn-edit"
+                    className="thl-btn-action thl-btn-edit"
                     onClick={() => navigate(`/teacher/assignments/edit/${hw.homeworkId}`)}
                   >
                     ✏️ Sửa
                   </button>
                   <button 
-                    className="btn-action btn-stats"
-                    onClick={() => navigate(`/teacher/assignments/${hw.homeworkId}/stats`)}
-                  >
-                    📊 Thống kê
-                  </button>
-                  <button 
-                    className="btn-action btn-delete"
+                    className="thl-btn-action thl-btn-delete"
                     onClick={() => handleDelete(hw.homeworkId, hw.title)}
                   >
                     🗑️ Xóa
@@ -614,6 +463,7 @@ const HomeworkList = () => {
           })}
         </div>
       )}
+      <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />
     </div>
   );
 };

@@ -1,235 +1,267 @@
 /* ========================================
-   TEACHER CLASS DETAIL - COMPLETE STYLES
-   Tab-based layout with 4 sections
+   TEACHER CLASS DETAIL - MODERN ROUNDED THEME
+   Scope: Unique Prefix .tcd- (Teacher Class Detail)
    ======================================== */
 
-.class-detail-container {
+/* Container chính */
+.tcd-container {
   padding: 24px;
-  background: #f5f7fa;
+  background: #f1f5f9;
   min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #334155;
 }
 
-/* ========== HEADER ========== */
-.btn-back-simple {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+/* ================= HEADER SECTION ================= */
+.tcd-header {
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 32px;
+  padding: 30px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  position: relative;
+}
+
+/* Nút quay lại đơn giản */
+.tcd-btn-back-simple {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  background: white;
   color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  margin-bottom: 20px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.btn-back-simple:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0891b2;
+.tcd-btn-back-simple:hover {
+  border-color: #10b981;
+  color: #10b981;
+  background: #f0fdf4;
+  transform: translateX(-2px);
 }
 
-.class-detail-header {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.tcd-header-content {
+  flex: 1;
 }
 
-.class-header-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.class-title-section {
+.tcd-title-section {
   display: flex;
   align-items: center;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.class-title-section h1 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1e293b;
+.tcd-title-section h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0;
+  letter-spacing: -0.5px;
 }
 
-.class-code-badge {
+/* Badge mã lớp */
+.tcd-code-badge {
   display: inline-block;
   padding: 6px 14px;
-  background: #dbeafe;
-  color: #0369a1;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.class-meta-info {
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #64748b;
-}
-
-.meta-item svg {
-  width: 16px;
-  height: 16px;
-  stroke: #94a3b8;
-  flex-shrink: 0;
-}
-
-/* ========== TAB NAVIGATION ========== */
-.tab-navigation {
-  display: flex;
-  gap: 8px;
-  background: white;
+  background: #f0fdf4;
+  color: #166534;
   border-radius: 12px;
-  padding: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid #dcfce7;
 }
 
-.tab-button {
-  flex: 1;
+/* Thông tin meta */
+.tcd-meta-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.tcd-meta-item {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  padding: 12px 20px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
+  color: #64748b;
   font-size: 14px;
   font-weight: 500;
+}
+
+.tcd-meta-item svg {
+  stroke: #94a3b8;
+}
+
+/* ================= TAB NAVIGATION ================= */
+.tcd-tab-nav {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  justify-content: center;
+}
+
+/* Style nút Tab */
+.tcd-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 50px;
   color: #64748b;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.tab-button:hover {
-  background: #f8fafc;
-  color: #0891b2;
-}
-
-.tab-button.active {
-  background: #0891b2;
-  color: white;
-}
-
-.tab-icon {
-  font-size: 18px;
-}
-
-.tab-label {
   font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
 }
 
-/* ========== TAB CONTENT ========== */
-.tab-content {
+.tcd-tab-btn:hover {
+  background: #f0fdf4;
+  color: #10b981;
+  border-color: #bbf7d0;
+  transform: translateY(-1px);
+}
+
+/* Trạng thái Active */
+.tcd-tab-btn.active {
+  background: #10b981;
+  border-color: #10b981;
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.tcd-tab-icon {
+  font-size: 16px;
+}
+
+/* ================= TAB CONTENT AREA ================= */
+.tcd-tab-content {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  min-height: 500px;
+  min-height: 200px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  animation: tcd-fadeIn 0.3s ease-in-out;
+
+  /* --- CÁC DÒNG MỚI ĐỂ THU HẸP CHIỀU RỘNG --- */
+  max-width: 960px; /* Giới hạn chiều rộng (bạn có thể chỉnh 800px nếu muốn nhỏ hơn) */
+  width: 100%;      /* Đảm bảo nó vẫn co giãn tốt trên màn hình nhỏ */
+  margin-left: auto;  /* Căn lề trái tự động */
+  margin-right: auto; /* Căn lề phải tự động -> Kết quả: Căn giữa */
 }
 
-/* ========== LOADING & ERROR STATES ========== */
-.loading-state,
-.error-state {
+/* Renamed Keyframes to avoid conflict */
+@keyframes tcd-fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ================= LOADING & ERROR STATES ================= */
+.tcd-loading-state, .tcd-error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
-  gap: 16px;
+  min-height: 50vh;
+  text-align: center;
 }
 
-.spinner {
+.tcd-spinner {
   width: 40px;
   height: 40px;
   border: 4px solid #f1f5f9;
-  border-top-color: #0891b2;
+  border-top-color: #10b981;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: tcd-spin 0.8s linear infinite;
+  margin-bottom: 16px;
 }
 
-@keyframes spin {
+.tcd-loading-state p {
+  color: #64748b;
+  font-size: 15px;
+}
+
+.tcd-error-state p {
+  color: #ef4444;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.tcd-btn-error-back {
+  padding: 10px 24px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+
+.tcd-btn-error-back:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+@keyframes tcd-spin {
   to { transform: rotate(360deg); }
 }
 
-.loading-state p,
-.error-state p {
-  font-size: 14px;
-  color: #64748b;
-}
-
-.btn-back {
-  padding: 10px 20px;
-  background: #0891b2;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-back:hover {
-  background: #0e7490;
-}
-
-/* ========== RESPONSIVE ========== */
+/* ================= RESPONSIVE ================= */
 @media (max-width: 768px) {
-  .class-detail-container {
+  .tcd-container {
     padding: 16px;
   }
-  
-  .class-detail-header {
-    padding: 16px;
+
+  .tcd-header {
+    flex-direction: column;
+    padding: 20px;
+    gap: 16px;
   }
-  
-  .class-title-section h1 {
-    font-size: 20px;
+
+  .tcd-btn-back-simple {
+    width: 100%;
   }
-  
-  .class-meta-info {
+
+  .tcd-title-section h1 {
+    font-size: 22px;
+  }
+
+  .tcd-meta-info {
     flex-direction: column;
     gap: 12px;
   }
-  
-  .tab-navigation {
-    overflow-x: auto;
-    flex-wrap: nowrap;
+
+  .tcd-tab-nav {
+    padding-bottom: 8px;
   }
   
-  .tab-button {
-    flex-shrink: 0;
-    min-width: 120px;
+  .tcd-tab-btn {
+    padding: 10px 16px;
+    font-size: 13px;
   }
-  
-  .tab-label {
-    display: none;
+
+@media (max-width: 768px) {
+  .tcd-tab-content {
+    padding: 16px;     /* Mobile: 16px padding */
+    border-radius: 12px;
+    min-height: 150px;
   }
-  
-  .tab-icon {
-    font-size: 20px;
-  }
-  
-  .tab-content {
-    padding: 16px;
-  }
+}
 }

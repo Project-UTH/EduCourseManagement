@@ -1,10 +1,10 @@
-/* ============================================
-   Grade Modal Styles
-   Modern modal for grading submissions
-   ============================================ */
+/* ========================================
+   TEACHER GRADE MODAL
+   Scope: Unique Prefix .tgm- (Teacher Grade Modal)
+   ======================================== */
 
 /* Overlay */
-.grade-modal-overlay {
+.tgm-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -17,20 +17,16 @@
   justify-content: center;
   z-index: 1000;
   padding: 20px;
-  animation: fadeIn 0.2s ease-out;
+  animation: tgm-fadeIn 0.2s ease-out;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes tgm-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Modal Container */
-.grade-modal {
+.tgm-container {
   background: white;
   border-radius: 16px;
   width: 100%;
@@ -38,22 +34,18 @@
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease-out;
+  animation: tgm-slideUp 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes tgm-slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Header */
-.grade-modal-header {
+.tgm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -61,24 +53,24 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-.grade-modal-title {
+.tgm-title-wrapper {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.grade-icon {
+.tgm-icon {
   font-size: 28px;
 }
 
-.grade-modal-title h2 {
+.tgm-title-wrapper h2 {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
   color: #111827;
 }
 
-.grade-modal-close {
+.tgm-btn-close {
   width: 36px;
   height: 36px;
   border: none;
@@ -93,18 +85,18 @@
   justify-content: center;
 }
 
-.grade-modal-close:hover:not(:disabled) {
+.tgm-btn-close:hover:not(:disabled) {
   background: #e5e7eb;
   color: #111827;
 }
 
-.grade-modal-close:disabled {
+.tgm-btn-close:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* Student Info */
-.grade-student-info {
+.tgm-student-info {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -113,7 +105,7 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-.student-avatar {
+.tgm-avatar {
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -124,83 +116,88 @@
   font-size: 28px;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  color: white; /* Ensure emoji/icon is visible */
 }
 
-.student-details h3 {
+.tgm-student-details h3 {
   margin: 0 0 4px 0;
   font-size: 18px;
   font-weight: 600;
   color: #111827;
 }
 
-.student-code {
+.tgm-student-code {
   margin: 0;
   font-size: 14px;
   color: #6b7280;
   font-family: 'Courier New', monospace;
+  font-weight: 600;
 }
 
 /* Submission Preview */
-.grade-submission-preview {
+.tgm-preview-section {
   padding: 20px 24px;
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.grade-submission-preview h4 {
+.tgm-preview-title {
   margin: 0 0 12px 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.submission-text-preview {
+.tgm-text-preview {
   margin: 0 0 12px 0;
-  padding: 12px;
+  padding: 16px;
   background: white;
   border-radius: 8px;
   font-size: 14px;
   line-height: 1.6;
   color: #374151;
-  border-left: 3px solid #3b82f6;
+  border-left: 4px solid #3b82f6;
+  max-height: 150px;
+  overflow-y: auto;
 }
 
-.submission-file-link {
+.tgm-file-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 10px 16px;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  color: #3b82f6;
+  color: #2563eb;
   text-decoration: none;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s;
 }
 
-.submission-file-link:hover {
+.tgm-file-link:hover {
   background: #eff6ff;
-  border-color: #3b82f6;
+  border-color: #bfdbfe;
+  transform: translateY(-1px);
 }
 
 /* Form */
-.grade-form {
+.tgm-form {
   padding: 24px;
 }
 
-.form-group {
+.tgm-form-group {
   margin-bottom: 24px;
 }
 
-.form-group:last-of-type {
+.tgm-form-group:last-of-type {
   margin-bottom: 20px;
 }
 
-.form-group label {
+.tgm-label {
   display: block;
   margin-bottom: 8px;
   font-size: 14px;
@@ -208,59 +205,61 @@
   color: #374151;
 }
 
-.required {
+.tgm-required {
   color: #ef4444;
   margin-left: 2px;
 }
 
 /* Score Input */
-.score-input-wrapper {
+.tgm-score-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
-.score-input {
-  width: 120px;
+.tgm-score-input {
+  width: 140px;
   padding: 12px 16px;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   color: #111827;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
   transition: all 0.2s;
   text-align: center;
+  background: white;
 }
 
-.score-input:focus {
+.tgm-score-input:focus {
   outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.score-input:disabled {
+.tgm-score-input:disabled {
   background: #f3f4f6;
   cursor: not-allowed;
+  color: #9ca3af;
 }
 
-.score-suffix {
-  font-size: 18px;
+.tgm-score-suffix {
+  font-size: 20px;
   font-weight: 600;
-  color: #6b7280;
+  color: #9ca3af;
 }
 
-.input-hint {
+.tgm-hint {
   margin: 8px 0 0 0;
   font-size: 13px;
   color: #6b7280;
 }
 
 /* Feedback Textarea */
-.feedback-textarea {
+.tgm-textarea {
   width: 100%;
   padding: 12px 16px;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
   color: #111827;
   border: 2px solid #e5e7eb;
@@ -268,57 +267,61 @@
   resize: vertical;
   font-family: inherit;
   transition: all 0.2s;
+  background: white;
+  box-sizing: border-box;
 }
 
-.feedback-textarea:focus {
+.tgm-textarea:focus {
   outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.feedback-textarea:disabled {
+.tgm-textarea:disabled {
   background: #f3f4f6;
   cursor: not-allowed;
 }
 
-.feedback-textarea::placeholder {
+.tgm-textarea::placeholder {
   color: #9ca3af;
 }
 
 /* Error Message */
-.error-message {
+.tgm-error {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 12px 16px;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 8px;
-  color: #dc2626;
+  border-radius: 10px;
+  color: #b91c1c;
   font-size: 14px;
-  margin-bottom: 20px;
-  animation: shake 0.3s ease-out;
+  margin-bottom: 24px;
+  animation: tgm-shake 0.3s ease-out;
 }
 
-@keyframes shake {
+@keyframes tgm-shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-5px); }
   75% { transform: translateX(5px); }
 }
 
-.error-icon {
+.tgm-error-icon {
   font-size: 18px;
 }
 
 /* Actions */
-.grade-modal-actions {
+.tgm-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  padding-top: 24px;
+  border-top: 1px solid #f3f4f6;
 }
 
-.btn-cancel,
-.btn-submit {
+.tgm-btn-cancel,
+.tgm-btn-submit {
   padding: 12px 24px;
   font-size: 15px;
   font-weight: 600;
@@ -328,87 +331,88 @@
   transition: all 0.2s;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
-.btn-cancel {
+.tgm-btn-cancel {
   background: #f3f4f6;
-  color: #6b7280;
+  color: #4b5563;
 }
 
-.btn-cancel:hover:not(:disabled) {
+.tgm-btn-cancel:hover:not(:disabled) {
   background: #e5e7eb;
-  color: #111827;
+  color: #1f2937;
 }
 
-.btn-submit {
+.tgm-btn-submit {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  min-width: 140px;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
 }
 
-.btn-submit:hover:not(:disabled) {
+.tgm-btn-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
 }
 
-.btn-cancel:disabled,
-.btn-submit:disabled {
+.tgm-btn-cancel:disabled,
+.tgm-btn-submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none !important;
+  box-shadow: none !important;
 }
 
-.submit-icon {
+.tgm-submit-icon {
   font-size: 18px;
   font-weight: bold;
 }
 
 /* Loading Spinner */
-.spinner {
-  width: 16px;
-  height: 16px;
+.tgm-spinner {
+  width: 18px;
+  height: 18px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  animation: tgm-spin 0.6s linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+@keyframes tgm-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Responsive */
 @media (max-width: 640px) {
-  .grade-modal {
+  .tgm-container {
     max-width: 100%;
     max-height: 100%;
+    height: 100%; /* Full screen on mobile */
     border-radius: 0;
   }
 
-  .grade-modal-header {
-    padding: 20px 16px 16px;
-  }
-
-  .grade-modal-title h2 {
-    font-size: 20px;
-  }
-
-  .grade-student-info,
-  .grade-submission-preview,
-  .grade-form {
+  .tgm-header {
     padding: 16px;
   }
 
-  .grade-modal-actions {
+  .tgm-title-wrapper h2 {
+    font-size: 20px;
+  }
+
+  .tgm-student-info,
+  .tgm-preview-section,
+  .tgm-form {
+    padding: 16px;
+  }
+
+  .tgm-actions {
     flex-direction: column-reverse;
   }
 
-  .btn-cancel,
-  .btn-submit {
+  .tgm-btn-cancel,
+  .tgm-btn-submit {
     width: 100%;
-    justify-content: center;
   }
 }

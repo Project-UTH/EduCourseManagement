@@ -210,14 +210,6 @@ const StudentSchedule: React.FC = () => {
         </div>
       </div>
 
-      {/* Empty State */}
-      {scheduleItems.length === 0 && !loading && (
-        <div className="empty-state">
-          <p>📅 Không có lịch học trong tuần này</p>
-          <small>Chỉ hiển thị lịch của các lớp trong kỳ sắp tới hoặc đang diễn ra</small>
-        </div>
-      )}
-
       {/* Schedule Table - Similar to TeacherSchedule */}
       <div className="calendar-wrapper">
         <table className="schedule-table">

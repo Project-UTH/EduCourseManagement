@@ -70,7 +70,6 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
             path: '/teacher/classes-menu',
             children: [
               { icon: '📋', label: 'Lớp của tôi', path: '/teacher/classes' },
-              { icon: '📄', label: 'Đề xuất giảng dạy', path: '/teacher/proposals' },
             ]
           },
           { 

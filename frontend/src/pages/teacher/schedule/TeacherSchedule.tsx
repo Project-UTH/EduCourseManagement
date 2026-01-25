@@ -1,24 +1,21 @@
 import { useState, useEffect } from 'react';
 import classApi from '../../../services/api/classApi';
 import './TeacherSchedule.css';
+import ChatList from '../../../components/chat/ChatList';
+import { useAuthStore } from '@/store/authStore';
+
 
 /**
- * TeacherSchedule Component - Fixed Version (Based on StudentSchedule logic)
- * 
- * Features:
- * - Correct day-of-week mapping using DAY_MAPPING
- * - Weekly view with date navigation
- * - Time slot grid (Sáng, Chiều, Tối)
- * - Class session cards with details
- * - Today highlighting
+ * TeacherSchedule Component
+ * Logic: Same as provided (StudentSchedule logic adapted for Teacher)
  */
 
 interface ClassSession {
   classId: number;
   classCode: string;
   subjectName: string;
-  dayOfWeek: string; // "MONDAY", "TUESDAY", etc. from API
-  timeSlot: string; // "CA_1", "CA_2", etc.
+  dayOfWeek: string;
+  timeSlot: string;
   startTime: string;
   endTime: string;
   roomCode: string;
@@ -31,7 +28,7 @@ interface ClassSession {
   maxStudents: number;
 }
 
-// Time slots grouped by period (matching StudentSchedule)
+// Time slots grouped by period
 const TIME_SLOTS = [
   { id: 'CA_1', label: 'Ca 1', period: 'Sáng', time: '06:45 - 09:15' },
   { id: 'CA_2', label: 'Ca 2', period: 'Sáng', time: '09:30 - 12:00' },
@@ -43,7 +40,6 @@ const TIME_SLOTS = [
 
 const PERIODS = ['Sáng', 'Chiều', 'Tối'];
 
-// ✅ CRITICAL: Same mapping as StudentSchedule
 const DAY_MAPPING = {
   'MONDAY': { display: 'Thứ 2', weekIndex: 0 },
   'TUESDAY': { display: 'Thứ 3', weekIndex: 1 },
@@ -63,17 +59,17 @@ const TeacherSchedule = () => {
     loadSchedule();
   }, [selectedDate]);
 
-  // ✅ Same as StudentSchedule - Get Monday of the current week
+  // Get Monday of the current week
   const getWeekMonday = (date: Date): Date => {
     const d = new Date(date);
-    const day = d.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
-    const diff = day === 0 ? -6 : 1 - day; // Adjust to Monday
+    const day = d.getDay(); // 0=Sunday, 1=Monday...
+    const diff = day === 0 ? -6 : 1 - day;
     d.setDate(d.getDate() + diff);
     d.setHours(0, 0, 0, 0);
     return d;
   };
 
-  // ✅ Same as StudentSchedule - Format date to YYYY-MM-DD
+  // Format date to YYYY-MM-DD for API
   const formatDateForAPI = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -81,7 +77,7 @@ const TeacherSchedule = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // ✅ Same as StudentSchedule - Get 7 dates of the week
+  // Get 7 dates of the week
   const getWeekDates = (): Date[] => {
     const monday = getWeekMonday(selectedDate);
     const dates: Date[] = [];
@@ -105,14 +101,8 @@ const TeacherSchedule = () => {
       
       // Transform classes to session format
       const transformedSessions: ClassSession[] = classes.map((cls: any) => {
-        const dayOfWeek = cls.dayOfWeek; // Should be "MONDAY", "TUESDAY", etc. from API
-        const timeSlotId = mapTimeSlotToId(cls.timeSlot?.slotName); // Map "Ca 1" → "CA_1"
-        
-        // Debug log
-        const mapping = DAY_MAPPING[dayOfWeek as keyof typeof DAY_MAPPING];
-        console.log(
-          `📍 ${cls.classCode} | dayOfWeek: "${dayOfWeek}" → ${mapping?.display} (weekIndex ${mapping?.weekIndex}) | timeSlot: ${timeSlotId}`
-        );
+        const dayOfWeek = cls.dayOfWeek;
+        const timeSlotId = mapTimeSlotToId(cls.timeSlot?.slotName);
         
         return {
           classId: cls.classId,
@@ -122,10 +112,10 @@ const TeacherSchedule = () => {
           timeSlot: timeSlotId,
           startTime: cls.timeSlot?.startTime || '00:00',
           endTime: cls.timeSlot?.endTime || '00:00',
-          roomCode: cls.room || 'TBA',
-          roomName: cls.room || 'To Be Announced',
-          location: extractLocation(cls.room),
-          isOnline: cls.room === 'E-Learning' || cls.room?.includes('E-Learning'),
+          roomCode: cls.fixedRoom || 'TBA',
+          roomName: cls.fixedRoom || 'To Be Announced',
+          location: extractLocation(cls.fixedRoom),
+          isOnline: cls.fixedRoom === 'E-Learning' || cls.fixedRoom?.includes('E-Learning'),
           semester: cls.semester,
           academicYear: cls.academicYear,
           currentStudents: cls.currentStudents || 0,
@@ -145,25 +135,22 @@ const TeacherSchedule = () => {
   const mapTimeSlotToId = (slotName?: string): string => {
     if (!slotName) return 'CA_1';
     
-    // "Ca 1" → "CA_1", "Ca 2" → "CA_2", etc.
     const match = slotName.match(/Ca\s*(\d+)/i);
     if (match) {
       return `CA_${match[1]}`;
     }
     
-    return 'CA_1'; // Default
+    return 'CA_1';
   };
 
   const extractLocation = (roomName?: string): string => {
     if (!roomName) return '';
     if (roomName.includes('E-Learning')) return 'E-Learning';
     
-    // Extract location like "(P.Thanh Mỹ Tây, TP.HCM)"
     const match = roomName.match(/\(([^)]+)\)/);
     return match ? match[1] : '';
   };
 
-  // ✅ CRITICAL: Same filter logic as StudentSchedule
   const getSessionsForSlot = (weekDayIndex: number, timeSlotId: string): ClassSession[] => {
     return sessions.filter(session => {
       const dayMapping = DAY_MAPPING[session.dayOfWeek as keyof typeof DAY_MAPPING];
@@ -171,7 +158,7 @@ const TeacherSchedule = () => {
     });
   };
 
-  // Navigation (same as StudentSchedule)
+  // Navigation
   const goToToday = () => {
     setSelectedDate(new Date());
   };
@@ -200,7 +187,6 @@ const TeacherSchedule = () => {
     return { day, date: dateStr };
   };
 
-  // Check if date is today
   const isToday = (date: Date): boolean => {
     const today = new Date();
     return (
@@ -209,6 +195,8 @@ const TeacherSchedule = () => {
       date.getFullYear() === today.getFullYear()
     );
   };
+  const user = useAuthStore((state: any) => state.user);
+
 
   const weekDates = getWeekDates();
 
@@ -330,6 +318,7 @@ const TeacherSchedule = () => {
           <p>📅 Không có lịch giảng dạy trong tuần này</p>
         </div>
       )}
+      <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />
     </div>
   );
 };

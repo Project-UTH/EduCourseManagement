@@ -211,55 +211,6 @@ const RightSidebar = ({ userRole, currentUsername }: RightSidebarProps) => {
       </div>
 
       {/* Upcoming Deadlines */}
-      <div className="widget deadlines-widget">
-        <div className="widget-header">
-          <h3>Deadline sắp tới</h3>
-          <button className="view-all-btn">Xem tất cả</button>
-        </div>
-        
-        {loading ? (
-          <div className="deadline-loading">
-            <div className="spinner-small"></div>
-            <p>Đang tải...</p>
-          </div>
-        ) : (
-          <div className="deadline-list">
-            {sortedDeadlines.length === 0 ? (
-              <div className="empty-state">
-                <p>✅ Không có deadline sắp tới</p>
-              </div>
-            ) : (
-              sortedDeadlines.map(deadline => (
-                <div key={deadline.id} className={`deadline-item ${getDeadlineColor(deadline.dueDate)}`}>
-                  <div className="deadline-icon">
-                    {deadline.type === 'assignment' && '📝'}
-                    {deadline.type === 'exam' && '📊'}
-                    {deadline.type === 'project' && '💼'}
-                  </div>
-                  <div className="deadline-content">
-                    <h3 className="deadline-subject">{deadline.subjectName}</h3>
-                    <h4>{deadline.title}</h4>
-                    <p className="deadline-course">{deadline.courseName}</p>
-                    <div className="deadline-time">
-                      <span className="deadline-date">
-                        {deadline.dueDate.toLocaleDateString('vi-VN', { 
-                          day: '2-digit', 
-                          month: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                      <span className={`time-left ${getDeadlineColor(deadline.dueDate)}`}>
-                        {formatTimeLeft(deadline.dueDate)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
 
       {/* 
         ✅ THAY THẾ phần "Nhóm Chat" cũ bằng ChatList component

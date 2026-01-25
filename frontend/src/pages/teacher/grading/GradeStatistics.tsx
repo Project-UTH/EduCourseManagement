@@ -2,19 +2,13 @@ import { useState, useEffect } from 'react';
 import gradeApi, { GradeStatsResponse, GradeResponse } from '../../../services/api/gradeApi';
 import classApi from '../../../services/api/classApi';
 import './GradeStatistics.css';
+import ChatList from '../../../components/chat/ChatList';
+import { useAuthStore } from '@/store/authStore';
+
 
 /**
- * GradeStatistics Component
- * 
- * Statistics and analytics page for class grades:
- * - Overall statistics cards
- * - Score distribution charts
- * - Letter grade distribution
- * - Top students ranking
- * - Pass/fail analysis
- * - Export to Excel
- * 
- * @author Phase 4 - Teacher Features
+ * GradeStatistics Component - Namespaced (tgs-)
+ * * Statistics and analytics page for class grades
  */
 
 const GradeStatistics = () => {
@@ -81,7 +75,6 @@ const GradeStatistics = () => {
   };
   
   const handleExportExcel = () => {
-    // TODO: Implement Excel export
     alert('Tính năng xuất Excel đang phát triển');
   };
   
@@ -104,35 +97,43 @@ const GradeStatistics = () => {
       const score = g.totalScore;
       return score !== null && score !== undefined && score >= min && score < max + 0.01;
     }).length;
-    return { range: `${i}-${i}.9`, count };
+    return { range: `${i}-${i === 10 ? 10 : i + 0.9}`, count };
   });
   
+  // Helper to calculate height safely
+  const getBarHeight = (count: number, total: number) => {
+    if (total === 0) return '0%';
+    const pct = (count / total) * 100;
+    return `${Math.max(pct, 2)}%`; // Min 2% height for visibility
+  };
+  const user = useAuthStore((state: any) => state.user);
+  
   return (
-    <div className="grade-statistics-container">
+    <div className="tgs-container">
       {/* Header */}
-      <div className="page-header">
-        <div>
+      <div className="tgs-header">
+        <div className="tgs-header-content">
           <h1>📊 Thống kê điểm</h1>
           <p>Phân tích và thống kê kết quả học tập</p>
         </div>
-        <button className="btn-export" onClick={handleExportExcel}>
+        <button className="tgs-btn-export" onClick={handleExportExcel}>
           📥 Xuất Excel
         </button>
       </div>
       
       {/* Error */}
       {error && (
-        <div className="alert alert-error">
-          ❌ {error}
+        <div className="tgs-alert tgs-alert-error">
+          <span>❌ {error}</span>
         </div>
       )}
       
-      {/* Class Selector */}
-      <div className="class-selector-wrapper">
+      {/* Filters */}
+      <div className="tgs-filters">
         <select
           value={selectedClassId || ''}
           onChange={(e) => setSelectedClassId(Number(e.target.value))}
-          className="class-selector"
+          className="tgs-select"
         >
           <option value="">-- Chọn lớp học --</option>
           {classes.map(cls => (
@@ -145,215 +146,157 @@ const GradeStatistics = () => {
       
       {/* Loading */}
       {loading && (
-        <div className="loading-container">
-          <div className="spinner"></div>
+        <div className="tgs-loading">
+          <div className="tgs-spinner"></div>
           <p>Đang tải thống kê...</p>
         </div>
       )}
       
-      {/* Statistics Content */}
+      {/* Content */}
       {!loading && stats && (
         <>
-          {/* Overall Stats Cards */}
-          <div className="stats-cards">
-            <div className="stat-card">
-              <div className="stat-icon">📚</div>
-              <div className="stat-content">
-                <div className="stat-label">Tổng sinh viên</div>
-                <div className="stat-value">{stats.overall.totalStudents}</div>
+          {/* Stats Cards */}
+          <div className="tgs-stats-grid">
+            <div className="tgs-stat-card">
+              <div className="tgs-stat-icon">📚</div>
+              <div className="tgs-stat-content">
+                <div className="tgs-stat-label">Tổng sinh viên</div>
+                <div className="tgs-stat-value">{stats.overall.totalStudents}</div>
               </div>
             </div>
             
-            <div className="stat-card">
-              <div className="stat-icon">✅</div>
-              <div className="stat-content">
-                <div className="stat-label">Đã chấm điểm</div>
-                <div className="stat-value">{stats.overall.gradedStudents}</div>
+            <div className="tgs-stat-card">
+              <div className="tgs-stat-icon">✅</div>
+              <div className="tgs-stat-content">
+                <div className="tgs-stat-label">Đã chấm điểm</div>
+                <div className="tgs-stat-value">{stats.overall.gradedStudents}</div>
               </div>
             </div>
             
-            <div className="stat-card">
-              <div className="stat-icon">⏳</div>
-              <div className="stat-content">
-                <div className="stat-label">Đang chờ</div>
-                <div className="stat-value">{stats.overall.inProgress}</div>
+            <div className="tgs-stat-card">
+              <div className="tgs-stat-icon">⏳</div>
+              <div className="tgs-stat-content">
+                <div className="tgs-stat-label">Đang chờ</div>
+                <div className="tgs-stat-value">{stats.overall.inProgress}</div>
               </div>
             </div>
             
-            <div className="stat-card">
-              <div className="stat-icon">📈</div>
-              <div className="stat-content">
-                <div className="stat-label">Tỷ lệ hoàn thành</div>
-                <div className="stat-value">{stats.overall.completionRate?.toFixed(1) ?? '0.0'}%</div>
+            <div className="tgs-stat-card">
+              <div className="tgs-stat-icon">📈</div>
+              <div className="tgs-stat-content">
+                <div className="tgs-stat-label">Tỷ lệ hoàn thành</div>
+                <div className="tgs-stat-value">{stats.overall.completionRate?.toFixed(1) ?? '0.0'}%</div>
               </div>
             </div>
           </div>
           
           {/* Charts Row */}
-          <div className="charts-row">
+          <div className="tgs-charts-row">
             {/* Score Distribution */}
-            <div className="chart-card">
+            <div className="tgs-chart-card">
               <h3>📊 Phân bố điểm số</h3>
-              <div className="bar-chart">
+              <div className="tgs-bar-chart">
                 {scoreDistribution.map((item, index) => (
-                  <div key={index} className="bar-item">
+                  <div key={index} className="tgs-bar-item">
                     <div 
-                      className="bar" 
+                      className="tgs-bar" 
                       style={{ 
-                        height: `${(item.count / stats.overall.totalStudents) * 100}%`,
-                        minHeight: item.count > 0 ? '20px' : '0'
+                        height: getBarHeight(item.count, stats.overall.totalStudents)
                       }}
                     >
-                      {item.count > 0 && <span className="bar-label">{item.count}</span>}
+                      {item.count > 0 && <span className="tgs-bar-label">{item.count}</span>}
                     </div>
-                    <div className="bar-axis">{item.range.split('-')[0]}</div>
+                    <div className="tgs-bar-axis">{item.range.split('-')[0]}</div>
                   </div>
                 ))}
               </div>
             </div>
             
             {/* Letter Grade Distribution */}
-            <div className="chart-card">
+            <div className="tgs-chart-card">
               <h3>🎯 Phân bố điểm chữ</h3>
-              <div className="letter-distribution">
-                <div className="letter-item">
-                  <div className="letter-badge grade-A">A</div>
-                  <div className="letter-count">{stats.distribution.countA}</div>
-                  <div className="letter-percent">
-                    {stats.overall.gradedStudents > 0 
-                      ? ((stats.distribution.countA / stats.overall.gradedStudents) * 100).toFixed(1)
-                      : '0.0'}%
+              <div className="tgs-letter-grid">
+                {[
+                  { grade: 'A', count: stats.distribution.countA, class: 'tgs-grade-A' },
+                  { grade: 'B+', count: stats.distribution.countBPlus, class: 'tgs-grade-B-plus' },
+                  { grade: 'B', count: stats.distribution.countB, class: 'tgs-grade-B' },
+                  { grade: 'C+', count: stats.distribution.countCPlus, class: 'tgs-grade-C-plus' },
+                  { grade: 'C', count: stats.distribution.countC, class: 'tgs-grade-C' },
+                  { grade: 'D+', count: stats.distribution.countDPlus, class: 'tgs-grade-D-plus' },
+                  { grade: 'D', count: stats.distribution.countD, class: 'tgs-grade-D' },
+                  { grade: 'F', count: stats.distribution.countF, class: 'tgs-grade-F' }
+                ].map((item) => (
+                  <div key={item.grade} className="tgs-letter-item">
+                    <div className={`tgs-badge ${item.class}`}>{item.grade}</div>
+                    <div className="tgs-letter-count">{item.count}</div>
+                    <div className="tgs-letter-percent">
+                      {stats.overall.gradedStudents > 0 
+                        ? ((item.count / stats.overall.gradedStudents) * 100).toFixed(1)
+                        : '0.0'}%
+                    </div>
                   </div>
-                </div>
-                
-                <div className="letter-item">
-                  <div className="letter-badge grade-B-plus">B+</div>
-                  <div className="letter-count">{stats.distribution.countBPlus}</div>
-                  <div className="letter-percent">
-                    {stats.overall.gradedStudents > 0
-                      ? ((stats.distribution.countBPlus / stats.overall.gradedStudents) * 100).toFixed(1)
-                      : '0.0'}%
-                  </div>
-                </div>
-                
-                <div className="letter-item">
-                  <div className="letter-badge grade-B">B</div>
-                  <div className="letter-count">{stats.distribution.countB}</div>
-                  <div className="letter-percent">
-                    {stats.overall.gradedStudents > 0
-                      ? ((stats.distribution.countB / stats.overall.gradedStudents) * 100).toFixed(1)
-                      : '0.0'}%
-                  </div>
-                </div>
-                
-                <div className="letter-item">
-                  <div className="letter-badge grade-C-plus">C+</div>
-                  <div className="letter-count">{stats.distribution.countCPlus}</div>
-                  <div className="letter-percent">
-                    {stats.overall.gradedStudents > 0
-                      ? ((stats.distribution.countCPlus / stats.overall.gradedStudents) * 100).toFixed(1)
-                      : '0.0'}%
-                  </div>
-                </div>
-                
-                <div className="letter-item">
-                  <div className="letter-badge grade-C">C</div>
-                  <div className="letter-count">{stats.distribution.countC}</div>
-                  <div className="letter-percent">
-                    {stats.overall.gradedStudents > 0
-                      ? ((stats.distribution.countC / stats.overall.gradedStudents) * 100).toFixed(1)
-                      : '0.0'}%
-                  </div>
-                </div>
-                
-                <div className="letter-item">
-                  <div className="letter-badge grade-D-plus">D+</div>
-                  <div className="letter-count">{stats.distribution.countDPlus}</div>
-                  <div className="letter-percent">
-                    {stats.overall.gradedStudents > 0
-                      ? ((stats.distribution.countDPlus / stats.overall.gradedStudents) * 100).toFixed(1)
-                      : '0.0'}%
-                  </div>
-                </div>
-                
-                <div className="letter-item">
-                  <div className="letter-badge grade-D">D</div>
-                  <div className="letter-count">{stats.distribution.countD}</div>
-                  <div className="letter-percent">
-                    {stats.overall.gradedStudents > 0
-                      ? ((stats.distribution.countD / stats.overall.gradedStudents) * 100).toFixed(1)
-                      : '0.0'}%
-                  </div>
-                </div>
-                
-                <div className="letter-item">
-                  <div className="letter-badge grade-F">F</div>
-                  <div className="letter-count">{stats.distribution.countF}</div>
-                  <div className="letter-percent">
-                    {stats.overall.gradedStudents > 0
-                      ? ((stats.distribution.countF / stats.overall.gradedStudents) * 100).toFixed(1)
-                      : '0.0'}%
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
           
           {/* Top Students */}
           {topStudents.length > 0 && (
-            <div className="top-students-card">
+            <div className="tgs-top-card">
               <h3>🏆 Top {topStudents.length} sinh viên xuất sắc</h3>
-              <table className="top-students-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '60px' }}>#</th>
-                    <th style={{ width: '120px' }}>MSSV</th>
-                    <th>Họ tên</th>
-                    <th style={{ width: '100px' }}>Điểm TB</th>
-                    <th style={{ width: '80px' }}>Xếp loại</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topStudents.map((grade, index) => (
-                    <tr key={grade.gradeId}>
-                      <td className="rank-cell">
-                        {index === 0 && <span className="medal gold">🥇</span>}
-                        {index === 1 && <span className="medal silver">🥈</span>}
-                        {index === 2 && <span className="medal bronze">🥉</span>}
-                        {index > 2 && <span className="rank-number">{index + 1}</span>}
-                      </td>
-                      <td>{grade.studentInfo.studentCode}</td>
-                      <td>{grade.studentInfo.fullName}</td>
-                      <td className="score-cell">{grade.totalScore?.toFixed(2)}</td>
-                      <td>
-                        <span className={`letter-badge ${grade.letterGrade}`}>
-                          {grade.letterGrade}
-                        </span>
-                      </td>
+              <div className="tgs-table-wrapper">
+                <table className="tgs-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '60px' }}>#</th>
+                      <th style={{ width: '120px' }}>MSSV</th>
+                      <th>Họ tên</th>
+                      <th style={{ width: '100px' }}>Điểm TB</th>
+                      <th style={{ width: '80px' }}>Xếp loại</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {topStudents.map((grade, index) => (
+                      <tr key={grade.gradeId}>
+                        <td className="tgs-rank-cell">
+                          {index === 0 && <span className="tgs-medal">🥇</span>}
+                          {index === 1 && <span className="tgs-medal">🥈</span>}
+                          {index === 2 && <span className="tgs-medal">🥉</span>}
+                          {index > 2 && <span className="tgs-rank-num">{index + 1}</span>}
+                        </td>
+                        <td>{grade.studentInfo.studentCode}</td>
+                        <td>{grade.studentInfo.fullName}</td>
+                        <td className="tgs-score-val">{grade.totalScore?.toFixed(2)}</td>
+                        <td>
+                          <span className={`tgs-badge tgs-grade-${grade.letterGrade?.replace('+', '-plus') || 'F'}`}>
+                            {grade.letterGrade}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
           
           {/* Bottom Stats Row */}
-          <div className="bottom-stats-row">
+          <div className="tgs-bottom-row">
             {/* Pass/Fail Stats */}
-            <div className="info-card">
+            <div className="tgs-info-card">
               <h3>📊 Thống kê đạt/rớt</h3>
-              <div className="pass-fail-stats">
-                <div className="pass-stat">
-                  <span className="pass-icon">✅</span>
-                  <span className="pass-label">Đạt:</span>
-                  <span className="pass-value">{stats.passFail.passedCount}</span>
-                  <span className="pass-percent">({stats.passFail.passRate?.toFixed(1) ?? '0.0'}%)</span>
+              <div className="tgs-pf-list">
+                <div className="tgs-pf-item tgs-pass">
+                  <span className="tgs-pf-icon">✅</span>
+                  <span className="tgs-pf-label">Đạt:</span>
+                  <span className="tgs-pf-val">{stats.passFail.passedCount}</span>
+                  <span className="tgs-pf-pct">({stats.passFail.passRate?.toFixed(1) ?? '0.0'}%)</span>
                 </div>
-                <div className="fail-stat">
-                  <span className="fail-icon">❌</span>
-                  <span className="fail-label">Rớt:</span>
-                  <span className="fail-value">{stats.passFail.failedCount}</span>
-                  <span className="fail-percent">
+                <div className="tgs-pf-item tgs-fail">
+                  <span className="tgs-pf-icon">❌</span>
+                  <span className="tgs-pf-label">Rớt:</span>
+                  <span className="tgs-pf-val">{stats.passFail.failedCount}</span>
+                  <span className="tgs-pf-pct">
                     ({stats.passFail.passRate ? (100 - stats.passFail.passRate).toFixed(1) : '0.0'}%)
                   </span>
                 </div>
@@ -361,32 +304,32 @@ const GradeStatistics = () => {
             </div>
             
             {/* Score Statistics */}
-            <div className="info-card">
+            <div className="tgs-info-card">
               <h3>📈 Điểm thống kê</h3>
-              <div className="score-statistics">
-                <div className="score-stat-item">
-                  <span className="score-stat-label">Trung bình:</span>
-                  <span className="score-stat-value">{stats.scores.average?.toFixed(2) ?? '--'}</span>
+              <div className="tgs-score-list">
+                <div className="tgs-score-item">
+                  <span className="tgs-score-label">Trung bình:</span>
+                  <span className="tgs-score-num">{stats.scores.average?.toFixed(2) ?? '--'}</span>
                 </div>
-                <div className="score-stat-item">
-                  <span className="score-stat-label">Cao nhất:</span>
-                  <span className="score-stat-value highlight-green">
+                <div className="tgs-score-item">
+                  <span className="tgs-score-label">Cao nhất:</span>
+                  <span className="tgs-score-num tgs-high-green">
                     {stats.scores.highest?.toFixed(2) ?? '--'}
                   </span>
                 </div>
-                <div className="score-stat-item">
-                  <span className="score-stat-label">Thấp nhất:</span>
-                  <span className="score-stat-value highlight-red">
+                <div className="tgs-score-item">
+                  <span className="tgs-score-label">Thấp nhất:</span>
+                  <span className="tgs-score-num tgs-high-red">
                     {stats.scores.lowest?.toFixed(2) ?? '--'}
                   </span>
                 </div>
-                <div className="score-stat-item">
-                  <span className="score-stat-label">Trung vị:</span>
-                  <span className="score-stat-value">{stats.scores.median?.toFixed(2) ?? '--'}</span>
+                <div className="tgs-score-item">
+                  <span className="tgs-score-label">Trung vị:</span>
+                  <span className="tgs-score-num">{stats.scores.median?.toFixed(2) ?? '--'}</span>
                 </div>
-                <div className="score-stat-item">
-                  <span className="score-stat-label">Độ lệch chuẩn:</span>
-                  <span className="score-stat-value">
+                <div className="tgs-score-item">
+                  <span className="tgs-score-label">Độ lệch chuẩn:</span>
+                  <span className="tgs-score-num">
                     {stats.scores.standardDeviation?.toFixed(2) ?? '--'}
                   </span>
                 </div>
@@ -398,17 +341,18 @@ const GradeStatistics = () => {
       
       {/* Empty State */}
       {!loading && !stats && selectedClassId && (
-        <div className="empty-state">
+        <div className="tgs-empty">
           <p>📭 Chưa có dữ liệu thống kê</p>
-          <p className="empty-hint">Hãy nhập điểm cho sinh viên trước</p>
+          <span className="tgs-hint">Hãy nhập điểm cho sinh viên trước</span>
         </div>
       )}
       
       {!selectedClassId && (
-        <div className="empty-state">
+        <div className="tgs-empty">
           <p>🎯 Vui lòng chọn lớp học để xem thống kê</p>
         </div>
       )}
+      <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />
     </div>
   );
 };

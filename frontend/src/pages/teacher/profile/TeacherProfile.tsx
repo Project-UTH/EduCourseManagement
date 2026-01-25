@@ -1,17 +1,13 @@
 import { useState, useEffect } from 'react';
 import teacherApi from '../../../services/api/teacherApi';
 import './TeacherProfile.css';
+import ChatList from '../../../components/chat/ChatList';
+import { useAuthStore } from '@/store/authStore';
+
 
 /**
- * TeacherProfile Component - WITH DEBUG LOGGING
- * 
- * Teacher profile management page
- * Features:
- * - View profile information
- * - Edit profile (email, phone, address)
- * - Change password
- * - Teaching statistics
- * - Avatar display
+ * TeacherProfile Component - Namespaced (tp-)
+ * * Teacher profile management page
  */
 
 const TeacherProfile = () => {
@@ -63,8 +59,6 @@ const TeacherProfile = () => {
     setLoading(true);
     try {
       await teacherApi.updateProfile(editForm);
-      
-      // Reload profile to get updated data
       await loadProfile();
       setIsEditing(false);
       showMessage('success', 'Cập nhật thông tin thành công!');
@@ -80,12 +74,6 @@ const TeacherProfile = () => {
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 🔍 DEBUG: Log form state
-    console.log('🔍 [DEBUG] Password Form State:', passwordForm);
-    console.log('🔍 [DEBUG] oldPassword:', passwordForm.oldPassword);
-    console.log('🔍 [DEBUG] newPassword:', passwordForm.newPassword);
-    console.log('🔍 [DEBUG] confirmPassword:', passwordForm.confirmPassword);
-    
     // Validation
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       showMessage('error', 'Mật khẩu mới không khớp!');
@@ -97,26 +85,21 @@ const TeacherProfile = () => {
       return;
     }
     
-    // 🔍 DEBUG: Prepare payload
     const payload = {
       oldPassword: passwordForm.oldPassword,
       newPassword: passwordForm.newPassword,
       confirmPassword: passwordForm.confirmPassword,
     };
-    console.log('🔍 [DEBUG] Sending payload:', payload);
-    console.log('🔍 [DEBUG] Payload JSON:', JSON.stringify(payload));
     
     setLoading(true);
     try {
       await teacherApi.changePassword(payload);
-      
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
       setIsChangingPassword(false);
       showMessage('success', 'Đổi mật khẩu thành công!');
     } catch (error: any) {
-      console.error('❌ [ERROR] Failed to change password:', error);
-      console.error('❌ [ERROR] Response:', error.response?.data);
-      const errorMessage = error.response?.data?.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại!';
+      console.error('Failed to change password:', error);
+      const errorMessage = error.response?.data?.message || 'Đổi mật khẩu thất bại. Kiểm tra lại mật khẩu cũ!';
       showMessage('error', errorMessage);
     } finally {
       setLoading(false);
@@ -140,12 +123,14 @@ const TeacherProfile = () => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
+  const user = useAuthStore((state: any) => state.user);
+
 
   if (loading && !profile) {
     return (
-      <div className="teacher-profile-container">
-        <div className="loading-state">
-          <div className="spinner"></div>
+      <div className="tp-container">
+        <div className="tp-loading">
+          <div className="tp-spinner"></div>
           <p>Đang tải thông tin...</p>
         </div>
       </div>
@@ -154,8 +139,8 @@ const TeacherProfile = () => {
 
   if (!profile) {
     return (
-      <div className="teacher-profile-container">
-        <div className="error-state">
+      <div className="tp-container">
+        <div className="tp-error">
           <p>Không thể tải thông tin hồ sơ</p>
         </div>
       </div>
@@ -163,78 +148,78 @@ const TeacherProfile = () => {
   }
 
   return (
-    <div className="teacher-profile-container">
+    <div className="tp-container">
       {/* Page Header */}
-      <div className="page-header">
+      <div className="tp-header">
         <h1>👤 Hồ sơ cá nhân</h1>
         <p>Quản lý thông tin tài khoản của bạn</p>
       </div>
 
       {/* Message Alert */}
       {message && (
-        <div className={`alert alert-${message.type}`}>
+        <div className={`tp-alert tp-alert-${message.type}`}>
           {message.type === 'success' ? '✅' : '❌'} {message.text}
         </div>
       )}
 
-      <div className="profile-layout">
+      <div className="tp-layout">
         {/* Left Column - Profile Card */}
-        <div className="profile-sidebar">
-          <div className="profile-card">
+        <div className="tp-sidebar">
+          <div className="tp-card">
             {/* Avatar */}
-            <div className="avatar-section">
-              <div className="avatar-wrapper">
+            <div className="tp-avatar-section">
+              <div className="tp-avatar-wrapper">
                 {profile.avatarUrl ? (
-                  <img src={profile.avatarUrl} alt={profile.fullName} className="avatar-img" />
+                  <img src={profile.avatarUrl} alt={profile.fullName} className="tp-avatar-img" />
                 ) : (
-                  <div className="avatar-placeholder">
+                  <div className="tp-avatar-placeholder">
                     {profile.fullName.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
-              <h2 className="profile-name">{profile.fullName}</h2>
-              <p className="profile-role">Giảng viên</p>
-              <p className="profile-degree">{profile.degree}</p>
+              <h2 className="tp-name">{profile.fullName}</h2>
+              <p className="tp-role">Giảng viên</p>
+              <p className="tp-degree">{profile.degree}</p>
             </div>
 
             {/* Quick Info */}
-            <div className="quick-info">
-              <div className="info-item">
-                <span className="info-icon">🆔</span>
+            <div className="tp-quick-info">
+              <div className="tp-info-item">
+                <span className="tp-info-icon">🆔</span>
                 <div>
-                  <div className="info-label">CCCD</div>
-                  <div className="info-value">{profile.citizenId}</div>
+                  <div className="tp-info-label">CCCD</div>
+                  <div className="tp-info-value">{profile.citizenId}</div>
                 </div>
               </div>
 
-              <div className="info-item">
-                <span className="info-icon">📧</span>
+              <div className="tp-info-item">
+                <span className="tp-info-icon">📧</span>
                 <div>
-                  <div className="info-label">Email</div>
-                  <div className="info-value">{profile.email}</div>
+                  <div className="tp-info-label">Email</div>
+                  <div className="tp-info-value">{profile.email}</div>
                 </div>
               </div>
 
-              <div className="info-item">
-                <span className="info-icon">📞</span>
+              <div className="tp-info-item">
+                <span className="tp-info-icon">📞</span>
                 <div>
-                  <div className="info-label">Điện thoại</div>
-                  <div className="info-value">{profile.phone}</div>
+                  <div className="tp-info-label">Điện thoại</div>
+                  <div className="tp-info-value">{profile.phone}</div>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="profile-actions">
+            <div className="tp-actions">
               <button 
-                className="btn-primary"
+                className="tp-btn tp-btn-primary"
                 onClick={() => setIsEditing(true)}
                 disabled={isEditing || isChangingPassword}
               >
                 ✏️ Chỉnh sửa
               </button>
               <button 
-                className="btn-secondary"
+                className="tp-btn tp-btn-secondary"
                 onClick={() => setIsChangingPassword(true)}
                 disabled={isEditing || isChangingPassword}
               >
@@ -245,63 +230,63 @@ const TeacherProfile = () => {
         </div>
 
         {/* Right Column - Details & Forms */}
-        <div className="profile-main">
+        <div className="tp-main">
           {/* Profile Details (View Mode) */}
           {!isEditing && !isChangingPassword && (
-            <div className="profile-section">
-              <div className="section-header">
+            <div className="tp-section">
+              <div className="tp-section-header">
                 <h3>📋 Thông tin chi tiết</h3>
               </div>
 
-              <div className="detail-grid">
-                <div className="detail-row">
-                  <span className="detail-label">Họ và tên:</span>
-                  <span className="detail-value">{profile.fullName}</span>
+              <div className="tp-detail-grid">
+                <div className="tp-detail-row">
+                  <span className="tp-detail-label">Họ và tên:</span>
+                  <span className="tp-detail-value">{profile.fullName}</span>
                 </div>
 
-                <div className="detail-row">
-                  <span className="detail-label">Giới tính:</span>
-                  <span className="detail-value">{formatGender(profile.gender)}</span>
+                <div className="tp-detail-row">
+                  <span className="tp-detail-label">Giới tính:</span>
+                  <span className="tp-detail-value">{formatGender(profile.gender)}</span>
                 </div>
 
-                <div className="detail-row">
-                  <span className="detail-label">Ngày sinh:</span>
-                  <span className="detail-value">{formatDate(profile.dateOfBirth)}</span>
+                <div className="tp-detail-row">
+                  <span className="tp-detail-label">Ngày sinh:</span>
+                  <span className="tp-detail-value">{formatDate(profile.dateOfBirth)}</span>
                 </div>
 
-                <div className="detail-row">
-                  <span className="detail-label">CCCD:</span>
-                  <span className="detail-value">{profile.citizenId}</span>
+                <div className="tp-detail-row">
+                  <span className="tp-detail-label">CCCD:</span>
+                  <span className="tp-detail-value">{profile.citizenId}</span>
                 </div>
 
-                <div className="detail-row">
-                  <span className="detail-label">Email:</span>
-                  <span className="detail-value">{profile.email}</span>
+                <div className="tp-detail-row">
+                  <span className="tp-detail-label">Email:</span>
+                  <span className="tp-detail-value">{profile.email}</span>
                 </div>
 
-                <div className="detail-row">
-                  <span className="detail-label">Điện thoại:</span>
-                  <span className="detail-value">{profile.phone}</span>
+                <div className="tp-detail-row">
+                  <span className="tp-detail-label">Điện thoại:</span>
+                  <span className="tp-detail-value">{profile.phone}</span>
                 </div>
 
-                <div className="detail-row">
-                  <span className="detail-label">Khoa:</span>
-                  <span className="detail-value">{profile.departmentName}</span>
+                <div className="tp-detail-row">
+                  <span className="tp-detail-label">Khoa:</span>
+                  <span className="tp-detail-value">{profile.departmentName}</span>
                 </div>
 
-                <div className="detail-row">
-                  <span className="detail-label">Chuyên ngành:</span>
-                  <span className="detail-value">{profile.majorName}</span>
+                <div className="tp-detail-row">
+                  <span className="tp-detail-label">Chuyên ngành:</span>
+                  <span className="tp-detail-value">{profile.majorName}</span>
                 </div>
 
-                <div className="detail-row">
-                  <span className="detail-label">Học vị:</span>
-                  <span className="detail-value">{profile.degree}</span>
+                <div className="tp-detail-row">
+                  <span className="tp-detail-label">Học vị:</span>
+                  <span className="tp-detail-value">{profile.degree}</span>
                 </div>
 
-                <div className="detail-row full-width">
-                  <span className="detail-label">Địa chỉ:</span>
-                  <span className="detail-value">{profile.address}</span>
+                <div className="tp-detail-row full-width">
+                  <span className="tp-detail-label">Địa chỉ:</span>
+                  <span className="tp-detail-value">{profile.address}</span>
                 </div>
               </div>
             </div>
@@ -309,15 +294,16 @@ const TeacherProfile = () => {
 
           {/* Edit Profile Form */}
           {isEditing && (
-            <div className="profile-section">
-              <div className="section-header">
+            <div className="tp-section">
+              <div className="tp-section-header">
                 <h3>✏️ Chỉnh sửa thông tin</h3>
               </div>
 
-              <form onSubmit={handleEditSubmit} className="edit-form">
-                <div className="form-group">
+              <form onSubmit={handleEditSubmit} className="tp-form">
+                <div className="tp-form-group">
                   <label>Email</label>
                   <input
+                    className="tp-input"
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
@@ -325,9 +311,10 @@ const TeacherProfile = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="tp-form-group">
                   <label>Số điện thoại</label>
                   <input
+                    className="tp-input"
                     type="tel"
                     value={editForm.phone}
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
@@ -335,22 +322,23 @@ const TeacherProfile = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="tp-form-group">
                   <label>Địa chỉ</label>
                   <textarea
+                    className="tp-textarea"
                     value={editForm.address}
                     onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                     rows={3}
                   />
                 </div>
 
-                <div className="form-actions">
-                  <button type="submit" className="btn-primary" disabled={loading}>
+                <div className="tp-form-actions">
+                  <button type="submit" className="tp-btn tp-btn-primary" disabled={loading}>
                     {loading ? 'Đang lưu...' : '💾 Lưu thay đổi'}
                   </button>
                   <button 
                     type="button" 
-                    className="btn-secondary" 
+                    className="tp-btn tp-btn-secondary" 
                     onClick={() => {
                       setIsEditing(false);
                       setEditForm({
@@ -370,38 +358,34 @@ const TeacherProfile = () => {
 
           {/* Change Password Form */}
           {isChangingPassword && (
-            <div className="profile-section">
-              <div className="section-header">
+            <div className="tp-section">
+              <div className="tp-section-header">
                 <h3>🔒 Đổi mật khẩu</h3>
               </div>
 
-              <form onSubmit={handlePasswordSubmit} className="password-form">
-                <div className="form-group">
+              <form onSubmit={handlePasswordSubmit} className="tp-form">
+                <div className="tp-form-group">
                   <label>Mật khẩu hiện tại</label>
                   <input
+                    className="tp-input"
                     type="password"
                     name="oldPassword"
                     value={passwordForm.oldPassword}
-                    onChange={(e) => {
-                      console.log('🔍 [INPUT] oldPassword changed:', e.target.value);
-                      setPasswordForm({ ...passwordForm, oldPassword: e.target.value });
-                    }}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
                     required
                     placeholder="Nhập mật khẩu hiện tại"
                     autoComplete="current-password"
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="tp-form-group">
                   <label>Mật khẩu mới</label>
                   <input
+                    className="tp-input"
                     type="password"
                     name="newPassword"
                     value={passwordForm.newPassword}
-                    onChange={(e) => {
-                      console.log('🔍 [INPUT] newPassword changed:', e.target.value);
-                      setPasswordForm({ ...passwordForm, newPassword: e.target.value });
-                    }}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                     required
                     placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
                     minLength={6}
@@ -409,16 +393,14 @@ const TeacherProfile = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="tp-form-group">
                   <label>Xác nhận mật khẩu mới</label>
                   <input
+                    className="tp-input"
                     type="password"
                     name="confirmPassword"
                     value={passwordForm.confirmPassword}
-                    onChange={(e) => {
-                      console.log('🔍 [INPUT] confirmPassword changed:', e.target.value);
-                      setPasswordForm({ ...passwordForm, confirmPassword: e.target.value });
-                    }}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                     required
                     placeholder="Nhập lại mật khẩu mới"
                     minLength={6}
@@ -426,17 +408,17 @@ const TeacherProfile = () => {
                   />
                 </div>
 
-                <div className="password-hint">
+                <div className="tp-password-hint">
                   💡 Mật khẩu phải có ít nhất 6 ký tự
                 </div>
 
-                <div className="form-actions">
-                  <button type="submit" className="btn-primary" disabled={loading}>
+                <div className="tp-form-actions">
+                  <button type="submit" className="tp-btn tp-btn-primary" disabled={loading}>
                     {loading ? 'Đang xử lý...' : '🔒 Đổi mật khẩu'}
                   </button>
                   <button 
                     type="button" 
-                    className="btn-secondary" 
+                    className="tp-btn tp-btn-secondary" 
                     onClick={() => {
                       setIsChangingPassword(false);
                       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -451,6 +433,7 @@ const TeacherProfile = () => {
           )}
         </div>
       </div>
+      <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />
     </div>
   );
 };

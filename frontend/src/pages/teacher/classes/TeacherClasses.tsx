@@ -2,17 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import classApi from '../../../services/api/classApi';
 import './TeacherClasses.css';
+import ChatList from '../../../components/chat/ChatList';
+import { useAuthStore } from '@/store/authStore';
+
 
 /**
  * TeacherClasses Component
- * 
- * Display all classes that the teacher is teaching
- * Features:
- * - Class cards with details
- * - Quick action buttons
- * - Filters (semester, status)
- * - Search functionality
- * - Summary statistics
+ * Scope: Independent styled component (prefix: tc-)
  */
 
 const TeacherClasses = () => {
@@ -48,13 +44,6 @@ const TeacherClasses = () => {
   const filterClasses = () => {
     let filtered = [...classes];
 
-    // Debug: Log actual status values
-    console.log('All classes statuses:', classes.map(c => ({
-      code: c.classCode,
-      status: c.status,
-      statusType: typeof c.status
-    })));
-
     // Search filter
     if (searchTerm) {
       filtered = filtered.filter(cls =>
@@ -68,18 +57,15 @@ const TeacherClasses = () => {
       filtered = filtered.filter(cls => cls.semesterId?.toString() === selectedSemester);
     }
 
-    // Status filter - FIXED: Case-insensitive comparison
+    // Status filter
     if (selectedStatus !== 'all') {
-      console.log('Filtering by status:', selectedStatus);
       filtered = filtered.filter(cls => {
         const classStatus = cls.status?.toUpperCase() || '';
         const filterStatus = selectedStatus.toUpperCase();
-        console.log(`Comparing: "${classStatus}" === "${filterStatus}"`, classStatus === filterStatus);
         return classStatus === filterStatus;
       });
     }
 
-    console.log('Filtered result:', filtered.length, 'classes');
     setFilteredClasses(filtered);
   };
 
@@ -92,7 +78,7 @@ const TeacherClasses = () => {
   // Calculate statistics
   const stats = {
     totalClasses: classes.length,
-    activeClasses: classes.filter(c => c.status?.toUpperCase() === 'OPEN').length,
+    activeClasses: classes.filter(c => c.status?.toUpperCase() === 'OPEN' || c.status?.toUpperCase() === 'ACTIVE').length,
     totalStudents: classes.reduce((sum, c) => sum + (c.currentStudents || 0), 0),
     avgClassSize: classes.length > 0 
       ? Math.round(classes.reduce((sum, c) => sum + (c.currentStudents || 0), 0) / classes.length)
@@ -100,19 +86,18 @@ const TeacherClasses = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    // Normalize status to uppercase for comparison
     const normalizedStatus = status?.toUpperCase() || '';
     
     const badges: Record<string, { text: string; class: string }> = {
-      'ACTIVE': { text: 'Đang dạy', class: 'status-active' },
-      'OPEN': { text: 'Đang dạy', class: 'status-active' },
-      'COMPLETED': { text: 'Đã kết thúc', class: 'status-completed' },
-      'CLOSED': { text: 'Đã kết thúc', class: 'status-completed' },
-      'CANCELLED': { text: 'Đã hủy', class: 'status-cancelled' },
-      'CANCELED': { text: 'Đã hủy', class: 'status-cancelled' },
+      'ACTIVE': { text: 'Đang dạy', class: 'tc-status-active' },
+      'OPEN': { text: 'Đang dạy', class: 'tc-status-active' },
+      'COMPLETED': { text: 'Đã kết thúc', class: 'tc-status-completed' },
+      'CLOSED': { text: 'Đã kết thúc', class: 'tc-status-completed' },
+      'CANCELLED': { text: 'Đã hủy', class: 'tc-status-cancelled' },
+      'CANCELED': { text: 'Đã hủy', class: 'tc-status-cancelled' },
     };
     
-    return badges[normalizedStatus] || { text: status || 'N/A', class: 'status-default' };
+    return badges[normalizedStatus] || { text: status || 'N/A', class: 'tc-status-default' };
   };
 
   const formatSchedule = (dayOfWeek: string, timeSlot: string) => {
@@ -128,80 +113,91 @@ const TeacherClasses = () => {
     return `${days[dayOfWeek] || dayOfWeek} - ${timeSlot}`;
   };
 
-  const handleCreateHomework = (classId: number) => {
+  // Navigation Handlers
+  const handleViewDetail = (classId: number) => {
+    navigate(`/teacher/classes/${classId}`);
+  };
+
+  const handleCreateHomework = (classId: number, e: React.MouseEvent) => {
+    e.stopPropagation(); 
     navigate(`/teacher/assignments/create?classId=${classId}`);
   };
 
-  const handleViewGrades = (classId: number) => {
+  // --- Đã khôi phục hàm xử lý nút Chấm điểm ---
+  const handleViewGrades = (classId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Điều hướng đến trang chấm điểm (hoặc tab điểm)
     navigate(`/teacher/grading?classId=${classId}`);
   };
 
-  const handleViewStats = (classId: number) => {
+  const handleViewStats = (classId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate(`/teacher/grade-statistics?classId=${classId}`);
-  };
+  }
+const user = useAuthStore((state: any) => state.user);
 
   return (
-    <div className="teacher-classes-container">
+    <div className="tc-container">
       {/* Page Header */}
-      <div className="page-header">
-        <div className="header-content">
+      <div className="tc-page-header">
+        <div className="tc-header-content">
           <h1>📚 Lớp học của tôi</h1>
           <p>Quản lý các lớp học đang giảng dạy</p>
         </div>
       </div>
 
       {/* Summary Statistics */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">📊</div>
-          <div className="stat-content">
-            <div className="stat-label">Tổng số lớp</div>
-            <div className="stat-value">{stats.totalClasses}</div>
+      <div className="tc-stats-grid">
+        <div className="tc-stat-card">
+          <div className="tc-stat-icon">📊</div>
+          <div className="tc-stat-content">
+            <div className="tc-stat-label">Tổng số lớp</div>
+            <div className="tc-stat-value">{stats.totalClasses}</div>
           </div>
         </div>
         
-        <div className="stat-card">
-          <div className="stat-icon">✅</div>
-          <div className="stat-content">
-            <div className="stat-label">Đang dạy</div>
-            <div className="stat-value">{stats.activeClasses}</div>
+        <div className="tc-stat-card">
+          <div className="tc-stat-icon">✅</div>
+          <div className="tc-stat-content">
+            <div className="tc-stat-label">Đang dạy</div>
+            <div className="tc-stat-value">{stats.activeClasses}</div>
           </div>
         </div>
         
-        <div className="stat-card">
-          <div className="stat-icon">👥</div>
-          <div className="stat-content">
-            <div className="stat-label">Tổng sinh viên</div>
-            <div className="stat-value">{stats.totalStudents}</div>
+        <div className="tc-stat-card">
+          <div className="tc-stat-icon">👥</div>
+          <div className="tc-stat-content">
+            <div className="tc-stat-label">Tổng sinh viên</div>
+            <div className="tc-stat-value">{stats.totalStudents}</div>
           </div>
         </div>
         
-        <div className="stat-card">
-          <div className="stat-icon">📈</div>
-          <div className="stat-content">
-            <div className="stat-label">TB mỗi lớp</div>
-            <div className="stat-value">{stats.avgClassSize}</div>
+        <div className="tc-stat-card">
+          <div className="tc-stat-icon">📈</div>
+          <div className="tc-stat-content">
+            <div className="tc-stat-label">TB mỗi lớp</div>
+            <div className="tc-stat-value">{stats.avgClassSize}</div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="filters-section">
-        <div className="search-box">
+      <div className="tc-filters-section">
+        <div className="tc-search-box">
           <input
             type="text"
-            placeholder="🔍 Tìm kiếm lớp học..."
+            placeholder="🔍 Tìm kiếm lớp học (Tên hoặc mã lớp)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
+            className="tc-search-input"
           />
         </div>
 
-        <div className="filter-controls">
+        <div className="tc-filter-controls">
           <select
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
-            className="filter-select"
+            className="tc-filter-select"
           >
             <option value="all">Tất cả học kỳ</option>
             {semesters.map(sem => (
@@ -214,7 +210,7 @@ const TeacherClasses = () => {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="filter-select"
+            className="tc-filter-select"
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="OPEN">Đang dạy</option>
@@ -226,59 +222,64 @@ const TeacherClasses = () => {
 
       {/* Loading State */}
       {loading && (
-        <div className="loading-state">
-          <div className="spinner"></div>
+        <div className="tc-loading-state">
+          <div className="tc-spinner"></div>
           <p>Đang tải danh sách lớp học...</p>
         </div>
       )}
 
       {/* Class Cards Grid */}
       {!loading && (
-        <div className="classes-grid">
+        <div className="tc-classes-grid">
           {filteredClasses.map(cls => (
-            <div key={cls.classId} className="class-card">
+            <div 
+              key={cls.classId} 
+              className="tc-class-card"
+              onClick={() => handleViewDetail(cls.classId)}
+              style={{ cursor: 'pointer' }}
+            >
               {/* Card Header */}
-              <div className="card-header">
-                <div className="class-title">
+              <div className="tc-card-header">
+                <div className="tc-class-title">
                   <h3>{cls.subjectName}</h3>
-                  <span className="class-code">{cls.classCode}</span>
+                  <span className="tc-class-code">{cls.classCode}</span>
                 </div>
-                <span className={`status-badge ${getStatusBadge(cls.status).class}`}>
+                <span className={`tc-status-badge ${getStatusBadge(cls.status).class}`}>
                   {getStatusBadge(cls.status).text}
                 </span>
               </div>
 
               {/* Card Body */}
-              <div className="card-body">
-                <div className="info-row">
-                  <span className="info-label">📖 Số tín chỉ:</span>
-                  <span className="info-value">{cls.subjectCredits} TC</span>
+              <div className="tc-card-body">
+                <div className="tc-info-row">
+                  <span className="tc-info-label">📖 Số tín chỉ:</span>
+                  <span className="tc-info-value">{cls.subjectCredits} TC</span>
                 </div>
 
-                <div className="info-row">
-                  <span className="info-label">📅 Học kỳ:</span>
-                  <span className="info-value">{cls.semesterName}</span>
+                <div className="tc-info-row">
+                  <span className="tc-info-label">📅 Học kỳ:</span>
+                  <span className="tc-info-value">{cls.semesterName}</span>
                 </div>
 
-                <div className="info-row">
-                  <span className="info-label">🕐 Lịch học:</span>
-                  <span className="info-value">
+                <div className="tc-info-row">
+                  <span className="tc-info-label">🕐 Lịch học:</span>
+                  <span className="tc-info-value">
                     {formatSchedule(cls.dayOfWeek, cls.timeSlot)}
                   </span>
                 </div>
 
-                <div className="info-row">
-                  <span className="info-label">📍 Phòng:</span>
-                  <span className="info-value">{cls.fixedRoom || 'TBA'}</span>
+                <div className="tc-info-row">
+                  <span className="tc-info-label">📍 Phòng:</span>
+                  <span className="tc-info-value">{cls.fixedRoom || 'TBA'}</span>
                 </div>
 
-                <div className="info-row">
-                  <span className="info-label">👥 Sĩ số:</span>
-                  <span className="info-value">
+                <div className="tc-info-row">
+                  <span className="tc-info-label">👥 Sĩ số:</span>
+                  <span className="tc-info-value">
                     {cls.currentStudents} / {cls.maxStudents}
-                    <span className="capacity-bar">
+                    <span className="tc-capacity-bar">
                       <span 
-                        className="capacity-fill" 
+                        className="tc-capacity-fill" 
                         style={{ width: `${(cls.currentStudents / cls.maxStudents) * 100}%` }}
                       ></span>
                     </span>
@@ -286,27 +287,27 @@ const TeacherClasses = () => {
                 </div>
               </div>
 
-              {/* Card Actions */}
-              <div className="card-actions">
+              {/* Card Actions: Đã bổ sung nút Chấm điểm */}
+              <div className="tc-card-actions">
                 <button 
-                  className="action-btn primary"
-                  onClick={() => handleCreateHomework(cls.classId)}
+                  className="tc-action-btn tc-btn-primary"
+                  onClick={(e) => handleCreateHomework(cls.classId, e)}
                   title="Tạo bài tập mới"
                 >
                   ➕ Bài tập
                 </button>
-                
+
                 <button 
-                  className="action-btn secondary"
-                  onClick={() => handleViewGrades(cls.classId)}
+                  className="tc-action-btn tc-btn-secondary"
+                  onClick={(e) => handleViewGrades(cls.classId, e)}
                   title="Quản lý điểm"
                 >
-                  📝 Điểm
+                  📝 Chấm điểm
                 </button>
                 
                 <button 
-                  className="action-btn secondary"
-                  onClick={() => handleViewStats(cls.classId)}
+                  className="tc-action-btn tc-btn-secondary"
+                  onClick={(e) => handleViewStats(cls.classId, e)}
                   title="Thống kê"
                 >
                   📊 Thống kê
@@ -319,8 +320,8 @@ const TeacherClasses = () => {
 
       {/* Empty State */}
       {!loading && filteredClasses.length === 0 && (
-        <div className="empty-state">
-          <div className="empty-icon">📚</div>
+        <div className="tc-empty-state">
+          <div className="tc-empty-icon">📂</div>
           <h3>Không tìm thấy lớp học</h3>
           <p>
             {searchTerm || selectedSemester !== 'all' || selectedStatus !== 'all'
@@ -329,6 +330,7 @@ const TeacherClasses = () => {
           </p>
         </div>
       )}
+      <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />
     </div>
   );
 };

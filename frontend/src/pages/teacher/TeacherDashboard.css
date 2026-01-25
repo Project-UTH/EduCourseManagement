@@ -1,557 +1,516 @@
 /* ========================================
-   TEACHER DASHBOARD - COMPLETE STYLES
-   Matching StudentDashboard design pattern
+   TEACHER DASHBOARD - HIGH CONTRAST ROUNDED THEME
+   Independent CSS: All styles are nested under .teacher-dashboard
    ======================================== */
 
 .teacher-dashboard {
   padding: 24px;
-  background: #f5f7fa;
+  /* ĐÃ SỬA: Đổi nền sang màu xám trung tính nhạt để tăng tương phản với các box trắng */
+  background: #f1f5f9; 
   min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #334155;
 }
 
-/* ========== HEADER ========== */
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
+/* ================= TEACHER HEADER - ENHANCED ================= */
+.teacher-dashboard .dashboard-header {
+  height: 80px;                /* ⬆️ Cao hơn (64 → 80) */
+  padding: 0 28px;             /* ⬆️ Thoáng hơn */
+  margin-bottom: 24px;         /* Tách khỏi content */
+
+  border-radius: 16px;         /* ✅ Bo góc mềm */
+  background: white;
+
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.08);  /* Card nổi nhẹ */
+
+  align-items: center;
 }
 
-.dashboard-header h1 {
+
+.teacher-dashboard .dashboard-header h1 {
   font-size: 28px;
-  font-weight: 700;
-  color: #1e293b;
+  font-weight: 800;
+  color: #0f172a; /* Màu chữ đậm hơn chút để nổi trên nền xám */
   margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
 }
 
-.dashboard-header p {
-  font-size: 14px;
+.teacher-dashboard .dashboard-header p {
+  font-size: 15px;
   color: #64748b;
   margin: 0;
 }
 
-.header-actions {
+.teacher-dashboard .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
 }
 
-.semester-select {
-  padding: 10px 16px;
+.teacher-dashboard .semester-select {
+  padding: 10px 20px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 50px;
   background: white;
   font-size: 14px;
   color: #334155;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Bóng nhẹ cho select */
 }
 
-.semester-select:hover {
-  border-color: #cbd5e1;
+.teacher-dashboard .semester-select:hover {
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
 }
 
-.semester-select:focus {
+.teacher-dashboard .semester-select:focus {
   outline: none;
-  border-color: #0891b2;
-  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+  border-color: #10b981;
 }
 
-.create-assignment-btn {
+/* BUTTON CHÍNH - VẪN GIỮ MÀU XANH LÁ LÀM ĐIỂM NHẤN */
+.teacher-dashboard .create-assignment-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: #0891b2;
+  gap: 10px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 50px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.4);
 }
 
-.create-assignment-btn:hover {
-  background: #0e7490;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+.teacher-dashboard .create-assignment-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px -4px rgba(16, 185, 129, 0.5);
 }
 
-.create-assignment-btn svg {
+.teacher-dashboard .create-assignment-btn svg {
   width: 20px;
   height: 20px;
 }
 
 /* ========== STATS GRID ========== */
-.stats-grid {
+.teacher-dashboard .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 32px;
+  gap: 24px;
+  margin-bottom: 40px;
 }
 
-.stat-card {
+.teacher-dashboard .stat-card {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 24px;
+  padding: 24px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s;
+  gap: 20px;
+  border: 1px solid white; /* Viền trắng để hòa vào nền card */
+  /* ĐÃ SỬA: Tăng độ đậm của bóng đổ để nổi trên nền xám */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.teacher-dashboard .stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08); /* Bóng đậm hơn khi hover */
 }
 
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
+.teacher-dashboard .stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 30px;
   flex-shrink: 0;
 }
 
-.stat-card.blue .stat-icon {
-  background: #dbeafe;
-}
+.teacher-dashboard .stat-card.blue .stat-icon { background: #e0f2fe; color: #0284c7; }
+.teacher-dashboard .stat-card.green .stat-icon { background: #dcfce7; color: #16a34a; }
+.teacher-dashboard .stat-card.orange .stat-icon { background: #ffedd5; color: #ea580c; }
+.teacher-dashboard .stat-card.purple .stat-icon { background: #f3e8ff; color: #9333ea; }
 
-.stat-card.green .stat-icon {
-  background: #d1fae5;
-}
+.teacher-dashboard .stat-content { flex: 1; }
 
-.stat-card.orange .stat-icon {
-  background: #fed7aa;
-}
-
-.stat-card.purple .stat-icon {
-  background: #e9d5ff;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-label {
+.teacher-dashboard .stat-label {
   font-size: 13px;
-  color: #64748b;
+  font-weight: 600;
+  color: #94a3b8;
   margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.stat-value {
-  font-size: 28px;
-  font-weight: 700;
+.teacher-dashboard .stat-value {
+  font-size: 32px;
+  font-weight: 800;
   color: #1e293b;
+  line-height: 1;
 }
 
 /* ========== CONTENT LAYOUT ========== */
-.dashboard-content {
+.teacher-dashboard .dashboard-content {
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 24px;
+  grid-template-columns: 1fr 350px;
+  gap: 30px;
 }
 
-/* ========== CLASSES SECTION ========== */
-.classes-section {
+/* ========== DANH SÁCH LỚP HỌC (BẢNG 1) ========== */
+.teacher-dashboard .classes-section {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 32px;
+  padding: 30px;
+  /* ĐÃ SỬA: Tăng độ đổ bóng để tách biệt rõ ràng khỏi nền xám */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
 }
 
-.section-header {
+/* ===== SECTION HEADER (Danh sách lớp học) ===== */
+.teacher-dashboard .section-header {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+
+  background: #10b981;
+  border-radius: 14px;                 /* Bo góc */
+
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  justify-content: space-between;
 }
 
-.section-header h2 {
-  font-size: 20px;
+.teacher-dashboard .section-header h2 {
+  font-size: 16px;                     /* Gọn hơn */
   font-weight: 600;
+  color: #1e293b;
+}
+
+
+.teacher-dashboard .section-header h2 {
+  font-size: 22px;
+  font-weight: 700;
   color: #1e293b;
   margin: 0;
 }
 
-.view-options {
-  display: flex;
-  gap: 8px;
-}
-
-.view-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e2e8f0;
+.teacher-dashboard .view-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  border: 1px solid #f1f5f9;
   background: white;
-  border-radius: 6px;
+  color: #64748b;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.view-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+.teacher-dashboard .view-btn:hover {
+  background: #f0fdf4;
+  color: #10b981;
+  border-color: #bbf7d0;
 }
 
-.view-btn.active {
-  background: #0891b2;
-  border-color: #0891b2;
+.teacher-dashboard .view-btn.active {
+  background: #10b981;
+  border-color: #10b981;
+  color: white;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
 }
 
-.view-btn.active svg {
-  stroke: white;
+/* GRID LỚP HỌC */
+.teacher-dashboard .classes-grid {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
 }
-
-.view-btn svg {
-  width: 18px;
-  height: 18px;
-  stroke: #64748b;
-}
-
-/* ========== CLASSES GRID ========== */
-.classes-grid {
+.teacher-dashboard .classes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
+  gap: 24px;
 }
 
-.class-card {
+
+/* ===== CLASS CARD (Gọn + bo góc) ===== */
+.teacher-dashboard .class-card {
+  padding: 14px 16px;
+  border-radius: 16px;                 /* Bo góc rõ */
+  border: 1px solid #e5e7eb;
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 20px;
-  transition: all 0.2s;
-  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 280px;      /* Giữ card gọn */
+  width: 100%
 }
 
-.class-card:hover {
+/* Hover nhẹ, không quá "nhảy" */
+.teacher-dashboard .class-card:hover {
   border-color: #0891b2;
-  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.15);
-  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(8, 145, 178, 0.12);
+  transform: translateY(-1px);
 }
 
-.class-header {
+
+.teacher-dashboard .class-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: #10b981;
+  transition: width 0.3s ease;
+}
+
+.teacher-dashboard .class-card:hover::before {
+  width: 6px;
+}
+
+.teacher-dashboard .class-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
-.class-info h3 {
-  font-size: 16px;
-  font-weight: 600;
+.teacher-dashboard .class-info h3 {
+  font-size: 17px;
+  font-weight: 700;
   color: #1e293b;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
 }
 
-.class-code {
+.teacher-dashboard .class-code {
   display: inline-block;
-  padding: 4px 12px;
-  background: #f1f5f9;
-  color: #475569;
-  border-radius: 6px;
+  padding: 6px 14px;
+  background: #f0fdf4;
+  color: #166534;
+  border-radius: 12px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  border: 1px solid #dcfce7;
 }
 
-.class-details {
+.teacher-dashboard .class-details {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
-.detail-item {
+.teacher-dashboard .detail-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 12px;
+  font-size: 14px;
   color: #64748b;
 }
 
-.detail-item svg {
-  width: 16px;
-  height: 16px;
+.teacher-dashboard .detail-item svg {
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   stroke: #94a3b8;
+  transition: stroke 0.3s;
 }
 
-.class-footer {
+.teacher-dashboard .class-card:hover .detail-item svg {
+  stroke: #10b981;
+}
+
+.teacher-dashboard .class-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px dashed #e2e8f0;
 }
 
-.next-class {
-  font-size: 12px;
-  color: #64748b;
-}
-
-.btn-view-detail {
-  padding: 6px 14px;
-  background: #f8fafc;
-  color: #0891b2;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+.teacher-dashboard .next-class {
   font-size: 13px;
+  color: #64748b;
   font-weight: 500;
+}
+
+.teacher-dashboard .btn-view-detail {
+  padding: 10px 20px;
+  background: #f0fdf4;
+  color: #10b981;
+  border: none;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.btn-view-detail:hover {
-  background: #0891b2;
+.teacher-dashboard .btn-view-detail:hover {
+  background: #10b981;
   color: white;
-  border-color: #0891b2;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-/* ========== UPCOMING SECTION ========== */
-.upcoming-section {
+/* ========== LỚP SẮP TỚI (BẢNG 2) ========== */
+.teacher-dashboard .upcoming-section {
   background: white;
-  border-radius: 12px;
+  border-radius: 32px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* ĐÃ SỬA: Tăng độ đổ bóng tương tự bảng 1 */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
   position: sticky;
   top: 24px;
 }
 
-.upcoming-list {
+.teacher-dashboard .upcoming-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.upcoming-item {
+/* Ô SẮP TỚI */
+.teacher-dashboard .upcoming-item {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   padding: 16px;
-  background: #f8fafc;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.upcoming-item:hover {
-  background: #f1f5f9;
-  transform: translateX(4px);
-}
-
-.upcoming-icon {
-  width: 40px;
-  height: 40px;
   background: white;
-  border-radius: 8px;
+  border: 1px solid #f1f5f9; /* Viền nhạt hơn */
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.teacher-dashboard .upcoming-item:hover {
+  border-color: #10b981;
+  background: #f0fdf4;
+  transform: scale(1.02);
+}
+
+.teacher-dashboard .upcoming-icon {
+  width: 48px;
+  height: 48px;
+  background: #f8fafc;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 22px;
   flex-shrink: 0;
+  transition: background 0.2s;
 }
 
-.upcoming-content {
+.teacher-dashboard .upcoming-item:hover .upcoming-icon {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.teacher-dashboard .upcoming-content {
   flex: 1;
   min-width: 0;
 }
 
-.upcoming-content h4 {
-  font-size: 14px;
-  font-weight: 600;
+.teacher-dashboard .upcoming-content h4 {
+  font-size: 15px;
+  font-weight: 700;
   color: #1e293b;
   margin: 0 0 4px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.upcoming-class {
+.teacher-dashboard .upcoming-class {
   font-size: 12px;
   color: #64748b;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  display: block;
 }
 
-.upcoming-details {
+.teacher-dashboard .upcoming-details {
   display: flex;
   gap: 12px;
   font-size: 12px;
+  font-weight: 600;
 }
 
-.upcoming-time {
-  color: #0891b2;
-  font-weight: 500;
+.teacher-dashboard .upcoming-time {
+  color: #10b981;
 }
 
-.upcoming-room {
+.teacher-dashboard .upcoming-room {
   color: #64748b;
 }
 
-.view-schedule-btn {
+.teacher-dashboard .view-schedule-btn {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px;
-  background: #f8fafc;
-  color: #0891b2;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 14px;
+  background: white;
+  color: #475569;
+  border: 2px solid #f1f5f9;
+  border-radius: 20px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.view-schedule-btn:hover {
-  background: #0891b2;
-  color: white;
-  border-color: #0891b2;
+.teacher-dashboard .view-schedule-btn:hover {
+  border-color: #10b981;
+  color: #10b981;
+  background: #f0fdf4;
 }
 
-.view-schedule-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* ========== EMPTY STATES ========== */
-.empty-state {
+/* ========== LOADING & EMPTY ========== */
+.teacher-dashboard .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 20px;
 }
 
-.empty-state-small {
-  text-align: center;
-  padding: 40px 20px;
-  background: #f8fafc;
-  border-radius: 8px;
+.teacher-dashboard .empty-icon {
+  font-size: 72px;
+  margin-bottom: 20px;
+  opacity: 0.8;
+  filter: grayscale(1);
 }
 
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
+.teacher-dashboard .empty-state h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #334155;
 }
 
-.empty-state h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1e293b;
-  margin: 0 0 8px 0;
-}
-
-.empty-state p {
-  font-size: 14px;
-  color: #64748b;
-  margin: 0;
-}
-
-/* ========== LOADING STATE ========== */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: 16px;
-}
-
-.spinner {
+.teacher-dashboard .spinner {
   width: 40px;
   height: 40px;
   border: 4px solid #f1f5f9;
-  border-top-color: #0891b2;
+  border-top-color: #10b981;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-state p {
-  font-size: 14px;
-  color: #64748b;
-}
-
-/* ========== ERROR STATE ========== */
-.error-state {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.error-state p {
-  font-size: 16px;
-  color: #ef4444;
-  margin-bottom: 16px;
-}
-
-.btn-retry {
-  padding: 10px 20px;
-  background: #0891b2;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-retry:hover {
-  background: #0e7490;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 1024px) {
-  .dashboard-content {
-    grid-template-columns: 1fr;
-  }
-  
-  .upcoming-section {
-    position: static;
-  }
-  
-  .classes-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
+  .teacher-dashboard .dashboard-content { grid-template-columns: 1fr; }
+  .teacher-dashboard .upcoming-section { position: static; margin-top: 24px; }
 }
 
 @media (max-width: 768px) {
-  .teacher-dashboard {
-    padding: 16px;
-  }
-  
-  .dashboard-header {
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .header-actions {
-    width: 100%;
-    flex-direction: column;
-  }
-  
-  .semester-select,
-  .create-assignment-btn {
-    width: 100%;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .classes-grid {
-    grid-template-columns: 1fr;
-  }
+  .teacher-dashboard { padding: 16px; }
+  .teacher-dashboard .dashboard-header { flex-direction: column; gap: 20px; }
+  .teacher-dashboard .header-actions { width: 100%; flex-direction: column; }
+  .teacher-dashboard .semester-select, .teacher-dashboard .create-assignment-btn { width: 100%; justify-content: center; }
+}
+.teacher-dashboard .dashboard-header {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
 }

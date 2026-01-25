@@ -5,15 +5,12 @@ import submissionApi, { SubmissionResponse } from '../../../services/api/submiss
 import GradeModal from './GradeModal';
 import SubmissionDetailModal from './SubmissionDetailModal';
 import './SubmissionList.css';
+import ChatList from '../../../components/chat/ChatList';
+import { useAuthStore } from '@/store/authStore';
+
 
 /**
- * SubmissionList Page
- * 
- * View and manage all student submissions
- * Filter by class, homework, status
- * Quick grading actions
- * ✅ MULTI-FILE SUPPORT
- * ✅ FIXED: Don't auto-select first homework
+ * SubmissionList Page - Namespaced (tsl-)
  */
 
 type StatusFilter = 'ALL' | 'SUBMITTED' | 'GRADED' | 'LATE';
@@ -26,17 +23,15 @@ const SubmissionList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Grade Modal State
+  // Modals
   const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionResponse | null>(null);
-  
-  // Detail Modal State
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailSubmission, setDetailSubmission] = useState<SubmissionResponse | null>(null);
   
   // Filters
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
-  const [selectedHomework, setSelectedHomework] = useState<number | null>(null);
+  const [selectedHomework, setSelectedHomework] = useState<number | null>(null); // Kept for future use
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [searchKeyword, setSearchKeyword] = useState('');
   
@@ -55,7 +50,7 @@ const SubmissionList = () => {
     }
   }, [selectedClass]);
   
-  // Load submissions when class changes (not homework!)
+  // Load submissions when class changes
   useEffect(() => {
     if (selectedClass) {
       loadAllSubmissionsForClass();
@@ -70,7 +65,6 @@ const SubmissionList = () => {
       const data = await classApi.getMyClasses();
       setClasses(data);
       
-      // Auto-select first class
       if (data.length > 0) {
         setSelectedClass(data[0].classId);
       }
@@ -84,7 +78,6 @@ const SubmissionList = () => {
   
   const loadHomeworkForClass = async () => {
     if (!selectedClass) return;
-    
     try {
       const data = await homeworkApi.getHomeworkByClass(selectedClass);
       setHomework(data);
@@ -101,7 +94,6 @@ const SubmissionList = () => {
       setLoading(true);
       setError(null);
       
-      // Load all homework for class
       const homeworkList = await homeworkApi.getHomeworkByClass(selectedClass);
       setHomework(homeworkList);
       
@@ -111,13 +103,11 @@ const SubmissionList = () => {
         return;
       }
       
-      // Load submissions for ALL homeworks
       const allSubmissions: SubmissionResponse[] = [];
       
       for (const hw of homeworkList) {
         try {
           const hwSubmissions = await submissionApi.getSubmissionsByHomework(hw.homeworkId);
-          // Attach homework info to each submission
           const submissionsWithHomework = hwSubmissions.map(sub => ({
             ...sub,
             homeworkTitle: hw.title,
@@ -130,7 +120,6 @@ const SubmissionList = () => {
       }
       
       setSubmissions(allSubmissions);
-      console.log('[SubmissionList] ✅ Loaded', allSubmissions.length, 'total submissions from', homeworkList.length, 'homeworks');
       
     } catch (err: any) {
       console.error('[SubmissionList] Failed to load submissions:', err);
@@ -141,99 +130,49 @@ const SubmissionList = () => {
     }
   };
   
-  const loadSubmissions = async () => {
-    if (!selectedHomework) return;
-    
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const data = await submissionApi.getSubmissionsByHomework(selectedHomework);
-      setSubmissions(data);
-      
-      console.log('[SubmissionList] ✅ Loaded', data.length, 'submissions');
-    } catch (err: any) {
-      console.error('[SubmissionList] Failed to load submissions:', err);
-      
-      // If 404, show empty state
-      if (err.response?.status === 404) {
-        setSubmissions([]);
-      } else {
-        setError(err.response?.data?.message || 'Không thể tải danh sách bài nộp!');
-        setSubmissions([]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-  
   const formatDateTime = (dateStr: string): string => {
     const date = new Date(dateStr);
     return date.toLocaleString('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+      hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric'
     });
   };
   
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'GRADED':
-        return { text: 'Đã chấm', color: '#10b981', bg: '#d1fae5' };
-      case 'SUBMITTED':
-        return { text: 'Đã nộp', color: '#3b82f6', bg: '#dbeafe' };
-      case 'LATE':
-        return { text: 'Nộp muộn', color: '#ef4444', bg: '#fee2e2' };
-      default:
-        return { text: status, color: '#6b7280', bg: '#f3f4f6' };
+      case 'GRADED': return { text: 'Đã chấm', color: '#166534', bg: '#dcfce7' };
+      case 'SUBMITTED': return { text: 'Đã nộp', color: '#1e40af', bg: '#dbeafe' };
+      case 'LATE': return { text: 'Nộp muộn', color: '#991b1b', bg: '#fee2e2' };
+      default: return { text: status, color: '#475569', bg: '#f1f5f9' };
     }
   };
   
-  // Map Vietnamese status to English enum
   const mapStatusToEnum = (status: string): StatusFilter => {
     switch (status) {
-      case 'Đã nộp':
-        return 'SUBMITTED';
-      case 'Đã chấm':
-        return 'GRADED';
-      case 'Nộp muộn':
-        return 'LATE';
-      default:
-        // If already English enum, return as is
-        return status as StatusFilter;
+      case 'Đã nộp': return 'SUBMITTED';
+      case 'Đã chấm': return 'GRADED';
+      case 'Nộp muộn': return 'LATE';
+      default: return status as StatusFilter;
     }
   };
   
-  // Grade handlers
   const handleGradeClick = (submission: SubmissionResponse) => {
     setSelectedSubmission(submission);
     setIsGradeModalOpen(true);
   };
   
   const handleGradeSuccess = () => {
-    // Reload all submissions after successful grading
     loadAllSubmissionsForClass();
   };
   
-  // View detail handler
   const handleViewDetail = (submission: SubmissionResponse) => {
     setDetailSubmission(submission);
     setIsDetailModalOpen(true);
   };
   
-  // Filter submissions
   const filteredSubmissions = submissions.filter(sub => {
-    // Map Vietnamese to enum
     const enumStatus = mapStatusToEnum(sub.status);
+    if (statusFilter !== 'ALL' && enumStatus !== statusFilter) return false;
     
-    // Status filter
-    if (statusFilter !== 'ALL' && enumStatus !== statusFilter) {
-      return false;
-    }
-    
-    // Search filter
     if (searchKeyword.trim()) {
       const keyword = searchKeyword.toLowerCase();
       return (
@@ -241,51 +180,52 @@ const SubmissionList = () => {
         sub.studentInfo.studentCode.toLowerCase().includes(keyword)
       );
     }
-    
     return true;
   });
   
-  // Statistics
+  // Stats
   const totalSubmissions = submissions.length;
   const gradedCount = submissions.filter(s => s.status === 'GRADED').length;
   const ungradedCount = totalSubmissions - gradedCount;
   const lateCount = submissions.filter(s => s.status === 'LATE').length;
+  const user = useAuthStore((state: any) => state.user);
+
   
   if (loading && submissions.length === 0) {
     return (
-      <div className="submission-list-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Đang tải...</p>
+      <div className="tsl-container">
+        <div className="tsl-loading">
+          <div className="tsl-spinner"></div>
+          <p>Đang tải dữ liệu...</p>
         </div>
       </div>
     );
   }
   
   return (
-    <div className="submission-list-container">
+    <div className="tsl-container">
       {/* Header */}
-      <div className="page-header">
+      <div className="tsl-header">
         <div>
-          <h1>📥 Bài nộp của sinh viên</h1>
-          <p>Xem tất cả bài nộp của lớp học</p>
+          <h1>📥 Quản lý Bài nộp</h1>
+          <p>Xem và chấm điểm bài tập của sinh viên</p>
         </div>
       </div>
       
-      {/* Error Message */}
+      {/* Error */}
       {error && (
-        <div className="alert alert-error">
-          ❌ {error}
+        <div className="tsl-error">
+          <span>❌ {error}</span>
         </div>
       )}
       
       {/* Filters */}
-      <div className="filters-section">
-        <div className="filters-row">
+      <div className="tsl-filters">
+        <div className="tsl-filters-row">
           <select
             value={selectedClass || ''}
             onChange={(e) => setSelectedClass(Number(e.target.value) || null)}
-            className="filter-select"
+            className="tsl-select"
           >
             <option value="">Chọn lớp học</option>
             {classes.map(cls => (
@@ -295,71 +235,69 @@ const SubmissionList = () => {
             ))}
           </select>
           
-          {/* ✅ REMOVED: Homework dropdown */}
-          
           <input
             type="text"
-            placeholder="🔍 Tìm sinh viên..."
+            placeholder="🔍 Tìm theo tên hoặc mã SV..."
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
-            className="search-input"
+            className="tsl-search"
           />
         </div>
       </div>
       
       {!selectedClass ? (
-        <div className="empty-state">
-          <span className="empty-icon">📚</span>
-          <h3>Chọn lớp học</h3>
-          <p>Vui lòng chọn lớp học để xem tất cả bài nộp</p>
+        <div className="tsl-empty">
+          <span className="tsl-empty-icon">📚</span>
+          <h3>Vui lòng chọn lớp học</h3>
+          <p>Chọn một lớp từ danh sách để xem các bài nộp</p>
         </div>
       ) : (
         <>
-          {/* Statistics Cards */}
-          <div className="stats-grid">
-            <div className="stat-card" style={{ borderLeftColor: '#3b82f6' }}>
-              <div className="stat-icon">📊</div>
-              <div className="stat-content">
-                <div className="stat-label">Tổng bài nộp</div>
-                <div className="stat-value">{totalSubmissions}</div>
+          {/* Stats Cards */}
+          <div className="tsl-stats-grid">
+            <div className="tsl-stat-card" style={{ borderLeftColor: '#3b82f6' }}>
+              <div className="tsl-stat-icon">📊</div>
+              <div className="tsl-stat-content">
+                <div className="tsl-stat-label">Tổng bài nộp</div>
+                <div className="tsl-stat-value">{totalSubmissions}</div>
               </div>
             </div>
             
-            <div className="stat-card" style={{ borderLeftColor: '#f59e0b' }}>
-              <div className="stat-icon">⏳</div>
-              <div className="stat-content">
-                <div className="stat-label">Chờ chấm</div>
-                <div className="stat-value">{ungradedCount}</div>
+            <div className="tsl-stat-card" style={{ borderLeftColor: '#f59e0b' }}>
+              <div className="tsl-stat-icon">⏳</div>
+              <div className="tsl-stat-content">
+                <div className="tsl-stat-label">Cần chấm</div>
+                <div className="tsl-stat-value">{ungradedCount}</div>
               </div>
             </div>
             
-            <div className="stat-card" style={{ borderLeftColor: '#10b981' }}>
-              <div className="stat-icon">✅</div>
-              <div className="stat-content">
-                <div className="stat-label">Đã chấm</div>
-                <div className="stat-value">{gradedCount}</div>
+            <div className="tsl-stat-card" style={{ borderLeftColor: '#10b981' }}>
+              <div className="tsl-stat-icon">✅</div>
+              <div className="tsl-stat-content">
+                <div className="tsl-stat-label">Đã chấm</div>
+                <div className="tsl-stat-value">{gradedCount}</div>
               </div>
             </div>
             
-            <div className="stat-card" style={{ borderLeftColor: '#ef4444' }}>
-              <div className="stat-icon">⚠️</div>
-              <div className="stat-content">
-                <div className="stat-label">Nộp muộn</div>
-                <div className="stat-value">{lateCount}</div>
+            <div className="tsl-stat-card" style={{ borderLeftColor: '#ef4444' }}>
+              <div className="tsl-stat-icon">⚠️</div>
+              <div className="tsl-stat-content">
+                <div className="tsl-stat-label">Nộp muộn</div>
+                <div className="tsl-stat-value">{lateCount}</div>
               </div>
             </div>
           </div>
           
           {/* Tabs */}
-          <div className="tabs">
+          <div className="tsl-tabs">
             {(['ALL', 'SUBMITTED', 'GRADED', 'LATE'] as StatusFilter[]).map(status => (
               <button
                 key={status}
-                className={`tab ${statusFilter === status ? 'active' : ''}`}
+                className={`tsl-tab ${statusFilter === status ? 'active' : ''}`}
                 onClick={() => setStatusFilter(status)}
               >
                 {status === 'ALL' && 'Tất cả'}
-                {status === 'SUBMITTED' && 'Đã nộp'}
+                {status === 'SUBMITTED' && 'Chưa chấm'}
                 {status === 'GRADED' && 'Đã chấm'}
                 {status === 'LATE' && 'Nộp muộn'}
               </button>
@@ -368,112 +306,99 @@ const SubmissionList = () => {
           
           {/* Submissions List */}
           {filteredSubmissions.length === 0 ? (
-            <div className="empty-state">
-              <span className="empty-icon">📭</span>
-              <h3>Không có bài nộp</h3>
+            <div className="tsl-empty">
+              <span className="tsl-empty-icon">📭</span>
+              <h3>Không tìm thấy bài nộp</h3>
               <p>
                 {searchKeyword.trim()
-                  ? 'Không tìm thấy sinh viên phù hợp'
-                  : 'Chưa có bài nộp nào'}
+                  ? 'Không có sinh viên nào phù hợp với từ khóa tìm kiếm'
+                  : 'Chưa có bài nộp nào trong danh mục này'}
               </p>
             </div>
           ) : (
-            <div className="submissions-list">
+            <div className="tsl-list">
               {filteredSubmissions.map((submission) => {
                 const statusBadge = getStatusBadge(submission.status);
-                
-                // ✅ Count files
                 const fileCount = submission.submissionFiles?.length || 0;
                 const hasLegacyFile = !!submission.submissionFileUrl;
                 const totalFiles = fileCount + (hasLegacyFile && fileCount === 0 ? 1 : 0);
                 
                 return (
-                  <div key={submission.submissionId} className="submission-card">
-                    <div className="submission-header">
-                      <div className="student-info">
-                        <span className="student-icon">👤</span>
-                        <div>
-                          <div className="student-name">{submission.studentInfo.fullName}</div>
-                          <div className="student-code">{submission.studentInfo.studentCode}</div>
-                        </div>
+                  <div key={submission.submissionId} className="tsl-card">
+                    {/* Column 1: Student Info */}
+                    <div className="tsl-student-col">
+                      <div className="tsl-avatar">👤</div>
+                      <div className="tsl-student-details">
+                        <h3>{submission.studentInfo.fullName}</h3>
+                        <span className="tsl-student-code">{submission.studentInfo.studentCode}</span>
                       </div>
-                      
-                      <span
-                        className="status-badge"
-                        style={{
-                          color: statusBadge.color,
-                          background: statusBadge.bg
-                        }}
-                      >
-                        {statusBadge.text}
-                      </span>
                     </div>
                     
-                    <div className="submission-info">
-                      {/* ✅ NEW: Show homework title */}
-                      {(submission as any).homeworkTitle && (
-                        <div className="info-row">
-                          <span className="info-label">Bài tập:</span>
-                          <span className="info-value" style={{ fontWeight: '600', color: '#0891b2' }}>
-                            {(submission as any).homeworkTitle}
-                          </span>
-                        </div>
-                      )}
+                    {/* Column 2: Submission Info */}
+                    <div className="tsl-info-col">
+                      <div className="tsl-info-item">
+                        <span className="tsl-label">Bài tập</span>
+                        <span className="tsl-value highlight">
+                          {(submission as any).homeworkTitle || 'Unknown'}
+                        </span>
+                      </div>
                       
-                      <div className="info-row">
-                        <span className="info-label">Ngày nộp:</span>
-                        <span className="info-value">
+                      <div className="tsl-info-item">
+                        <span className="tsl-label">Trạng thái</span>
+                        <span 
+                          className="tsl-badge" 
+                          style={{ color: statusBadge.color, background: statusBadge.bg }}
+                        >
+                          {statusBadge.text}
+                        </span>
+                      </div>
+                      
+                      <div className="tsl-info-item">
+                        <span className="tsl-label">Ngày nộp</span>
+                        <span className="tsl-value">
                           {formatDateTime(submission.submissionDate)}
                           {submission.submissionTiming && (
-                            <span className="late-badge"> ({submission.submissionTiming})</span>
+                            <span className="tsl-late-tag">{submission.submissionTiming}</span>
                           )}
                         </span>
                       </div>
                       
-                      {submission.score !== null && submission.score !== undefined && (
-                        <div className="info-row">
-                          <span className="info-label">Điểm:</span>
-                          <span className="info-value score">
-                            {submission.score} / 10
-                          </span>
-                        </div>
-                      )}
+                      <div className="tsl-info-item">
+                        <span className="tsl-label">Điểm số</span>
+                        {submission.score !== null && submission.score !== undefined ? (
+                          <span className="tsl-value score">{submission.score}/10</span>
+                        ) : (
+                          <span className="tsl-value">--</span>
+                        )}
+                      </div>
                       
-                      {/* ✅ MULTI-FILE DISPLAY */}
                       {totalFiles > 0 && (
-                        <div className="info-row">
-                          <span className="info-label">File đính kèm:</span>
-                          <span className="info-value">
-                            📁 {totalFiles} file{totalFiles > 1 ? 's' : ''}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {submission.teacherFeedback && (
-                        <div className="info-row full-width">
-                          <span className="info-label">Nhận xét:</span>
-                          <span className="info-value">{submission.teacherFeedback}</span>
+                        <div className="tsl-info-item">
+                          <span className="tsl-label">File đính kèm</span>
+                          <span className="tsl-value">📎 {totalFiles} tệp tin</span>
                         </div>
                       )}
                     </div>
                     
-                    <div className="submission-actions">
+                    {/* Column 3: Actions */}
+                    <div className="tsl-actions-col">
                       <button 
-                        className="btn-view"
+                        className="tsl-btn tsl-btn-view"
                         onClick={() => handleViewDetail(submission)}
                       >
                         👁️ Xem chi tiết
                       </button>
+                      
                       {submission.status !== 'GRADED' ? (
                         <button 
-                          className="btn-grade"
+                          className="tsl-btn tsl-btn-grade"
                           onClick={() => handleGradeClick(submission)}
                         >
                           ✏️ Chấm điểm
                         </button>
                       ) : (
                         <button 
-                          className="btn-regrade"
+                          className="tsl-btn tsl-btn-regrade"
                           onClick={() => handleGradeClick(submission)}
                         >
                           🔄 Chấm lại
@@ -507,6 +432,7 @@ const SubmissionList = () => {
           }
         }}
       />
+      <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />
     </div>
   );
 };

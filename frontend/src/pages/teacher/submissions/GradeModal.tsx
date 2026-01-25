@@ -3,15 +3,8 @@ import './GradeModal.css';
 import submissionApi from '../../../services/api/submissionApi';
 
 /**
- * GradeModal Component
- * 
- * Modal for grading student homework submissions
- * Features:
- * - Score input (0-10 with validation)
- * - Teacher feedback textarea
- * - Submit/Cancel actions
- * - Loading states
- * - Error handling
+ * GradeModal Component - Namespaced (tgm-)
+ * * Modal for grading student homework submissions
  */
 
 interface GradeModalProps {
@@ -62,7 +55,7 @@ const GradeModal: React.FC<GradeModalProps> = ({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  // Prevent body scroll when modal is open
+  // Prevent body scroll
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -122,16 +115,16 @@ const GradeModal: React.FC<GradeModalProps> = ({
   if (!isOpen || !submission) return null;
 
   return (
-    <div className="grade-modal-overlay" onClick={onClose}>
-      <div className="grade-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="tgm-overlay" onClick={onClose}>
+      <div className="tgm-container" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="grade-modal-header">
-          <div className="grade-modal-title">
-            <span className="grade-icon">✏️</span>
+        <div className="tgm-header">
+          <div className="tgm-title-wrapper">
+            <span className="tgm-icon">✏️</span>
             <h2>Chấm điểm bài nộp</h2>
           </div>
           <button 
-            className="grade-modal-close" 
+            className="tgm-btn-close" 
             onClick={onClose}
             disabled={loading}
           >
@@ -140,30 +133,29 @@ const GradeModal: React.FC<GradeModalProps> = ({
         </div>
 
         {/* Student Info */}
-        <div className="grade-student-info">
-          <div className="student-avatar">👤</div>
-          <div className="student-details">
+        <div className="tgm-student-info">
+          <div className="tgm-avatar">👤</div>
+          <div className="tgm-student-details">
             <h3>{submission.studentInfo.fullName}</h3>
-            <p className="student-code">{submission.studentInfo.studentCode}</p>
+            <p className="tgm-student-code">{submission.studentInfo.studentCode}</p>
           </div>
         </div>
 
         {/* Submission Preview */}
         {(submission.submissionText || submission.submissionFileUrl) && (
-          <div className="grade-submission-preview">
-            <h4>Bài nộp:</h4>
+          <div className="tgm-preview-section">
+            <h4 className="tgm-preview-title">Nội dung bài nộp:</h4>
             {submission.submissionText && (
-              <p className="submission-text-preview">
-                {submission.submissionText.substring(0, 200)}
-                {submission.submissionText.length > 200 && '...'}
-              </p>
+              <div className="tgm-text-preview">
+                {submission.submissionText}
+              </div>
             )}
             {submission.submissionFileUrl && (
               <a 
                 href={submission.submissionFileUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="submission-file-link"
+                className="tgm-file-link"
               >
                 📎 Tải xuống file đính kèm
               </a>
@@ -172,32 +164,32 @@ const GradeModal: React.FC<GradeModalProps> = ({
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="grade-form">
+        <form onSubmit={handleSubmit} className="tgm-form">
           {/* Score Input */}
-          <div className="form-group">
-            <label htmlFor="score">
-              Điểm <span className="required">*</span>
+          <div className="tgm-form-group">
+            <label htmlFor="score" className="tgm-label">
+              Điểm <span className="tgm-required">*</span>
             </label>
-            <div className="score-input-wrapper">
+            <div className="tgm-score-wrapper">
               <input
                 id="score"
                 type="text"
                 value={score}
                 onChange={handleScoreChange}
                 placeholder="0.0"
-                className="score-input"
+                className="tgm-score-input"
                 disabled={loading}
                 required
               />
-              <span className="score-suffix">/ 10</span>
+              <span className="tgm-score-suffix">/ 10</span>
             </div>
-            <p className="input-hint">Nhập điểm từ 0 đến 10 (VD: 8.5)</p>
+            <p className="tgm-hint">Nhập điểm từ 0 đến 10 (VD: 8.5)</p>
           </div>
 
           {/* Feedback Textarea */}
-          <div className="form-group">
-            <label htmlFor="feedback">
-              Nhận xét <span className="required">*</span>
+          <div className="tgm-form-group">
+            <label htmlFor="feedback" className="tgm-label">
+              Nhận xét <span className="tgm-required">*</span>
             </label>
             <textarea
               id="feedback"
@@ -207,29 +199,29 @@ const GradeModal: React.FC<GradeModalProps> = ({
                 setError('');
               }}
               placeholder="Nhập nhận xét, góp ý cho sinh viên..."
-              className="feedback-textarea"
+              className="tgm-textarea"
               rows={5}
               disabled={loading}
               required
             />
-            <p className="input-hint">
+            <p className="tgm-hint">
               {feedback.length} / 500 ký tự
             </p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="error-message">
-              <span className="error-icon">⚠️</span>
+            <div className="tgm-error">
+              <span className="tgm-error-icon">⚠️</span>
               {error}
             </div>
           )}
 
           {/* Actions */}
-          <div className="grade-modal-actions">
+          <div className="tgm-actions">
             <button
               type="button"
-              className="btn-cancel"
+              className="tgm-btn-cancel"
               onClick={onClose}
               disabled={loading}
             >
@@ -237,17 +229,17 @@ const GradeModal: React.FC<GradeModalProps> = ({
             </button>
             <button
               type="submit"
-              className="btn-submit"
+              className="tgm-btn-submit"
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <span className="spinner"></span>
+                  <span className="tgm-spinner"></span>
                   Đang lưu...
                 </>
               ) : (
                 <>
-                  <span className="submit-icon">✓</span>
+                  <span className="tgm-submit-icon">✓</span>
                   Lưu điểm
                 </>
               )}

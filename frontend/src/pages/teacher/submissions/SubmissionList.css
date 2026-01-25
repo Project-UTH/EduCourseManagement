@@ -1,452 +1,439 @@
-/* SubmissionList.css */
+/* ========================================
+   TEACHER SUBMISSION LIST PAGE
+   Scope: Unique Prefix .tsl- (Teacher Submission List)
+   ======================================== */
 
-.submission-list-container {
-  padding: 2rem;
+.tsl-container {
+  padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #374151;
+  background: #f8fafc;
+  min-height: calc(100vh - 64px);
 }
 
 /* ==================== HEADER ==================== */
-
-.page-header {
+.tsl-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 24px;
 }
 
-.page-header h1 {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 0.25rem 0;
+.tsl-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
 }
 
-.page-header p {
-  color: #6b7280;
+.tsl-header p {
+  color: #64748b;
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: 15px;
+}
+
+/* ==================== ERROR BANNER ==================== */
+.tsl-error {
+  padding: 16px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  color: #991b1b;
+  font-weight: 500;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* ==================== FILTERS ==================== */
-
-.filters-section {
+.tsl-filters {
   background: white;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0;
 }
 
-.filters-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 1rem;
+.tsl-filters-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.filter-select {
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.9375rem;
+.tsl-select,
+.tsl-search {
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
   background: white;
-  cursor: pointer;
   transition: all 0.2s;
+  color: #1e293b;
 }
 
-.filter-select:disabled {
-  background: #f3f4f6;
-  cursor: not-allowed;
-  opacity: 0.6;
+.tsl-select {
+  min-width: 240px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
 }
 
-.filter-select:focus {
+.tsl-search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.tsl-select:focus,
+.tsl-search:focus {
   outline: none;
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
-.search-input {
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.9375rem;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-}
-
-/* ==================== STATISTICS CARDS ==================== */
-
-.stats-grid {
+/* ==================== STATS CARDS ==================== */
+.tsl-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
-.stat-card {
+.tsl-stat-card {
   background: white;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
+  border-radius: 16px;
+  padding: 20px;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  border-left: 4px solid;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  transition: all 0.2s;
+  gap: 16px;
+  border: 1px solid #e2e8f0;
+  border-left-width: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
 }
 
-.stat-card:hover {
+.tsl-stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
-.stat-icon {
-  font-size: 2.5rem;
+.tsl-stat-icon {
+  font-size: 24px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border-radius: 12px;
 }
 
-.stat-content {
+.tsl-stat-content {
   flex: 1;
 }
 
-.stat-label {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-bottom: 0.25rem;
+.tsl-stat-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 4px;
+  font-weight: 500;
 }
 
-.stat-value {
-  font-size: 2rem;
+.tsl-stat-value {
+  font-size: 24px;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
+  line-height: 1.2;
 }
 
 /* ==================== TABS ==================== */
-
-.tabs {
+.tsl-tabs {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  background: white;
-  padding: 1rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  gap: 8px;
+  margin-bottom: 24px;
+  padding-bottom: 4px;
+  overflow-x: auto;
 }
 
-.tab {
-  flex: 1;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  background: #f3f4f6;
-  color: #6b7280;
+.tsl-tab {
+  padding: 10px 20px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
   font-weight: 600;
-  font-size: 0.9375rem;
-  border-radius: 0.5rem;
+  font-size: 14px;
+  border-radius: 50px; /* Pill shape */
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.tab:hover {
-  background: #e5e7eb;
-  color: #111827;
+.tsl-tab:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
-.tab.active {
+.tsl-tab.active {
   background: #10b981;
   color: white;
+  border-color: #10b981;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
 }
 
 /* ==================== SUBMISSIONS LIST ==================== */
-
-.submissions-list {
+.tsl-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
 }
 
-.submission-card {
+.tsl-card {
   background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
   transition: all 0.2s;
-}
-
-.submission-card:hover {
-  border-color: #10b981;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-/* ==================== SUBMISSION HEADER ==================== */
-
-.submission-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.student-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.student-icon {
-  font-size: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 50px;
-  height: 50px;
-  background: #f3f4f6;
-  border-radius: 50%;
-}
-
-.student-name {
-  font-weight: 600;
-  color: #111827;
-  font-size: 1.125rem;
-}
-
-.student-code {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-top: 0.25rem;
-}
-
-.status-badge {
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-/* ==================== SUBMISSION INFO ==================== */
-
-.submission-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 2fr 3fr 1fr; /* Student Info | Submission Info | Actions */
+  gap: 24px;
   align-items: center;
 }
 
-.info-row.full-width {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-}
-
-.info-label {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.info-value {
-  font-size: 0.9375rem;
-  color: #111827;
-  font-weight: 500;
-}
-
-.info-value.score {
-  color: #10b981;
-  font-weight: 700;
-  font-size: 1.125rem;
-}
-
-.late-badge {
-  color: #ef4444;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.file-link {
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.2s;
-}
-
-.file-link:hover {
-  color: #2563eb;
-  text-decoration: underline;
-}
-
-/* ==================== SUBMISSION ACTIONS ==================== */
-
-.submission-actions {
-  display: flex;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.btn-view,
-.btn-grade,
-.btn-regrade {
-  flex: 1;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 0.9375rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-view {
-  background: #3b82f6;
-  color: white;
-}
-
-.btn-view:hover {
-  background: #2563eb;
+.tsl-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
   transform: translateY(-2px);
 }
 
-.btn-grade {
+/* Student Info Column */
+.tsl-student-col {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.tsl-avatar {
+  width: 48px;
+  height: 48px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.tsl-student-details h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.tsl-student-code {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Info Column */
+.tsl-info-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.tsl-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tsl-label {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.tsl-value {
+  font-size: 14px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.tsl-value.highlight {
+  color: #0891b2;
+  font-weight: 600;
+}
+
+.tsl-value.score {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.tsl-badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.tsl-late-tag {
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fef2f2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+
+/* Actions Column */
+.tsl-actions-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tsl-btn {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tsl-btn-view {
+  background: white;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+.tsl-btn-view:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.tsl-btn-grade {
   background: #10b981;
   color: white;
 }
 
-.btn-grade:hover {
+.tsl-btn-grade:hover {
   background: #059669;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
 }
 
-.btn-regrade {
-  background: #f59e0b;
-  color: white;
+.tsl-btn-regrade {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fcd34d;
 }
 
-.btn-regrade:hover {
-  background: #d97706;
-  transform: translateY(-2px);
+.tsl-btn-regrade:hover {
+  background: #fef3c7;
 }
 
-/* ==================== EMPTY STATE ==================== */
-
-.empty-state {
+/* ==================== EMPTY & LOADING ==================== */
+.tsl-empty {
   text-align: center;
-  padding: 4rem 2rem;
+  padding: 60px 20px;
   background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-radius: 16px;
+  border: 2px dashed #e2e8f0;
 }
 
-.empty-icon {
-  font-size: 4rem;
+.tsl-empty-icon {
+  font-size: 48px;
   display: block;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
 }
 
-.empty-state h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 0.5rem 0;
+.tsl-empty h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
 }
 
-.empty-state p {
-  color: #6b7280;
+.tsl-empty p {
+  color: #64748b;
   margin: 0;
-  font-size: 0.9375rem;
 }
 
-/* ==================== LOADING ==================== */
-
-.loading-spinner {
+.tsl-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 0;
-  gap: 1rem;
+  padding: 60px 0;
+  gap: 16px;
 }
 
-.spinner {
-  border: 4px solid #e5e7eb;
+.tsl-spinner {
+  border: 4px solid #f1f5f9;
   border-top: 4px solid #10b981;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
+  width: 40px;
+  height: 40px;
+  animation: tsl-spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-spinner p {
-  color: #6b7280;
-  font-size: 0.9375rem;
+@keyframes tsl-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ==================== RESPONSIVE ==================== */
-
 @media (max-width: 1024px) {
-  .filters-row {
-    grid-template-columns: 1fr 1fr;
+  .tsl-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
   
-  .search-input {
-    grid-column: 1 / -1;
+  .tsl-actions-col {
+    flex-direction: row;
   }
   
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .tsl-btn {
+    flex: 1;
   }
 }
 
 @media (max-width: 768px) {
-  .submission-list-container {
-    padding: 1rem;
-  }
+  .tsl-container { padding: 16px; }
   
-  .filters-row {
-    grid-template-columns: 1fr;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .tabs {
-    flex-wrap: wrap;
-  }
-  
-  .tab {
-    flex: 1 1 calc(50% - 0.25rem);
-    min-width: 120px;
-  }
-  
-  .submission-header {
+  .tsl-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 8px;
   }
   
-  .submission-actions {
-    flex-direction: column;
-  }
+  .tsl-filters-row { flex-direction: column; }
+  .tsl-select, .tsl-search { width: 100%; }
   
-  .btn-view,
-  .btn-grade,
-  .btn-regrade {
-    width: 100%;
-  }
+  .tsl-info-col { grid-template-columns: 1fr; }
+  
+  .tsl-tabs { padding-bottom: 8px; }
 }

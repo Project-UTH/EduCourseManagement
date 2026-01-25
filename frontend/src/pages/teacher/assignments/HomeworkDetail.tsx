@@ -2,16 +2,15 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import homeworkApi, { HomeworkResponse } from '../../../services/api/homeworkApi';
 import './HomeworkDetail.css';
+import ChatList from '../../../components/chat/ChatList';
+import { useAuthStore } from '@/store/authStore';
 
 /**
- * HomeworkDetail Page
- * 
- * Shows complete homework information with:
- * - Homework info (title, type, deadline, etc.)
- * - Statistics (submitted, graded, average score)
- * - Submission list (students who submitted)
- * 
- * Note: Using HomeworkResponse for now, will add full detail API later
+ * HomeworkDetail Page - Namespaced (thd-)
+ * * Features:
+ * - Detailed homework info
+ * - Submission statistics
+ * - Filterable student list
  */
 
 interface SubmissionData {
@@ -25,6 +24,7 @@ interface SubmissionData {
   status: 'SUBMITTED' | 'GRADED' | 'LATE';
   submissionFileUrl?: string;
 }
+
 
 const HomeworkDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -53,8 +53,8 @@ const HomeworkDetail = () => {
       const data = await homeworkApi.getHomeworkById(Number(id));
       setHomework(data);
       
-      // TODO: Load submissions from submission API when available
-      // For now, showing empty state
+      // TODO: Load submissions from API
+      // For demo, keeping empty or you can mock data here
       setSubmissions([]);
       
       console.log('[HomeworkDetail] ✅ Loaded:', data);
@@ -89,37 +89,17 @@ const HomeworkDetail = () => {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     
     if (diff < 0) {
-      return {
-        icon: '🔴',
-        text: `Đã quá hạn ${Math.abs(days)} ngày`,
-        color: '#ef4444',
-        status: 'OVERDUE'
-      };
+      return { icon: '🔴', text: `Quá hạn ${Math.abs(days)} ngày`, color: '#ef4444' };
     } else if (days === 0) {
-      return {
-        icon: '⚡',
-        text: 'Hôm nay',
-        color: '#f59e0b',
-        status: 'TODAY'
-      };
+      return { icon: '⚡', text: 'Hạn hôm nay', color: '#f59e0b' };
     } else if (days <= 3) {
-      return {
-        icon: '⚠️',
-        text: `Còn ${days} ngày`,
-        color: '#f59e0b',
-        status: 'URGENT'
-      };
+      return { icon: '⚠️', text: `Còn ${days} ngày`, color: '#f59e0b' };
     } else {
-      return {
-        icon: '🟢',
-        text: `Còn ${days} ngày`,
-        color: '#10b981',
-        status: 'OPEN'
-      };
+      return { icon: '🟢', text: `Còn ${days} ngày`, color: '#10b981' };
     }
   };
   
-  const getTypeLabel = (type: string): string => {
+  const getTypeLabel = (type: string) => {
     switch (type) {
       case 'REGULAR': return 'Thường xuyên';
       case 'MIDTERM': return 'Giữa kỳ';
@@ -128,7 +108,7 @@ const HomeworkDetail = () => {
     }
   };
   
-  const getTypeColor = (type: string): string => {
+  const getTypeColor = (type: string) => {
     switch (type) {
       case 'REGULAR': return '#3b82f6';
       case 'MIDTERM': return '#f59e0b';
@@ -137,24 +117,14 @@ const HomeworkDetail = () => {
     }
   };
   
-  const formatDateTime = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    return date.toLocaleString('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+  const formatDateTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleString('vi-VN', {
+      hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric'
     });
   };
   
   const filteredSubmissions = submissions.filter(sub => {
-    // Filter by status
-    if (filterStatus !== 'ALL' && sub.status !== filterStatus) {
-      return false;
-    }
-    
-    // Filter by search keyword
+    if (filterStatus !== 'ALL' && sub.status !== filterStatus) return false;
     if (searchKeyword.trim()) {
       const keyword = searchKeyword.toLowerCase();
       return (
@@ -162,45 +132,32 @@ const HomeworkDetail = () => {
         sub.studentCode?.toLowerCase().includes(keyword)
       );
     }
-    
     return true;
   });
+  const user = useAuthStore((state: any) => state.user);
+
   
   if (loading) {
     return (
-      <div className="homework-detail-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Đang tải...</p>
+      <div className="thd-container">
+        <div className="thd-loading">
+          <div className="thd-spinner"></div>
+          <p>Đang tải thông tin bài tập...</p>
         </div>
       </div>
     );
   }
+
   
-  if (error) {
+  if (error || !homework) {
     return (
-      <div className="homework-detail-container">
-        <div className="error-state">
-          <span className="error-icon">❌</span>
+      <div className="thd-container">
+        <div className="thd-error">
+          <span className="thd-error-icon">❌</span>
           <h3>Lỗi</h3>
-          <p>{error}</p>
-          <button onClick={() => navigate('/teacher/assignments')} className="btn-secondary">
-            ← Quay lại danh sách
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-  if (!homework) {
-    return (
-      <div className="homework-detail-container">
-        <div className="error-state">
-          <span className="error-icon">📭</span>
-          <h3>Không tìm thấy bài tập</h3>
-          <p>Bài tập không tồn tại hoặc đã bị xóa.</p>
-          <button onClick={() => navigate('/teacher/assignments')} className="btn-secondary">
-            ← Quay lại danh sách
+          <p>{error || 'Không tìm thấy bài tập'}</p>
+          <button onClick={() => navigate('/teacher/assignments')} className="thd-btn-back">
+            Quay lại danh sách
           </button>
         </div>
       </div>
@@ -209,7 +166,7 @@ const HomeworkDetail = () => {
   
   const deadlineStatus = getDeadlineStatus();
   const submittedCount = submissions.length;
-  const totalStudents = 40; // TODO: Get from class info when available
+  const totalStudents = 40; // Mock total
   const submissionRate = totalStudents > 0 ? (submittedCount / totalStudents * 100).toFixed(1) : 0;
   
   const gradedSubmissions = submissions.filter(s => s.status === 'GRADED');
@@ -220,256 +177,209 @@ const HomeworkDetail = () => {
     ? (gradedSubmissions.reduce((sum, s) => sum + (s.score || 0), 0) / gradedSubmissions.length).toFixed(2)
     : '--';
   
-  const maxScore = gradedSubmissions.length > 0
-    ? Math.max(...gradedSubmissions.map(s => s.score || 0)).toFixed(2)
-    : '--';
-  
-  const minScore = gradedSubmissions.length > 0
-    ? Math.min(...gradedSubmissions.map(s => s.score || 0)).toFixed(2)
-    : '--';
+  const maxScore = gradedSubmissions.length > 0 ? Math.max(...gradedSubmissions.map(s => s.score || 0)).toFixed(2) : '--';
+  const minScore = gradedSubmissions.length > 0 ? Math.min(...gradedSubmissions.map(s => s.score || 0)).toFixed(2) : '--';
   
   return (
-    <div className="homework-detail-container">
+    <div className="thd-container">
       {/* Header */}
-      <div className="page-header">
-        <button onClick={() => navigate('/teacher/assignments')} className="btn-back">
+      <div className="thd-header">
+        <button onClick={() => navigate('/teacher/assignments')} className="thd-btn-back">
           ← Quay lại
         </button>
-        <div className="header-actions">
+        <div className="thd-header-actions">
           <button
             onClick={() => navigate(`/teacher/assignments/edit/${homework.homeworkId}`)}
-            className="btn-edit"
+            className="thd-btn-edit"
           >
             ✏️ Sửa
           </button>
-          <button onClick={handleDelete} className="btn-delete">
+          <button onClick={handleDelete} className="thd-btn-delete">
             🗑️ Xóa
           </button>
         </div>
       </div>
       
-      {/* Title */}
-      <div className="homework-title">
-        <h1>📝 {homework.title}</h1>
-        <p>
-          Lớp: {homework.classCode} - {homework.subjectName}
+      {/* Title Section */}
+      <div className="thd-title-section">
+        <h1>{homework.title}</h1>
+        <p className="thd-subtitle">
+          <span>📚 {homework.subjectName}</span>
+          <span>•</span>
+          <span>🏫 Lớp {homework.classCode}</span>
         </p>
       </div>
       
       {/* Info Section */}
-      <div className="info-section">
-        <h2>📋 Thông tin</h2>
+      <div className="thd-section">
+        <h2>📋 Thông tin chi tiết</h2>
         
-        <div className="info-grid">
-          <div className="info-item">
-            <span className="info-label">Loại:</span>
-            <span
-              className="info-value"
-              style={{
-                color: getTypeColor(homework.homeworkType),
-                fontWeight: '600'
-              }}
-            >
+        <div className="thd-info-grid">
+          <div className="thd-info-item">
+            <span className="thd-label">Loại bài tập</span>
+            <span className="thd-value" style={{ color: getTypeColor(homework.homeworkType) }}>
               {getTypeLabel(homework.homeworkType)}
             </span>
           </div>
           
-          <div className="info-item">
-            <span className="info-label">Deadline:</span>
-            <span className="info-value">
-              {formatDateTime(homework.deadline)}
-            </span>
+          <div className="thd-info-item">
+            <span className="thd-label">Hạn nộp</span>
+            <span className="thd-value">{formatDateTime(homework.deadline)}</span>
           </div>
           
-          <div className="info-item">
-            <span className="info-label">Trạng thái:</span>
-            <span className="info-value" style={{ color: deadlineStatus?.color }}>
+          <div className="thd-info-item">
+            <span className="thd-label">Trạng thái</span>
+            <span className="thd-value" style={{ color: deadlineStatus?.color }}>
               {deadlineStatus?.icon} {deadlineStatus?.text}
             </span>
           </div>
           
-          <div className="info-item">
-            <span className="info-label">Điểm tối đa:</span>
-            <span className="info-value">{homework.maxScore}</span>
+          <div className="thd-info-item">
+            <span className="thd-label">Điểm tối đa</span>
+            <span className="thd-value">{homework.maxScore} điểm</span>
           </div>
           
           {homework.attachmentUrl && (
-            <div className="info-item full-width">
-              <span className="info-label">File đính kèm:</span>
+            <div className="thd-info-item full-width">
+              <span className="thd-label">File đính kèm</span>
               <a
                 href={homework.attachmentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="attachment-link"
+                className="thd-attachment-link"
               >
-                📎 Tải xuống
+                📎 Tải xuống tài liệu
               </a>
             </div>
           )}
         </div>
         
         {homework.description && (
-          <div className="description-section">
-            <h3>📄 Mô tả</h3>
-            <p className="description-text">{homework.description}</p>
+          <div className="thd-description-box">
+            <div className="thd-desc-title">📄 Nội dung yêu cầu</div>
+            <p className="thd-desc-text">{homework.description}</p>
           </div>
         )}
       </div>
       
-      {/* Statistics Section */}
-      <div className="stats-section">
-        <h2>📊 Thống kê</h2>
+      {/* Stats Section */}
+      <div className="thd-section">
+        <h2>📊 Thống kê nộp bài</h2>
         
-        <div className="stats-grid">
-          <div className="stat-card" style={{ borderLeftColor: '#3b82f6' }}>
-            <div className="stat-icon">📝</div>
-            <div className="stat-content">
-              <div className="stat-label">Đã nộp</div>
-              <div className="stat-value">
-                {submittedCount}/{totalStudents}
-              </div>
-              <div className="stat-subtext">({submissionRate}%)</div>
+        <div className="thd-stats-grid">
+          <div className="thd-stat-card" style={{ borderLeftColor: '#3b82f6' }}>
+            <div className="thd-stat-icon">📝</div>
+            <div className="thd-stat-content">
+              <span className="thd-stat-label">Đã nộp</span>
+              <span className="thd-stat-value">{submittedCount}/{totalStudents}</span>
+              <span className="thd-stat-subtext">Tỷ lệ: {submissionRate}%</span>
             </div>
           </div>
           
-          <div className="stat-card" style={{ borderLeftColor: '#f59e0b' }}>
-            <div className="stat-icon">⏳</div>
-            <div className="stat-content">
-              <div className="stat-label">Chờ chấm</div>
-              <div className="stat-value">
-                {submittedCount - gradedCount}/{submittedCount}
-              </div>
-              <div className="stat-subtext">
-                ({submittedCount > 0 ? (100 - Number(gradedRate)).toFixed(1) : 0}%)
-              </div>
+          <div className="thd-stat-card" style={{ borderLeftColor: '#f59e0b' }}>
+            <div className="thd-stat-icon">⏳</div>
+            <div className="thd-stat-content">
+              <span className="thd-stat-label">Chờ chấm</span>
+              <span className="thd-stat-value">{submittedCount - gradedCount}</span>
+              <span className="thd-stat-subtext">Cần xử lý</span>
             </div>
           </div>
           
-          <div className="stat-card" style={{ borderLeftColor: '#10b981' }}>
-            <div className="stat-icon">✅</div>
-            <div className="stat-content">
-              <div className="stat-label">Đã chấm</div>
-              <div className="stat-value">
-                {gradedCount}/{submittedCount}
-              </div>
-              <div className="stat-subtext">({gradedRate}%)</div>
+          <div className="thd-stat-card" style={{ borderLeftColor: '#10b981' }}>
+            <div className="thd-stat-icon">✅</div>
+            <div className="thd-stat-content">
+              <span className="thd-stat-label">Đã chấm</span>
+              <span className="thd-stat-value">{gradedCount}</span>
+              <span className="thd-stat-subtext">Hoàn thành: {gradedRate}%</span>
             </div>
           </div>
         </div>
         
         {gradedSubmissions.length > 0 && (
-          <div className="score-stats">
-            <h3>Phân tích điểm</h3>
-            <div className="score-grid">
-              <div className="score-item">
-                <span className="score-label">Điểm trung bình:</span>
-                <span className="score-value">{averageScore} / {homework.maxScore}</span>
+          <div className="thd-score-stats">
+            <h3>Phân tích điểm số</h3>
+            <div className="thd-score-grid">
+              <div className="thd-score-item">
+                <span className="thd-score-label">Trung bình</span>
+                <span className="thd-score-value">{averageScore}</span>
               </div>
-              <div className="score-item">
-                <span className="score-label">Điểm cao nhất:</span>
-                <span className="score-value">{maxScore}</span>
+              <div className="thd-score-item">
+                <span className="thd-score-label">Cao nhất</span>
+                <span className="thd-score-value" style={{ color: '#10b981' }}>{maxScore}</span>
               </div>
-              <div className="score-item">
-                <span className="score-label">Điểm thấp nhất:</span>
-                <span className="score-value">{minScore}</span>
+              <div className="thd-score-item">
+                <span className="thd-score-label">Thấp nhất</span>
+                <span className="thd-score-value" style={{ color: '#ef4444' }}>{minScore}</span>
               </div>
             </div>
           </div>
         )}
       </div>
       
-      {/* Submissions Section */}
-      <div className="submissions-section">
-        <h2>📥 Danh sách bài nộp ({submittedCount})</h2>
+      {/* Submissions List Section */}
+      <div className="thd-section">
+        <h2>📥 Danh sách sinh viên ({submittedCount})</h2>
         
-        <div className="submissions-filters">
+        <div className="thd-filters">
           <input
             type="text"
-            placeholder="🔍 Tìm sinh viên..."
+            placeholder="🔍 Tìm theo tên hoặc mã sinh viên..."
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
-            className="search-input"
+            className="thd-search-input"
           />
           
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="filter-select"
+            className="thd-filter-select"
           >
-            <option value="ALL">Tất cả</option>
-            <option value="SUBMITTED">Đã nộp</option>
-            <option value="GRADED">Đã chấm</option>
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="SUBMITTED">Đã nộp (Chưa chấm)</option>
+            <option value="GRADED">Đã chấm điểm</option>
             <option value="LATE">Nộp muộn</option>
           </select>
         </div>
         
         {filteredSubmissions.length === 0 ? (
-          <div className="empty-submissions">
-            <span className="empty-icon">📭</span>
-            <h3>Chưa có bài nộp nào</h3>
+          <div className="thd-empty">
+            <span style={{ fontSize: '40px', display: 'block', marginBottom: '16px' }}>📭</span>
             <p>
-              {searchKeyword.trim()
-                ? 'Không tìm thấy sinh viên phù hợp'
-                : 'Sinh viên chưa nộp bài tập này'}
+              {searchKeyword.trim() 
+                ? 'Không tìm thấy sinh viên nào phù hợp' 
+                : 'Chưa có sinh viên nào nộp bài cho bài tập này'}
             </p>
           </div>
         ) : (
-          <div className="submissions-list">
+          <div className="thd-sub-list">
             {filteredSubmissions.map((submission) => (
-              <div key={submission.submissionId} className="submission-card">
-                <div className="submission-header">
-                  <div className="student-info">
-                    <span className="student-icon">👤</span>
-                    <div>
-                      <div className="student-name">{submission.studentName}</div>
-                      <div className="student-code">{submission.studentCode}</div>
-                    </div>
+              <div key={submission.submissionId} className="thd-sub-card">
+                <div className="thd-sub-info-group">
+                  <div className="thd-student-icon">👤</div>
+                  <div className="thd-student-details">
+                    <div className="thd-student-name">{submission.studentName}</div>
+                    <div className="thd-student-code">{submission.studentCode}</div>
                   </div>
                   
-                  <div className="submission-status">
-                    {submission.status === 'GRADED' && (
-                      <span className="status-badge graded">✅ Đã chấm</span>
-                    )}
-                    {submission.status === 'SUBMITTED' && (
-                      <span className="status-badge submitted">📝 Đã nộp</span>
-                    )}
-                    {submission.status === 'LATE' && (
-                      <span className="status-badge late">⚠️ Nộp muộn</span>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="submission-info">
-                  <div className="info-row">
-                    <span className="info-label">Ngày nộp:</span>
-                    <span className="info-value">
-                      {formatDateTime(submission.submissionDate)}
-                    </span>
+                  <div className="thd-sub-status">
+                    {submission.status === 'GRADED' && <span className="thd-badge graded">✅ Đã chấm</span>}
+                    {submission.status === 'SUBMITTED' && <span className="thd-badge submitted">📝 Đã nộp</span>}
+                    {submission.status === 'LATE' && <span className="thd-badge late">⚠️ Nộp muộn</span>}
+                    
+                    <span className="thd-sub-date">{formatDateTime(submission.submissionDate)}</span>
                   </div>
                   
-                  {submission.score !== null && submission.score !== undefined && (
-                    <div className="info-row">
-                      <span className="info-label">Điểm:</span>
-                      <span className="info-value score">
-                        {submission.score} / {homework.maxScore}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {submission.teacherFeedback && (
-                    <div className="info-row full-width">
-                      <span className="info-label">Nhận xét:</span>
-                      <span className="info-value">{submission.teacherFeedback}</span>
-                    </div>
+                  {submission.score !== undefined && (
+                    <div className="thd-sub-score">{submission.score} điểm</div>
                   )}
                 </div>
                 
-                <div className="submission-actions">
-                  <button className="btn-view">👁️ Xem</button>
+                <div className="thd-sub-actions">
+                  <button className="thd-btn-action">👁️ Xem bài</button>
                   {submission.status !== 'GRADED' ? (
-                    <button className="btn-grade">✏️ Chấm điểm</button>
+                    <button className="thd-btn-action primary">✏️ Chấm điểm</button>
                   ) : (
-                    <button className="btn-regrade">🔄 Chấm lại</button>
+                    <button className="thd-btn-action">🔄 Chấm lại</button>
                   )}
                 </div>
               </div>
@@ -477,6 +387,7 @@ const HomeworkDetail = () => {
           </div>
         )}
       </div>
+      <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />
     </div>
   );
 };
