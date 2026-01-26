@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import roomApi, { RoomResponse, RoomScheduleResponse } from '../../../services/api/roomApi';
-import './RoomDetail.css'; // File CSS độc lập đã chỉnh sửa
+import './RoomDetail.css'; // Standalone CSS file
 
 const RoomDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,12 +12,12 @@ const RoomDetail = () => {
   const [loading, setLoading] = useState(true);
   const [scheduleLoading, setScheduleLoading] = useState(false);
   
-  const SEMESTER_ID = 1; // TODO: Lấy từ Context hoặc Config
+  const SEMESTER_ID = 1; // TODO: Get from Context or Config
 
   useEffect(() => {
     if (id) {
       fetchRoomDetail();
-      fetchSchedule(); // Có thể uncomment nếu muốn load lịch luôn
+      fetchSchedule(); // Uncomment to load schedule immediately
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -30,7 +30,7 @@ const RoomDetail = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('❌ Error fetching room:', error);
-      // Xử lý lỗi nhẹ nhàng hơn, có thể dùng Toast
+      // Handle error gracefully
       navigate('/admin/rooms');
     } finally {
       setLoading(false);

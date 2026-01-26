@@ -64,14 +64,7 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
             label: 'Trang chủ', 
             path: '/teacher/dashboard' 
           },
-          {
-            icon: '📚',
-            label: 'Lớp học',
-            path: '/teacher/classes-menu',
-            children: [
-              { icon: '📋', label: 'Lớp của tôi', path: '/teacher/classes' },
-            ]
-          },
+         
           { 
             icon: '📅', 
             label: 'Lịch giảng dạy', 
@@ -124,27 +117,12 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
             path: '/student/schedule' 
           },
           {
-            icon: '📝',
-            label: 'Bài tập',
-            path: '/student/assignments-menu',
-            children: [
-              { icon: '📝', label: 'Danh sách bài tập', path: '/student/assignments' },
-              { icon: '📤', label: 'Bài đã nộp', path: '/student/submissions' },
-            ]
-          },
-          {
             icon: '📊',
             label: 'Điểm số',
             path: '/student/grades-menu',
             children: [
-              { icon: '📈', label: 'Xem điểm', path: '/student/grades' },
               { icon: '📄', label: 'Bảng điểm tích lũy', path: '/student/transcript' },  // ✅ UPDATED - Link đến trang mới
             ]
-          },
-          { 
-            icon: '💬', 
-            label: 'Phản hồi', 
-            path: '/student/feedback' 
           },
           { 
             icon: '👤', 

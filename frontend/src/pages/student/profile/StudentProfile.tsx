@@ -1,17 +1,14 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import studentApi from '../../../services/api/studentApi';
 import authApi from '../../../services/api/authApi';
+// CHỈNH SỬA: Import file CSS độc lập mới
 import './StudentProfile.css';
+import { useAuthStore } from '@/store/authStore';
+import ChatList from '../../../components/chat/ChatList';
 
 /**
  * StudentProfile Component
- * 
- * Student profile management page
- * Features:
- * - View profile information
- * - Edit profile (email, phone)
- * - Change password
- * - Student-specific info display
+ * * Student profile management page (Green Theme)
  */
 
 const StudentProfile = () => {
@@ -61,8 +58,6 @@ const StudentProfile = () => {
     setLoading(true);
     try {
       await studentApi.updateProfile(editForm);
-      
-      // Reload profile to get updated data
       await loadProfile();
       setIsEditing(false);
       showMessage('success', 'Cập nhật thông tin thành công!');
@@ -77,13 +72,10 @@ const StudentProfile = () => {
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       showMessage('error', 'Mật khẩu mới không khớp!');
       return;
     }
-    
     if (passwordForm.newPassword.length < 6) {
       showMessage('error', 'Mật khẩu phải có ít nhất 6 ký tự!');
       return;
@@ -98,7 +90,6 @@ const StudentProfile = () => {
     setLoading(true);
     try {
       await authApi.changePassword(payload);
-      
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
       setIsChangingPassword(false);
       showMessage('success', 'Đổi mật khẩu thành công!');
@@ -117,29 +108,20 @@ const StudentProfile = () => {
   };
 
   const formatGender = (gender: string) => {
-    const genders: Record<string, string> = {
-      MALE: 'Nam',
-      FEMALE: 'Nữ',
-      OTHER: 'Khác',
-    };
+    const genders: Record<string, string> = { MALE: 'Nam', FEMALE: 'Nữ', OTHER: 'Khác' };
     return genders[gender] || gender;
   };
 
   const formatEducationLevel = (level: string) => {
     const levels: Record<string, string> = {
-      ASSOCIATE: 'Cao đẳng',
-      BACHELOR: 'Đại học',
-      MASTER: 'Thạc sĩ',
-      DOCTOR: 'Tiến sĩ',
+      ASSOCIATE: 'Cao đẳng', BACHELOR: 'Đại học', MASTER: 'Thạc sĩ', DOCTOR: 'Tiến sĩ',
     };
     return levels[level] || level;
   };
 
   const formatTrainingType = (type: string) => {
     const types: Record<string, string> = {
-      REGULAR: 'Chính quy',
-      DISTANCE: 'Từ xa',
-      PART_TIME: 'Bán thời gian',
+      REGULAR: 'Chính quy', DISTANCE: 'Từ xa', PART_TIME: 'Bán thời gian',
     };
     return types[type] || type;
   };
@@ -147,12 +129,13 @@ const StudentProfile = () => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
+  const user = useAuthStore((state: any) => state.user);
 
   if (loading && !profile) {
     return (
-      <div className="student-profile-container">
-        <div className="loading-state">
-          <div className="spinner"></div>
+      <div className="sp-container">
+        <div className="sp-loading">
+          <div className="sp-spinner"></div>
           <p>Đang tải thông tin...</p>
         </div>
       </div>
@@ -161,8 +144,8 @@ const StudentProfile = () => {
 
   if (!profile) {
     return (
-      <div className="student-profile-container">
-        <div className="error-state">
+      <div className="sp-container">
+        <div className="sp-error">
           <p>Không thể tải thông tin hồ sơ</p>
         </div>
       </div>
@@ -170,78 +153,78 @@ const StudentProfile = () => {
   }
 
   return (
-    <div className="student-profile-container">
+    <div className="sp-container">
       {/* Page Header */}
-      <div className="page-header">
+      <div className="sp-header">
         <h1>👤 Hồ sơ cá nhân</h1>
         <p>Quản lý thông tin tài khoản của bạn</p>
       </div>
 
-      {/* Message Alert */}
+      {/* Alert Message */}
       {message && (
-        <div className={`alert alert-${message.type}`}>
+        <div className={`sp-alert ${message.type === 'success' ? 'sp-alert-success' : 'sp-alert-error'}`}>
           {message.type === 'success' ? '✅' : '❌'} {message.text}
         </div>
       )}
 
-      <div className="profile-layout">
-        {/* Left Column - Profile Card */}
-        <div className="profile-sidebar">
-          <div className="profile-card">
-            {/* Avatar */}
-            <div className="avatar-section">
-              <div className="avatar-wrapper">
+      <div className="sp-layout">
+        {/* Left Column - Sidebar */}
+        <div className="sp-sidebar">
+          <div className="sp-card">
+            {/* Avatar Section */}
+            <div className="sp-avatar-section">
+              <div className="sp-avatar-wrapper">
                 {profile.avatarUrl ? (
-                  <img src={profile.avatarUrl} alt={profile.fullName} className="avatar-img" />
+                  <img src={profile.avatarUrl} alt={profile.fullName} className="sp-avatar-img" />
                 ) : (
-                  <div className="avatar-placeholder">
+                  <div className="sp-avatar-placeholder">
                     {profile.fullName.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
-              <h2 className="profile-name">{profile.fullName}</h2>
-              <p className="profile-role">Sinh viên</p>
-              <p className="profile-code">{profile.studentCode}</p>
+              <h2 className="sp-name">{profile.fullName}</h2>
+              <p className="sp-role">Sinh viên</p>
+              <p className="sp-code">{profile.studentCode}</p>
             </div>
 
             {/* Quick Info */}
-            <div className="quick-info">
-              <div className="info-item">
-                <span className="info-icon">🎓</span>
+            <div className="sp-quick-info">
+              <div className="sp-info-item">
+                <span className="sp-info-icon">🎓</span>
                 <div>
-                  <div className="info-label">MSSV</div>
-                  <div className="info-value">{profile.studentCode}</div>
+                  <div className="sp-info-label">MSSV</div>
+                  <div className="sp-info-value">{profile.studentCode}</div>
                 </div>
               </div>
 
-              <div className="info-item">
-                <span className="info-icon">📧</span>
+              <div className="sp-info-item">
+                <span className="sp-info-icon">📧</span>
                 <div>
-                  <div className="info-label">Email</div>
-                  <div className="info-value">{profile.email || 'Chưa có'}</div>
+                  <div className="sp-info-label">Email</div>
+                  <div className="sp-info-value">{profile.email || 'Chưa có'}</div>
                 </div>
               </div>
 
-              <div className="info-item">
-                <span className="info-icon">📞</span>
+              <div className="sp-info-item">
+                <span className="sp-info-icon">📞</span>
                 <div>
-                  <div className="info-label">Điện thoại</div>
-                  <div className="info-value">{profile.phone || 'Chưa có'}</div>
+                  <div className="sp-info-label">Điện thoại</div>
+                  <div className="sp-info-value">{profile.phone || 'Chưa có'}</div>
                 </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="profile-actions">
+            {/* Actions */}
+            <div className="sp-actions">
               <button 
-                className="btn-primary"
+                className="sp-btn sp-btn-primary"
                 onClick={() => setIsEditing(true)}
                 disabled={isEditing || isChangingPassword}
               >
                 ✏️ Chỉnh sửa
               </button>
               <button 
-                className="btn-secondary"
+                className="sp-btn sp-btn-secondary"
                 onClick={() => setIsChangingPassword(true)}
                 disabled={isEditing || isChangingPassword}
               >
@@ -251,126 +234,114 @@ const StudentProfile = () => {
           </div>
         </div>
 
-        {/* Right Column - Details & Forms */}
-        <div className="profile-main">
+        {/* Right Column - Main Content */}
+        <div className="sp-main">
           {/* Profile Details (View Mode) */}
           {!isEditing && !isChangingPassword && (
-            <div className="profile-section">
-              <div className="section-header">
+            <div className="sp-section">
+              <div className="sp-section-header">
                 <h3>📋 Thông tin chi tiết</h3>
               </div>
 
-              <div className="detail-grid">
-                <div className="detail-row">
-                  <span className="detail-label">Họ và tên:</span>
-                  <span className="detail-value">{profile.fullName}</span>
+              <div className="sp-detail-grid">
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Họ và tên:</span>
+                  <span className="sp-detail-value">{profile.fullName}</span>
                 </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Giới tính:</span>
-                  <span className="detail-value">{formatGender(profile.gender)}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Giới tính:</span>
+                  <span className="sp-detail-value">{formatGender(profile.gender)}</span>
                 </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Ngày sinh:</span>
-                  <span className="detail-value">{formatDate(profile.dateOfBirth)}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Ngày sinh:</span>
+                  <span className="sp-detail-value">{formatDate(profile.dateOfBirth)}</span>
                 </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">MSSV:</span>
-                  <span className="detail-value">{profile.studentCode}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">MSSV:</span>
+                  <span className="sp-detail-value">{profile.studentCode}</span>
                 </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Email:</span>
-                  <span className="detail-value">{profile.email || 'Chưa cập nhật'}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Email:</span>
+                  <span className="sp-detail-value">{profile.email || 'Chưa cập nhật'}</span>
                 </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Điện thoại:</span>
-                  <span className="detail-value">{profile.phone || 'Chưa cập nhật'}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Điện thoại:</span>
+                  <span className="sp-detail-value">{profile.phone || 'Chưa cập nhật'}</span>
                 </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Khóa học:</span>
-                  <span className="detail-value">{profile.academicYear}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Khóa học:</span>
+                  <span className="sp-detail-value">{profile.academicYear}</span>
                 </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Bậc đào tạo:</span>
-                  <span className="detail-value">{formatEducationLevel(profile.educationLevel)}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Bậc đào tạo:</span>
+                  <span className="sp-detail-value">{formatEducationLevel(profile.educationLevel)}</span>
                 </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Loại hình đào tạo:</span>
-                  <span className="detail-value">{formatTrainingType(profile.trainingType)}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Loại hình:</span>
+                  <span className="sp-detail-value">{formatTrainingType(profile.trainingType)}</span>
                 </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Khoa:</span>
-                  <span className="detail-value">{profile.departmentName}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Khoa:</span>
+                  <span className="sp-detail-value">{profile.departmentName}</span>
                 </div>
-
-                <div className="detail-row">
-                  <span className="detail-label">Chuyên ngành:</span>
-                  <span className="detail-value">{profile.majorName}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Chuyên ngành:</span>
+                  <span className="sp-detail-value">{profile.majorName}</span>
                 </div>
-
-                <div className="detail-row full-width">
-                  <span className="detail-label">Nơi sinh:</span>
-                  <span className="detail-value">{profile.placeOfBirth || 'Chưa cập nhật'}</span>
+                <div className="sp-detail-row">
+                  <span className="sp-detail-label">Nơi sinh:</span>
+                  <span className="sp-detail-value">{profile.placeOfBirth || 'Chưa cập nhật'}</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Edit Profile Form */}
+          {/* Edit Form */}
           {isEditing && (
-            <div className="profile-section">
-              <div className="section-header">
+            <div className="sp-section">
+              <div className="sp-section-header">
                 <h3>✏️ Chỉnh sửa thông tin</h3>
               </div>
 
-              <form onSubmit={handleEditSubmit} className="edit-form">
-                <div className="form-group">
+              <form onSubmit={handleEditSubmit} className="sp-form">
+                <div className="sp-form-group">
                   <label>Email</label>
                   <input
+                    className="sp-input"
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     placeholder="email@example.com"
                   />
-                  <small className="form-hint">Email để nhận thông báo từ trường</small>
+                  <small className="sp-form-hint">Email để nhận thông báo từ trường</small>
                 </div>
 
-                <div className="form-group">
+                <div className="sp-form-group">
                   <label>Số điện thoại</label>
                   <input
+                    className="sp-input"
                     type="tel"
                     value={editForm.phone}
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                     placeholder="0901234567"
                   />
-                  <small className="form-hint">Số điện thoại liên hệ</small>
+                  <small className="sp-form-hint">Số điện thoại liên hệ</small>
                 </div>
 
-                <div className="form-note">
+                <div className="sp-form-note">
                   ℹ️ Chỉ có thể cập nhật Email và Số điện thoại. Các thông tin khác liên hệ phòng Đào tạo để thay đổi.
                 </div>
 
-                <div className="form-actions">
-                  <button type="submit" className="btn-primary" disabled={loading}>
+                <div className="sp-form-actions">
+                  <button type="submit" className="sp-btn sp-btn-primary" disabled={loading}>
                     {loading ? 'Đang lưu...' : '💾 Lưu thay đổi'}
                   </button>
                   <button 
                     type="button" 
-                    className="btn-secondary" 
+                    className="sp-btn sp-btn-secondary" 
                     onClick={() => {
                       setIsEditing(false);
-                      setEditForm({
-                        email: profile.email || '',
-                        phone: profile.phone || '',
-                      });
+                      setEditForm({ email: profile.email || '', phone: profile.phone || '' });
                     }}
                     disabled={loading}
                   >
@@ -381,66 +352,63 @@ const StudentProfile = () => {
             </div>
           )}
 
-          {/* Change Password Form */}
+          {/* Password Form */}
           {isChangingPassword && (
-            <div className="profile-section">
-              <div className="section-header">
+            <div className="sp-section">
+              <div className="sp-section-header">
                 <h3>🔒 Đổi mật khẩu</h3>
               </div>
 
-              <form onSubmit={handlePasswordSubmit} className="password-form">
-                <div className="form-group">
+              <form onSubmit={handlePasswordSubmit} className="sp-form">
+                <div className="sp-form-group">
                   <label>Mật khẩu hiện tại</label>
                   <input
+                    className="sp-input"
                     type="password"
-                    name="oldPassword"
                     value={passwordForm.oldPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
                     required
                     placeholder="Nhập mật khẩu hiện tại"
-                    autoComplete="current-password"
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="sp-form-group">
                   <label>Mật khẩu mới</label>
                   <input
+                    className="sp-input"
                     type="password"
-                    name="newPassword"
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                     required
                     placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
                     minLength={6}
-                    autoComplete="new-password"
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="sp-form-group">
                   <label>Xác nhận mật khẩu mới</label>
                   <input
+                    className="sp-input"
                     type="password"
-                    name="confirmPassword"
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                     required
                     placeholder="Nhập lại mật khẩu mới"
                     minLength={6}
-                    autoComplete="new-password"
                   />
                 </div>
 
-                <div className="password-hint">
+                <div className="sp-password-hint">
                   💡 Mật khẩu phải có ít nhất 6 ký tự
                 </div>
 
-                <div className="form-actions">
-                  <button type="submit" className="btn-primary" disabled={loading}>
+                <div className="sp-form-actions">
+                  <button type="submit" className="sp-btn sp-btn-primary" disabled={loading}>
                     {loading ? 'Đang xử lý...' : '🔒 Đổi mật khẩu'}
                   </button>
                   <button 
                     type="button" 
-                    className="btn-secondary" 
+                    className="sp-btn sp-btn-secondary" 
                     onClick={() => {
                       setIsChangingPassword(false);
                       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -455,6 +423,10 @@ const StudentProfile = () => {
           )}
         </div>
       </div>
+      <ChatList 
+        currentUsername={user?.username || 'student'}
+        currentRole="STUDENT"
+      />
     </div>
   );
 };

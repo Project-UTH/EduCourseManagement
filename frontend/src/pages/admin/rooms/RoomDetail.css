@@ -4,12 +4,18 @@
    ======================================== */
 
 .room-detail-page {
-  padding: 24px;
-  background: #f9fafb;
-  min-height: 100vh;
-  /* Reset cơ bản cho font trong phạm vi page này để đồng bộ */
+  /* Layout chung */
+  padding: 32px;
+  background: #ffffff;
+  min-height: auto;
   font-family: inherit;
   box-sizing: border-box;
+  
+  /* Căn giữa và giới hạn chiều rộng */
+  max-width: 1000px;
+  margin: 40px auto; 
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 /* ==================== LOADING ==================== */
@@ -19,7 +25,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  min-height: 400px;
   gap: 16px;
   color: #6b7280;
   font-weight: 500;
@@ -31,7 +37,6 @@
   border: 4px solid #e5e7eb;
   border-top-color: #16a34a;
   border-radius: 50%;
-  /* Đổi tên animation để tránh trùng lặp global */
   animation: rd-spin 0.8s linear infinite;
 }
 
@@ -39,42 +44,48 @@
   to { transform: rotate(360deg); }
 }
 
-/* ==================== HEADER ==================== */
+/* ==================== HEADER & BACK BUTTON ==================== */
 
 .room-detail-page .detail-header {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 24px;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f3f4f6;
 }
 
+/* --- CHỈNH SỬA: Back Button Nổi bật --- */
 .room-detail-page .back-button {
-  padding: 10px 20px;
-  background: white;
-  border: 2px solid #e5e7eb;
+  padding: 10px 24px;
+  background: #16a34a; /* Nền xanh lá */
+  color: white;        /* Chữ trắng */
+  border: none;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  /* Thêm bóng đổ để nổi bật */
+  box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3); 
 }
 
 .room-detail-page .back-button:hover {
-  border-color: #16a34a;
-  color: #16a34a;
-  background: #f0fdf4;
+  background: #15803d; /* Xanh đậm hơn khi hover */
+  transform: translateY(-2px); /* Nổi lên nhẹ */
+  box-shadow: 0 6px 12px rgba(22, 163, 74, 0.4);
 }
 
 .room-detail-page .detail-title {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 800;
   color: #1a202c;
   margin: 0;
-  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* ==================== SECTIONS COMMON ==================== */
@@ -84,61 +95,69 @@
 .room-detail-page .stats-section,
 .room-detail-page .schedule-section {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f3f4f6;
+  padding: 0;
+  margin-bottom: 40px;
+  box-shadow: none;
+  border: none;
 }
 
+/* --- CHỈNH SỬA: Section Title nền xanh --- */
 .room-detail-page .section-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
-  color: #1a202c;
-  margin: 0 0 20px 0;
+  color: #ffffff; /* Chữ trắng */
+  margin: 0 0 24px 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid #f3f4f6;
-  padding-bottom: 12px;
+  gap: 10px;
+  
+  /* Background xanh lá bo góc */
+  background-color: #16a34a; 
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
 }
 
 /* ==================== INFO GRID ==================== */
 
 .room-detail-page .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 32px;
+  /* Căn giữa grid */
+  justify-content: center;
+  text-align: center;
 }
 
 .room-detail-page .info-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  align-items: center; 
 }
 
 .room-detail-page .info-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  color: #6b7280;
+  color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .room-detail-page .info-value {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: #1f2937;
 }
 
 .room-detail-page .status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
+  justify-content: center;
+  padding: 6px 16px;
   border-radius: 999px;
   font-size: 14px;
   font-weight: 600;
-  width: fit-content;
 }
 
 .room-detail-page .status-badge.active {
@@ -155,23 +174,27 @@
 
 .room-detail-page .status-card {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border: 1px solid #86efac;
-  border-radius: 12px;
-  padding: 24px;
+  border: 2px solid #86efac;
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .room-detail-page .status-main {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .room-detail-page .current-status {
   display: inline-block;
-  padding: 12px 24px;
-  border-radius: 16px;
-  font-size: 18px;
-  font-weight: 700;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  padding: 12px 32px;
+  border-radius: 50px;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+  transform: scale(1.05);
 }
 
 .room-detail-page .current-status.status-in_use {
@@ -190,10 +213,12 @@
 }
 
 .room-detail-page .current-session-detail {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 8px;
-  padding: 20px;
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
 .room-detail-page .current-session-detail h3 {
@@ -201,22 +226,18 @@
   font-size: 16px;
   color: #15803d;
   text-transform: uppercase;
-  font-weight: 700;
-  border-bottom: 1px dashed #bbf7d0;
-  padding-bottom: 8px;
+  font-weight: 800;
+  border-bottom: 2px dashed #bbf7d0;
+  padding-bottom: 12px;
+  text-align: center;
 }
 
 .room-detail-page .current-session-detail p {
-  margin: 8px 0;
+  margin: 10px 0;
   font-size: 15px;
   color: #374151;
   display: flex;
   justify-content: space-between;
-}
-
-.room-detail-page .current-session-detail p strong {
-    color: #1f2937;
-    font-weight: 600;
 }
 
 /* ==================== STATS GRID ==================== */
@@ -224,35 +245,40 @@
 .room-detail-page .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  gap: 20px;
 }
 
 .room-detail-page .stat-card {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  justify-content: center;
+  gap: 12px;
+  background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 20px;
-  transition: all 0.2s;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  text-align: center;
 }
 
 .room-detail-page .stat-card:hover {
   border-color: #16a34a;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(22, 163, 74, 0.1);
 }
 
 .room-detail-page .stat-icon {
-  font-size: 28px;
-  width: 50px;
-  height: 50px;
+  font-size: 32px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f0fdf4;
-  border-radius: 12px;
+  color: #16a34a;
+  border-radius: 50%;
+  margin-bottom: 4px;
 }
 
 .room-detail-page .stat-content {
@@ -260,95 +286,17 @@
 }
 
 .room-detail-page .stat-value {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 800;
   color: #16a34a;
-  line-height: 1.2;
-  margin-bottom: 4px;
+  line-height: 1;
+  margin-bottom: 8px;
 }
 
 .room-detail-page .stat-label {
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
   font-weight: 600;
-}
-
-/* ==================== SCHEDULE TABLE (Scoped) ==================== */
-
-.room-detail-page .schedule-loading,
-.room-detail-page .no-schedule {
-  text-align: center;
-  padding: 40px;
-  color: #6b7280;
-  font-size: 14px;
-  background: #f9fafb;
-  border-radius: 8px;
-}
-
-.room-detail-page .schedule-table-wrapper {
-  overflow-x: auto;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-}
-
-.room-detail-page .schedule-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-  min-width: 800px; /* Đảm bảo không bị vỡ trên mobile */
-}
-
-.room-detail-page .schedule-table thead {
-  background: #f9fafb;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.room-detail-page .schedule-table th {
-  padding: 16px;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 700;
-  color: #4b5563;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-.room-detail-page .schedule-table td {
-  padding: 16px;
-  border-bottom: 1px solid #f3f4f6;
-  color: #1f2937;
-}
-
-.room-detail-page .schedule-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.room-detail-page .schedule-table tbody tr:hover {
-  background: #f8fafc;
-}
-
-.room-detail-page .session-status {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.room-detail-page .session-status.scheduled {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.room-detail-page .session-status.completed {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.room-detail-page .session-status.cancelled {
-  background: #fee2e2;
-  color: #991b1b;
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -356,27 +304,27 @@
 @media (max-width: 768px) {
   .room-detail-page {
     padding: 16px;
+    margin: 16px;
+    width: auto;
   }
 
   .room-detail-page .detail-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    gap: 16px;
   }
 
-  .room-detail-page .detail-title {
-    font-size: 22px;
+  .room-detail-page .back-button {
+    width: 100%;
+    justify-content: center;
   }
 
   .room-detail-page .info-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
   }
 
   .room-detail-page .stats-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .room-detail-page .schedule-table th,
-  .room-detail-page .schedule-table td {
-    padding: 12px 8px;
+    grid-template-columns: 1fr;
   }
 }

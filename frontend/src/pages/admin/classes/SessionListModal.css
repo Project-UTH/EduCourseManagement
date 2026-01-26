@@ -1,235 +1,386 @@
-/* SessionListModal.css - Session Schedule Modal */
+/* ==========================================================================
+   SESSION LIST MODAL - STANDALONE CSS
+   Scope: .session-list-wrapper
+   Prefix: slm-
+   Theme: Amber / Orange (Schedule Management)
+   ========================================================================== */
 
-.modal-large {
-  max-width: 1200px;
-  width: 90%;
+.session-list-wrapper {
+  font-family: inherit;
+  --slm-primary: #f59e0b;       /* Amber 500 */
+  --slm-primary-hover: #d97706; /* Amber 600 */
+  --slm-bg: #ffffff;
+  --slm-border: #e5e7eb;
+  --slm-text-main: #1f2937;     /* Gray 800 */
+  --slm-text-sec: #6b7280;      /* Gray 500 */
+  --slm-danger: #ef4444;
+  --slm-success: #10b981;
+  --slm-info: #3b82f6;
+  --slm-overlay: rgba(255, 251, 235, 0.4); /* Light warm overlay */
+  --slm-backdrop: rgba(0, 0, 0, 0.6);      /* Dark backdrop */
+  --slm-radius: 8px;
 }
 
-.modal-subtitle {
-  font-size: 14px;
-  color: var(--gray-600);
-  margin-top: 4px;
+/* --- OVERLAY & MODAL --- */
+.session-list-wrapper.slm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--slm-backdrop);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+  animation: slm-fadeIn 0.2s ease-out;
 }
 
-/* ==================== SESSIONS TABLE ==================== */
+.session-list-wrapper .slm-modal {
+  background: var(--slm-bg);
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 1100px; /* Modal rất rộng để hiển thị bảng */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slm-zoomIn 0.25s ease-out;
+}
 
-.sessions-table-wrapper {
+@keyframes slm-fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slm-zoomIn { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* --- HEADER --- */
+.session-list-wrapper .slm-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--slm-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #fffbeb; /* Amber 50 */
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.session-list-wrapper .slm-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #92400e; /* Amber 800 */
+}
+
+.session-list-wrapper .slm-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #b45309; /* Amber 700 */
+}
+
+.session-list-wrapper .slm-close {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #9ca3af;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.session-list-wrapper .slm-close:hover {
+  color: var(--slm-danger);
+}
+
+/* --- BODY --- */
+.session-list-wrapper .slm-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  background-color: #f9fafb; /* Light gray background for body */
+}
+
+/* --- CONTROLS (Stats & Filter) --- */
+.session-list-wrapper .slm-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--slm-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.session-list-wrapper .slm-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.session-list-wrapper .slm-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--slm-text-sec);
+}
+
+.session-list-wrapper .slm-stat-val {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--slm-text-main);
+}
+
+.session-list-wrapper .slm-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-list-wrapper .slm-select {
+  padding: 6px 12px;
+  border: 1px solid var(--slm-border);
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  background-color: white;
+}
+
+/* --- TABLE --- */
+.session-list-wrapper .slm-table-container {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid var(--slm-border);
   overflow-x: auto;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.sessions-table {
+.session-list-wrapper .slm-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13px;
+  min-width: 900px;
 }
 
-.sessions-table th {
-  background: var(--gray-50);
-  padding: 12px;
+.session-list-wrapper .slm-table th {
+  background: #f3f4f6;
+  padding: 12px 16px;
   text-align: left;
   font-weight: 600;
-  border-bottom: 2px solid var(--gray-200);
+  color: var(--slm-text-sec);
+  border-bottom: 1px solid var(--slm-border);
+  white-space: nowrap;
 }
 
-.sessions-table td {
-  padding: 12px;
-  border-bottom: 1px solid var(--gray-200);
+.session-list-wrapper .slm-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  color: var(--slm-text-main);
   vertical-align: top;
 }
 
-.sessions-table tr:hover {
-  background: var(--gray-50);
+.session-list-wrapper .slm-table tr:hover {
+  background: #f9fafb;
 }
 
-.rescheduled-row {
-  background: #fffbeb !important;
+/* Row Highlights */
+.session-list-wrapper .slm-row-rescheduled {
+  background-color: #fff7ed !important; /* Orange 50 */
+}
+.session-list-wrapper .slm-row-rescheduled:hover {
+  background-color: #ffedd5 !important; /* Orange 100 */
 }
 
-.rescheduled-row:hover {
-  background: #fef3c7 !important;
+.session-list-wrapper .slm-row-elearning {
+  background-color: #f0f9ff; /* Blue 50 */
 }
 
-/* Schedule cell */
-.schedule-cell {
+/* Cell Content */
+.session-list-wrapper .slm-cell-content {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.schedule-cell .date {
+.session-list-wrapper .slm-date {
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--slm-text-main);
 }
 
-.schedule-cell .time {
-  font-size: 13px;
-  color: var(--gray-700);
-}
-
-.schedule-cell .room {
+.session-list-wrapper .slm-time {
   font-size: 12px;
-  color: var(--gray-600);
+  color: var(--slm-text-sec);
 }
 
-/* Rescheduled badge */
-.rescheduled-badge {
+.session-list-wrapper .slm-room {
   display: inline-block;
+  font-weight: 600;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f3f4f6;
+  color: #4b5563;
+  width: fit-content;
+}
+
+/* Badges */
+.session-list-wrapper .slm-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.session-list-wrapper .badge-inperson {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.session-list-wrapper .badge-elearning {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.session-list-wrapper .badge-rescheduled {
   background: #fef3c7;
   color: #92400e;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
+  border: 1px solid #fcd34d;
   margin-top: 4px;
+  display: inline-block;
 }
 
-/* Edit form */
-.edit-form {
+/* --- EDIT FORM (Inline) --- */
+.session-list-wrapper .slm-edit-form {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.form-input,
-.form-select,
-.form-textarea {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--gray-300);
+  background: white;
+  padding: 8px;
   border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
+  border: 1px solid #fbbf24; /* Amber border */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
+.session-list-wrapper .slm-edit-input,
+.session-list-wrapper .slm-edit-select,
+.session-list-wrapper .slm-edit-textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 12px;
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
-.form-textarea {
+.session-list-wrapper .slm-edit-textarea {
   resize: vertical;
-  min-height: 60px;
+  min-height: 50px;
 }
 
-.reason-text {
-  font-size: 13px;
-  color: var(--gray-700);
-  font-style: italic;
+.session-list-wrapper .slm-edit-input:focus {
+  border-color: var(--slm-primary);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 
-/* Action buttons in table */
-.action-buttons {
+/* --- ACTION BUTTONS --- */
+.session-list-wrapper .slm-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
-.btn-save,
-.btn-cancel,
-.btn-edit,
-.btn-reset {
-  padding: 6px 12px;
-  font-size: 13px;
-  border: none;
-  border-radius: 6px;
+.session-list-wrapper .slm-btn {
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
+  border: 1px solid transparent;
   transition: all 0.2s;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.btn-save {
-  background: var(--primary-600);
+.session-list-wrapper .btn-edit {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fcd34d;
+}
+.session-list-wrapper .btn-edit:hover {
+  background: #fef3c7;
+}
+
+.session-list-wrapper .btn-reset {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #d1d5db;
+}
+.session-list-wrapper .btn-reset:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.session-list-wrapper .btn-save {
+  background: var(--slm-primary);
   color: white;
+  width: 100%;
+  justify-content: center;
+}
+.session-list-wrapper .btn-save:hover {
+  background: var(--slm-primary-hover);
 }
 
-.btn-save:hover {
-  background: var(--primary-700);
+.session-list-wrapper .btn-cancel {
+  background: white;
+  color: var(--slm-text-sec);
+  border-color: #d1d5db;
+  width: 100%;
+  justify-content: center;
+}
+.session-list-wrapper .btn-cancel:hover {
+  background: #f9fafb;
 }
 
-.btn-cancel {
-  background: var(--gray-200);
-  color: var(--gray-700);
-}
-
-.btn-cancel:hover {
-  background: var(--gray-300);
-}
-
-.btn-edit {
-  background: #3b82f6;
-  color: white;
-}
-
-.btn-edit:hover {
-  background: #2563eb;
-}
-
-.btn-reset {
-  background: #f59e0b;
-  color: white;
-}
-
-.btn-reset:hover {
-  background: #d97706;
-}
-
-/* Sessions summary */
-.sessions-summary {
-  margin-top: 16px;
-  padding: 12px;
-  background: var(--gray-50);
-  border-radius: 6px;
+/* --- FOOTER --- */
+.session-list-wrapper .slm-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--slm-border);
+  background: #fff;
   display: flex;
-  gap: 24px;
+  justify-content: flex-end;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
-.summary-item {
+.session-list-wrapper .btn-close-footer {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: var(--slm-text-main);
+  font-weight: 600;
+  cursor: pointer;
+}
+.session-list-wrapper .btn-close-footer:hover {
+  background: #f3f4f6;
+}
+
+/* Loading & No Data */
+.session-list-wrapper .slm-loading,
+.session-list-wrapper .slm-no-data {
+  text-align: center;
+  padding: 40px;
+  color: var(--slm-text-sec);
   font-size: 14px;
-}
-
-.summary-item strong {
-  color: var(--primary-600);
-}
-
-/* ==================== RESPONSIVE ==================== */
-
-@media (max-width: 768px) {
-  .modal-large {
-    width: 95%;
-    max-height: 90vh;
-  }
-  
-  .sessions-table {
-    font-size: 13px;
-  }
-  
-  .sessions-table th,
-  .sessions-table td {
-    padding: 8px;
-  }
-  
-  .edit-form {
-    gap: 6px;
-  }
-  
-  .form-input,
-  .form-select,
-  .form-textarea {
-    padding: 6px 10px;
-    font-size: 13px;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-  }
-  
-  .btn-save,
-  .btn-cancel,
-  .btn-edit,
-  .btn-reset {
-    width: 100%;
-  }
 }

@@ -346,7 +346,6 @@ const RoomList = () => {
                 <th className="col-capacity center-text">Sức chứa</th>
                 <th className="col-status">Trạng thái</th>
                 <th className="col-current-session">Đang dùng</th>
-                <th className="col-utilization center-text">Sử dụng</th>
                 <th className="col-actions center-text">Thao tác</th>
               </tr>
             </thead>
@@ -362,7 +361,6 @@ const RoomList = () => {
                   <td className="col-capacity center-text">{room.capacityInfo}</td>
                   <td className="col-status">{getStatusBadge(room)}</td>
                   <td className="col-current-session">{renderCurrentSession(room)}</td>
-                  <td className="col-utilization center-text">{renderUtilization(room.utilizationPercentage)}</td>
                   <td className="col-actions">
                     <div className="action-buttons">
   <div className="action-row top">

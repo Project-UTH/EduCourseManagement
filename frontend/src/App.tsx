@@ -6,7 +6,6 @@ import { DashboardLayout } from './components/layout';
 
 // Dashboards
 import AdminDashboard from './pages/admin/AdminDashboard';
-import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 
 // Admin Pages
@@ -170,8 +169,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="dashboard" element={<TeacherDashboard />} />
-          <Route path="classes" element={<TeacherClasses />} />
+          <Route path="dashboard" element={<TeacherClasses />} />
           
           {/* ✅ NEW - Class detail with tabs (MUST be before "schedule" to avoid conflict) */}
           <Route path="classes/:classId" element={<TeacherClassDetail />} />

@@ -1,25 +1,19 @@
 import { useState, useEffect } from 'react';
 import materialApi, { MaterialResponse } from '../../../services/api/materialApi';
-
-/**
- * ClassDocuments Tab (Teacher)
- * 
- * ✅ FIXED: Upload materials to API
- * ✅ FIXED: List materials from API
- * ✅ FIXED: Delete materials
- */
+import './ClassDocuments.css'; // Đã đổi import sang file CSS độc lập mới
 
 interface Props {
   classId: number;
 }
 
 const ClassDocuments: React.FC<Props> = ({ classId }) => {
+  // --- LOGIC GIỮ NGUYÊN ---
   const [materials, setMaterials] = useState<MaterialResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Upload form
+  // Upload form state
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -27,19 +21,17 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
 
   useEffect(() => {
     loadMaterials();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
   const loadMaterials = async () => {
     setLoading(true);
     setError(null);
-
     try {
-      console.log('[ClassDocuments] Loading materials for class:', classId);
       const data = await materialApi.getTeacherMaterials(classId);
       setMaterials(data);
-      console.log('[ClassDocuments] ✅ Loaded', data.length, 'materials');
     } catch (err: any) {
-      console.error('[ClassDocuments] ❌ Failed to load:', err);
+      console.error(err);
       setError('Không thể tải danh sách tài liệu');
     } finally {
       setLoading(false);
@@ -49,51 +41,31 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
       alert('File vượt quá 10MB!');
       e.target.value = '';
       return;
     }
-
     setSelectedFile(file);
   };
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!title.trim()) {
-      alert('Vui lòng nhập tiêu đề!');
-      return;
-    }
-
-    if (!selectedFile) {
-      alert('Vui lòng chọn file!');
-      return;
-    }
+    if (!title.trim() || !selectedFile) return;
 
     setUploading(true);
-
     try {
-      console.log('[ClassDocuments] Uploading:', selectedFile.name);
-      
       await materialApi.uploadMaterial(classId, title, description, selectedFile);
-      
-      console.log('[ClassDocuments] ✅ Upload successful');
       alert('✅ Upload tài liệu thành công!');
-
+      
       // Reset form
       setTitle('');
       setDescription('');
       setSelectedFile(null);
       setShowUploadForm(false);
-
-      // Reload materials
       loadMaterials();
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      console.error('[ClassDocuments] ❌ Upload failed:', err);
       alert('❌ Upload thất bại: ' + (err.response?.data?.message || err.message));
     } finally {
       setUploading(false);
@@ -102,15 +74,11 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
 
   const handleDelete = async (materialId: number, title: string) => {
     if (!confirm(`Xóa tài liệu "${title}"?`)) return;
-
     try {
-      console.log('[ClassDocuments] Deleting:', materialId);
       await materialApi.deleteMaterial(materialId);
-      console.log('[ClassDocuments] ✅ Deleted');
-      alert('✅ Đã xóa tài liệu');
       loadMaterials();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      console.error('[ClassDocuments] ❌ Delete failed:', err);
       alert('❌ Xóa thất bại: ' + (err.response?.data?.message || err.message));
     }
   };
@@ -119,54 +87,52 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
     const lowerType = type.toLowerCase();
     switch (lowerType) {
       case 'pdf': return '📄';
-      case 'pptx':
-      case 'ppt': return '📊';
-      case 'zip':
-      case 'rar': return '📦';
-      case 'docx':
-      case 'doc': return '📝';
-      case 'xlsx':
-      case 'xls': return '📊';
+      case 'pptx': case 'ppt': return '📊';
+      case 'zip': case 'rar': return '📦';
+      case 'docx': case 'doc': return '📝';
+      case 'xlsx': case 'xls': return '📈';
       default: return '📁';
     }
   };
 
   if (loading) {
     return (
-      <div className="tab-documents">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Đang tải tài liệu...</p>
-        </div>
+      <div className="class-documents-tab">
+        <div className="cd-loading">⏳ Đang tải tài liệu...</div>
       </div>
     );
   }
 
+  // --- RENDER (Class Names Updated) ---
   return (
-    <div className="tab-documents">
-      <div className="tab-header">
-        <h2>📁 Tài liệu lớp học</h2>
+    <div className="class-documents-tab">
+      
+      {/* HEADER */}
+      <div className="cd-header">
+        <h2 className="cd-title">📁 Tài liệu lớp học</h2>
         <button 
-          className="btn-primary"
+          className="cd-btn cd-btn-primary"
           onClick={() => setShowUploadForm(!showUploadForm)}
         >
-          {showUploadForm ? '❌ Hủy' : '⬆️ Upload tài liệu'}
+          {showUploadForm ? 'Đóng form' : 'Upload mới'}
         </button>
       </div>
 
+      {/* ERROR MESSAGE */}
       {error && (
-        <div className="error-message">
-          ⚠️ {error}
-          <button onClick={loadMaterials} className="btn-retry">🔄 Thử lại</button>
+        <div className="cd-error">
+          <span>⚠️ {error}</span>
+          <button onClick={loadMaterials} className="cd-btn cd-btn-secondary" style={{padding:'4px 8px', fontSize:'12px'}}>Thử lại</button>
         </div>
       )}
 
-      {/* Upload Form */}
+      {/* UPLOAD FORM */}
       {showUploadForm && (
-        <form onSubmit={handleUpload} className="upload-form">
-          <div className="form-group">
-            <label>Tiêu đề *</label>
+        <form onSubmit={handleUpload} className="cd-upload-form">
+          <div className="cd-form-group">
+            <label className="cd-label">Tiêu đề <span style={{color:'red'}}>*</span></label>
             <input
+              className="cd-input"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -176,100 +142,91 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
             />
           </div>
 
-          <div className="form-group">
-            <label>Mô tả</label>
+          <div className="cd-form-group">
+            <label className="cd-label">Mô tả</label>
             <textarea
+              className="cd-textarea"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Mô tả ngắn gọn về tài liệu..."
+              placeholder="Mô tả nội dung tài liệu..."
               rows={3}
             />
           </div>
 
-          <div className="form-group">
-            <label>File *</label>
+          <div className="cd-form-group">
+            <label className="cd-label">File đính kèm (Max 10MB) <span style={{color:'red'}}>*</span></label>
             <input
+              className="cd-file-input"
               type="file"
               onChange={handleFileSelect}
               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar"
               required
             />
-            {selectedFile && (
-              <div className="file-preview">
-                📎 {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-              </div>
-            )}
           </div>
 
-          <div className="form-actions">
+          <div className="cd-form-actions">
             <button 
               type="button" 
               onClick={() => setShowUploadForm(false)}
-              className="btn-secondary"
+              className="cd-btn cd-btn-secondary"
               disabled={uploading}
             >
               Hủy
             </button>
             <button 
               type="submit" 
-              className="btn-primary"
+              className="cd-btn cd-btn-primary"
               disabled={uploading}
             >
-              {uploading ? '⏳ Đang upload...' : '✅ Upload'}
+              {uploading ? 'Đang tải lên...' : 'Xác nhận Upload'}
             </button>
           </div>
         </form>
       )}
 
-      {/* Materials List */}
+      {/* MATERIALS LIST */}
       {materials.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">📁</div>
-          <h3>Chưa có tài liệu</h3>
-          <p>Upload tài liệu giảng dạy cho lớp học</p>
+        <div className="cd-empty">
+          <div className="cd-empty-icon">📂</div>
+          <h3>Chưa có tài liệu nào</h3>
+          <p>Giảng viên chưa tải lên tài liệu cho lớp học này.</p>
         </div>
       ) : (
-        <div className="materials-list">
+        <div className="cd-materials-list">
           {materials.map(material => (
-            <div key={material.materialId} className="material-card">
-              <div className="material-icon">
+            <div key={material.materialId} className="cd-material-card">
+              <div className="cd-file-icon">
                 {getFileIcon(material.fileType)}
               </div>
               
-              <div className="material-info">
-                <h4>{material.title}</h4>
+              <div className="cd-file-info">
+                <h4 className="cd-file-title">{material.title}</h4>
                 {material.description && (
-                  <p className="material-description">{material.description}</p>
+                  <p className="cd-file-desc">{material.description}</p>
                 )}
-                <div className="material-meta">
-                  <span className="file-type">{material.fileType.toUpperCase()}</span>
-                  <span className="separator">•</span>
-                  <span className="file-size">{material.fileSizeDisplay}</span>
-                  <span className="separator">•</span>
-                  <span className="upload-date">
-                    {new Date(material.uploadedAt).toLocaleDateString('vi-VN')}
-                  </span>
+                <div className="cd-file-meta">
+                  <span className="cd-badge">{material.fileType}</span>
+                  <span>•</span>
+                  <span>{material.fileSizeDisplay}</span>
+                  <span>•</span>
+                  <span>{new Date(material.uploadedAt).toLocaleDateString('vi-VN')}</span>
                 </div>
               </div>
 
-              <div className="material-actions">
+              <div className="cd-file-actions">
                 <button 
-                  className="btn-download"
+                  className="cd-btn cd-btn-download"
                   onClick={() => window.open(material.fileUrl, '_blank')}
+                  title="Tải xuống"
                 >
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Tải
+                  📥 Tải
                 </button>
                 <button 
-                  className="btn-delete"
+                  className="cd-btn cd-btn-delete"
                   onClick={() => handleDelete(material.materialId, material.title)}
+                  title="Xóa tài liệu"
                 >
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Xóa
+                  🗑️ Xóa
                 </button>
               </div>
             </div>
@@ -277,8 +234,10 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
         </div>
       )}
 
-      <div className="info-box">
-        <p>💡 <strong>Hỗ trợ:</strong> PDF, Word, Excel, PowerPoint, ZIP (Max 10MB/file)</p>
+      {/* FOOTER HINT */}
+      <div className="cd-info-box">
+        <span>💡</span>
+        <strong>Hỗ trợ:</strong> PDF, Word, Excel, PowerPoint, ZIP (Tối đa 10MB/file)
       </div>
     </div>
   );

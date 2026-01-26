@@ -6,6 +6,8 @@ import GradesTab from './GradesTab';
 import MaterialsTab from './MaterialsTab';
 import InfoTab from './InfoTab';
 import './ClassDetail.css';
+import { useAuthStore } from '@/store/authStore';
+import ChatList from '../../../components/chat/ChatList';
 
 /**
  * ClassDetail - Chi tiết lớp học với 4 tabs
@@ -79,6 +81,7 @@ const ClassDetail = () => {
       setLoading(false);
     }
   };
+  const user = useAuthStore((state: any) => state.user);
 
   if (loading) {
     return (
@@ -222,6 +225,10 @@ const ClassDetail = () => {
           )}
         </div>
       </div>
+      <ChatList 
+        currentUsername={user?.username || 'student'}
+        currentRole="STUDENT"
+      />
     </div>
   );
 };

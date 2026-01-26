@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import studentApi, { StudentCreateRequest, StudentUpdateRequest, StudentResponse } from '../../../services/api/studentApi';
 import majorApi from '../../../services/api/majorApi';
 import departmentApi from '../../../services/api/departmentApi';
-import './StudentModal.css';
+import './StudentModal.css'; // File CSS độc lập
 
 interface Department {
   departmentId: number;
@@ -42,21 +42,19 @@ const StudentModal: React.FC<StudentModalProps> = ({ student, onClose, onSuccess
     placeOfBirth: ''
   });
 
-  // Dropdown data
+  // Data & UI State
   const [departments, setDepartments] = useState<Department[]>([]);
   const [majors, setMajors] = useState<Major[]>([]);
   const [loadingMajors, setLoadingMajors] = useState(false);
-
-  // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  // Fetch departments on mount
+  // --- EFFECT: Initial Load ---
   useEffect(() => {
     fetchDepartments();
   }, []);
 
-  // Initialize form data for edit mode
+  // --- EFFECT: Fill Data (Edit Mode) ---
   useEffect(() => {
     if (student) {
       setFormData({
@@ -73,26 +71,18 @@ const StudentModal: React.FC<StudentModalProps> = ({ student, onClose, onSuccess
         phone: student.phone || '',
         placeOfBirth: student.placeOfBirth || ''
       });
+      // Trigger load majors for the existing department
+      loadMajors(student.departmentId);
     }
   }, [student]);
 
-  // Cascade: Load majors when department changes
-  useEffect(() => {
-    if (formData.departmentId) {
-      loadMajors(Number(formData.departmentId));
-    } else {
-      setMajors([]);
-      setFormData(prev => ({ ...prev, majorId: '' }));
-    }
-  }, [formData.departmentId]);
-
+  // --- FETCHING ---
   const fetchDepartments = async () => {
     try {
       const response = await departmentApi.getAll(0, 100);
       setDepartments(response.data || []);
     } catch (error) {
       console.error('Error fetching departments:', error);
-      alert('Lỗi tải danh sách khoa');
     }
   };
 
@@ -109,11 +99,23 @@ const StudentModal: React.FC<StudentModalProps> = ({ student, onClose, onSuccess
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  // --- HANDLERS ---
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear error when field is edited
+    // Cascading logic for Department -> Major
+    if (name === 'departmentId') {
+      setFormData(prev => ({ ...prev, majorId: '' })); // Reset major
+      if (value) {
+        loadMajors(Number(value));
+      } else {
+        setMajors([]);
+      }
+    }
+
+    // Clear error
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -122,54 +124,31 @@ const StudentModal: React.FC<StudentModalProps> = ({ student, onClose, onSuccess
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Student code (only for create mode)
     if (!isEditMode) {
-      if (!formData.studentCode.trim()) {
-        newErrors.studentCode = 'MSSV không được để trống';
-      } else if (!/^\d{12}$/.test(formData.studentCode)) {
-        newErrors.studentCode = 'MSSV phải có đúng 12 chữ số';
-      }
+      if (!formData.studentCode.trim()) newErrors.studentCode = 'MSSV bắt buộc';
+      else if (!/^\d{12}$/.test(formData.studentCode)) newErrors.studentCode = 'MSSV phải có 12 chữ số';
     }
 
-    // Full name
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Họ tên không được để trống';
-    } else if (formData.fullName.length > 100) {
-      newErrors.fullName = 'Họ tên không quá 100 ký tự';
+    if (!formData.fullName.trim()) newErrors.fullName = 'Họ tên bắt buộc';
+    if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Ngày sinh bắt buộc';
+    
+    // Validate age (15-100)
+    if (formData.dateOfBirth) {
+        const year = new Date(formData.dateOfBirth).getFullYear();
+        const currentYear = new Date().getFullYear();
+        if (currentYear - year < 15 || currentYear - year > 100) {
+            newErrors.dateOfBirth = 'Năm sinh không hợp lệ';
+        }
     }
 
-    // Date of birth
-    if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = 'Ngày sinh không được để trống';
-    } else {
-      const dob = new Date(formData.dateOfBirth);
-      const today = new Date();
-      const age = today.getFullYear() - dob.getFullYear();
-      if (age < 15 || age > 100) {
-        newErrors.dateOfBirth = 'Tuổi phải từ 15 đến 100';
-      }
-    }
-
-    // Academic year
-    if (!formData.academicYear) {
-      newErrors.academicYear = 'Khóa học không được để trống';
-    } else if (formData.academicYear < 2000 || formData.academicYear > 2100) {
-      newErrors.academicYear = 'Khóa học không hợp lệ';
-    }
-
-    // Major
-    if (!formData.majorId) {
-      newErrors.majorId = 'Chuyên ngành không được để trống';
-    }
-
-    // Email (optional but must be valid)
+    if (!formData.departmentId) newErrors.departmentId = 'Vui lòng chọn Khoa';
+    if (!formData.majorId) newErrors.majorId = 'Vui lòng chọn Chuyên ngành';
+    
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email không hợp lệ';
     }
-
-    // Phone (optional but must be valid)
-    if (formData.phone && !/^[0-9+\-\s()]*$/.test(formData.phone)) {
-      newErrors.phone = 'Số điện thoại không hợp lệ';
+    if (formData.phone && !/^[0-9+\-\s()]{9,15}$/.test(formData.phone)) {
+        newErrors.phone = 'SĐT không hợp lệ';
     }
 
     setErrors(newErrors);
@@ -178,169 +157,130 @@ const StudentModal: React.FC<StudentModalProps> = ({ student, onClose, onSuccess
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       setLoading(true);
+      const payload = {
+        ...formData,
+        majorId: Number(formData.majorId),
+        // Clean optional fields
+        email: formData.email || undefined,
+        phone: formData.phone || undefined,
+        placeOfBirth: formData.placeOfBirth || undefined
+      };
 
       if (isEditMode) {
-        // Update student
-        const updateData: StudentUpdateRequest = {
-          fullName: formData.fullName,
-          gender: formData.gender,
-          dateOfBirth: formData.dateOfBirth,
-          academicYear: formData.academicYear,
-          educationLevel: formData.educationLevel,
-          trainingType: formData.trainingType,
-          majorId: Number(formData.majorId),
-          email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          placeOfBirth: formData.placeOfBirth || undefined
-        };
-
-        await studentApi.update(student.studentId, updateData);
-        alert('Cập nhật sinh viên thành công!');
+        await studentApi.update(student.studentId, payload as StudentUpdateRequest);
+        alert('✅ Cập nhật thành công!');
       } else {
-        // Create student
-        const createData: StudentCreateRequest = {
-          studentCode: formData.studentCode,
-          fullName: formData.fullName,
-          gender: formData.gender,
-          dateOfBirth: formData.dateOfBirth,
-          academicYear: formData.academicYear,
-          educationLevel: formData.educationLevel,
-          trainingType: formData.trainingType,
-          majorId: Number(formData.majorId),
-          email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          placeOfBirth: formData.placeOfBirth || undefined
-        };
-
-        await studentApi.create(createData);
-        alert('Thêm sinh viên thành công!\nMật khẩu mặc định: ddMMyyyy (từ ngày sinh)');
+        await studentApi.create(payload as StudentCreateRequest);
+        alert('✅ Thêm sinh viên thành công!\nMật khẩu mặc định là ngày sinh (ddMMyyyy)');
       }
-
       onSuccess();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('Error saving student:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
-      alert('Lỗi: ' + errorMessage);
+      const msg = error.response?.data?.message || 'Có lỗi xảy ra';
+      alert(`❌ ${msg}`);
     } finally {
       setLoading(false);
     }
   };
 
+  // --- RENDER ---
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div className="student-modal-wrapper sm-overlay" onClick={onClose}>
+      <div className="sm-modal" onClick={(e) => e.stopPropagation()}>
+        
         {/* HEADER */}
-        <div className="modal-header">
-          <h2>{isEditMode ? 'Sửa thông tin Sinh viên' : 'Thêm Sinh viên mới'}</h2>
-          <button className="btn-close" onClick={onClose}>×</button>
+        <div className="sm-header">
+          <h2 className="sm-title">
+            {isEditMode ? '✏️ Cập nhật thông tin' : '➕ Thêm sinh viên mới'}
+          </h2>
+          <button className="sm-close" onClick={onClose}>&times;</button>
         </div>
 
         {/* BODY */}
-        <form onSubmit={handleSubmit} className="modal-body">
-          {/* Row 1: Student Code (only for create) + Full Name */}
-          <div className="form-row">
-            {!isEditMode && (
-              <div className="form-group">
-                <label>
-                  MSSV <span className="required">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="studentCode"
-                  value={formData.studentCode}
-                  onChange={handleChange}
-                  placeholder="12 chữ số"
-                  maxLength={12}
-                  disabled={isEditMode}
-                />
-                {errors.studentCode && <span className="error-text">{errors.studentCode}</span>}
-                {!isEditMode && (
-                  <span className="help-text">VD: 210101234567</span>
-                )}
-              </div>
-            )}
-            <div className="form-group">
-              <label>
-                Họ và tên <span className="required">*</span>
-              </label>
+        <form onSubmit={handleSubmit} className="sm-body">
+          
+          {/* Row 1: MSSV & Name */}
+          <div className="sm-row-2">
+            <div className="sm-group">
+              <label className="sm-label">Mã sinh viên <span className="required">*</span></label>
               <input
-                type="text"
+                className="sm-input"
+                name="studentCode"
+                value={formData.studentCode}
+                onChange={handleChange}
+                placeholder="VD: 210001234567"
+                disabled={isEditMode}
+                maxLength={12}
+              />
+              {errors.studentCode && <span className="sm-error">{errors.studentCode}</span>}
+              {!isEditMode && <span className="sm-hint">Gồm 12 chữ số</span>}
+            </div>
+            
+            <div className="sm-group">
+              <label className="sm-label">Họ và tên <span className="required">*</span></label>
+              <input
+                className="sm-input"
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                placeholder="Nguyễn Văn A"
+                placeholder="VD: Nguyễn Văn A"
               />
-              {errors.fullName && <span className="error-text">{errors.fullName}</span>}
+              {errors.fullName && <span className="sm-error">{errors.fullName}</span>}
             </div>
           </div>
 
-          {/* Row 2: Gender + Date of Birth */}
-          <div className="form-row">
-            <div className="form-group">
-              <label>
-                Giới tính <span className="required">*</span>
-              </label>
-              <select name="gender" value={formData.gender} onChange={handleChange}>
+          {/* Row 2: Gender & DOB */}
+          <div className="sm-row-2">
+            <div className="sm-group">
+              <label className="sm-label">Giới tính <span className="required">*</span></label>
+              <select className="sm-select" name="gender" value={formData.gender} onChange={handleChange}>
                 <option value="MALE">Nam</option>
                 <option value="FEMALE">Nữ</option>
                 <option value="OTHER">Khác</option>
               </select>
             </div>
-            <div className="form-group">
-              <label>
-                Ngày sinh <span className="required">*</span>
-              </label>
+            <div className="sm-group">
+              <label className="sm-label">Ngày sinh <span className="required">*</span></label>
               <input
                 type="date"
+                className="sm-input"
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={handleChange}
               />
-              {errors.dateOfBirth && <span className="error-text">{errors.dateOfBirth}</span>}
+              {errors.dateOfBirth && <span className="sm-error">{errors.dateOfBirth}</span>}
             </div>
           </div>
 
-          {/* Row 3: Academic Year + Education Level + Training Type */}
-          <div className="form-row-3">
-            <div className="form-group">
-              <label>
-                Khóa học <span className="required">*</span>
-              </label>
+          {/* Row 3: Education Info (3 Columns) */}
+          <div className="sm-row-3">
+            <div className="sm-group">
+              <label className="sm-label">Khóa <span className="required">*</span></label>
               <input
                 type="number"
+                className="sm-input"
                 name="academicYear"
                 value={formData.academicYear}
                 onChange={handleChange}
-                placeholder="2024"
-                min="2000"
-                max="2100"
+                min="2000" max="2100"
               />
-              {errors.academicYear && <span className="error-text">{errors.academicYear}</span>}
             </div>
-            <div className="form-group">
-              <label>
-                Trình độ <span className="required">*</span>
-              </label>
-              <select name="educationLevel" value={formData.educationLevel} onChange={handleChange}>
-                <option value="ASSOCIATE">Cao đẳng</option>
+            <div className="sm-group">
+              <label className="sm-label">Trình độ <span className="required">*</span></label>
+              <select className="sm-select" name="educationLevel" value={formData.educationLevel} onChange={handleChange}>
                 <option value="BACHELOR">Đại học</option>
+                <option value="ASSOCIATE">Cao đẳng</option>
                 <option value="MASTER">Thạc sĩ</option>
                 <option value="DOCTOR">Tiến sĩ</option>
               </select>
             </div>
-            <div className="form-group">
-              <label>
-                Hình thức <span className="required">*</span>
-              </label>
-              <select name="trainingType" value={formData.trainingType} onChange={handleChange}>
+            <div className="sm-group">
+              <label className="sm-label">Hình thức <span className="required">*</span></label>
+              <select className="sm-select" name="trainingType" value={formData.trainingType} onChange={handleChange}>
                 <option value="REGULAR">Chính quy</option>
                 <option value="DISTANCE">Từ xa</option>
                 <option value="PART_TIME">Vừa làm vừa học</option>
@@ -348,106 +288,105 @@ const StudentModal: React.FC<StudentModalProps> = ({ student, onClose, onSuccess
             </div>
           </div>
 
-          {/* Row 4: Department + Major (Cascade) */}
-          <div className="form-row">
-            <div className="form-group">
-              <label>
-                Khoa <span className="required">*</span>
-              </label>
-              <select
-                name="departmentId"
-                value={formData.departmentId}
+          {/* Row 4: Dept & Major */}
+          <div className="sm-row-2">
+            <div className="sm-group">
+              <label className="sm-label">Khoa / Viện <span className="required">*</span></label>
+              <select 
+                className="sm-select" 
+                name="departmentId" 
+                value={formData.departmentId} 
                 onChange={handleChange}
               >
-                <option value="">-- Chọn khoa --</option>
-                {departments.map(dept => (
-                  <option key={dept.departmentId} value={dept.departmentId}>
-                    {dept.departmentCode} - {dept.departmentName}
+                <option value="">-- Chọn Khoa --</option>
+                {departments.map(d => (
+                  <option key={d.departmentId} value={d.departmentId}>
+                    {d.departmentCode} - {d.departmentName}
                   </option>
                 ))}
               </select>
+              {errors.departmentId && <span className="sm-error">{errors.departmentId}</span>}
             </div>
-            <div className="form-group">
-              <label>
-                Chuyên ngành <span className="required">*</span>
-              </label>
-              <select
-                name="majorId"
-                value={formData.majorId}
+            
+            <div className="sm-group">
+              <label className="sm-label">Chuyên ngành <span className="required">*</span></label>
+              <select 
+                className="sm-select" 
+                name="majorId" 
+                value={formData.majorId} 
                 onChange={handleChange}
                 disabled={!formData.departmentId || loadingMajors}
               >
                 <option value="">
-                  {loadingMajors ? 'Đang tải...' : '-- Chọn chuyên ngành --'}
+                  {loadingMajors ? 'Đang tải...' : '-- Chọn Ngành --'}
                 </option>
-                {majors.map(major => (
-                  <option key={major.majorId} value={major.majorId}>
-                    {major.majorCode} - {major.majorName}
+                {majors.map(m => (
+                  <option key={m.majorId} value={m.majorId}>
+                    {m.majorCode} - {m.majorName}
                   </option>
                 ))}
               </select>
-              {errors.majorId && <span className="error-text">{errors.majorId}</span>}
-              {!formData.departmentId && (
-                <span className="help-text">Chọn khoa trước</span>
-              )}
+              {errors.majorId && <span className="sm-error">{errors.majorId}</span>}
             </div>
           </div>
 
-          {/* Row 5: Email + Phone */}
-          <div className="form-row">
-            <div className="form-group">
-              <label>Email</label>
+          {/* Row 5: Contact Info */}
+          <div className="sm-row-2">
+            <div className="sm-group">
+              <label className="sm-label">Email</label>
               <input
                 type="email"
+                className="sm-input"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="student@example.com"
+                placeholder="student@school.edu.vn"
               />
-              {errors.email && <span className="error-text">{errors.email}</span>}
+              {errors.email && <span className="sm-error">{errors.email}</span>}
             </div>
-            <div className="form-group">
-              <label>Số điện thoại</label>
+            <div className="sm-group">
+              <label className="sm-label">Số điện thoại</label>
               <input
                 type="tel"
+                className="sm-input"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="0901234567"
+                placeholder="09xx..."
               />
-              {errors.phone && <span className="error-text">{errors.phone}</span>}
+              {errors.phone && <span className="sm-error">{errors.phone}</span>}
             </div>
           </div>
 
           {/* Row 6: Place of Birth */}
-          <div className="form-group">
-            <label>Nơi sinh</label>
+          <div className="sm-group">
+            <label className="sm-label">Nơi sinh</label>
             <input
-              type="text"
+              className="sm-input"
               name="placeOfBirth"
               value={formData.placeOfBirth}
               onChange={handleChange}
-              placeholder="TP. Hồ Chí Minh"
+              placeholder="Tỉnh / Thành phố"
             />
           </div>
 
-          {/* Info text */}
+          {/* Info Box */}
           {!isEditMode && (
-            <div className="info-text">
-              <strong>Lưu ý:</strong> Mật khẩu mặc định sẽ được tạo từ ngày sinh (định dạng ddMMyyyy).
-              Sinh viên cần đổi mật khẩu sau lần đăng nhập đầu tiên.
+            <div className="sm-info-box">
+              <strong>💡 Lưu ý:</strong> Tài khoản sẽ được tạo tự động với mật khẩu là ngày tháng năm sinh (ddMMyyyy).
             </div>
           )}
 
           {/* FOOTER */}
-          <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={onClose}>
-              Hủy
+          <div className="sm-footer">
+            <button type="button" className="sm-btn btn-cancel" onClick={onClose}>
+              Hủy bỏ
             </button>
-            <button type="submit" className="btn-submit" disabled={loading}>
-              {loading ? 'Đang xử lý...' : isEditMode ? 'Cập nhật' : 'Thêm mới'}
+            <button type="submit" className="sm-btn btn-submit" disabled={loading}>
+              {loading ? 'Đang lưu...' : isEditMode ? 'Cập nhật' : 'Thêm mới'}
             </button>
           </div>
+
         </form>
       </div>
     </div>

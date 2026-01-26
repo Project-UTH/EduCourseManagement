@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+// IMPORT FILE CSS ĐỘC LẬP
 import './StudentTranscript.css';
+import { useAuthStore } from '@/store/authStore';
+import ChatList from '../../components/chat/ChatList';
+
 
 /**
  * StudentTranscript Component
- * 
- * Displays comprehensive academic transcript with:
+ * * Displays comprehensive academic transcript with:
  * - Overall statistics (GPA, cumulative average, classification)
  * - Grades grouped by semester
  * - Academic performance classification
  * - Credit summary
  */
 
-// Match studentGradeApi.ts response format (document 6)
 interface ClassGrade {
   subjectCode: string;
   subjectName: string;
@@ -21,7 +23,6 @@ interface ClassGrade {
   status: 'PASSED' | 'FAILED' | 'IN_PROGRESS';
 }
 
-// Internal format for component use
 interface TranscriptData {
   student: {
     studentCode: string;
@@ -61,7 +62,6 @@ const StudentTranscript: React.FC = () => {
     try {
       console.log('🔍 Fetching transcript from backend API');
       
-      // Call real backend API
       const response = await fetch('http://localhost:8080/api/student/transcript', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -74,12 +74,8 @@ const StudentTranscript: React.FC = () => {
       }
 
       const result = await response.json();
-      console.log('✅ API Response:', result);
-      
-      // Extract data from ApiResponse wrapper
       const apiData = result.data;
       
-      // Transform to component format
       const transformedData: TranscriptData = {
         student: {
           studentCode: apiData.student.studentCode,
@@ -101,7 +97,6 @@ const StudentTranscript: React.FC = () => {
         }))
       };
       
-      console.log('✅ Transcript loaded from database:', transformedData);
       setTranscript(transformedData);
     } catch (err: any) {
       console.error('❌ Failed to load transcript:', err);
@@ -111,18 +106,12 @@ const StudentTranscript: React.FC = () => {
     }
   };
 
-  /**
-   * Group grades by semester
-   * Note: Backend already groups by semester in response
-   */
   const groupBySemester = (): SemesterGroup[] => {
     if (!transcript || !transcript.grades) return [];
 
-    // Backend already returns data grouped by semester
     return transcript.grades
-      .sort((a, b) => b.semester.localeCompare(a.semester)) // Newest first
+      .sort((a, b) => b.semester.localeCompare(a.semester))
       .map((semesterData) => {
-        // Calculate semester average (hệ 10)
         const validScores = semesterData.classes
           .filter(g => g.totalScore != null && g.totalScore !== undefined)
           .map(g => ({ score: g.totalScore!, credits: g.credits }));
@@ -132,7 +121,6 @@ const StudentTranscript: React.FC = () => {
             validScores.reduce((sum, item) => sum + item.credits, 0)
           : null;
 
-        // Calculate semester GPA (hệ 4)
         const validGrades = semesterData.classes
           .filter(g => g.letterGrade != null && g.letterGrade !== undefined)
           .map(g => ({ 
@@ -150,7 +138,6 @@ const StudentTranscript: React.FC = () => {
           .filter(g => g.status === 'PASSED')
           .reduce((sum, g) => sum + g.credits, 0);
 
-        // Classification based on hệ 10
         const classification = getClassification(averageScore);
 
         return {
@@ -165,88 +152,42 @@ const StudentTranscript: React.FC = () => {
       });
   };
 
-  /**
-   * Get academic performance classification
-   * Based on Vietnamese grading system
-   * 
-   * ⚠️ IMPORTANT: Thang điểm đúng theo yêu cầu
-   * - Xuất sắc: 8.5 – 10
-   * - Giỏi: 7.9 – 8.4 (lưu ý: 7.95 là Giỏi, 7.84 là Khá)
-   * - Khá: 6.5 – 7.8
-   * - Trung bình: 5.0 – 6.4
-   * - Yếu: 4.0 – 4.9
-   * - Kém: < 4.0
-   */
   const getClassification = (score: number | null): string => {
     if (score === null || score === undefined) return '--';
     
     if (score >= 8.5) return 'Xuất sắc';
-    if (score >= 7.9) return 'Giỏi'; // 7.9-8.4
-    if (score >= 6.5) return 'Khá'; // 6.5-7.8 (7.84 vẫn là Khá)
+    if (score >= 7.9) return 'Giỏi';
+    if (score >= 6.5) return 'Khá';
     if (score >= 5.0) return 'Trung bình';
     if (score >= 4.0) return 'Yếu';
     return 'Kém';
   };
 
-  /**
-   * Convert letter grade to grade point (hệ 4)
-   */
   const getGradePoint = (letterGrade: string): number => {
     const gradePoints: Record<string, number> = {
-      'A': 4.0,
-      'B+': 3.5,
-      'B': 3.0,
-      'C+': 2.5,
-      'C': 2.0,
-      'D+': 1.5,
-      'D': 1.0,
-      'F': 0.0
+      'A': 4.0, 'B+': 3.5, 'B': 3.0, 'C+': 2.5, 'C': 2.0, 'D+': 1.5, 'D': 1.0, 'F': 0.0
     };
     return gradePoints[letterGrade] || 0.0;
   };
 
-  /**
-   * Calculate cumulative average (Điểm TB tích lũy hệ 10)
-   * Flatten all semester grades to calculate overall average
-   */
   const calculateCumulativeAverage = (): number | null => {
     if (!transcript || !transcript.grades || transcript.grades.length === 0) return null;
 
-    // Flatten all classes from all semesters
     const allClasses = transcript.grades.flatMap(sem => sem.classes);
-    
-    const validGrades = allClasses.filter(
-      g => g.totalScore != null && g.totalScore !== undefined
-    );
+    const validGrades = allClasses.filter(g => g.totalScore != null && g.totalScore !== undefined);
 
     if (validGrades.length === 0) return null;
 
-    const totalWeightedScore = validGrades.reduce(
-      (sum, g) => sum + g.totalScore! * g.credits,
-      0
-    );
+    const totalWeightedScore = validGrades.reduce((sum, g) => sum + g.totalScore! * g.credits, 0);
     const totalCredits = validGrades.reduce((sum, g) => sum + g.credits, 0);
 
     return totalWeightedScore / totalCredits;
   };
 
-  // ============================================================================
-  // 🔧 FIXED: Tính điểm TB tích lũy đến từng kỳ cụ thể
-  // ============================================================================
-  /**
-   * Calculate cumulative average up to a specific semester
-   * For oldest semester: only that semester's average
-   * For newer semesters: average from oldest up to this one
-   * 
-   * @param semesterIndex Index of the semester in the sorted array (0 = newest)
-   * @returns Cumulative average from oldest semester up to this one
-   */
   const calculateCumulativeAverageUpTo = (semesterIndex: number): number | null => {
     if (!transcript || !transcript.grades) return null;
     
     const semesterGroups = groupBySemester();
-    
-    // Collect all classes from oldest semester up to this one
     let allClasses: ClassGrade[] = [];
     for (let i = semesterGroups.length - 1; i >= semesterIndex; i--) {
       allClasses = allClasses.concat(semesterGroups[i].grades);
@@ -261,51 +202,14 @@ const StudentTranscript: React.FC = () => {
     return totalWeighted / totalCredits;
   };
 
-  /**
-   * Calculate cumulative credits up to a specific semester
-   * Counts all courses with valid grade (not F, not null)
-   * Note: We don't check status because backend might return IN_PROGRESS
-   * 
-   * For the oldest semester: cumulative = that semester's total
-   * For newer semesters: cumulative = previous + current
-   * 
-   * @param semesterIndex Index of the semester in the sorted array (0 = newest)
-   * @returns Total cumulative credits from oldest semester up to this one
-   */
   const calculateCumulativeCredits = (semesterIndex: number): number => {
     if (!transcript || !transcript.grades) return 0;
 
     const semesterGroups = groupBySemester();
-    
-    console.group(`🔍 Cumulative Credits for Index ${semesterIndex}`);
-    
-    // For the oldest semester (last in array)
-    if (semesterIndex === semesterGroups.length - 1) {
-      const oldestSemester = semesterGroups[semesterIndex];
-      console.log('📌 OLDEST semester:', oldestSemester.semester);
-      
-      const credits = oldestSemester.grades
-        .filter(g => {
-          // Only check: has grade AND not F
-          const hasGrade = g.letterGrade != null && g.letterGrade !== '';
-          const notF = g.letterGrade !== 'F';
-          console.log(`  ${g.subjectCode}: grade=${g.letterGrade}, status=${g.status}, ` +
-                     `hasGrade=${hasGrade}, notF=${notF} → count=${hasGrade && notF}`);
-          return hasGrade && notF;
-        })
-        .reduce((sum, g) => sum + g.credits, 0);
-        
-      console.log('✅ Result:', credits);
-      console.groupEnd();
-      return credits;
-    }
-    
-    // For newer semesters, accumulate
     let cumulativeCredits = 0;
     
     for (let i = semesterGroups.length - 1; i >= semesterIndex; i--) {
       const semester = semesterGroups[i];
-      
       const passedCredits = semester.grades
         .filter(g => {
           const hasGrade = g.letterGrade != null && g.letterGrade !== '';
@@ -314,33 +218,23 @@ const StudentTranscript: React.FC = () => {
         })
         .reduce((sum, g) => sum + g.credits, 0);
       
-      console.log(`${semester.semester}: +${passedCredits}`);
       cumulativeCredits += passedCredits;
     }
-    
-    console.log('✅ Total:', cumulativeCredits);
-    console.groupEnd();
     return cumulativeCredits;
   };
 
-  /**
-   * Get color for classification
-   */
   const getClassificationColor = (classification: string): string => {
     switch (classification) {
-      case 'Xuất sắc': return '#10b981'; // green
-      case 'Giỏi': return '#3b82f6'; // blue
-      case 'Khá': return '#f59e0b'; // amber
-      case 'Trung bình': return '#f97316'; // orange
-      case 'Yếu': return '#ef4444'; // red
-      case 'Kém': return '#991b1b'; // dark red
-      default: return '#9ca3af'; // gray
+      case 'Xuất sắc': return '#10b981';
+      case 'Giỏi': return '#3b82f6';
+      case 'Khá': return '#f59e0b';
+      case 'Trung bình': return '#f97316';
+      case 'Yếu': return '#ef4444';
+      case 'Kém': return '#991b1b';
+      default: return '#9ca3af';
     }
   };
 
-  /**
-   * Get color for letter grade
-   */
   const getLetterGradeColor = (letter?: string | null): string => {
     if (!letter || letter === '--') return '#9ca3af';
     if (letter === 'A') return '#10b981';
@@ -350,31 +244,18 @@ const StudentTranscript: React.FC = () => {
     return '#ef4444';
   };
 
-  /**
-   * Get grade classification from letter grade
-   * A = Giỏi, B/B+ = Khá, C/C+ = Trung bình, D/D+ = Yếu, F = Kém
-   */
   const getGradeClassification = (letter?: string | null): string => {
     if (!letter || letter === '--') return '--';
-    
     switch (letter) {
-      case 'A':
-        return 'Giỏi';
-      case 'B+':
-      case 'B':
-        return 'Khá';
-      case 'C+':
-      case 'C':
-        return 'Trung bình';
-      case 'D+':
-      case 'D':
-        return 'Yếu';
-      case 'F':
-        return 'Kém';
-      default:
-        return '--';
+      case 'A': return 'Giỏi';
+      case 'B+': case 'B': return 'Khá';
+      case 'C+': case 'C': return 'Trung bình';
+      case 'D+': case 'D': return 'Yếu';
+      case 'F': return 'Kém';
+      default: return '--';
     }
   };
+  const user = useAuthStore((state: any) => state.user);
 
   const semesterGroups = groupBySemester();
   const cumulativeAverage = calculateCumulativeAverage();
@@ -572,7 +453,6 @@ const StudentTranscript: React.FC = () => {
                 </thead>
                 <tbody>
                   {semesterGroup.grades.map((grade, gradeIndex) => {
-                    // Calculate grade point for display
                     const gradePoint = grade.letterGrade ? getGradePoint(grade.letterGrade) : null;
 
                     return (
@@ -621,9 +501,7 @@ const StudentTranscript: React.FC = () => {
               </table>
             </div>
 
-            {/* ================================================================ */}
-            {/* 🔧 FIXED: Semester Summary - Sử dụng calculateCumulativeAverageUpTo */}
-            {/* ================================================================ */}
+            {/* Semester Summary */}
             <div className="semester-summary">
               <div className="summary-item">
                 <span className="summary-label">
@@ -784,6 +662,10 @@ const StudentTranscript: React.FC = () => {
           Nếu có thắc mắc về điểm số, vui lòng liên hệ phòng Đào tạo hoặc giảng viên phụ trách môn học.
         </p>
       </div>
+      <ChatList 
+        currentUsername={user?.username || 'student'}
+        currentRole="STUDENT"
+      />
     </div>
   );
 };

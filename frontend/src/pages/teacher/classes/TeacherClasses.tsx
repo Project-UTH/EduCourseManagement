@@ -261,17 +261,7 @@ const user = useAuthStore((state: any) => state.user);
                   <span className="tc-info-value">{cls.semesterName}</span>
                 </div>
 
-                <div className="tc-info-row">
-                  <span className="tc-info-label">🕐 Lịch học:</span>
-                  <span className="tc-info-value">
-                    {formatSchedule(cls.dayOfWeek, cls.timeSlot)}
-                  </span>
-                </div>
-
-                <div className="tc-info-row">
-                  <span className="tc-info-label">📍 Phòng:</span>
-                  <span className="tc-info-value">{cls.fixedRoom || 'TBA'}</span>
-                </div>
+               
 
                 <div className="tc-info-row">
                   <span className="tc-info-label">👥 Sĩ số:</span>

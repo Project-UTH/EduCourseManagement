@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../../services/api/apiClient';
 import './StudentSchedule.css';
+import ChatList from '../../components/chat/ChatList';
+import { useAuthStore } from '@/store/authStore';
 
 /**
  * StudentSchedule Component - Fixed Version
@@ -174,7 +176,7 @@ const StudentSchedule: React.FC = () => {
       date.getFullYear() === today.getFullYear()
     );
   };
-
+const user = useAuthStore((state: any) => state.user);
   const weekDates = getWeekDates();
 
   if (loading) {
@@ -210,6 +212,7 @@ const StudentSchedule: React.FC = () => {
         </div>
       </div>
 
+  
       {/* Schedule Table - Similar to TeacherSchedule */}
       <div className="calendar-wrapper">
         <table className="schedule-table">
@@ -285,6 +288,7 @@ const StudentSchedule: React.FC = () => {
           </tbody>
         </table>
       </div>
+      <ChatList currentUsername={user?.username || 'student'} currentRole="STUDENT" />
     </div>
   );
 };

@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
+// IMPORT FILE CSS ĐỘC LẬP
 import './StudentGrades.css';
-
-/**
- * GradesTab Component (FIXED)
- * 
- * ✅ FIX: Handle correct API response format
- * - API returns: { success, message, data: [...] }
- * - Field name: 'grade' (not 'score')
- * - homeworkType: 'REGULAR', 'MIDTERM', 'FINAL'
- */
 
 interface Props {
   classId: number;
@@ -44,18 +36,17 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
 
       const result = await response.json();
       
-      // ✅ FIX: API returns { success, message, data: [...] }
+      // API returns: { success, message, data: [...] }
       const homeworks = result.data || [];
       
       console.log('✅ Loaded homeworks:', homeworks);
       
-      // 2. Tách điểm theo loại (sử dụng 'grade' thay vì 'score')
+      // 2. Tách điểm theo loại
       const regularScores: number[] = [];
       let midtermScore: number | null = null;
       let finalScore: number | null = null;
 
       homeworks.forEach((hw: any) => {
-        // ✅ Check 'grade' field (not 'score')
         if (hw.grade !== null && hw.grade !== undefined) {
           // Quy đổi về thang 10
           const normalized = (hw.grade / hw.maxScore) * 10;
@@ -70,7 +61,7 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
         }
       });
 
-      // 3. Tính toán trung bình
+      // 3. Tính toán trung bình TX
       const tx = regularScores.length > 0
         ? regularScores.reduce((a, b) => a + b, 0) / regularScores.length
         : null;
@@ -87,14 +78,6 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
         midtermScore: midtermScore,
         finalScore: finalScore,
         totalScore: total,
-        letterGrade: total !== null ? getLetterGrade(total) : '--'
-      });
-
-      console.log('✅ Calculated grades:', { 
-        tx, 
-        midtermScore, 
-        finalScore, 
-        total,
         letterGrade: total !== null ? getLetterGrade(total) : '--'
       });
 
@@ -130,7 +113,7 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
       <div className="student-grades-container">
         <div className="loading-state">
           <div className="spinner"></div>
-          <p>Đang tính toán điểm...</p>
+          <p className="state-message">Đang tính toán điểm...</p>
         </div>
       </div>
     );
@@ -142,6 +125,7 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
         <div className="empty-state">
           <div className="empty-icon">📊</div>
           <h3>Chưa có dữ liệu điểm</h3>
+          <p className="state-message">Giảng viên chưa chấm bài tập nào.</p>
         </div>
       </div>
     );
@@ -208,8 +192,10 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
             <div 
               className="letter-grade-badge"
               style={{ 
-                background: `${getLetterGradeColor(grade.letterGrade)}15`,
-                color: getLetterGradeColor(grade.letterGrade)
+                // Logic màu nền badge dựa trên điểm chữ, đè lên gradient của card
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: grade.totalScore ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                border: `2px solid ${getLetterGradeColor(grade.letterGrade)}`
               }}
             >
               {grade.letterGrade}
@@ -220,7 +206,7 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
 
       {/* Grade Scale Reference */}
       <div className="grade-scale">
-        <h4>Thang điểm chữ</h4>
+        <h4>Thang điểm chữ tham khảo</h4>
         <div className="grade-scale-grid">
           <div className="scale-item">
             <span className="scale-letter" style={{ color: '#10b981' }}>A</span>

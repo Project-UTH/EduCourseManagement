@@ -1,101 +1,303 @@
-/* ClassModal.css - Create/Edit Class Modal */
+/* ==========================================================================
+   CLASS MODAL - STANDALONE CSS
+   Scope: .class-modal-wrapper
+   Prefix: cm-
+   Theme: Royal Blue (Professional/Core)
+   ========================================================================== */
 
-/* Modal specific styles for class creation/editing */
-
-.class-modal-content {
-  max-width: 800px;
+.class-modal-wrapper {
+  font-family: inherit;
+  --cm-primary: #2563eb;       /* Blue 600 */
+  --cm-primary-hover: #1d4ed8; /* Blue 700 */
+  --cm-bg: #ffffff;
+  --cm-border: #e2e8f0;
+  --cm-text-main: #1e293b;     /* Slate 800 */
+  --cm-text-sec: #64748b;      /* Slate 500 */
+  --cm-danger: #ef4444;
+  --cm-success: #10b981;
+  --cm-overlay: rgba(233, 235, 240, 0.6); /* Slate overlay */
+  --cm-radius: 8px;
 }
 
-.class-modal-body {
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-/* Form layout */
-.class-form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.class-form-row-single {
-  margin-bottom: 16px;
-}
-
-/* Schedule section */
-.schedule-section {
-  background: var(--gray-50);
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.schedule-section h3 {
-  margin: 0 0 12px 0;
-  font-size: 15px;
-  color: var(--gray-900);
-}
-
-.schedule-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-}
-
-/* Time slot select */
-.timeslot-select {
-  position: relative;
-}
-
-.timeslot-display {
-  font-size: 12px;
-  color: var(--gray-600);
-  margin-top: 4px;
-}
-
-/* Conflict warning */
-.conflict-warning {
-  background: #fef3c7;
-  border: 1px solid #fcd34d;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 16px;
+/* --- OVERLAY & MODAL --- */
+.class-modal-wrapper.cm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--cm-overlay);
   display: flex;
-  align-items: start;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  padding: 16px;
+  backdrop-filter: blur(3px);
+  animation: cm-fadeIn 0.2s ease-out;
+}
+
+.class-modal-wrapper .cm-modal {
+  background: var(--cm-bg);
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 900px; /* Rộng để chứa form lịch học */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: cm-slideUp 0.3s ease-out;
+}
+
+@keyframes cm-fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cm-slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* --- HEADER --- */
+.class-modal-wrapper .cm-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--cm-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eff6ff; /* Blue 50 */
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.class-modal-wrapper .cm-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e3a8a; /* Blue 900 */
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.conflict-warning-icon {
-  color: #f59e0b;
-  font-size: 18px;
+.class-modal-wrapper .cm-close {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #94a3b8;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
 }
 
-.conflict-warning-text {
+.class-modal-wrapper .cm-close:hover {
+  color: var(--cm-danger);
+}
+
+/* --- BODY --- */
+.class-modal-wrapper .cm-body {
+  padding: 24px;
+  overflow-y: auto;
   flex: 1;
-  font-size: 13px;
-  color: #92400e;
 }
 
-/* Success info */
-.success-info {
-  background: #d1fae5;
-  border: 1px solid #6ee7b7;
+/* --- LAYOUT GRID --- */
+.class-modal-wrapper .cm-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.class-modal-wrapper .cm-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.class-modal-wrapper .cm-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cm-text-main);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.class-modal-wrapper .required {
+  color: var(--cm-danger);
+  margin-left: 4px;
+}
+
+/* --- FORM ELEMENTS --- */
+.class-modal-wrapper .cm-input,
+.class-modal-wrapper .cm-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--cm-border);
+  border-radius: var(--cm-radius);
+  font-size: 14px;
+  color: var(--cm-text-main);
+  background-color: white;
+  transition: all 0.2s;
+  outline: none;
+  font-family: inherit;
+}
+
+.class-modal-wrapper .cm-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+  padding-right: 2.5rem;
+}
+
+.class-modal-wrapper .cm-input:focus,
+.class-modal-wrapper .cm-select:focus {
+  border-color: var(--cm-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); /* Blue shadow */
+}
+
+.class-modal-wrapper .cm-input:disabled,
+.class-modal-wrapper .cm-select:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+  color: #94a3b8;
+}
+
+/* --- SCHEDULE SECTIONS --- */
+.class-modal-wrapper .cm-schedule-box {
+  background: #f8fafc;
+  border: 1px solid var(--cm-border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.class-modal-wrapper .cm-schedule-box.elearning {
+  background: #fffbeb; /* Yellow 50 for differentiation */
+  border-color: #fcd34d;
+}
+
+.class-modal-wrapper .cm-box-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.class-modal-wrapper .title-fixed { color: #0f172a; }
+.class-modal-wrapper .title-elearning { color: #92400e; }
+
+.class-modal-wrapper .cm-schedule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* --- INFO BOXES --- */
+/* Info tổng quan (Blue) */
+.class-modal-wrapper .cm-info-main {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  padding: 12px 16px;
   border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   font-size: 13px;
-  color: #065f46;
+  line-height: 1.5;
 }
 
-/* ==================== RESPONSIVE ==================== */
+.class-modal-wrapper .cm-info-main ul {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+}
 
+/* Info chi tiết môn học (Green) */
+.class-modal-wrapper .cm-info-subject {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.class-modal-wrapper .subject-stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed #bbf7d0;
+}
+.class-modal-wrapper .subject-stat-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* --- HELPERS & ERRORS --- */
+.class-modal-wrapper .cm-error {
+  font-size: 12px;
+  color: var(--cm-danger);
+  margin-top: 4px;
+  display: block;
+}
+
+.class-modal-wrapper .cm-hint {
+  font-size: 12px;
+  color: var(--cm-text-sec);
+  margin-top: 4px;
+  display: block;
+  font-style: italic;
+}
+
+/* --- FOOTER --- */
+.class-modal-wrapper .cm-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--cm-border);
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.class-modal-wrapper .cm-btn {
+  padding: 10px 20px;
+  border-radius: var(--cm-radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.class-modal-wrapper .btn-submit {
+  background: #15803d;
+  color: white;
+}
+.class-modal-wrapper .btn-submit:hover {
+  background: var(--cm-primary-hover);
+  transform: translateY(-1px);
+}
+.class-modal-wrapper .btn-submit:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.class-modal-wrapper .btn-cancel {
+  background: white;
+  border: 1px solid var(--cm-border);
+  color: var(--cm-text-sec);
+}
+.class-modal-wrapper .btn-cancel:hover {
+  background: #f1f5f9;
+  color: var(--cm-text-main);
+}
+
+/* --- RESPONSIVE --- */
 @media (max-width: 768px) {
-  .class-form-row {
+  .class-modal-wrapper .cm-row-2,
+  .class-modal-wrapper .cm-schedule-grid {
     grid-template-columns: 1fr;
-  }
-  
-  .schedule-grid {
-    grid-template-columns: 1fr;
+    gap: 16px;
   }
 }

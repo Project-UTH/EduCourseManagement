@@ -4,8 +4,9 @@ import teacherSubjectApi from '../../../services/api/teacherSubjectApi';
 import departmentApi from '../../../services/api/departmentApi';
 import majorApi from '../../../services/api/majorApi';
 import SubjectSelector from './SubjectSelector';
-import './TeacherModal.css';
+import './TeacherModal.css'; // File CSS độc lập mới
 
+// Interfaces
 interface Department {
   departmentId: number;
   departmentCode: string;
@@ -52,20 +53,18 @@ const TeacherModal: React.FC<TeacherModalProps> = ({ teacher, onClose, onSuccess
   const [departments, setDepartments] = useState<Department[]>([]);
   const [majors, setMajors] = useState<Major[]>([]);
   const [loadingMajors, setLoadingMajors] = useState(false);
-
-  // Selected subjects
   const [selectedSubjects, setSelectedSubjects] = useState<SelectedSubject[]>([]);
 
-  // Validation errors
+  // UI state
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  // Load departments on mount
+  // --- EFFECTS ---
+
   useEffect(() => {
     fetchDepartments();
   }, []);
 
-  // Initialize form data for edit mode
   useEffect(() => {
     if (teacher) {
       setFormData({
@@ -81,7 +80,6 @@ const TeacherModal: React.FC<TeacherModalProps> = ({ teacher, onClose, onSuccess
         address: teacher.address || ''
       });
 
-      // Initialize selected subjects
       if (teacher.subjects && teacher.subjects.length > 0) {
         const subjects = teacher.subjects.map(s => ({
           subjectId: s.subjectId,
@@ -93,7 +91,7 @@ const TeacherModal: React.FC<TeacherModalProps> = ({ teacher, onClose, onSuccess
     }
   }, [teacher]);
 
-  // Cascade: Load majors when department changes
+  // Cascade Load Major
   useEffect(() => {
     if (formData.departmentId) {
       loadMajors(Number(formData.departmentId));
@@ -103,15 +101,14 @@ const TeacherModal: React.FC<TeacherModalProps> = ({ teacher, onClose, onSuccess
     }
   }, [formData.departmentId]);
 
+  // --- API CALLS ---
+
   const fetchDepartments = async () => {
     try {
       const response = await departmentApi.getAll(0, 100);
-      // Backend returns: { success, totalItems, totalPages, data: Department[] }
       setDepartments(response.data || []);
-      console.log('✅ [TeacherModal] Departments loaded:', response.data.length);
     } catch (error) {
       console.error('Error fetching departments:', error);
-      alert('Lỗi tải danh sách khoa');
     }
   };
 
@@ -128,65 +125,34 @@ const TeacherModal: React.FC<TeacherModalProps> = ({ teacher, onClose, onSuccess
     }
   };
 
+  // --- HANDLERS ---
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-
-    // Reset major when department changes
-    if (name === 'departmentId') {
-      setFormData(prev => ({ ...prev, majorId: '' }));
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Citizen ID validation (only for create mode)
     if (!isEditMode) {
-      if (!formData.citizenId.trim()) {
-        newErrors.citizenId = 'Số CCCD không được để trống';
-      } else if (!/^\d{12}$/.test(formData.citizenId)) {
-        newErrors.citizenId = 'Số CCCD phải đúng 12 chữ số';
-      }
+      if (!formData.citizenId.trim()) newErrors.citizenId = 'Số CCCD bắt buộc';
+      else if (!/^\d{12}$/.test(formData.citizenId)) newErrors.citizenId = 'CCCD phải có 12 số';
     }
 
-    // Full name
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Họ và tên không được để trống';
-    } else if (formData.fullName.length > 100) {
-      newErrors.fullName = 'Họ và tên không quá 100 ký tự';
-    }
-
-    // Date of birth
-    if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = 'Ngày sinh không được để trống';
-    } else {
+    if (!formData.fullName.trim()) newErrors.fullName = 'Họ tên bắt buộc';
+    
+    if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Ngày sinh bắt buộc';
+    else {
       const dob = new Date(formData.dateOfBirth);
-      const today = new Date();
-      if (dob >= today) {
-        newErrors.dateOfBirth = 'Ngày sinh phải là ngày trong quá khứ';
-      }
+      if (dob >= new Date()) newErrors.dateOfBirth = 'Ngày sinh không hợp lệ';
     }
 
-    // Email (optional but must be valid if provided)
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email không hợp lệ';
-    }
+    if (!formData.departmentId) newErrors.departmentId = 'Vui lòng chọn Khoa';
 
-    // Phone (optional but must be valid if provided)
-    if (formData.phone && !/^[0-9+\-\s()]*$/.test(formData.phone)) {
-      newErrors.phone = 'Số điện thoại không hợp lệ';
-    }
-
-    // Department
-    if (!formData.departmentId) {
-      newErrors.departmentId = 'Phải chọn khoa';
-    }
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Email không hợp lệ';
+    if (formData.phone && !/^[0-9+\-\s()]*$/.test(formData.phone)) newErrors.phone = 'SĐT không hợp lệ';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -194,299 +160,238 @@ const TeacherModal: React.FC<TeacherModalProps> = ({ teacher, onClose, onSuccess
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
-
     try {
       let teacherId: number;
+      const commonData = {
+        fullName: formData.fullName,
+        gender: formData.gender,
+        dateOfBirth: formData.dateOfBirth,
+        email: formData.email || undefined,
+        phone: formData.phone || undefined,
+        departmentId: Number(formData.departmentId),
+        majorId: formData.majorId ? Number(formData.majorId) : undefined,
+        degree: formData.degree || undefined,
+        address: formData.address || undefined
+      };
 
       if (isEditMode) {
-        // Update teacher
-        const updateData: TeacherUpdateRequest = {
-          fullName: formData.fullName,
-          gender: formData.gender,
-          dateOfBirth: formData.dateOfBirth,
-          email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          departmentId: Number(formData.departmentId),
-          majorId: formData.majorId ? Number(formData.majorId) : undefined,
-          degree: formData.degree || undefined,
-          address: formData.address || undefined
-        };
-
-        const response = await teacherApi.update(teacher!.teacherId, updateData);
+        const response = await teacherApi.update(teacher!.teacherId, commonData as TeacherUpdateRequest);
         teacherId = response.data.teacherId;
-        
-        // Update subjects
-        await updateTeacherSubjects(teacherId);
-        
-        alert('Cập nhật giảng viên thành công!');
+        alert('✅ Cập nhật giảng viên thành công!');
       } else {
-        // Create new teacher
-        const createData: TeacherCreateRequest = {
-          citizenId: formData.citizenId,
-          fullName: formData.fullName,
-          gender: formData.gender,
-          dateOfBirth: formData.dateOfBirth,
-          email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          departmentId: Number(formData.departmentId),
-          majorId: formData.majorId ? Number(formData.majorId) : undefined,
-          degree: formData.degree || undefined,
-          address: formData.address || undefined
-        };
-
-        const response = await teacherApi.create(createData);
+        const createData = { ...commonData, citizenId: formData.citizenId };
+        const response = await teacherApi.create(createData as TeacherCreateRequest);
         teacherId = response.data.teacherId;
-        
-        // Add subjects
-        await updateTeacherSubjects(teacherId);
-        
-        alert('Thêm giảng viên thành công!');
+        alert('✅ Thêm giảng viên thành công!');
+      }
+
+      // Update Subjects
+      if (selectedSubjects.length > 0 || isEditMode) {
+        const subjectRequests = selectedSubjects.map(s => ({
+          subjectId: s.subjectId,
+          isPrimary: s.isPrimary,
+          yearsOfExperience: s.yearsOfExperience
+        }));
+        await teacherSubjectApi.replaceSubjects(teacherId, subjectRequests);
       }
 
       onSuccess();
-    } catch (error) {
-      console.error('Error saving teacher:', error);
-      
-      // Handle validation errors from backend
-      if (error && typeof error === 'object' && 'response' in error) {
-        const apiError = error as { response?: { data?: { validationErrors?: Record<string, string>; message?: string } } };
-        if (apiError.response?.data?.validationErrors) {
-          setErrors(apiError.response.data.validationErrors);
-        } else {
-          alert('Lỗi: ' + (apiError.response?.data?.message || 'Có lỗi xảy ra'));
-        }
-      } else {
-        alert('Lỗi: Có lỗi xảy ra');
-      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      const msg = error.response?.data?.message || 'Có lỗi xảy ra';
+      alert(`❌ Lỗi: ${msg}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateTeacherSubjects = async (teacherId: number) => {
-    if (selectedSubjects.length === 0) {
-      // Remove all subjects if none selected
-      await teacherSubjectApi.replaceSubjects(teacherId, []);
-      return;
-    }
-
-    // Prepare subject requests
-    const subjectRequests = selectedSubjects.map(s => ({
-      subjectId: s.subjectId,
-      isPrimary: s.isPrimary,
-      yearsOfExperience: s.yearsOfExperience
-    }));
-
-    // Replace all subjects
-    await teacherSubjectApi.replaceSubjects(teacherId, subjectRequests);
-  };
+  // --- RENDER ---
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div className="teacher-modal-wrapper tm-overlay" onClick={onClose}>
+      <div className="tm-modal" onClick={(e) => e.stopPropagation()}>
+        
         {/* HEADER */}
-        <div className="modal-header">
-          <h2>{isEditMode ? 'Sửa thông tin Giảng viên' : 'Thêm Giảng viên mới'}</h2>
-          <button className="btn-close" onClick={onClose}>×</button>
+        <div className="tm-header">
+          <h2 className="tm-title">
+            {isEditMode ? '✏️ Cập nhật Giảng viên' : '➕ Thêm Giảng viên mới'}
+          </h2>
+          <button className="tm-close" onClick={onClose}>&times;</button>
         </div>
 
         {/* BODY */}
-        <form onSubmit={handleSubmit} className="modal-body">
-          {/* Row 1: Citizen ID (only for create) + Full Name */}
-          <div className="form-row">
+        <form onSubmit={handleSubmit} className="tm-body">
+          
+          {/* Row 1: CCCD & Name */}
+          <div className="tm-row-2">
             {!isEditMode && (
-              <div className="form-group">
-                <label>
-                  Số CCCD <span className="required">*</span>
-                </label>
+              <div className="tm-group">
+                <label className="tm-label">Số CCCD <span className="required">*</span></label>
                 <input
-                  type="text"
+                  className={`tm-input ${errors.citizenId ? 'error' : ''}`}
                   name="citizenId"
                   value={formData.citizenId}
                   onChange={handleChange}
-                  placeholder="Nhập 12 số CCCD"
+                  placeholder="12 chữ số"
                   maxLength={12}
-                  className={errors.citizenId ? 'input-error' : ''}
                 />
-                {errors.citizenId && <span className="error-text">{errors.citizenId}</span>}
+                {errors.citizenId && <span className="tm-error-msg">{errors.citizenId}</span>}
               </div>
             )}
-
-            <div className="form-group" style={{ flex: isEditMode ? 1 : 0.5 }}>
-              <label>
-                Họ và tên <span className="required">*</span>
-              </label>
+            
+            <div className="tm-group" style={{gridColumn: isEditMode ? '1 / -1' : 'auto'}}>
+              <label className="tm-label">Họ và tên <span className="required">*</span></label>
               <input
-                type="text"
+                className={`tm-input ${errors.fullName ? 'error' : ''}`}
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                placeholder="Nhập họ và tên"
-                className={errors.fullName ? 'input-error' : ''}
+                placeholder="Nguyễn Văn A"
               />
-              {errors.fullName && <span className="error-text">{errors.fullName}</span>}
+              {errors.fullName && <span className="tm-error-msg">{errors.fullName}</span>}
             </div>
           </div>
 
-          {/* Row 2: Gender + Date of Birth */}
-          <div className="form-row">
-            <div className="form-group">
-              <label>
-                Giới tính <span className="required">*</span>
-              </label>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-              >
+          {/* Row 2: Gender & DOB */}
+          <div className="tm-row-2">
+            <div className="tm-group">
+              <label className="tm-label">Giới tính <span className="required">*</span></label>
+              <select className="tm-select" name="gender" value={formData.gender} onChange={handleChange}>
                 <option value="MALE">Nam</option>
                 <option value="FEMALE">Nữ</option>
                 <option value="OTHER">Khác</option>
               </select>
             </div>
-
-            <div className="form-group">
-              <label>
-                Ngày sinh <span className="required">*</span>
-              </label>
+            <div className="tm-group">
+              <label className="tm-label">Ngày sinh <span className="required">*</span></label>
               <input
                 type="date"
+                className={`tm-input ${errors.dateOfBirth ? 'error' : ''}`}
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={handleChange}
-                className={errors.dateOfBirth ? 'input-error' : ''}
               />
-              {errors.dateOfBirth && <span className="error-text">{errors.dateOfBirth}</span>}
+              {errors.dateOfBirth && <span className="tm-error-msg">{errors.dateOfBirth}</span>}
             </div>
           </div>
 
-          {/* Row 3: Email + Phone */}
-          <div className="form-row">
-            <div className="form-group">
-              <label>Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="example@email.com"
-                className={errors.email ? 'input-error' : ''}
-              />
-              {errors.email && <span className="error-text">{errors.email}</span>}
-            </div>
-
-            <div className="form-group">
-              <label>Số điện thoại</label>
-              <input
-                type="text"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="0123456789"
-                className={errors.phone ? 'input-error' : ''}
-              />
-              {errors.phone && <span className="error-text">{errors.phone}</span>}
-            </div>
-          </div>
-
-          {/* Row 4: Department + Major (Cascade) */}
-          <div className="form-row">
-            <div className="form-group">
-              <label>
-                Khoa <span className="required">*</span>
-              </label>
+          {/* Row 3: Department & Major */}
+          <div className="tm-row-2">
+            <div className="tm-group">
+              <label className="tm-label">Khoa / Đơn vị <span className="required">*</span></label>
               <select
+                className={`tm-select ${errors.departmentId ? 'error' : ''}`}
                 name="departmentId"
                 value={formData.departmentId}
                 onChange={handleChange}
-                className={errors.departmentId ? 'input-error' : ''}
               >
-                <option value="">-- Chọn khoa --</option>
-                {departments.map((dept) => (
-                  <option key={dept.departmentId} value={dept.departmentId}>
-                    {dept.departmentCode} - {dept.departmentName}
+                <option value="">-- Chọn Khoa --</option>
+                {departments.map((d) => (
+                  <option key={d.departmentId} value={d.departmentId}>
+                    {d.departmentCode} - {d.departmentName}
                   </option>
                 ))}
               </select>
-              {errors.departmentId && <span className="error-text">{errors.departmentId}</span>}
+              {errors.departmentId && <span className="tm-error-msg">{errors.departmentId}</span>}
             </div>
 
-            <div className="form-group">
-              <label>Chuyên ngành</label>
+            <div className="tm-group">
+              <label className="tm-label">Chuyên ngành chính</label>
               <select
+                className="tm-select"
                 name="majorId"
                 value={formData.majorId}
                 onChange={handleChange}
                 disabled={!formData.departmentId || loadingMajors}
               >
-                <option value="">-- Không chọn (dạy nhiều ngành) --</option>
-                {majors.map((major) => (
-                  <option key={major.majorId} value={major.majorId}>
-                    {major.majorCode} - {major.majorName}
+                <option value="">-- Không chọn (dạy đại cương) --</option>
+                {majors.map((m) => (
+                  <option key={m.majorId} value={m.majorId}>
+                    {m.majorCode} - {m.majorName}
                   </option>
                 ))}
               </select>
-              {loadingMajors && <span className="text-muted small">Đang tải...</span>}
             </div>
           </div>
 
-          {/* Row 5: Degree */}
-          <div className="form-row">
-            <div className="form-group">
-              <label>Học vị</label>
+          {/* Row 4: Degree & Email & Phone */}
+          <div className="tm-row-2" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+             <div className="tm-group">
+              <label className="tm-label">Học vị</label>
               <input
-                type="text"
+                className="tm-input"
                 name="degree"
                 value={formData.degree}
                 onChange={handleChange}
-                placeholder="VD: Thạc sĩ, Tiến sĩ"
+                placeholder="Thạc sĩ, Tiến sĩ..."
               />
             </div>
-          </div>
-
-          {/* Row 6: Address */}
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 1 }}>
-              <label>Địa chỉ</label>
-              <textarea
-                name="address"
-                value={formData.address}
+            <div className="tm-group">
+              <label className="tm-label">Email</label>
+              <input
+                type="email"
+                className={`tm-input ${errors.email ? 'error' : ''}`}
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
-                placeholder="Nhập địa chỉ"
-                rows={2}
+                placeholder="email@example.com"
               />
+              {errors.email && <span className="tm-error-msg">{errors.email}</span>}
+            </div>
+            <div className="tm-group">
+              <label className="tm-label">SĐT</label>
+              <input
+                type="tel"
+                className={`tm-input ${errors.phone ? 'error' : ''}`}
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="09xx..."
+              />
+              {errors.phone && <span className="tm-error-msg">{errors.phone}</span>}
             </div>
           </div>
 
-          {/* Row 7: Subject Selector */}
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 1 }}>
-              <SubjectSelector
+          {/* Address */}
+          <div className="tm-group">
+            <label className="tm-label">Địa chỉ liên hệ</label>
+            <textarea
+              className="tm-textarea"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              placeholder="Số nhà, đường, phường/xã..."
+              rows={2}
+            />
+          </div>
+
+          {/* Subject Selector Section */}
+          <div className="tm-group">
+             <label className="tm-label">Môn học phụ trách</label>
+             <SubjectSelector
                 departmentId={formData.departmentId ? Number(formData.departmentId) : undefined}
                 selectedSubjects={selectedSubjects}
                 onChange={setSelectedSubjects}
-              />
-              <div className="info-text">
-                Chọn các môn học mà giảng viên có thể dạy. Đánh dấu "Môn chủ đạo" cho môn chuyên môn.
-              </div>
-            </div>
+             />
+             <div className="tm-info-box">
+                <span>💡</span>
+                <span>Chọn các môn mà giảng viên có thể giảng dạy. Đánh dấu "Môn chủ đạo" cho môn chuyên môn sâu.</span>
+             </div>
           </div>
 
           {/* FOOTER */}
-          <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={onClose}>
-              Hủy
+          <div className="tm-footer">
+            <button type="button" className="tm-btn btn-cancel" onClick={onClose}>
+              Hủy bỏ
             </button>
-            <button type="submit" className="btn-submit" disabled={loading}>
-              {loading ? 'Đang xử lý...' : (isEditMode ? 'Cập nhật' : 'Thêm mới')}
+            <button type="submit" className="tm-btn btn-submit" disabled={loading}>
+              {loading ? 'Đang lưu...' : (isEditMode ? 'Lưu thay đổi' : 'Thêm mới')}
             </button>
           </div>
+
         </form>
       </div>
     </div>

@@ -7,10 +7,8 @@ import ChatList from '../../components/chat/ChatList';
 import './StudentDashboard.css';
 
 /**
- * StudentDashboard - REAL DATA FROM API + CHAT INTEGRATION
- * 
- * ✅ Load từ: GET /api/student/classes
- * ✅ Tích hợp ChatList - floating button ở góc dưới phải
+ * StudentDashboard - Namespaced (sd-)
+ * * Real data from API + Chat integration
  */
 
 interface CourseCard {
@@ -45,7 +43,6 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load REAL data from API
   useEffect(() => {
     loadDashboardData();
   }, []);
@@ -55,13 +52,9 @@ const StudentDashboard = () => {
     setError(null);
 
     try {
-      console.log('[Dashboard] Loading registered classes...');
-
-      // 1. Load registered classes (Backend đã filter ACTIVE rồi)
+      // 1. Load registered classes
       const classesData = await studentClassApi.getMyClasses();
-      console.log('[Dashboard] ✅ Received classes:', classesData);
-
-      // 2. Transform to CourseCard format
+      
       const transformedCourses: CourseCard[] = classesData.map((c: any) => ({
         id: c.classId,
         subjectName: c.subjectName || c.className,
@@ -75,14 +68,12 @@ const StudentDashboard = () => {
       }));
 
       setCourses(transformedCourses);
-      console.log('[Dashboard] ✅ Courses set:', transformedCourses.length);
 
-      // 3. Load homeworks
+      // 2. Load homeworks
       const allHomeworks: any[] = [];
       for (const cls of classesData) {
         try {
           const classHomeworks = await studentHomeworkApi.getClassHomeworks(cls.classId);
-          // ✅ Attach classId and subjectName to each homework
           const homeworksWithClass = classHomeworks.map(hw => ({
             ...hw,
             classId: cls.classId,
@@ -90,11 +81,11 @@ const StudentDashboard = () => {
           }));
           allHomeworks.push(...homeworksWithClass);
         } catch (err) {
-          console.error(`[Dashboard] Failed to load homeworks for class ${cls.classId}:`, err);
+          console.error(`Failed to load homeworks for class ${cls.classId}`, err);
         }
       }
 
-      // 4. Transform to Assignment format
+      // 3. Filter pending assignments
       const transformedAssignments: Assignment[] = allHomeworks
         .filter(hw => !hw.hasSubmitted && !hw.isOverdue)
         .slice(0, 3)
@@ -117,53 +108,27 @@ const StudentDashboard = () => {
 
       setPendingAssignments(transformedAssignments);
 
-      console.log('[Dashboard] ✅ Loaded successfully:', {
-        courses: transformedCourses.length,
-        assignments: transformedAssignments.length
-      });
-
     } catch (err: any) {
-      console.error('[Dashboard] ❌ Failed to load data:', err);
+      console.error('Failed to load dashboard data:', err);
       setError('Không thể tải dữ liệu. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
   };
   
-  // Calculate stats from REAL data
   const stats = [
-    { 
-      label: 'Tín chỉ đã đăng ký', 
-      value: courses.reduce((sum) => sum + 3, 0).toString(), // Assume 3 credits each
-      icon: '📚', 
-      color: 'blue' 
-    },
-    { 
-      label: 'Bài tập hoàn thành', 
-      value: '12/15', // Will calculate from homework API
-      icon: '✅', 
-      color: 'green' 
-    },
-    { 
-      label: 'Bài tập chưa nộp', 
-      value: pendingAssignments.length.toString(), 
-      icon: '📝', 
-      color: 'orange' 
-    },
-    { 
-      label: 'Điểm TB tích lũy', 
-      value: '3.45', // Will calculate from grades API
-      icon: '📊', 
-      color: 'purple' 
-    },
+    { label: 'Tín chỉ đã đăng ký', value: courses.reduce((sum) => sum + 3, 0).toString(), icon: '📚', color: 'sd-blue' },
+    { label: 'Bài tập hoàn thành', value: '12/15', icon: '✅', color: 'sd-green' },
+    { label: 'Bài tập chưa nộp', value: pendingAssignments.length.toString(), icon: '📝', color: 'sd-orange' },
+    { label: 'Điểm TB tích lũy', value: '3.45', icon: '📊', color: 'sd-purple' },
   ];
 
   if (loading) {
     return (
-      <div className="student-dashboard">
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Đang tải khóa học...</p>
+      <div className="sd-container">
+        <div className="sd-loading">
+          <div className="sd-spinner"></div>
+          <p>Đang tải dữ liệu...</p>
         </div>
       </div>
     );
@@ -171,155 +136,74 @@ const StudentDashboard = () => {
 
   if (error) {
     return (
-      <div className="student-dashboard">
-        <div className="error-state">
+      <div className="sd-container">
+        <div className="sd-error">
           <p>{error}</p>
-          <button onClick={loadDashboardData} className="btn-retry">
-            Thử lại
-          </button>
+          <button onClick={loadDashboardData} className="sd-btn-register">Thử lại</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="student-dashboard">
-      <div className="dashboard-header">
-        <div>
-          <h1>Khóa học của tôi</h1>
-          <p>Theo dõi tiến độ học tập và các khóa học bạn đang tham gia</p>
-        </div>
-        <div className="header-actions">
-          <select 
-            className="semester-select"
-            value={selectedSemester}
-            onChange={(e) => setSelectedSemester(e.target.value)}
-          >
-            <option value="current">Học kỳ hiện tại</option>
-            <option value="2024-1">Học kỳ 1 (2024-2025)</option>
-            <option value="2023-2">Học kỳ 2 (2023-2024)</option>
-          </select>
-          <button 
-            className="register-btn"
-            onClick={() => navigate('/student/subjects')}
-          >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Đăng ký học phần
-          </button>
+    <div className="sd-container">
+      {/* Header */}
+      <div className="sd-header">
+        <div className="sd-header-content">
+          <h1>Chào mừng trở lại, {user?.fullName || 'Sinh viên'}! 👋</h1>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="stats-grid">
-        {stats.map((stat, index) => (
-          <div key={index} className={`stat-card ${stat.color}`}>
-            <div className="stat-icon">{stat.icon}</div>
-            <div className="stat-content">
-              <p className="stat-label">{stat.label}</p>
-              <h3 className="stat-value">{stat.value}</h3>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Stats Grid */}
 
-      <div className="dashboard-content">
-        {/* Courses Grid */}
-        <div className="courses-section">
-          <div className="section-header">
+      <div className="sd-content-layout">
+        {/* Main Courses Area */}
+        <div className="sd-courses-section">
+          <div className="sd-section-header">
             <h2>Khóa học đã đăng ký ({courses.length})</h2>
-            <div className="view-options">
-              <button className="view-btn active">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
-              <button className="view-btn">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
           </div>
 
           {courses.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📚</div>
+            <div className="sd-empty">
+              <div className="sd-empty-icon">📚</div>
               <h3>Chưa đăng ký khóa học nào</h3>
               <p>Bạn chưa đăng ký khóa học nào. Hãy đăng ký để bắt đầu học!</p>
-              <button 
-                className="btn-primary"
-                onClick={() => navigate('/student/subjects')}
-              >
+              <button className="sd-btn-register" onClick={() => navigate('/student/subjects')}>
                 Đăng ký ngay
               </button>
             </div>
           ) : (
-            <div className="courses-grid">
+            <div className="sd-courses-grid">
               {courses.map((course) => (
-                <div key={course.id} className="course-card">
-                  <div className="course-header">
-                    <div className="course-info">
+                <div key={course.id} className="sd-course-card">
+                  <div className="sd-course-header">
+                    <div className="sd-course-info">
                       <h3>{course.subjectName}</h3>
-                      <span className="course-code">{course.classCode}</span>
+                      <span className="sd-course-code">{course.classCode}</span>
                     </div>
-                    {course.grade && (
-                      <div className="course-grade">{course.grade}</div>
-                    )}
+                    {course.grade && <div className="sd-course-grade">{course.grade}</div>}
                   </div>
 
-                  <div className="course-teacher">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                  <div className="sd-course-teacher">
+                    <span className="sd-detail-icon">👨‍🏫</span>
                     <span>{course.teacherName}</span>
                   </div>
 
-                  <div className="course-details">
-                    <div className="detail-item">
-                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span>{course.schedule}</span>
-                    </div>
-                    <div className="detail-item">
-                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      <span>Phòng {course.room}</span>
-                    </div>
-                  </div>
-
-                  <div className="course-progress">
-                    <div className="progress-header">
-                      <span className="progress-label">Tiến độ học tập</span>
-                      <span className="progress-value">{course.progress}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ width: `${course.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="course-footer">
-                    <span className="next-class">
-                      Lớp tiếp theo: {course.nextClassDate}
-                    </span>
-                    <div className="course-actions">
+                  
+                  <div className="sd-course-footer">
+                    
+                    <div className="sd-course-actions">
                       <button 
-                        className="action-btn secondary"
+                        className="sd-btn sd-btn-secondary"
                         onClick={() => navigate(`/student/courses/${course.id}/assignments`)}
                       >
                         Bài tập
                       </button>
                       <button 
-                        className="action-btn primary"
+                        className="sd-btn sd-btn-primary"
                         onClick={() => navigate(`/student/courses/${course.id}`)}
                       >
-                        Xem chi tiết
+                        Chi tiết
                       </button>
                     </div>
                   </div>
@@ -329,54 +213,43 @@ const StudentDashboard = () => {
           )}
         </div>
 
-        {/* Pending Assignments Sidebar */}
-        <div className="assignments-section">
-          <div className="section-header">
-            <h2>Bài tập cần làm</h2>
-            <button 
-              className="view-all-link"
-              onClick={() => navigate('/student/assignments')}
-            >
-              Xem tất cả
-            </button>
-          </div>
-
-          {pendingAssignments.length === 0 ? (
-            <div className="empty-state-small">
-              <p>✅ Không có bài tập nào cần làm</p>
+        {/* Sidebar: Assignments & Schedule */}
+        <div className="sd-sidebar">
+          <div className="sd-assignments-panel">
+            <div className="sd-section-header">
+              <h2>Bài tập cần làm</h2>
             </div>
-          ) : (
-            <div className="assignments-list">
-              {pendingAssignments.map(assignment => (
-                <div key={assignment.id} className="assignment-item">
-                  <div className="assignment-icon">📝</div>
-                  <div className="assignment-content">
-                    <h3 className="assignment-subject">{assignment.subjectName}</h3>
-                    <h4>{assignment.title}</h4>
-                    <p className="assignment-course">{assignment.course}</p>
-                    <div className="assignment-details">
-                      <span className="assignment-due">Hạn nộp: {assignment.dueDate}</span>
-                      <span className="assignment-time-left urgent">{assignment.timeLeft}</span>
+
+            {pendingAssignments.length === 0 ? (
+              <div className="sd-empty" style={{ padding: '20px' }}>
+                <p style={{ margin: 0 }}>✅ Không có bài tập nào</p>
+              </div>
+            ) : (
+              <div className="sd-assign-list">
+                {pendingAssignments.map(assignment => (
+                  <div key={assignment.id} className="sd-assign-item">
+                    <div className="sd-assign-icon">📝</div>
+                    <div className="sd-assign-content">
+                      <div className="sd-assign-subject">{assignment.subjectName}</div>
+                      <h4 className="sd-assign-title">{assignment.title}</h4>
+                      <p className="sd-assign-course">{assignment.course}</p>
+                      <div className="sd-assign-meta">
+                        <span className="sd-assign-due">Hạn: {assignment.dueDate}</span>
+                        <span className="sd-assign-urgent">{assignment.timeLeft}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          <button 
-            className="view-schedule-btn"
-            onClick={() => navigate('/student/schedule')}
-          >
-            Xem lịch học
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+            <button className="sd-btn-schedule" onClick={() => navigate('/student/schedule')}>
+              📅 Xem lịch học chi tiết
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ✅ CHAT INTEGRATION - Floating button ở góc dưới phải */}
       <ChatList 
         currentUsername={user?.username || 'student'}
         currentRole="STUDENT"

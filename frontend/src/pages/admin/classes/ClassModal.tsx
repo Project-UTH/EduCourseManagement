@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import './ClassModal.css';
+import './ClassModal.css'; // File CSS độc lập
 import { 
   DAYS_OF_WEEK, 
   TIME_SLOTS,
   getScheduleInfo
 } from '../../../utils/constants';
 
-// ==================== TYPE DEFINITIONS ====================
-
+// --- TYPES ---
 interface Subject {
   subjectId: number;
   subjectCode: string;
@@ -17,19 +16,12 @@ interface Subject {
   inpersonSessions: number;
   elearningSessions: number;
   departmentId: number;
-  departmentName?: string;
-  majorId?: number;
-  majorName?: string;
 }
 
 interface Teacher {
   teacherId: number;
   fullName: string;
   degree?: string;
-  email?: string;
-  departmentId: number;
-  departmentName?: string;
-  majorId?: number;
   majorName?: string;
 }
 
@@ -47,19 +39,10 @@ interface ClassData {
   teacherId: number;
   semesterId: number;
   maxStudents: number;
-  
-  // Fixed schedule
   dayOfWeek: string;
   timeSlot: string;
-  
-  // E-learning schedule (if any)
   elearningDayOfWeek?: string;
   elearningTimeSlot?: string;
-  
-  // Session counts (for display)
-  totalSessions?: number;
-  inPersonSessions?: number;
-  eLearningSessions?: number;
 }
 
 interface Props {
@@ -69,24 +52,18 @@ interface Props {
   classData?: ClassData;
 }
 
-// ==================== COMPONENT ====================
-
+// --- COMPONENT ---
 const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) => {
   
-  // ===== STATE =====
-  
+  // State
   const [form, setForm] = useState({
     classCode: '',
     subjectId: 0,
     teacherId: 0,
     semesterId: 0,
-    maxStudents: 50,
-    
-    // Fixed schedule (required)
+    maxStudents: 50, // Mặc định 60 cho đại học
     dayOfWeek: '',
     timeSlot: '',
-    
-    // ⭐ E-learning schedule (conditional - only if subject has e-learning)
     elearningDayOfWeek: '', 
     elearningTimeSlot: '',
   });
@@ -94,7 +71,6 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
-  
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -103,12 +79,9 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
 
   const isEdit = !!classData;
   const token = localStorage.getItem('token') || '';
-
-  // ⭐ Check if selected subject has e-learning sessions
   const hasElearning = selectedSubject && selectedSubject.elearningSessions > 0;
 
-  // ===== LOAD DATA =====
-
+  // --- EFFECTS ---
   useEffect(() => {
     if (isOpen) {
       loadData();
@@ -124,12 +97,28 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
           elearningDayOfWeek: classData.elearningDayOfWeek || '',
           elearningTimeSlot: classData.elearningTimeSlot || '',
         });
+        // Note: selectedSubject will be set when subjects are loaded and we find match, 
+        // or trigger handleSubjectChange logic manually if needed. 
+        // Here we rely on user not changing subject in edit mode mostly.
       }
     } else {
       reset();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Load teachers when subject is set (esp. in Edit mode)
+  useEffect(() => {
+    if (form.subjectId && subjects.length > 0) {
+       const subj = subjects.find(s => s.subjectId === form.subjectId);
+       if (subj) {
+         setSelectedSubject(subj);
+         loadTeachers(subj.subjectId);
+       }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.subjectId, subjects]);
+
 
   const loadData = async () => {
     try {
@@ -140,52 +129,39 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
       const subData = await subRes.json();
       setSubjects(subData.data?.content || subData.data || []);
 
-      // Load semesters - ONLY UPCOMING (for create) or current (for edit)
+      // Load semesters
       const semRes = await fetch('/api/admin/semesters?page=0&size=100', { headers });
       const semData = await semRes.json();
       const semList = semData.data?.content || semData.data || [];
       
       if (isEdit) {
-        // Edit: Show current semester + UPCOMING
-        setSemesters(semList.filter((s: Semester) => 
-          s.semesterId === classData?.semesterId || s.status === 'UPCOMING'
-        ));
+        setSemesters(semList);
       } else {
         // Create: Only UPCOMING
         setSemesters(semList.filter((s: Semester) => s.status === 'UPCOMING'));
       }
 
     } catch (err) {
-      console.error('Load failed:', err);
-      alert('❌ Không thể tải dữ liệu!');
+      console.error(err);
+      alert('❌ Lỗi kết nối hệ thống');
     }
   };
 
   const loadTeachers = async (subjectId: number) => {
     setLoadingTeachers(true);
-    setTeachers([]);
-    
     try {
       const res = await fetch(`/api/admin/subjects/${subjectId}/teachers`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
       if (res.ok) {
         const data = await res.json();
         setTeachers(data.data || []);
-      } else {
-        alert('❌ Không thể tải giảng viên!');
       }
-    } catch (err) {
-      console.error('Load teachers failed:', err);
-      alert('❌ Lỗi khi tải giảng viên!');
-    } finally {
-      setLoadingTeachers(false);
-    }
+    } catch (err) { console.error(err); } 
+    finally { setLoadingTeachers(false); }
   };
 
-  // ===== HANDLERS =====
-
+  // --- HANDLERS ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     const numFields = ['subjectId', 'teacherId', 'semesterId', 'maxStudents'];
@@ -195,85 +171,46 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
       [name]: numFields.includes(name) ? Number(value) : value
     }));
 
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  const handleSubjectChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const subjectId = Number(e.target.value);
-    
     setForm(prev => ({ 
       ...prev, 
       subjectId, 
       teacherId: 0,
-      // Reset e-learning schedule when subject changes
       elearningDayOfWeek: '',
       elearningTimeSlot: ''
     }));
     
     if (subjectId) {
-      // Load subject details
-      try {
-        const res = await fetch(`/api/admin/subjects/${subjectId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          const subject: Subject = data.data;
-          setSelectedSubject(subject);
-          
-          // ⭐ Show info about what backend will do
-          const scheduleInfo = getScheduleInfo(
-            subject.inpersonSessions, 
-            subject.elearningSessions
-          );
-          
-          if (scheduleInfo.info) {
-            console.log('📅 Schedule info:', scheduleInfo.info);
-          }
-        }
-      } catch (err) {
-        console.error('Load subject details failed:', err);
-      }
-      
-      // Load teachers for this subject
+      const subj = subjects.find(s => s.subjectId === subjectId);
+      setSelectedSubject(subj || null);
       loadTeachers(subjectId);
     } else {
       setSelectedSubject(null);
       setTeachers([]);
-    }
-
-    if (errors.subjectId) {
-      setErrors(prev => ({ ...prev, subjectId: '' }));
     }
   };
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
 
-    // Basic validation
-    if (!form.classCode.trim()) errs.classCode = 'Mã lớp không được trống';
-    if (form.classCode.length > 20) errs.classCode = 'Mã lớp tối đa 20 ký tự';
+    if (!form.classCode.trim()) errs.classCode = 'Mã lớp bắt buộc';
     if (!form.subjectId) errs.subjectId = 'Chọn môn học';
     if (!form.teacherId) errs.teacherId = 'Chọn giảng viên';
     if (!form.semesterId) errs.semesterId = 'Chọn học kỳ';
-    if (form.maxStudents < 1) errs.maxStudents = 'Sĩ số phải > 0';
-    if (form.maxStudents > 200) errs.maxStudents = 'Sĩ số tối đa 200';
+    if (form.maxStudents < 1 || form.maxStudents > 200) errs.maxStudents = 'Sĩ số 1-200';
     
-    // Fixed schedule validation
-    if (!form.dayOfWeek) errs.dayOfWeek = 'Chọn thứ (lịch cố định)';
-    if (!form.timeSlot) errs.timeSlot = 'Chọn ca học (lịch cố định)';
+    // Fixed schedule
+    if (!form.dayOfWeek) errs.dayOfWeek = 'Chọn thứ';
+    if (!form.timeSlot) errs.timeSlot = 'Chọn ca';
 
-    // ⭐ E-learning schedule validation (only if subject has e-learning)
+    // E-learning schedule
     if (hasElearning) {
-      if (!form.elearningDayOfWeek) {
-        errs.elearningDayOfWeek = 'Chọn thứ (E-learning)';
-      }
-      if (!form.elearningTimeSlot) {
-        errs.elearningTimeSlot = 'Chọn ca học (E-learning)';
-      }
+      if (!form.elearningDayOfWeek) errs.elearningDayOfWeek = 'Chọn thứ online';
+      if (!form.elearningTimeSlot) errs.elearningTimeSlot = 'Chọn ca online';
     }
 
     setErrors(errs);
@@ -282,36 +219,28 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validate()) {
-      return;
-    }
+    if (!validate()) return;
 
     setLoading(true);
-
     try {
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
 
-      // ⭐ REQUEST DATA - Include e-learning schedule if has e-learning
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const requestData: any = {
         dayOfWeek: form.dayOfWeek,
         timeSlot: form.timeSlot,
       };
 
-      // ⭐ Add e-learning schedule if subject has e-learning sessions
       if (hasElearning) {
         requestData.elearningDayOfWeek = form.elearningDayOfWeek;
         requestData.elearningTimeSlot = form.elearningTimeSlot;
       }
 
       let res;
-
       if (isEdit) {
-        // UPDATE
         res = await fetch(`/api/admin/classes/${classData.classId}`, {
           method: 'PUT',
           headers,
@@ -322,7 +251,6 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
           })
         });
       } else {
-        // CREATE
         res = await fetch('/api/admin/classes', {
           method: 'POST',
           headers,
@@ -339,25 +267,15 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
 
       if (res.ok) {
         const result = await res.json();
-        const responseData = result.data;
-        
-        alert(
-          isEdit 
-            ? '✅ Cập nhật thành công!' 
-            : `✅ Tạo lớp thành công!\n\n` +
-              `🏠 Phòng: ${responseData.fixedRoom || 'Đã gán'}\n` +
-              `📅 Đã tạo ${responseData.totalSessionsGenerated || 0} buổi học\n` +
-              `${hasElearning ? `💻 Bao gồm ${selectedSubject?.elearningSessions} buổi E-learning` : ''}`
-        );
+        alert(isEdit ? '✅ Cập nhật thành công!' : `✅ Tạo lớp thành công!\nPhòng: ${result.data.fixedRoom || 'Tự động gán'}`);
         onSuccess();
         onClose();
       } else {
         const err = await res.json();
-        throw new Error(err.message || 'Failed');
+        alert(`❌ ${err.message}`);
       }
     } catch (err) {
-      console.error('Submit failed:', err);
-      alert(`❌ ${err instanceof Error ? err.message : 'Có lỗi xảy ra'}`);
+      alert('❌ Lỗi hệ thống');
     } finally {
       setLoading(false);
     }
@@ -365,15 +283,8 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
 
   const reset = () => {
     setForm({
-      classCode: '',
-      subjectId: 0,
-      teacherId: 0,
-      semesterId: 0,
-      maxStudents: 50,
-      dayOfWeek: '',
-      timeSlot: '',
-      elearningDayOfWeek: '',
-      elearningTimeSlot: '',
+      classCode: '', subjectId: 0, teacherId: 0, semesterId: 0, maxStudents: 60,
+      dayOfWeek: '', timeSlot: '', elearningDayOfWeek: '', elearningTimeSlot: '',
     });
     setErrors({});
     setTeachers([]);
@@ -382,317 +293,208 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
 
   if (!isOpen) return null;
 
-  // Get schedule info for display
-  const scheduleInfo = selectedSubject 
-    ? getScheduleInfo(selectedSubject.inpersonSessions, selectedSubject.elearningSessions)
-    : null;
-
-  // ===== RENDER =====
-
+  // --- RENDER ---
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+    <div className="class-modal-wrapper cm-overlay" onClick={onClose}>
+      <div className="cm-modal" onClick={e => e.stopPropagation()}>
         
         {/* HEADER */}
-        <div className="modal-header">
-          <h2>{isEdit ? '✏️ Sửa lớp học' : '➕ Tạo lớp học'}</h2>
-          <button className="btn-close" onClick={onClose}>×</button>
+        <div className="cm-header">
+          <h2 className="cm-title">
+            {isEdit ? '✏️ Chỉnh sửa Lớp học phần' : '➕ Mở Lớp học phần mới'}
+          </h2>
+          <button className="cm-close" onClick={onClose}>&times;</button>
         </div>
 
         {/* BODY */}
-        <form onSubmit={submit} className="modal-body">
+        <form onSubmit={submit} className="cm-body">
           
-          {/* INFO */}
-          <div className="info-box info-box-primary">
-            <strong>🎯 Backend tự động xử lý:</strong>
+          {/* INFO BOX */}
+          <div className="cm-info-main">
+            <strong>🚀 Quy trình tự động:</strong>
             <ul>
-              <li>✅ <strong>Gán phòng học</strong> (4-tier fallback strategy)</li>
-              <li>✅ <strong>Tạo 10 buổi cố định</strong> (Thứ + Ca bạn chọn)</li>
-              <li>✅ <strong>Tạo buổi bổ sung</strong> (PENDING - lên lịch khi kích hoạt HK)</li>
-              <li>✅ <strong>Tạo buổi E-learning</strong> (nếu có - ONLINE room)</li>
+              <li>Hệ thống tự động gán phòng học phù hợp (theo sức chứa).</li>
+              <li>Lịch học (10-15 tuần) sẽ được tạo tự động ngay khi lưu.</li>
+              <li>Nếu có E-learning, lịch online sẽ được tạo song song.</li>
             </ul>
           </div>
 
-          {/* CLASS CODE */}
-          <div className="form-group">
-            <label>Mã lớp <span className="required">*</span></label>
-            <input
-              name="classCode"
-              value={form.classCode}
-              onChange={handleChange}
-              placeholder="VD: SE301-01"
-              disabled={isEdit}
-            />
-            {errors.classCode && <span className="error-text">{errors.classCode}</span>}
-            {isEdit && <span className="form-hint">⚠️ Mã lớp không thể sửa</span>}
-          </div>
-
-          {/* SUBJECT */}
-          <div className="form-group">
-            <label>Môn học <span className="required">*</span></label>
-            <select
-              name="subjectId"
-              value={form.subjectId || ''}
-              onChange={handleSubjectChange}
-              disabled={isEdit}
-            >
-              <option value="">-- Chọn môn học --</option>
-              {subjects.map(s => (
-                <option key={s.subjectId} value={s.subjectId}>
-                  {s.subjectCode} - {s.subjectName} ({s.credits} TC)
-                </option>
-              ))}
-            </select>
-            {errors.subjectId && <span className="error-text">{errors.subjectId}</span>}
-            {isEdit && <span className="form-hint">⚠️ Môn học không thể sửa</span>}
+          {/* ROW 1: CODE & MAX STUDENTS */}
+          <div className="cm-row-2">
+            <div className="cm-group">
+              <label className="cm-label">Mã lớp <span className="required">*</span></label>
+              <input
+                className="cm-input"
+                name="classCode"
+                value={form.classCode}
+                onChange={handleChange}
+                placeholder="VD: INT301-01"
+                disabled={isEdit}
+              />
+              {errors.classCode && <span className="cm-error">{errors.classCode}</span>}
+            </div>
             
-            {/* ⭐ SUBJECT INFO BOX */}
-            {selectedSubject && scheduleInfo && (
-              <div className="subject-info-box">
-                <div className="subject-info-title">
-                  📚 Thông tin môn học:
-                </div>
-                
-                <div className="subject-info-row">
-                  <span className="label">Tổng buổi:</span>
-                  <span className="value">{selectedSubject.totalSessions} buổi</span>
-                </div>
-                
-                <div className="subject-info-row">
-                  <span className="label">Trực tiếp:</span>
-                  <span className="value value-tt">{selectedSubject.inpersonSessions} buổi</span>
-                </div>
-                
-                <div className="subject-info-row">
-                  <span className="label">E-learning:</span>
-                  <span className="value value-el">{selectedSubject.elearningSessions} buổi</span>
-                </div>
-                
-                {/* ⭐ SCHEDULE BREAKDOWN */}
-                <div className="schedule-breakdown">
-                  <div className="breakdown-title">🎯 Backend sẽ tự động tạo:</div>
-                  <div className="breakdown-item">
-                    <span className="breakdown-icon">📌</span>
-                    <span className="breakdown-text">
-                      <strong>{scheduleInfo.fixedCount} buổi cố định</strong> 
-                      {' '}(Thứ + Ca bạn chọn)
-                    </span>
-                  </div>
-                  
-                  {scheduleInfo.hasExtra && (
-                    <div className="breakdown-item">
-                      <span className="breakdown-icon">📅</span>
-                      <span className="breakdown-text">
-                        <strong>{scheduleInfo.extraCount} buổi bổ sung</strong>
-                        {' '}(⏳ PENDING - lên lịch khi kích hoạt HK)
-                      </span>
-                    </div>
-                  )}
-                  
-                  {scheduleInfo.hasElearning && (
-                    <div className="breakdown-item">
-                      <span className="breakdown-icon">💻</span>
-                      <span className="breakdown-text">
-                        <strong>{selectedSubject.elearningSessions} buổi E-learning</strong>
-                        {' '}(ONLINE - không kiểm tra xung đột)
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            <div className="cm-group">
+              <label className="cm-label">Sĩ số tối đa <span className="required">*</span></label>
+              <input
+                type="number"
+                className="cm-input"
+                name="maxStudents"
+                value={form.maxStudents}
+                onChange={handleChange}
+                min="1" max="200"
+              />
+              {errors.maxStudents && <span className="cm-error">{errors.maxStudents}</span>}
+            </div>
           </div>
 
-          {/* TEACHER */}
-          <div className="form-group">
-            <label>Giảng viên <span className="required">*</span></label>
+          {/* ROW 2: SEMESTER & SUBJECT */}
+          <div className="cm-row-2">
+            <div className="cm-group">
+              <label className="cm-label">Học kỳ <span className="required">*</span></label>
+              <select
+                className="cm-select"
+                name="semesterId"
+                value={form.semesterId || ''}
+                onChange={handleChange}
+                disabled={isEdit}
+              >
+                <option value="">-- Chọn học kỳ --</option>
+                {semesters.map(s => (
+                  <option key={s.semesterId} value={s.semesterId}>
+                    {s.semesterCode} - {s.semesterName}
+                  </option>
+                ))}
+              </select>
+              {errors.semesterId && <span className="cm-error">{errors.semesterId}</span>}
+            </div>
+
+            <div className="cm-group">
+              <label className="cm-label">Môn học <span className="required">*</span></label>
+              <select
+                className="cm-select"
+                name="subjectId"
+                value={form.subjectId || ''}
+                onChange={handleSubjectChange}
+                disabled={isEdit}
+              >
+                <option value="">-- Chọn môn học --</option>
+                {subjects.map(s => (
+                  <option key={s.subjectId} value={s.subjectId}>
+                    {s.subjectCode} - {s.subjectName}
+                  </option>
+                ))}
+              </select>
+              {errors.subjectId && <span className="cm-error">{errors.subjectId}</span>}
+              
+              {/* SUBJECT DETAILS */}
+              {selectedSubject && (
+                <div className="cm-info-subject">
+                  <div className="subject-stat-row">
+                    <span>📚 Tín chỉ:</span> <strong>{selectedSubject.credits}</strong>
+                  </div>
+                  <div className="subject-stat-row">
+                    <span>🏫 Trực tiếp:</span> <strong>{selectedSubject.inpersonSessions} buổi</strong>
+                  </div>
+                  <div className="subject-stat-row">
+                    <span>💻 E-learning:</span> <strong>{selectedSubject.elearningSessions} buổi</strong>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ROW 3: TEACHER */}
+          <div className="cm-group">
+            <label className="cm-label">Giảng viên <span className="required">*</span></label>
             <select
+              className="cm-select"
               name="teacherId"
               value={form.teacherId || ''}
               onChange={handleChange}
               disabled={!form.subjectId || loadingTeachers}
             >
               <option value="">
-                {!form.subjectId ? '-- Chọn môn trước --' :
-                 loadingTeachers ? '-- Đang tải... --' :
-                 '-- Chọn giảng viên --'}
+                {loadingTeachers ? 'Đang tải danh sách...' : '-- Chọn giảng viên --'}
               </option>
               {teachers.map(t => (
                 <option key={t.teacherId} value={t.teacherId}>
-                  {t.degree && `${t.degree} `}{t.fullName}
-                  {t.majorName && ` (${t.majorName})`}
+                  {t.fullName} {t.degree ? `(${t.degree})` : ''} - {t.majorName}
                 </option>
               ))}
             </select>
-            {errors.teacherId && <span className="error-text">{errors.teacherId}</span>}
-            
-            {!form.subjectId && (
-              <span className="form-hint">💡 Chọn môn học trước</span>
-            )}
-            
-            {form.subjectId && !loadingTeachers && teachers.length === 0 && (
-              <span className="form-hint" style={{color: '#ef4444'}}>
-                ⚠️ Chưa có GV được phân công
-              </span>
-            )}
-            
-            {form.subjectId && !loadingTeachers && teachers.length > 0 && (
-              <span className="form-hint" style={{color: '#16a34a'}}>
-                ✅ {teachers.length} GV có thể dạy
-              </span>
-            )}
+            {errors.teacherId && <span className="cm-error">{errors.teacherId}</span>}
+            {!form.subjectId && <span className="cm-hint">Vui lòng chọn môn học trước</span>}
           </div>
 
-          {/* SEMESTER */}
-          <div className="form-group">
-            <label>Học kỳ <span className="required">*</span></label>
-            <select
-              name="semesterId"
-              value={form.semesterId || ''}
-              onChange={handleChange}
-              disabled={isEdit}
-            >
-              <option value="">-- Chọn học kỳ --</option>
-              {semesters.map(s => (
-                <option key={s.semesterId} value={s.semesterId}>
-                  {s.semesterCode} - {s.semesterName} ({s.status})
-                </option>
-              ))}
-            </select>
-            {errors.semesterId && <span className="error-text">{errors.semesterId}</span>}
-            {isEdit && <span className="form-hint">⚠️ Học kỳ không thể sửa</span>}
-            {!isEdit && semesters.length === 0 && (
-              <span className="form-hint" style={{color: '#ef4444'}}>
-                ⚠️ Không có học kỳ UPCOMING. Vui lòng tạo học kỳ mới!
-              </span>
-            )}
-          </div>
+          <hr style={{border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0'}} />
 
-          {/* MAX STUDENTS */}
-          <div className="form-group">
-            <label>Sĩ số tối đa <span className="required">*</span></label>
-            <input
-              type="number"
-              name="maxStudents"
-              value={form.maxStudents}
-              onChange={handleChange}
-              min="1"
-              max="200"
-            />
-            {errors.maxStudents && <span className="error-text">{errors.maxStudents}</span>}
-            <span className="form-hint">💡 Số SV đăng ký tự động cập nhật</span>
-          </div>
-
-          {/* ⭐ FIXED SCHEDULE - SIMPLE (NO ROOM!) */}
-          <div className="schedule-section schedule-fixed">
-            <h3>📅 Lịch học cố định</h3>
-            <p className="schedule-description">
-              Chỉ cần chọn <strong>Thứ</strong> và <strong>Ca học</strong>. 
-              Backend sẽ tự động gán phòng học phù hợp.
-            </p>
-
-            <div className="form-row">
-              {/* DAY */}
-              <div className="form-group">
-                <label>Thứ <span className="required">*</span></label>
-                <select name="dayOfWeek" value={form.dayOfWeek} onChange={handleChange}>
+          {/* SCHEDULE SECTION 1: FIXED */}
+          <div className="cm-schedule-box">
+            <div className="cm-box-title title-fixed">
+              📅 Lịch học Cố định (Trực tiếp)
+            </div>
+            <div className="cm-schedule-grid">
+              <div className="cm-group" style={{marginBottom:0}}>
+                <label className="cm-label">Thứ</label>
+                <select className="cm-select" name="dayOfWeek" value={form.dayOfWeek} onChange={handleChange}>
                   <option value="">-- Chọn --</option>
-                  {DAYS_OF_WEEK.map(d => (
-                    <option key={d.value} value={d.value}>{d.label}</option>
-                  ))}
+                  {DAYS_OF_WEEK.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                 </select>
-                {errors.dayOfWeek && <span className="error-text">{errors.dayOfWeek}</span>}
+                {errors.dayOfWeek && <span className="cm-error">{errors.dayOfWeek}</span>}
               </div>
-
-              {/* SLOT */}
-              <div className="form-group">
-                <label>Ca học <span className="required">*</span></label>
-                <select name="timeSlot" value={form.timeSlot} onChange={handleChange}>
+              <div className="cm-group" style={{marginBottom:0}}>
+                <label className="cm-label">Ca học</label>
+                <select className="cm-select" name="timeSlot" value={form.timeSlot} onChange={handleChange}>
                   <option value="">-- Chọn --</option>
-                  {TIME_SLOTS.map(s => (
-                    <option key={s.value} value={s.value}>
-                      {s.label} ({s.time})
-                    </option>
-                  ))}
+                  {TIME_SLOTS.map(s => <option key={s.value} value={s.value}>{s.label} ({s.time})</option>)}
                 </select>
-                {errors.timeSlot && <span className="error-text">{errors.timeSlot}</span>}
+                {errors.timeSlot && <span className="cm-error">{errors.timeSlot}</span>}
               </div>
             </div>
-            
-            <div className="form-hint form-hint-success">
-              🏠 <strong>Phòng học sẽ được gán tự động</strong> (4-tier fallback strategy)
+            <div className="cm-hint" style={{marginTop:'12px', color:'#16a34a'}}>
+              ✅ Phòng học sẽ được gán tự động dựa trên sức chứa.
             </div>
           </div>
 
-          {/* ⭐ E-LEARNING SCHEDULE (Show only if has e-learning) */}
+          {/* SCHEDULE SECTION 2: E-LEARNING (CONDITIONAL) */}
           {hasElearning && (
-            <div className="schedule-section schedule-elearning">
-              <h3>💻 Lịch E-learning</h3>
-              <p className="schedule-description">
-                Môn học có <strong>{selectedSubject?.elearningSessions} buổi E-learning</strong>. 
-                Vui lòng chọn thứ và ca để student biết khi nào học online.
-              </p>
-
-              <div className="info-box info-box-info">
-                ℹ️ <strong>Lưu ý:</strong> E-learning KHÔNG kiểm tra xung đột với các lớp khác 
-                (học online, không cần phòng vật lý). Nhiều lớp có thể cùng giờ E-learning.
+            <div className="cm-schedule-box elearning">
+              <div className="cm-box-title title-elearning">
+                💻 Lịch E-learning ({selectedSubject?.elearningSessions} buổi)
               </div>
-
-              <div className="form-row">
-                {/* E-LEARNING DAY */}
-                <div className="form-group">
-                  <label>Thứ (E-learning) <span className="required">*</span></label>
-                  <select 
-                    name="elearningDayOfWeek" 
-                    value={form.elearningDayOfWeek} 
-                    onChange={handleChange}
-                  >
+              <div className="cm-schedule-grid">
+                <div className="cm-group" style={{marginBottom:0}}>
+                  <label className="cm-label">Thứ (Online)</label>
+                  <select className="cm-select" name="elearningDayOfWeek" value={form.elearningDayOfWeek} onChange={handleChange}>
                     <option value="">-- Chọn --</option>
-                    {DAYS_OF_WEEK.map(d => (
-                      <option key={d.value} value={d.value}>{d.label}</option>
-                    ))}
+                    {DAYS_OF_WEEK.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                   </select>
-                  {errors.elearningDayOfWeek && (
-                    <span className="error-text">{errors.elearningDayOfWeek}</span>
-                  )}
+                  {errors.elearningDayOfWeek && <span className="cm-error">{errors.elearningDayOfWeek}</span>}
                 </div>
-
-                {/* E-LEARNING SLOT */}
-                <div className="form-group">
-                  <label>Ca học (E-learning) <span className="required">*</span></label>
-                  <select 
-                    name="elearningTimeSlot" 
-                    value={form.elearningTimeSlot} 
-                    onChange={handleChange}
-                  >
+                <div className="cm-group" style={{marginBottom:0}}>
+                  <label className="cm-label">Ca học (Online)</label>
+                  <select className="cm-select" name="elearningTimeSlot" value={form.elearningTimeSlot} onChange={handleChange}>
                     <option value="">-- Chọn --</option>
-                    {TIME_SLOTS.map(s => (
-                      <option key={s.value} value={s.value}>
-                        {s.label} ({s.time})
-                      </option>
-                    ))}
+                    {TIME_SLOTS.map(s => <option key={s.value} value={s.value}>{s.label} ({s.time})</option>)}
                   </select>
-                  {errors.elearningTimeSlot && (
-                    <span className="error-text">{errors.elearningTimeSlot}</span>
-                  )}
+                  {errors.elearningTimeSlot && <span className="cm-error">{errors.elearningTimeSlot}</span>}
                 </div>
               </div>
-
-              <div className="form-hint form-hint-success">
-                🌐 <strong>Phòng ONLINE</strong> sẽ được gán tự động (không xung đột)
+              <div className="cm-hint" style={{marginTop:'12px', color:'#b45309'}}>
+                🌐 Không kiểm tra trùng lịch phòng học (Room ONLINE).
               </div>
             </div>
           )}
 
           {/* FOOTER */}
-          <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={onClose} disabled={loading}>
-              ❌ Hủy
-            </button>
-            <button type="submit" className="btn-submit" disabled={loading || loadingTeachers}>
-              {loading ? '⏳ Đang xử lý...' : isEdit ? '💾 Cập nhật' : '➕ Tạo lớp'}
+          <div className="cm-footer">
+            <button type="button" className="cm-btn btn-cancel" onClick={onClose}>Hủy bỏ</button>
+            <button type="submit" className="cm-btn btn-submit" disabled={loading}>
+              {loading ? 'Đang xử lý...' : isEdit ? 'Lưu thay đổi' : 'Tạo lớp mới'}
             </button>
           </div>
+
         </form>
       </div>
     </div>

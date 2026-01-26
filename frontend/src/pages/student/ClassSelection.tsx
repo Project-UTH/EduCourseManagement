@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import apiClient from '../../services/api/apiClient';
 import registrationApi from '../../services/api/registrationApi';
-import './ClassSelection.css';
+import './ClassSelection.css'; // File CSS đã cập nhật
 
 interface Subject {
   subjectId: number;
@@ -41,7 +41,6 @@ const ClassSelection: React.FC = () => {
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   
-  // Lấy semesterId từ URL query params
   const searchParams = new URLSearchParams(location.search);
   const semesterId = searchParams.get('semesterId');
 
@@ -49,45 +48,32 @@ const ClassSelection: React.FC = () => {
     if (subjectId) {
       fetchData(Number(subjectId));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjectId, semesterId]);
 
   const fetchData = async (id: number) => {
     setLoading(true);
     try {
-      console.log('🔍 Fetching subject ID:', id);
-      console.log('📅 Semester filter:', semesterId);
-      
-      // Fetch subject
       const subjectRes = await apiClient.get(`/api/student/subjects/${id}`);
-      console.log('📘 Subject response:', subjectRes);
-      
       if (subjectRes.data && subjectRes.data.success) {
         setSubject(subjectRes.data.data);
       }
 
-      // Fetch available classes
       const classUrl = semesterId 
         ? `/api/student/classes/by-subject/${id}?semesterId=${semesterId}`
         : `/api/student/classes/by-subject/${id}`;
       
-      console.log('🔗 Class URL:', classUrl);
-      
       const classRes = await apiClient.get(classUrl);
-      console.log('📚 Classes response:', classRes);
-      
       if (classRes.data && classRes.data.success) {
-        const classList = classRes.data.data || [];
-        console.log(`✅ Received ${classList.length} classes`);
-        setClasses(classList);
+        setClasses(classRes.data.data || []);
       }
     } catch (error: any) {
-      console.error('❌ Error:', error);
-      
+      console.error(error);
       if (error.response?.status === 401) {
-        alert('❌ Phiên đăng nhập hết hạn! Vui lòng đăng nhập lại.');
+        alert('Phiên đăng nhập hết hạn!');
         navigate('/login');
       } else {
-        alert('❌ Không thể tải thông tin!');
+        alert('Không thể tải thông tin!');
       }
     } finally {
       setLoading(false);
@@ -104,21 +90,18 @@ const ClassSelection: React.FC = () => {
     if (!selectedClass) return;
 
     if (!window.confirm(
-      `Bạn có chắc muốn đăng ký lớp "${selectedClass.classCode}"?\n\n` +
-      `Môn: ${subject?.subjectName}\n` +
-      `GV: ${selectedClass.teacherName}\n` +
-      `Lịch: ${selectedClass.dayOfWeekDisplay}, ${selectedClass.timeSlotDisplay}`
+      `Xác nhận đăng ký lớp "${selectedClass.classCode}"?\n\n` +
+      `📌 Môn: ${subject?.subjectName}\n` +
+      `👨‍🏫 GV: ${selectedClass.teacherName}\n` +
+      `📅 Lịch: ${selectedClass.dayOfWeekDisplay}, ${selectedClass.timeSlotDisplay}`
     )) {
       return;
     }
 
     try {
       const response = await registrationApi.registerForClass(selectedClassId);
-      
       if (response.data.success) {
         alert('✅ Đăng ký thành công!');
-        
-        // ✅ Navigate to MyRegistrations page
         navigate('/student/registrations');
       }
     } catch (error: any) {
@@ -133,15 +116,21 @@ const ClassSelection: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Đang tải danh sách lớp học...</p>
+      <div className="class-selection-page">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Đang tải dữ liệu lớp học...</p>
+        </div>
       </div>
     );
   }
 
   if (!subject) {
-    return <div className="error-container">Không tìm thấy môn học!</div>;
+    return (
+      <div className="class-selection-page">
+        <div className="error-container">❌ Không tìm thấy thông tin môn học!</div>
+      </div>
+    );
   }
 
   return (
@@ -149,7 +138,7 @@ const ClassSelection: React.FC = () => {
       {/* Header */}
       <div className="page-header">
         <button onClick={handleBack} className="btn-back">
-          ← Quay lại
+          <span>←</span> Quay lại danh sách môn
         </button>
         <div className="subject-info">
           <h1>{subject.subjectName}</h1>
@@ -167,10 +156,10 @@ const ClassSelection: React.FC = () => {
       {/* Classes Section */}
       <div className="classes-section">
         <div className="section-title">
-          <h2>📚 Lớp học phần đang chờ đăng ký</h2>
+          <h2>📚 Danh sách Lớp học phần</h2>
           {semesterId && (
-            <div className="semester-info">
-              <span>🎓 Học kỳ được chọn</span>
+            <div className="semester-info" style={{fontSize: '13px', opacity: 0.9}}>
+              🎓 Học kỳ hiện tại
             </div>
           )}
         </div>
@@ -181,17 +170,17 @@ const ClassSelection: React.FC = () => {
               <tr>
                 <th style={{ width: '50px' }}></th>
                 <th style={{ width: '60px' }}>STT</th>
-                <th style={{ width: '250px' }}>Tên lớp học phần</th>
-                <th style={{ width: '150px' }}>Mã lớp học phần</th>
-                <th style={{ width: '100px' }}>Sĩ số</th>
+                <th style={{ width: '300px' }}>Lớp học phần</th>
+                <th style={{ width: '150px' }}>Mã lớp</th>
+                <th style={{ width: '100px', textAlign:'center' }}>Sĩ số</th>
               </tr>
             </thead>
             <tbody>
               {classes.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="no-data">
-                    <span className="no-data-icon">📚</span>
-                    <p>Chưa có lớp học nào!</p>
+                    <span className="no-data-icon">📭</span>
+                    <p>Chưa có lớp học nào được mở cho môn này.</p>
                   </td>
                 </tr>
               ) : (
@@ -199,6 +188,8 @@ const ClassSelection: React.FC = () => {
                   <tr
                     key={cls.classId}
                     className={selectedClassId === cls.classId ? 'selected-row' : ''}
+                    onClick={() => cls.canRegister && setSelectedClassId(cls.classId)}
+                    style={{cursor: cls.canRegister ? 'pointer' : 'default'}}
                   >
                     <td>
                       <input
@@ -207,6 +198,7 @@ const ClassSelection: React.FC = () => {
                         checked={selectedClassId === cls.classId}
                         onChange={() => setSelectedClassId(cls.classId)}
                         disabled={!cls.canRegister}
+                        onClick={(e) => e.stopPropagation()}
                       />
                     </td>
                     <td>{index + 1}</td>
@@ -215,11 +207,11 @@ const ClassSelection: React.FC = () => {
                         <strong>{subject.subjectName}</strong>
                         <div className="class-status">
                           Trạng thái: <span className={`status-${cls.status.toLowerCase()}`}>
-                            {cls.status === 'OPEN' ? 'Đang chờ đăng ký' : 'Đã đầy'}
+                            {cls.status === 'OPEN' ? '🟢 Đang mở' : '🔴 Đã đầy'}
                           </span>
                         </div>
                         <div className="class-code-small">
-                          Mã lớp: {cls.classCode} | Học kỳ: {cls.semesterCode}
+                          HK: {cls.semesterCode}
                         </div>
                       </div>
                     </td>
@@ -227,7 +219,10 @@ const ClassSelection: React.FC = () => {
                       <div className="class-code-main">{cls.classCode}</div>
                     </td>
                     <td className="text-center">
-                      {cls.enrolledCount}/{cls.maxStudents}
+                      <span style={{fontWeight: 600, color: cls.enrolledCount >= cls.maxStudents ? '#dc2626' : '#16a34a'}}>
+                        {cls.enrolledCount}
+                      </span>
+                      /{cls.maxStudents}
                     </td>
                   </tr>
                 ))
@@ -238,34 +233,35 @@ const ClassSelection: React.FC = () => {
 
         {/* Class Detail */}
         <div className="class-detail-section">
-          <h3>Chi tiết lớp học phần</h3>
+          <h3>ℹ️ Chi tiết lớp đã chọn</h3>
           {selectedClassId ? (
             <div className="detail-content">
               {(() => {
                 const selectedClass = classes.find(c => c.classId === selectedClassId);
-                if (!selectedClass) return <p>Chọn lớp để xem chi tiết</p>;
+                if (!selectedClass) return null;
                 
                 return (
                   <div className="detail-grid">
                     <div className="detail-item">
-                      <label>Giảng viên:</label>
+                      <label>👨‍🏫 Giảng viên:</label>
                       <span>{selectedClass.teacherName}</span>
                     </div>
                     <div className="detail-item">
-                      <label>Lịch học:</label>
+                      <label>⏰ Lịch học:</label>
                       <span>{selectedClass.dayOfWeekDisplay}, {selectedClass.timeSlotDisplay}</span>
                     </div>
                     <div className="detail-item">
-                      <label>Phòng:</label>
+                      <label>📍 Phòng học:</label>
                       <span>{selectedClass.room}</span>
                     </div>
                     <div className="detail-item">
-                      <label>Sĩ số:</label>
-                      <span>{selectedClass.enrolledCount}/{selectedClass.maxStudents}</span>
-                    </div>
-                    <div className="detail-item">
-                      <label>Học kỳ:</label>
-                      <span>{selectedClass.semesterCode}</span>
+                      <label>📊 Sĩ số:</label>
+                      <span>
+                        {selectedClass.enrolledCount} / {selectedClass.maxStudents} 
+                        <span style={{fontSize:'12px', color:'#6b7280', marginLeft:'6px'}}>
+                          (Còn {selectedClass.availableSeats} chỗ)
+                        </span>
+                      </span>
                     </div>
                   </div>
                 );
@@ -273,15 +269,19 @@ const ClassSelection: React.FC = () => {
             </div>
           ) : (
             <div className="detail-content">
-              <p className="text-muted">Chọn lớp để xem chi tiết</p>
+              <p className="text-muted">👈 Vui lòng chọn một lớp trong bảng để xem chi tiết</p>
             </div>
           )}
         </div>
 
-        {/* Register Button */}
+        {/* Action Buttons */}
         <div className="action-buttons">
-          <button onClick={handleRegister} disabled={!selectedClassId} className="btn-register">
-            ✅ ĐĂNG KÝ
+          <button 
+            onClick={handleRegister} 
+            disabled={!selectedClassId} 
+            className="btn-register"
+          >
+            ✅ ĐĂNG KÝ HỌC PHẦN
           </button>
         </div>
       </div>

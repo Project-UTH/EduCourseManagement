@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../services/api/apiClient';
 import registrationApi, { RegistrationResponse } from '../../services/api/registrationApi';
+import { useAuthStore } from '@/store/authStore';
+// CHỈNH SỬA: Import file CSS độc lập
 import './SubjectSelection.css';
+import ChatList from '../../components/chat/ChatList';
+
 
 interface Subject {
   subjectId: number;
@@ -12,11 +16,9 @@ interface Subject {
   departmentName: string;
   departmentKnowledgeType?: string;
   majorName?: string;
-  // ✅ NEW: Prerequisites info
   prerequisites?: PrerequisiteInfo[];
 }
 
-// ✅ NEW: Prerequisite interface
 interface PrerequisiteInfo {
   subjectId: number;
   subjectCode: string;
@@ -33,7 +35,7 @@ interface Semester {
   status: string;
 }
 
-// ✅ NEW: Inline Prerequisites Badge Component
+// Inline Prerequisites Badge Component
 const PrerequisitesBadge: React.FC<{ prerequisites: PrerequisiteInfo[] }> = ({ prerequisites }) => {
   if (!prerequisites || prerequisites.length === 0) {
     return <span className="text-muted">Không</span>;
@@ -82,14 +84,13 @@ const SubjectSelection: React.FC = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
   
-  // ✅ My Registrations state
   const [myRegistrations, setMyRegistrations] = useState<RegistrationResponse[]>([]);
   const [loadingRegs, setLoadingRegs] = useState(false);
 
   useEffect(() => {
     fetchSemesters();
     fetchSubjects();
-    fetchMyRegistrations(); // ✅ Load registrations on mount
+    fetchMyRegistrations();
   }, []);
 
   useEffect(() => {
@@ -102,13 +103,11 @@ const SubjectSelection: React.FC = () => {
     try {
       console.log('🔍 Fetching semesters...');
       const response = await apiClient.get('/api/student/semesters');
-      console.log('📅 Semesters response:', response.data);
       
       if (response.data && response.data.success) {
         const sems = response.data.data || [];
         setSemesters(sems);
         
-        // Auto-select first UPCOMING semester for registration
         const upcomingSem = sems.find((s: Semester) => s.status === 'UPCOMING');
         if (upcomingSem) {
           setSelectedSemesterId(upcomingSem.semesterId);
@@ -129,20 +128,14 @@ const SubjectSelection: React.FC = () => {
   const fetchSubjects = async () => {
     setLoading(true);
     try {
-      console.log('🔍 Fetching subjects for semester:', selectedSemesterId);
-      
       const url = selectedSemesterId 
         ? `/api/student/subjects/available?semesterId=${selectedSemesterId}`
         : '/api/student/subjects/available';
       
       const response = await apiClient.get(url);
       
-      console.log('📚 Subjects response:', response.data);
-      
       if (response.data && response.data.success) {
         const subjectList = response.data.data || [];
-        console.log(`✅ Received ${subjectList.length} subjects`);
-        console.log('Sample subject with prerequisites:', subjectList[0]);
         setSubjects(subjectList);
       }
     } catch (error: any) {
@@ -153,7 +146,6 @@ const SubjectSelection: React.FC = () => {
     }
   };
 
-  // ✅ Fetch my registrations
   const fetchMyRegistrations = async () => {
     setLoadingRegs(true);
     try {
@@ -162,7 +154,6 @@ const SubjectSelection: React.FC = () => {
       if (response.data.success) {
         const allRegs = response.data.data || [];
         
-        // Filter: Only UPCOMING and ACTIVE semesters
         const filteredRegs = allRegs.filter((reg: RegistrationResponse) => {
           if (reg.status !== 'REGISTERED') return false;
           if (reg.semesterStatus) {
@@ -171,7 +162,6 @@ const SubjectSelection: React.FC = () => {
           return true;
         });
         
-        console.log(`📋 My registrations (UPCOMING/ACTIVE): ${filteredRegs.length}`);
         setMyRegistrations(filteredRegs);
       }
     } catch (error) {
@@ -181,7 +171,6 @@ const SubjectSelection: React.FC = () => {
     }
   };
 
-  // ✅ Handle drop registration
   const handleDrop = async (reg: RegistrationResponse) => {
     const canDrop = !reg.semesterStatus || reg.semesterStatus === 'UPCOMING';
     
@@ -204,7 +193,7 @@ const SubjectSelection: React.FC = () => {
       
       if (response.data.success) {
         alert('✅ Hủy đăng ký thành công!');
-        fetchMyRegistrations(); // Reload
+        fetchMyRegistrations();
       }
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || 'Hủy đăng ký thất bại!';
@@ -246,23 +235,22 @@ const SubjectSelection: React.FC = () => {
     const badge = badges[status] || { text: status, className: 'default' };
     return <span className={`semester-badge ${badge.className}`}>{badge.text}</span>;
   };
-// ✅ Filter theo keyword
-const searchFilteredSubjects = subjects.filter(subject =>
-  subject.subjectCode.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-  subject.subjectName.toLowerCase().includes(searchKeyword.toLowerCase())
-);
 
-// ✅ Lấy danh sách subjectId đã đăng ký
-const registeredSubjectIds = new Set(
-  myRegistrations
-    .filter(reg => reg.status === 'REGISTERED')
-    .map(reg => reg.subjectId)
-);
+  const searchFilteredSubjects = subjects.filter(subject =>
+    subject.subjectCode.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+    subject.subjectName.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
 
-// ✅ Loại bỏ môn đã đăng ký
-const filteredSubjects = searchFilteredSubjects.filter(subject => 
-  !registeredSubjectIds.has(subject.subjectId)
-);
+  const registeredSubjectIds = new Set(
+    myRegistrations
+      .filter(reg => reg.status === 'REGISTERED')
+      .map(reg => reg.subjectId)
+  );
+
+  const filteredSubjects = searchFilteredSubjects.filter(subject => 
+    !registeredSubjectIds.has(subject.subjectId)
+  );
+  const user = useAuthStore((state: any) => state.user);
 
   if (loading && subjects.length === 0) {
     return (
@@ -301,9 +289,7 @@ const filteredSubjects = searchFilteredSubjects.filter(subject =>
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="search-filter">
+          <div className="search-filter">
           <input
             type="text"
             placeholder="Tìm kiếm theo mã hoặc tên môn học..."
@@ -312,6 +298,9 @@ const filteredSubjects = searchFilteredSubjects.filter(subject =>
             className="search-input"
           />
         </div>
+        </div>
+
+        
       </div>
 
       {/* Subjects Table */}
@@ -377,12 +366,12 @@ const filteredSubjects = searchFilteredSubjects.filter(subject =>
                     )}
                   </td>
                   <td className="prerequisites-cell">
-  {subject.prerequisites && subject.prerequisites.length > 0 ? (
-    <PrerequisitesBadge prerequisites={subject.prerequisites} />
-  ) : (
-    <span className="text-muted">—</span>
-  )}
-</td>
+                    {subject.prerequisites && subject.prerequisites.length > 0 ? (
+                      <PrerequisitesBadge prerequisites={subject.prerequisites} />
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
                 </tr>
               ))
             )}
@@ -406,9 +395,6 @@ const filteredSubjects = searchFilteredSubjects.filter(subject =>
         <div className="my-registrations-section">
           <div className="section-header">
             <h2>📋 Lớp đã đăng ký ({myRegistrations.length})</h2>
-            <button onClick={fetchMyRegistrations} className="btn-refresh-small">
-              🔄 Làm mới
-            </button>
           </div>
 
           <div className="registrations-grid">
@@ -500,6 +486,10 @@ const filteredSubjects = searchFilteredSubjects.filter(subject =>
           </div>
         </div>
       )}
+      <ChatList 
+        currentUsername={user?.username || 'student'}
+        currentRole="STUDENT"
+      />
     </div>
   );
 };

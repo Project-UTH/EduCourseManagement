@@ -4,12 +4,7 @@ import departmentApi, {
   DepartmentCreateRequest, 
   DepartmentUpdateRequest
 } from '../../../services/api/departmentApi';
-import './DepartmentModal.css';
-
-/**
- * Department Modal (Create/Edit)
- * Phase 3 Sprint 3.1 - Fixed Version
- */
+import './DepartmentModal.css'; // File CSS độc lập
 
 interface DepartmentModalProps {
   department: Department | null;
@@ -35,7 +30,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
   const [formData, setFormData] = useState({
     departmentCode: '',
     departmentName: '',
-    knowledgeType: 'GENERAL' as 'GENERAL' | 'SPECIALIZED',
+    knowledgeType: 'SPECIALIZED' as 'GENERAL' | 'SPECIALIZED',
     description: '',
   });
 
@@ -43,9 +38,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
-  /**
-   * Initialize form data in edit mode
-   */
+  // Initialize Data
   useEffect(() => {
     if (department) {
       setFormData({
@@ -57,37 +50,34 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
     }
   }, [department]);
 
-  /**
-   * Handle input change
-   */
+  // Handlers
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     
-    // Clear error for this field
+    // Clear error
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
-  /**
-   * Validate form
-   */
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formData.departmentCode.trim()) {
-      newErrors.departmentCode = 'Mã khoa không được để trống';
+      newErrors.departmentCode = 'Mã khoa bắt buộc';
     } else if (formData.departmentCode.length > 10) {
-      newErrors.departmentCode = 'Mã khoa không quá 10 ký tự';
+      newErrors.departmentCode = 'Mã tối đa 10 ký tự';
+    } else if (!/^[A-Z0-9]+$/.test(formData.departmentCode)) {
+      newErrors.departmentCode = 'Chỉ dùng chữ in hoa và số (VD: IT, MATH)';
     }
 
     if (!formData.departmentName.trim()) {
-      newErrors.departmentName = 'Tên khoa không được để trống';
+      newErrors.departmentName = 'Tên khoa bắt buộc';
     } else if (formData.departmentName.length > 100) {
-      newErrors.departmentName = 'Tên khoa không quá 100 ký tự';
+      newErrors.departmentName = 'Tên tối đa 100 ký tự';
     }
 
     if (!formData.knowledgeType) {
@@ -95,139 +85,109 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
     }
 
     if (formData.description && formData.description.length > 500) {
-      newErrors.description = 'Mô tả không quá 500 ký tự';
+      newErrors.description = 'Mô tả tối đa 500 ký tự';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  /**
-   * Handle submit
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       setLoading(true);
-
       if (isEditMode) {
-        // ✅ FIX: Use update() method
         await departmentApi.update(
           department.departmentId,
           formData as unknown as DepartmentUpdateRequest
         );
-        alert('Cập nhật khoa thành công!');
+        alert('✅ Cập nhật khoa thành công!');
       } else {
-        // ✅ FIX: Use create() method
         await departmentApi.create(formData as unknown as DepartmentCreateRequest);
-        alert('Thêm khoa thành công!');
+        alert('✅ Thêm khoa thành công!');
       }
-
       onSuccess();
-    } catch (err) {
-      console.error('❌ [DepartmentModal] Error saving department:', err);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error('Error saving department:', err);
+      const msg = err.response?.data?.message || 'Có lỗi xảy ra';
       
-      // Handle specific errors
-      if (err && typeof err === 'object' && 'response' in err) {
-        const error = err as { response?: { status?: number; data?: { message?: string } } };
-        if (error.response?.status === 400) {
-          const errorMessage = error.response.data?.message || 'Dữ liệu không hợp lệ';
-          
-          if (errorMessage.includes('already exists')) {
-            setErrors({ departmentCode: 'Mã khoa đã tồn tại' });
-          } else {
-            alert(errorMessage);
-          }
-        } else {
-          alert('Có lỗi xảy ra. Vui lòng thử lại!');
-        }
+      if (msg.includes('already exists')) {
+        setErrors({ departmentCode: 'Mã khoa đã tồn tại' });
       } else {
-        alert('Có lỗi xảy ra. Vui lòng thử lại!');
+        alert(`❌ Lỗi: ${msg}`);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * Knowledge type options (only 2 types from backend)
-   */
   const knowledgeTypes = [
-    { value: 'GENERAL', label: 'Đại cương' },
     { value: 'SPECIALIZED', label: 'Chuyên ngành' },
+    { value: 'GENERAL', label: 'Đại cương' },
   ];
 
+  // RENDER
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        {/* Modal Header */}
-        <div className="modal-header">
-          <h2>{isEditMode ? 'Sửa Khoa' : 'Thêm Khoa Mới'}</h2>
-          <button className="btn-close" onClick={onClose}>
-            ×
-          </button>
+    <div className="department-modal-wrapper dm-overlay" onClick={onClose}>
+      <div className="dm-modal" onClick={(e) => e.stopPropagation()}>
+        
+        {/* HEADER */}
+        <div className="dm-header">
+          <h2 className="dm-title">{isEditMode ? '✏️ Sửa Khoa / Viện' : '➕ Thêm Khoa Mới'}</h2>
+          <button className="dm-close" onClick={onClose}>&times;</button>
         </div>
 
-        {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="modal-body">
-          {/* Department Code */}
-          <div className="form-group">
-            <label htmlFor="departmentCode">
-              Mã Khoa <span className="required">*</span>
-            </label>
+        {/* BODY */}
+        <form onSubmit={handleSubmit} className="dm-body">
+          
+          {/* Code */}
+          <div className="dm-group">
+            <label className="dm-label">Mã Khoa <span className="required">*</span></label>
             <input
               type="text"
-              id="departmentCode"
               name="departmentCode"
               value={formData.departmentCode}
-              onChange={handleChange}
-              placeholder="VD: IT, BUS, ENG"
-              className={errors.departmentCode ? 'error' : ''}
+              onChange={(e) => {
+                 handleChange({
+                  ...e,
+                  target: { ...e.target, value: e.target.value.toUpperCase() }
+                });
+              }}
+              placeholder="VD: IT, MATH, ENG"
+              className={`dm-input ${errors.departmentCode ? 'error' : ''}`}
               maxLength={10}
               disabled={loading || isEditMode}
             />
-            {errors.departmentCode && (
-              <span className="error-text">{errors.departmentCode}</span>
-            )}
+            {errors.departmentCode && <span className="dm-error-msg">{errors.departmentCode}</span>}
           </div>
 
-          {/* Department Name */}
-          <div className="form-group">
-            <label htmlFor="departmentName">
-              Tên Khoa <span className="required">*</span>
-            </label>
+          {/* Name */}
+          <div className="dm-group">
+            <label className="dm-label">Tên Khoa <span className="required">*</span></label>
             <input
               type="text"
-              id="departmentName"
               name="departmentName"
               value={formData.departmentName}
               onChange={handleChange}
               placeholder="VD: Công nghệ Thông tin"
-              className={errors.departmentName ? 'error' : ''}
+              className={`dm-input ${errors.departmentName ? 'error' : ''}`}
               maxLength={100}
               disabled={loading}
             />
-            {errors.departmentName && (
-              <span className="error-text">{errors.departmentName}</span>
-            )}
+            {errors.departmentName && <span className="dm-error-msg">{errors.departmentName}</span>}
           </div>
 
-          {/* Knowledge Type */}
-          <div className="form-group">
-            <label htmlFor="knowledgeType">
-              Loại Kiến thức <span className="required">*</span>
-            </label>
+          {/* Type */}
+          <div className="dm-group">
+            <label className="dm-label">Loại Kiến thức <span className="required">*</span></label>
             <select
-              id="knowledgeType"
               name="knowledgeType"
               value={formData.knowledgeType}
               onChange={handleChange}
-              className={errors.knowledgeType ? 'error' : ''}
+              className={`dm-select ${errors.knowledgeType ? 'error' : ''}`}
               disabled={loading}
             >
               {knowledgeTypes.map((type) => (
@@ -236,51 +196,45 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
                 </option>
               ))}
             </select>
-            {errors.knowledgeType && (
-              <span className="error-text">{errors.knowledgeType}</span>
-            )}
           </div>
 
           {/* Description */}
-          <div className="form-group">
-            <label htmlFor="description">Mô tả</label>
+          <div className="dm-group">
+            <label className="dm-label">Mô tả</label>
             <textarea
-              id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Nhập mô tả về khoa (tùy chọn)"
+              placeholder="Nhập mô tả chức năng, nhiệm vụ của khoa..."
               rows={4}
-              className={errors.description ? 'error' : ''}
+              className={`dm-textarea ${errors.description ? 'error' : ''}`}
               maxLength={500}
               disabled={loading}
             />
-            <div className="char-count">
-              {formData.description.length}/500 ký tự
+            <div className="dm-char-count">
+              {formData.description.length}/500
             </div>
-            {errors.description && (
-              <span className="error-text">{errors.description}</span>
-            )}
           </div>
 
-          {/* Modal Footer */}
-          <div className="modal-footer">
+          {/* FOOTER */}
+          <div className="dm-footer">
             <button
               type="button"
-              className="btn-cancel"
+              className="dm-btn btn-cancel"
               onClick={onClose}
               disabled={loading}
             >
-              Hủy
+              Hủy bỏ
             </button>
             <button
               type="submit"
-              className="btn-submit"
+              className="dm-btn btn-submit"
               disabled={loading}
             >
-              {loading ? 'Đang xử lý...' : isEditMode ? 'Cập nhật' : 'Thêm mới'}
+              {loading ? 'Đang xử lý...' : isEditMode ? 'Lưu thay đổi' : 'Thêm mới'}
             </button>
           </div>
+
         </form>
       </div>
     </div>

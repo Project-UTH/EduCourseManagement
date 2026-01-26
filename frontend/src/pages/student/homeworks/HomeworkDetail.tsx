@@ -1,32 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import studentHomeworkApi, { HomeworkDetailResponse, SubmissionFileResponse } from '../../../services/api/studentHomeworkApi';
+
+// IMPORT FILE CSS ĐỘC LẬP
 import './HomeworkDetail.css';
 
 /**
  * HomeworkDetail - MULTI-FILE SUPPORT (UPDATED)
- * - Show ALL uploaded files
- * - Click file to view details (download/delete)
- * - Add more files (NOT replace)
  */
 
 const HomeworkDetail = () => {
   const { homeworkId } = useParams<{ homeworkId: string }>();
   const navigate = useNavigate();
 
+  // ... (Phần logic giữ nguyên 100% như code của bạn)
   const [homework, setHomework] = useState<HomeworkDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [isEditing, setIsEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [textContent, setTextContent] = useState('');
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
-
-  // File detail modal
   const [selectedFileDetail, setSelectedFileDetail] = useState<SubmissionFileResponse | null>(null);
-
   const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB
 
   useEffect(() => {
@@ -36,11 +32,9 @@ const HomeworkDetail = () => {
   const loadHomeworkDetail = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const data = await studentHomeworkApi.getHomeworkDetail(Number(homeworkId));
       setHomework(data);
-      
       if (data.submission) {
         setTextContent(data.submission.submissionText || '');
       }
@@ -54,8 +48,6 @@ const HomeworkDetail = () => {
 
   const handleNewFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    
-    // Check total size (existing + new)
     const newFilesSize = files.reduce((sum, f) => sum + f.size, 0);
     const existingSize = newFiles.reduce((sum, f) => sum + f.size, 0);
     const totalSize = newFilesSize + existingSize;
@@ -64,7 +56,6 @@ const HomeworkDetail = () => {
       setSubmitError(`Tổng dung lượng vượt quá 100MB! (${(totalSize / 1024 / 1024).toFixed(2)}MB)`);
       return;
     }
-
     setNewFiles([...newFiles, ...files]);
     setSubmitError(null);
   };
@@ -75,44 +66,34 @@ const HomeworkDetail = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!textContent && newFiles.length === 0) {
       setSubmitError('Vui lòng nhập nội dung hoặc chọn file!');
       return;
     }
-
     setSubmitting(true);
     setSubmitError(null);
-
     try {
       if (isEditing) {
-        // UPDATE: Add new files (one by one)
         for (const file of newFiles) {
           await studentHomeworkApi.updateHomework(Number(homeworkId), {
             submissionText: textContent || undefined,
             file: file
           });
         }
-        console.log('[HomeworkDetail] ✅ Updated successfully');
       } else {
-        // SUBMIT: New submission (can include multiple files but API accepts one at a time)
         for (let i = 0; i < newFiles.length; i++) {
           if (i === 0) {
-            // First submit with text + file
             await studentHomeworkApi.submitHomework(Number(homeworkId), {
               submissionText: textContent || undefined,
               file: newFiles[i]
             });
           } else {
-            // Subsequent files as updates
             await studentHomeworkApi.updateHomework(Number(homeworkId), {
               file: newFiles[i]
             });
           }
         }
-        console.log('[HomeworkDetail] ✅ Submitted successfully');
       }
-      
       await loadHomeworkDetail();
       setTextContent('');
       setNewFiles([]);
@@ -150,7 +131,6 @@ const HomeworkDetail = () => {
 
   const getTimeLeft = () => {
     if (!homework) return '';
-    
     const now = new Date();
     const deadline = new Date(homework.deadline);
     const diff = deadline.getTime() - now.getTime();
@@ -159,10 +139,8 @@ const HomeworkDetail = () => {
       const days = Math.floor(Math.abs(diff) / (1000 * 60 * 60 * 24));
       return days > 0 ? `Quá hạn ${days} ngày` : `Quá hạn ${Math.floor(Math.abs(diff) / (1000 * 60 * 60))} giờ`;
     }
-    
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
     if (days > 0) return `Còn ${days} ngày ${hours} giờ`;
     if (hours > 0) return `Còn ${hours} giờ`;
     return `Còn ${Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))} phút`;
@@ -172,19 +150,11 @@ const HomeworkDetail = () => {
   const isGraded = homework?.submission?.score !== undefined && homework?.submission?.score !== null;
   const canEdit = hasSubmitted && !isGraded && !homework?.isOverdue;
 
-  // ✅ File detail modal handlers
-  const openFileDetail = (file: SubmissionFileResponse) => {
-    setSelectedFileDetail(file);
-  };
+  const openFileDetail = (file: SubmissionFileResponse) => setSelectedFileDetail(file);
+  const closeFileDetail = () => setSelectedFileDetail(null);
 
-  const closeFileDetail = () => {
-    setSelectedFileDetail(null);
-  };
-
-  // ✅ Delete specific file
   const handleDeleteFile = async (fileId: number) => {
     if (!window.confirm('Bạn có chắc muốn xóa file này?')) return;
-    
     try {
       await studentHomeworkApi.deleteSubmissionFileById(Number(homeworkId), fileId);
       closeFileDetail();
@@ -220,7 +190,7 @@ const HomeworkDetail = () => {
 
   return (
     <div className="homework-detail">
-      {/* ✅ File Detail Modal */}
+      {/* File Detail Modal */}
       {selectedFileDetail && (
         <div className="file-modal-overlay" onClick={closeFileDetail}>
           <div className="file-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -325,7 +295,7 @@ const HomeworkDetail = () => {
             </div>
           )}
 
-          {/* ✅ SUBMISSION STATUS CARD - UPDATED */}
+          {/* Submission Status Card */}
           <div className="info-card submission-status-card">
             <h3>📤 Trạng thái nộp bài</h3>
             
@@ -361,7 +331,7 @@ const HomeworkDetail = () => {
                   </div>
                 )}
 
-                {/* ✅ FILE SUBMISSIONS - SHOW ALL FILES */}
+                {/* File Submissions */}
                 {homework.submission.submissionFiles && homework.submission.submissionFiles.length > 0 && (
                   <div className="file-submissions-section">
                     <h4>📁 File submissions ({homework.submission.submissionFiles.length})</h4>
@@ -424,7 +394,7 @@ const HomeworkDetail = () => {
         <div className="content-right">
           {(!hasSubmitted || isEditing) ? (
             <div className="submission-form-card">
-              <h3>📝 {isEditing ? 'Thêm file mới' : 'Nộp bài tập'}</h3>
+              <h3>{isEditing ? 'Thêm file mới' : 'Nộp bài tập'}</h3>
               
               <form onSubmit={handleSubmit}>
                 <div className="form-group">

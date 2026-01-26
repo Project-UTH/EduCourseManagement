@@ -226,24 +226,20 @@
 
 /* GRID LỚP HỌC */
 .teacher-dashboard .classes-grid {
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 14px;
-}
-.teacher-dashboard .classes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
 }
 
 
 /* ===== CLASS CARD (Gọn + bo góc) ===== */
 .teacher-dashboard .class-card {
-  padding: 14px 16px;
-  border-radius: 16px;                 /* Bo góc rõ */
+  padding: 12px 14px;
+  border-radius: 14px;                 /* Bo góc rõ */
   border: 1px solid #e5e7eb;
   background: white;
   transition: all 0.2s ease;
-  max-width: 280px;      /* Giữ card gọn */
+  max-width: none;      /* Giữ card gọn */
   width: 100%
 }
 
@@ -299,8 +295,8 @@
 .teacher-dashboard .class-details {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 18px;
+  margin-bottom: 16px;
 }
 
 .teacher-dashboard .detail-item {
@@ -328,7 +324,7 @@
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
-  padding-top: 18px;
+  padding-top: 12px;
   border-top: 1px dashed #e2e8f0;
 }
 

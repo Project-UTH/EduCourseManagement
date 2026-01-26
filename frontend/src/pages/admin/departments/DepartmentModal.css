@@ -1,27 +1,212 @@
-/**
- * Department Modal - Styles
- * File: frontend/src/pages/admin/departments/DepartmentModal.css
- * 
- * Modal styles đã có trong admin-components.css
- * File này chỉ import và custom nếu cần
- */
+/* ==========================================================================
+   DEPARTMENT MODAL - STANDALONE CSS
+   Scope: .department-modal-wrapper
+   Prefix: dm-
+   Theme: Cyan / Teal
+   ========================================================================== */
 
+.department-modal-wrapper {
+  font-family: inherit;
+  --dm-primary: #16a34a;       /* Cyan 600 */
+  --dm-primary-hover: #15803d; /* Cyan 700 */
+  --dm-bg: #ffffff;
+  --dm-border: #e2e8f0;
+  --dm-text-main: #111827;
+  --dm-text-sec: #64748b;
+  --dm-danger: #ef4444;
+  --dm-overlay: rgba(241, 244, 245, 0.5); /* Dark Cyan Overlay */
+  --dm-radius: 8px;
+}
 
-/* 
- * Tất cả modal styles đã có trong admin-components.css:
- * - .modal-overlay
- * - .modal-content
- * - .modal-header
- * - .modal-body
- * - .modal-footer
- * - .btn-close
- * - .btn-cancel
- * - .btn-submit
- * - .form-group
- * - .error-text
- * - .helper-text
- * 
- * Chỉ thêm custom nếu Department modal có gì đặc biệt
- */
+/* --- OVERLAY & MODAL --- */
+.department-modal-wrapper.dm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--dm-overlay);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+  animation: dm-fadeIn 0.2s ease-out;
+}
 
-/* Department modal specific (nếu cần) */
+.department-modal-wrapper .dm-modal {
+  background: var(--dm-bg);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: dm-slideUp 0.3s ease-out;
+}
+
+@keyframes dm-fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dm-slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* --- HEADER --- */
+.department-modal-wrapper .dm-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--dm-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ecfeff; /* Cyan 50 */
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.department-modal-wrapper .dm-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #155e75; /* Cyan 800 */
+}
+
+.department-modal-wrapper .dm-close {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #94a3b8;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.department-modal-wrapper .dm-close:hover {
+  color: var(--dm-danger);
+}
+
+/* --- BODY --- */
+.department-modal-wrapper .dm-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.department-modal-wrapper .dm-group {
+  margin-bottom: 20px;
+}
+
+.department-modal-wrapper .dm-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dm-text-main);
+  margin-bottom: 8px;
+}
+
+.department-modal-wrapper .required {
+  color: var(--dm-danger);
+  margin-left: 4px;
+}
+
+/* Inputs & Selects */
+.department-modal-wrapper .dm-input,
+.department-modal-wrapper .dm-select,
+.department-modal-wrapper .dm-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--dm-border);
+  border-radius: var(--dm-radius);
+  font-size: 14px;
+  color: var(--dm-text-main);
+  background-color: white;
+  transition: all 0.2s;
+  outline: none;
+  font-family: inherit;
+}
+
+.department-modal-wrapper .dm-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+  padding-right: 2.5rem;
+}
+
+.department-modal-wrapper .dm-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.department-modal-wrapper .dm-input:focus,
+.department-modal-wrapper .dm-select:focus,
+.department-modal-wrapper .dm-textarea:focus {
+  border-color: var(--dm-primary);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15); /* Cyan shadow */
+}
+
+/* Error State */
+.department-modal-wrapper .dm-input.error,
+.department-modal-wrapper .dm-select.error {
+  border-color: var(--dm-danger);
+  background-color: #fef2f2;
+}
+
+.department-modal-wrapper .dm-error-msg {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--dm-danger);
+  font-weight: 500;
+}
+
+/* Char Count */
+.department-modal-wrapper .dm-char-count {
+  text-align: right;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* --- FOOTER --- */
+.department-modal-wrapper .dm-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--dm-border);
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.department-modal-wrapper .dm-btn {
+  padding: 10px 20px;
+  border-radius: var(--dm-radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.department-modal-wrapper .btn-submit {
+  background: var(--dm-primary);
+  color: white;
+}
+.department-modal-wrapper .btn-submit:hover {
+  background: var(--dm-primary-hover);
+}
+.department-modal-wrapper .btn-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.department-modal-wrapper .btn-cancel {
+  background: white;
+  border: 1px solid var(--dm-border);
+  color: var(--dm-text-sec);
+}
+.department-modal-wrapper .btn-cancel:hover {
+  background: #f1f5f9;
+  color: var(--dm-text-main);
+}

@@ -1,0 +1,300 @@
+/* ==========================================================================
+   CLASS DOCUMENTS - STANDALONE CSS
+   File: ClassDocuments.css
+   Scope: .class-documents-tab
+   Prefix: cd-
+   ========================================================================== */
+
+.class-documents-tab {
+  /* Khai báo biến cục bộ để không ảnh hưởng bên ngoài */
+  --cd-primary: #0891b2;       /* Cyan 600 */
+  --cd-primary-hover: #0e7490; /* Cyan 700 */
+  --cd-bg: #ffffff;
+  --cd-border: #e2e8f0;
+  --cd-text-main: #0f172a;
+  --cd-text-sec: #64748b;
+  --cd-danger: #ef4444;
+  --cd-file-bg: #f1f5f9;
+  --cd-radius: 8px;
+
+  /* Layout chính */
+  background: var(--cd-bg);
+  border-radius: 12px;
+  border: 1px solid var(--cd-border);
+  padding: 24px;
+  min-height: 400px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* --- HEADER --- */
+.class-documents-tab .cd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f8fafc;
+}
+
+.class-documents-tab .cd-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cd-text-main);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- BUTTONS (Định nghĩa lại để độc lập) --- */
+.class-documents-tab .cd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  line-height: 1.5;
+}
+
+.class-documents-tab .cd-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.class-documents-tab .cd-btn-primary {
+  background: var(--cd-primary);
+  color: white;
+  box-shadow: 0 2px 4px rgba(8, 145, 178, 0.2);
+}
+.class-documents-tab .cd-btn-primary:hover:not(:disabled) {
+  background: var(--cd-primary-hover);
+  transform: translateY(-1px);
+}
+
+.class-documents-tab .cd-btn-secondary {
+  background: white;
+  border-color: var(--cd-border);
+  color: var(--cd-text-sec);
+}
+.class-documents-tab .cd-btn-secondary:hover:not(:disabled) {
+  background: #f8fafc;
+  color: var(--cd-text-main);
+}
+
+.class-documents-tab .cd-btn-download {
+  padding: 6px 12px;
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  font-size: 13px;
+}
+.class-documents-tab .cd-btn-download:hover {
+  background: #e0f2fe;
+}
+
+.class-documents-tab .cd-btn-delete {
+  padding: 6px 12px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  font-size: 13px;
+}
+.class-documents-tab .cd-btn-delete:hover {
+  background: #fee2e2;
+}
+
+/* --- UPLOAD FORM --- */
+.class-documents-tab .cd-upload-form {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  animation: cd-slideDown 0.3s ease-out;
+}
+
+@keyframes cd-slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.class-documents-tab .cd-form-group {
+  margin-bottom: 16px;
+}
+
+.class-documents-tab .cd-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cd-text-main);
+  margin-bottom: 6px;
+}
+
+.class-documents-tab .cd-input,
+.class-documents-tab .cd-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--cd-border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.class-documents-tab .cd-input:focus,
+.class-documents-tab .cd-textarea:focus {
+  border-color: var(--cd-primary);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+}
+
+.class-documents-tab .cd-file-input {
+  display: block;
+  width: 100%;
+  font-size: 14px;
+  color: var(--cd-text-sec);
+}
+
+.class-documents-tab .cd-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* --- MATERIALS LIST --- */
+.class-documents-tab .cd-materials-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.class-documents-tab .cd-material-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--cd-border);
+  border-radius: 8px;
+  background: white;
+  transition: all 0.2s;
+}
+
+.class-documents-tab .cd-material-card:hover {
+  border-color: var(--cd-primary);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.class-documents-tab .cd-file-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cd-file-bg);
+  border-radius: 8px;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.class-documents-tab .cd-file-info {
+  flex: 1;
+}
+
+.class-documents-tab .cd-file-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cd-text-main);
+  margin: 0 0 4px 0;
+}
+
+.class-documents-tab .cd-file-desc {
+  font-size: 14px;
+  color: var(--cd-text-sec);
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.class-documents-tab .cd-file-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.class-documents-tab .cd-badge {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.class-documents-tab .cd-file-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* --- STATES (Loading, Error, Empty) --- */
+.class-documents-tab .cd-loading,
+.class-documents-tab .cd-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--cd-text-sec);
+  font-size: 14px;
+}
+
+.class-documents-tab .cd-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.class-documents-tab .cd-error {
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+/* --- FOOTER INFO --- */
+.class-documents-tab .cd-info-box {
+  margin-top: 24px;
+  padding: 12px 16px;
+  background: #f0fdfa; /* Teal 50 */
+  border: 1px solid #ccfbf1;
+  border-radius: 6px;
+  color: #0f766e;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 640px) {
+  .class-documents-tab .cd-material-card {
+    flex-direction: column;
+  }
+  .class-documents-tab .cd-file-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 12px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 12px;
+  }
+}

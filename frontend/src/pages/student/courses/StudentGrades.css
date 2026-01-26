@@ -1,249 +1,172 @@
-/* ========================================
-   STUDENT GRADES - COMPLETE STYLES
-   Display student's own grades
-   ======================================== */
+/* ==========================================================================
+   STUDENT GRADES - INDEPENDENT STYLESHEET
+   Scope: .student-grades-container
+   ========================================================================== */
 
+/* Container chính - Reset cơ bản để độc lập */
 .student-grades-container {
-  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #1e293b;
+}
+
+.student-grades-container * {
+  box-sizing: border-box;
 }
 
 /* ========== HEADER ========== */
-.grades-header {
+.student-grades-container .grades-header {
   margin-bottom: 24px;
 }
 
-.grades-header h2 {
+.student-grades-container .grades-header h2 {
   font-size: 24px;
   font-weight: 700;
   color: #1e293b;
   margin: 0 0 8px 0;
 }
 
-.grades-subtitle {
+.student-grades-container .grades-subtitle {
   font-size: 14px;
   color: #64748b;
   margin: 0;
 }
 
-/* ========== CLASS INFO CARD ========== */
-.class-info-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
-}
-
-.class-info-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.class-info-row:last-child {
-  border-bottom: none;
-}
-
-.info-label {
-  font-size: 14px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.info-value {
-  font-size: 14px;
-  color: #1e293b;
-  font-weight: 600;
-}
-
-/* ========== SCORES GRID ========== */
-.scores-grid {
+/* ========== SCORES GRID (3 Cards: TX, GK, CK) ========== */
+.student-grades-container .scores-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
 
-.score-card {
+.student-grades-container .score-card {
   background: white;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   padding: 20px;
-  transition: all 0.2s;
+  transition: all 0.2s ease-in-out;
+  position: relative;
 }
 
-.score-card:hover {
+.student-grades-container .score-card:hover {
   border-color: #0891b2;
-  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.1);
+  box-shadow: 0 8px 20px rgba(8, 145, 178, 0.1);
+  transform: translateY(-2px);
 }
 
-.score-header {
+.student-grades-container .score-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
 }
 
-.score-icon {
+.student-grades-container .score-icon {
   font-size: 20px;
 }
 
-.score-label {
+.student-grades-container .score-label {
   font-size: 14px;
   font-weight: 600;
   color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.score-weight {
+.student-grades-container .score-weight {
   font-size: 12px;
   color: #94a3b8;
   margin-bottom: 12px;
+  font-weight: 500;
 }
 
-.score-value {
+.student-grades-container .score-value {
   font-size: 32px;
   font-weight: 700;
   color: #0891b2;
   text-align: center;
 }
 
-/* ========== TOTAL SCORE CARD ========== */
-.total-score-card {
+/* ========== TOTAL SCORE CARD (Gradient) ========== */
+.student-grades-container .total-score-card {
   background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 24px;
   color: white;
+  box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.4);
 }
 
-.total-score-content {
+.student-grades-container .total-score-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
-.total-score-info h3 {
+.student-grades-container .total-score-info h3 {
   font-size: 20px;
   font-weight: 700;
   margin: 0 0 8px 0;
+  color: white;
 }
 
-.total-score-formula {
+.student-grades-container .total-score-formula {
   font-size: 13px;
   opacity: 0.9;
   margin: 0;
+  font-family: monospace;
 }
 
-.total-score-display {
+.student-grades-container .total-score-display {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
-.total-score-number {
+.student-grades-container .total-score-number {
   font-size: 48px;
   font-weight: 700;
+  line-height: 1;
 }
 
-.letter-grade-badge {
-  padding: 12px 20px;
+.student-grades-container .letter-grade-badge {
+  padding: 10px 24px;
   border-radius: 12px;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  min-width: 60px;
+  text-align: center;
 }
 
-/* ========== ADDITIONAL INFO ========== */
-.additional-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.info-card {
+/* ========== GRADE SCALE REFERENCE ========== */
+.student-grades-container .grade-scale {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 20px;
+  padding: 24px;
 }
 
-.info-card-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.info-card-icon {
-  font-size: 20px;
-}
-
-.info-card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #475569;
-}
-
-.info-card-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #0891b2;
-}
-
-.comment-card {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 12px;
-  padding: 20px;
-  grid-column: 1 / -1;
-}
-
-.comment-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.comment-icon {
-  font-size: 20px;
-}
-
-.comment-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #92400e;
-}
-
-.comment-content {
-  font-size: 14px;
-  color: #78350f;
-  line-height: 1.6;
-}
-
-/* ========== GRADE SCALE ========== */
-.grade-scale {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.grade-scale h4 {
+.student-grades-container .grade-scale h4 {
   font-size: 16px;
   font-weight: 600;
   color: #1e293b;
   margin: 0 0 16px 0;
 }
 
-.grade-scale-grid {
+.student-grades-container .grade-scale-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 12px;
 }
 
-.scale-item {
+.student-grades-container .scale-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -251,54 +174,40 @@
   background: white;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
+  transition: transform 0.2s;
 }
 
-.scale-letter {
+.student-grades-container .scale-item:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+}
+
+.student-grades-container .scale-letter {
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
-.scale-range {
+.student-grades-container .scale-range {
   font-size: 12px;
   color: #64748b;
 }
 
-/* ========== EMPTY STATE ========== */
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
-.empty-state h3 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1e293b;
-  margin: 0 0 8px 0;
-}
-
-.empty-state p {
-  font-size: 14px;
-  color: #64748b;
-  margin: 0;
-}
-
-/* ========== LOADING STATE ========== */
-.loading-state {
+/* ========== STATES (Loading, Empty, Error) ========== */
+.student-grades-container .loading-state,
+.student-grades-container .empty-state,
+.student-grades-container .error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
   gap: 16px;
+  text-align: center;
+  min-height: 300px;
 }
 
-.spinner {
+.student-grades-container .spinner {
   width: 40px;
   height: 40px;
   border: 4px solid #f1f5f9;
@@ -311,39 +220,44 @@
   to { transform: rotate(360deg); }
 }
 
-.loading-state p {
+.student-grades-container .empty-icon {
+  font-size: 64px;
+  margin-bottom: 0;
+  opacity: 0.5;
+}
+
+.student-grades-container .empty-state h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.student-grades-container .state-message {
   font-size: 14px;
   color: #64748b;
-}
-
-/* ========== ERROR STATE ========== */
-.error-state {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.error-state p {
-  font-size: 16px;
-  color: #ef4444;
+  margin: 0;
 }
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
-  .scores-grid {
+  .student-grades-container .scores-grid {
     grid-template-columns: 1fr;
   }
   
-  .total-score-content {
+  .student-grades-container .total-score-content {
     flex-direction: column;
     text-align: center;
-    gap: 20px;
+    gap: 24px;
   }
   
-  .additional-info {
-    grid-template-columns: 1fr;
-  }
-  
-  .grade-scale-grid {
+  .student-grades-container .grade-scale-grid {
     grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .student-grades-container .grade-scale-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

@@ -1,29 +1,268 @@
-/**
- * Subject Modal - Styles
- * File: frontend/src/pages/admin/subjects/SubjectModal.css
- */
+/* ==========================================================================
+   SUBJECT MODAL - STANDALONE CSS
+   Scope: .subject-modal-wrapper
+   Prefix: sm-
+   Theme: Friendly Green (Emerald/Nature)
+   ========================================================================== */
 
-
-/* Subject modal có form 3 cột cho sessions */
-.subject-modal-sessions-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-4);
-  margin-bottom: var(--spacing-5);
+.subject-modal-wrapper {
+  font-family: inherit;
+  --sm-primary: #16a34a;       /* Green 600: Màu chủ đạo */
+  --sm-primary-hover: #15803d; /* Green 700: Hover */
+  --sm-bg: #ffffff;
+  --sm-border: #e2e8f0;
+  --sm-text-main: #111827;     /* Dark text */
+  --sm-text-sec: #6b7280;      /* Secondary text */
+  --sm-danger: #ef4444;        /* Error */
+  --sm-overlay: rgba(229, 235, 231, 0.5); /* Greenish dark overlay */
+  --sm-radius: 8px;
 }
 
-@media (max-width: 768px) {
-  .subject-modal-sessions-row {
+/* --- OVERLAY & MODAL --- */
+.subject-modal-wrapper.sm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--sm-overlay);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+  animation: sm-fadeIn 0.2s ease-out;
+}
+
+.subject-modal-wrapper .sm-modal {
+  background: var(--sm-bg);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px; /* Rộng hơn chút để chứa form sessions */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: sm-slideUp 0.3s ease-out;
+}
+
+@keyframes sm-fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sm-slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* --- HEADER --- */
+.subject-modal-wrapper .sm-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--sm-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0fdf4; /* Very light green bg */
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.subject-modal-wrapper .sm-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #166534; /* Dark green text */
+}
+
+.subject-modal-wrapper .sm-close {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #9ca3af;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.subject-modal-wrapper .sm-close:hover {
+  color: var(--sm-danger);
+}
+
+/* --- BODY --- */
+.subject-modal-wrapper .sm-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Form Layout */
+.subject-modal-wrapper .sm-group {
+  margin-bottom: 20px;
+}
+
+.subject-modal-wrapper .sm-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sm-text-main);
+  margin-bottom: 8px;
+}
+
+.subject-modal-wrapper .required {
+  color: var(--sm-danger);
+  margin-left: 4px;
+}
+
+.subject-modal-wrapper .optional {
+  color: var(--sm-text-sec);
+  font-weight: 400;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+/* Sessions Row (3 Columns) */
+.subject-modal-wrapper .sm-row-sessions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--sm-border);
+  margin-bottom: 20px;
+}
+
+@media (max-width: 640px) {
+  .subject-modal-wrapper .sm-row-sessions {
     grid-template-columns: 1fr;
   }
 }
 
-/* Info box cho quy tắc tính buổi - đã có trong admin-components.css */
-/* Chỉ cần dùng class .info-box */
+/* Total Sessions Display (Read-only box) */
+.subject-modal-wrapper .sm-total-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px; /* Same height as inputs */
+  background: white; /* Green 100 */
+  color: black; /* Green 700 */
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: var(--sm-radius);
+  border: 1px solid #e2e8f0;
+}
 
-/* Major dropdown loading state */
-.subject-modal-major-loading {
-  color: var(--gray-400);
-  font-style: italic;
-  font-size: var(--font-size-sm);
+/* Inputs, Selects & Textarea */
+.subject-modal-wrapper .sm-input,
+.subject-modal-wrapper .sm-select,
+.subject-modal-wrapper .sm-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--sm-border);
+  border-radius: var(--sm-radius);
+  font-size: 14px;
+  color: var(--sm-text-main);
+  background-color: white;
+  transition: all 0.2s;
+  outline: none;
+  font-family: inherit;
+}
+
+.subject-modal-wrapper .sm-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+  padding-right: 2.5rem;
+}
+
+.subject-modal-wrapper .sm-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.subject-modal-wrapper .sm-input:focus,
+.subject-modal-wrapper .sm-select:focus,
+.subject-modal-wrapper .sm-textarea:focus {
+  border-color: var(--sm-primary);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15); /* Green shadow */
+}
+
+.subject-modal-wrapper .sm-input:disabled,
+.subject-modal-wrapper .sm-select:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Error State */
+.subject-modal-wrapper .sm-input.error,
+.subject-modal-wrapper .sm-select.error {
+  border-color: var(--sm-danger);
+  background-color: #fef2f2;
+}
+
+.subject-modal-wrapper .sm-error-msg {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--sm-danger);
+  font-weight: 500;
+}
+
+/* Helper Text */
+.subject-modal-wrapper .sm-helper {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--sm-text-sec);
+}
+
+.subject-modal-wrapper .sm-char-count {
+  text-align: right;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* --- FOOTER --- */
+.subject-modal-wrapper .sm-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--sm-border);
+  background: #f9fafb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.subject-modal-wrapper .sm-btn {
+  padding: 10px 20px;
+  border-radius: var(--sm-radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.subject-modal-wrapper .btn-submit {
+  background: var(--sm-primary);
+  color: white;
+}
+.subject-modal-wrapper .btn-submit:hover {
+  background: var(--sm-primary-hover);
+  transform: translateY(-1px);
+}
+.subject-modal-wrapper .btn-submit:disabled {
+  background: #86efac;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.subject-modal-wrapper .btn-cancel {
+  background: white;
+  border: 1px solid var(--sm-border);
+  color: var(--sm-text-sec);
+}
+.subject-modal-wrapper .btn-cancel:hover {
+  background: #f3f4f6;
+  color: var(--sm-text-main);
 }
