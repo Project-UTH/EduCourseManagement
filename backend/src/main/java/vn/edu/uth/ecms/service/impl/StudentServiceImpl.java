@@ -704,6 +704,7 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
         response.setSubjectCode(classEntity.getSubject().getSubjectCode());
         response.setSubjectName(classEntity.getSubject().getSubjectName());
         response.setCredits(classEntity.getSubject().getCredits());
+        response.setSubjectDescription(classEntity.getSubject().getDescription());
         
         response.setTeacherId(classEntity.getTeacher().getTeacherId());
         response.setTeacherName(classEntity.getTeacher().getFullName());

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.response.ScheduleItemResponse;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.repository.ClassRepository;
 import vn.edu.uth.ecms.repository.ClassSessionRepository;
 import vn.edu.uth.ecms.repository.CourseRegistrationRepository;
 import vn.edu.uth.ecms.service.ScheduleService;
@@ -23,6 +24,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     private final CourseRegistrationRepository registrationRepository;
     private final ClassSessionRepository sessionRepository;
+    private final ClassRepository classRepository; // ✅ ADD THIS
 
     @Override
     public List<ScheduleItemResponse> getStudentWeeklySchedule(
@@ -121,20 +123,109 @@ public class ScheduleServiceImpl implements ScheduleService {
         return scheduleItems;
     }
     
+    // ✅✅✅ FIXED: Teacher weekly schedule ✅✅✅
+    @Override
+    public List<ScheduleItemResponse> getTeacherWeeklySchedule(
+            Long teacherId, LocalDate weekStartDate) {
+        
+        log.info("📅 Building weekly schedule for teacher {} from {}", teacherId, weekStartDate);
+        
+        // ✅ Ensure weekStartDate is Monday
+        LocalDate actualMonday = weekStartDate;
+        if (weekStartDate.getDayOfWeek() != DayOfWeek.MONDAY) {
+            actualMonday = weekStartDate.with(DayOfWeek.MONDAY);
+            log.warn("⚠️ Received non-Monday date {}. Adjusted to Monday: {}", 
+                    weekStartDate, actualMonday);
+        }
+        
+        LocalDate weekEndDate = actualMonday.plusDays(6);
+        
+        log.info("📆 Week range: {} (MONDAY) to {} (SUNDAY)", actualMonday, weekEndDate);
+        
+        // ✅ FIXED: Get all classes taught by this teacher efficiently
+        List<ClassEntity> allClasses = classRepository.findByTeacher_TeacherId(teacherId);
+        
+        log.info("📚 Teacher has {} classes total", allClasses.size());
+        
+        // Filter: Only ACTIVE/UPCOMING semesters
+        List<ClassEntity> classes = allClasses.stream()
+                .filter(cls -> cls.getSemester() != null)
+                .filter(cls -> {
+                    SemesterStatus status = cls.getSemester().getStatus();
+                    boolean isValid = status == SemesterStatus.UPCOMING || status == SemesterStatus.ACTIVE;
+                    
+                    log.debug("  Class {} - Semester {} - Status {} - Include: {}", 
+                            cls.getClassCode(),
+                            cls.getSemester().getSemesterCode(),
+                            status,
+                            isValid);
+                    
+                    return isValid;
+                })
+                .toList();
+        
+        log.info("✅ After filtering (UPCOMING/ACTIVE): {} classes", classes.size());
+        
+        List<ScheduleItemResponse> scheduleItems = new ArrayList<>();
+        
+        // For each class
+        for (ClassEntity classEntity : classes) {
+            log.info("🔍 Processing class: {} ({})", 
+                    classEntity.getClassCode(), 
+                    classEntity.getClassId());
+            
+            // ✅ Get sessions for this class in the week
+            List<ClassSession> sessions = sessionRepository.findByClassAndDateRange(
+                    classEntity.getClassId(),
+                    actualMonday,
+                    weekEndDate
+            );
+            
+            log.info("  → Found {} sessions in this week", sessions.size());
+            
+            // Convert each session to ScheduleItemResponse
+            for (ClassSession session : sessions) {
+                LocalDate sessionDate = session.getEffectiveDate();
+                
+                // Skip if date is null or outside the week range
+                if (sessionDate == null || 
+                    sessionDate.isBefore(actualMonday) || 
+                    sessionDate.isAfter(weekEndDate)) {
+                    log.warn("  ⚠️ Session {} has invalid date: {}", 
+                            session.getSessionNumber(), sessionDate);
+                    continue;
+                }
+                
+                ScheduleItemResponse item = mapToScheduleItem(session, classEntity);
+                scheduleItems.add(item);
+                
+                log.info("  ✅ Session {}: {} {} {} (Room: {})", 
+                        session.getSessionNumber(),
+                        item.getSessionDate(),
+                        item.getDayOfWeek(),
+                        item.getTimeSlot(),
+                        item.getRoom());
+            }
+        }
+        
+        log.info("✅ Total schedule items: {}", scheduleItems.size());
+        
+        return scheduleItems;
+    }
+    
     /**
-     * ✅ FIXED: Map session to response using ACTUAL stored dates
-     * DO NOT recalculate dates from dayOfWeek!
+     * ✅ SHARED: Map session to response using ACTUAL stored dates
      */
     private ScheduleItemResponse mapToScheduleItem(ClassSession session, ClassEntity classEntity) {
         Subject subject = classEntity.getSubject();
         Teacher teacher = classEntity.getTeacher();
         
-        // ✅ CRITICAL: Use getEffectiveDate() from entity - this returns the STORED date
+        // ✅ CRITICAL: Use getEffectiveDate() from entity
         LocalDate effectiveDate = session.getEffectiveDate();
         DayOfWeek effectiveDay = session.getEffectiveDayOfWeek();
         TimeSlot effectiveSlot = session.getEffectiveTimeSlot();
         
-        // ✅ If stored date exists, derive dayOfWeek from it (for consistency)
+        // ✅ If stored date exists, derive dayOfWeek from it
         if (effectiveDate != null && effectiveDay == null) {
             effectiveDay = effectiveDate.getDayOfWeek();
             log.debug("  🔧 Derived dayOfWeek {} from date {}", effectiveDay, effectiveDate);
@@ -163,7 +254,7 @@ public class ScheduleServiceImpl implements ScheduleService {
                 .subjectName(subject.getSubjectName())
                 .teacherId(teacher.getTeacherId())
                 .teacherName(teacher.getFullName())
-                .sessionDate(effectiveDate)  // ✅ Use STORED date, not recalculated!
+                .sessionDate(effectiveDate)
                 .dayOfWeek(effectiveDay != null ? effectiveDay.toString() : null)
                 .dayOfWeekDisplay(effectiveDay != null ? getDayOfWeekDisplay(effectiveDay) : null)
                 .timeSlot(effectiveSlot != null ? effectiveSlot.toString() : null)

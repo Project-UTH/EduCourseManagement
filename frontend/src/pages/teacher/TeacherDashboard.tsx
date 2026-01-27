@@ -39,7 +39,7 @@ const TeacherDashboard = () => {
     weekClasses: 0
   });
   const [loading, setLoading] = useState(true);
-  const [ setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // ⭐ FIX: Added 'error' variable
 
   useEffect(() => {
     loadDashboardData();
@@ -49,7 +49,7 @@ const TeacherDashboard = () => {
     setLoading(true);
 
     try {
-      // 1. Load teacher's classes (Giả lập gọi API)
+      // 1. Load teacher's classes
       const classesData = await classApi.getMyClasses();
 
       // 2. Transform Data
@@ -61,7 +61,8 @@ const TeacherDashboard = () => {
         schedule: `${c.dayOfWeekDisplay}, ${c.timeSlotDisplay}`,
         dayOfWeekDisplay: c.dayOfWeekDisplay || 'Chưa xếp lịch',
         timeSlotDisplay: c.timeSlotDisplay || '',
-        enrolledStudents: c.studentCount || 0,
+        // ⭐ FIX: Use enrolledCount from backend
+        enrolledStudents: c.enrolledCount || c.studentCount || 0,
         maxStudents: c.maxStudents || 40,
         nextClassDate: new Date().toLocaleDateString('vi-VN')
       }));
@@ -120,6 +121,33 @@ const TeacherDashboard = () => {
         </div>
       </div>
 
+      {/* ⭐ Show error if exists */}
+      {error && (
+        <div style={{
+          background: '#fee2e2',
+          border: '1px solid #ef4444',
+          color: '#b91c1c',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          margin: '16px 0'
+        }}>
+          ⚠️ {error}
+          <button 
+            onClick={loadDashboardData}
+            style={{
+              marginLeft: '12px',
+              padding: '4px 12px',
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Thử lại
+          </button>
+        </div>
+      )}
 
       <div className="dashboard-content">
         {/* Main List */}

@@ -27,6 +27,7 @@ interface ClassInfo {
   credits: number;
   maxStudents: number;
   enrolledCount: number;
+  description?: string; // ⭐ NEW: Subject description
 }
 
 const ClassDetail = () => {
@@ -49,38 +50,64 @@ const ClassDetail = () => {
     try {
       console.log('[ClassDetail] Loading class info for ID:', classId);
       
-      // Get class detail from API
-      const data = await studentClassApi.getMyClasses();
-      const classData = data.find((c: any) => c.classId === Number(classId));
+      // ⭐ FIX: Use getClassDetail for full data
+      const classDetail = await studentClassApi.getClassDetail(Number(classId!));
+      
+      console.log('🔍 [ClassDetail] FULL Response:', JSON.stringify(classDetail, null, 2));
+      console.log('🔍 [ClassDetail] subject:', classDetail.subject);
+      console.log('🔍 [ClassDetail] teacher:', classDetail.teacher);
+      console.log('🔍 [ClassDetail] semester:', classDetail.semester);
+      console.log('🔍 [ClassDetail] room:', classDetail.room);
+      console.log('🔍 [ClassDetail] enrolledCount:', classDetail.enrolledCount);
+      console.log('🔍 [ClassDetail] maxStudents:', classDetail.maxStudents);
 
-      if (!classData) {
+      if (!classDetail) {
         setError('Không tìm thấy lớp học');
         return;
       }
 
-      const info: ClassInfo = {
-        classId: classData.classId,
-        classCode: classData.classCode,
-        subjectName: classData.subjectName,
-        teacherName: classData.teacherName,
-        schedule: classData.schedule || 'Chưa xếp lịch',
-        room: classData.roomName || 'Chưa có phòng',
-        semesterName: classData.semesterName || 'HK II 2025-2026',
-        credits: classData.credits || 3,
-        maxStudents: classData.maxStudents,
-        enrolledCount: classData.currentStudents || 0
+      // Helper to convert day number to Vietnamese
+      const getDayName = (dayNum: number) => {
+        const days: Record<number, string> = {
+          2: 'Thứ 2', 3: 'Thứ 3', 4: 'Thứ 4',
+          5: 'Thứ 5', 6: 'Thứ 6', 7: 'Thứ 7', 8: 'Chủ nhật'
+        };
+        return days[dayNum] || 'Không xác định';
       };
+
+      // ⭐ FIX: Handle both flat and nested structures
+      const info: ClassInfo = {
+        classId: classDetail.classId,
+        classCode: classDetail.classCode,
+        subjectName: classDetail.subject?.subjectName || (classDetail as any).subjectName || 'Không rõ',
+        teacherName: classDetail.teacher?.fullName || (classDetail as any).teacherName || 'Không rõ',
+        schedule: classDetail.schedule && classDetail.schedule.length > 0
+          ? `${getDayName(classDetail.schedule[0].dayOfWeek)}, ${classDetail.schedule[0].timeSlotName}`
+          : (classDetail as any).schedule || 'Chưa xếp lịch',
+        room: classDetail.room?.roomName || (classDetail as any).roomName || 'Chưa có phòng',
+        semesterName: classDetail.semester?.semesterName || (classDetail as any).semesterName || 'Chưa xác định',
+        credits: classDetail.subject?.credits || (classDetail as any).credits || 3,
+        maxStudents: classDetail.maxStudents || 50,
+        enrolledCount: classDetail.enrolledCount || 0,
+        // ⭐ FIX: Use subjectDescription from flat structure (not nested)
+        description: (classDetail as any).subjectDescription || classDetail.subject?.description || undefined
+      };
+
+      console.log('📝 [ClassDetail] Description:', info.description); // Debug log
 
       setClassInfo(info);
       console.log('[ClassDetail] ✅ Class info loaded:', info);
+      console.log('📊 [ClassDetail] FINAL Sĩ số:', info.enrolledCount, '/', info.maxStudents);
 
     } catch (err: any) {
       console.error('[ClassDetail] ❌ Failed to load class info:', err);
+      console.error('[ClassDetail] ❌ Error details:', err.message);
       setError('Không thể tải thông tin lớp học');
     } finally {
       setLoading(false);
     }
   };
+
   const user = useAuthStore((state: any) => state.user);
 
   if (loading) {

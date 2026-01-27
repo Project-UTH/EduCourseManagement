@@ -102,7 +102,7 @@ const ClassSelection: React.FC = () => {
       const response = await registrationApi.registerForClass(selectedClassId);
       if (response.data.success) {
         alert('✅ Đăng ký thành công!');
-        navigate('/student/registrations');
+        navigate('/student/subjects');
       }
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || 'Đăng ký thất bại!';

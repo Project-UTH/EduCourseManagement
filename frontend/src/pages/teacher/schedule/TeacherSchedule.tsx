@@ -1,45 +1,47 @@
-import { useState, useEffect } from 'react';
-import classApi from '../../../services/api/classApi';
-import './TeacherSchedule.css';
-import ChatList from '../../../components/chat/ChatList';
-import { useAuthStore } from '@/store/authStore';
-
+import React, { useState, useEffect } from 'react';
+import '../schedule/TeacherSchedule.css'
 
 /**
  * TeacherSchedule Component
- * Logic: Same as provided (StudentSchedule logic adapted for Teacher)
+ * 
+ * Features:
+ * - Weekly schedule view for teachers
+ * - Shows all classes they teach
+ * - Table layout with periods (Sáng, Chiều, Tối)
+ * - Week navigation
+ * - Highlights current day
  */
 
-interface ClassSession {
+interface ScheduleItem {
   classId: number;
   classCode: string;
+  subjectCode: string;
   subjectName: string;
-  dayOfWeek: string;
-  timeSlot: string;
-  startTime: string;
-  endTime: string;
-  roomCode: string;
-  roomName: string;
-  location: string;
-  isOnline: boolean;
-  semester: string;
-  academicYear: string;
-  currentStudents: number;
-  maxStudents: number;
+  teacherName: string;
+  sessionDate: string; // "YYYY-MM-DD"
+  dayOfWeek: string; // "MONDAY", "TUESDAY", etc.
+  dayOfWeekDisplay: string; // "Thứ 2", "Thứ 3", etc.
+  timeSlot: string; // "CA1", "CA2", etc.
+  timeSlotDisplay: string;
+  room: string;
+  sessionNumber: number;
+  sessionType: string;
+  campus: string;
 }
 
 // Time slots grouped by period
 const TIME_SLOTS = [
-  { id: 'CA_1', label: 'Ca 1', period: 'Sáng', time: '06:45 - 09:15' },
-  { id: 'CA_2', label: 'Ca 2', period: 'Sáng', time: '09:30 - 12:00' },
-  { id: 'CA_3', label: 'Ca 3', period: 'Chiều', time: '12:10 - 14:40' },
-  { id: 'CA_4', label: 'Ca 4', period: 'Chiều', time: '14:50 - 17:20' },
-  { id: 'CA_5', label: 'Ca 5', period: 'Chiều', time: '17:30 - 20:00' },
-  { id: 'CA_6', label: 'Ca 6', period: 'Tối', time: '20:10 - 22:40' },
+  { id: 'CA1', label: 'Ca 1', period: 'Sáng', time: '06:45 - 09:15' },
+  { id: 'CA2', label: 'Ca 2', period: 'Sáng', time: '09:25 - 11:55' },
+  { id: 'CA3', label: 'Ca 3', period: 'Chiều', time: '12:10 - 14:40' },
+  { id: 'CA4', label: 'Ca 4', period: 'Chiều', time: '14:50 - 17:20' },
+  { id: 'CA5', label: 'Ca 5', period: 'Chiều', time: '17:30 - 20:00' },
+  { id: 'CA6', label: 'Ca 6', period: 'Tối', time: '20:10 - 22:40' },
 ];
 
 const PERIODS = ['Sáng', 'Chiều', 'Tối'];
 
+// Day mapping from API format to display
 const DAY_MAPPING = {
   'MONDAY': { display: 'Thứ 2', weekIndex: 0 },
   'TUESDAY': { display: 'Thứ 3', weekIndex: 1 },
@@ -50,10 +52,10 @@ const DAY_MAPPING = {
   'SUNDAY': { display: 'Chủ nhật', weekIndex: 6 },
 };
 
-const TeacherSchedule = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [sessions, setSessions] = useState<ClassSession[]>([]);
+const TeacherSchedule: React.FC = () => {
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     loadSchedule();
@@ -62,14 +64,14 @@ const TeacherSchedule = () => {
   // Get Monday of the current week
   const getWeekMonday = (date: Date): Date => {
     const d = new Date(date);
-    const day = d.getDay(); // 0=Sunday, 1=Monday...
+    const day = d.getDay();
     const diff = day === 0 ? -6 : 1 - day;
     d.setDate(d.getDate() + diff);
     d.setHours(0, 0, 0, 0);
     return d;
   };
 
-  // Format date to YYYY-MM-DD for API
+  // Format date to YYYY-MM-DD
   const formatDateForAPI = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -94,67 +96,58 @@ const TeacherSchedule = () => {
   const loadSchedule = async () => {
     setLoading(true);
     try {
-      // Get all teacher's classes
-      const classes = await classApi.getMyClasses();
+      const monday = getWeekMonday(selectedDate);
+      const weekStartDate = formatDateForAPI(monday);
       
-      console.log('📦 Teacher classes received:', classes.length);
-      
-      // Transform classes to session format
-      const transformedSessions: ClassSession[] = classes.map((cls: any) => {
-        const dayOfWeek = cls.dayOfWeek;
-        const timeSlotId = mapTimeSlotToId(cls.timeSlot?.slotName);
+      console.log('📅 Fetching teacher schedule for week starting:', weekStartDate);
+
+      // IMPORTANT: Must match the backend endpoint exactly
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `/api/teacher/schedule/weekly?weekStartDate=${weekStartDate}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data && data.success) {
+        const items = data.data || [];
+        console.log('✅ Received', items.length, 'schedule items');
         
-        return {
-          classId: cls.classId,
-          classCode: cls.classCode,
-          subjectName: cls.subject?.subjectName || 'N/A',
-          dayOfWeek: dayOfWeek,
-          timeSlot: timeSlotId,
-          startTime: cls.timeSlot?.startTime || '00:00',
-          endTime: cls.timeSlot?.endTime || '00:00',
-          roomCode: cls.fixedRoom || 'TBA',
-          roomName: cls.fixedRoom || 'To Be Announced',
-          location: extractLocation(cls.fixedRoom),
-          isOnline: cls.fixedRoom === 'E-Learning' || cls.fixedRoom?.includes('E-Learning'),
-          semester: cls.semester,
-          academicYear: cls.academicYear,
-          currentStudents: cls.currentStudents || 0,
-          maxStudents: cls.maxStudents || 0,
-        };
-      });
-      
-      setSessions(transformedSessions);
-    } catch (error) {
-      console.error('❌ Failed to load teacher schedule:', error);
+        // Debug log for each item
+        items.forEach((item: ScheduleItem) => {
+          const mapping = DAY_MAPPING[item.dayOfWeek as keyof typeof DAY_MAPPING];
+          console.log(
+            `📍 ${item.sessionDate} | ${item.dayOfWeek} → ${mapping?.display} (index ${mapping?.weekIndex}) | ${item.timeSlot} | ${item.subjectName}`
+          );
+        });
+        
+        setScheduleItems(items);
+      } else {
+        console.error('❌ API response not successful:', data);
+      }
+    } catch (error: any) {
+      console.error('❌ Error fetching teacher schedule:', error);
+      console.error('Error details:', error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Map time slot name from API to our ID format
-  const mapTimeSlotToId = (slotName?: string): string => {
-    if (!slotName) return 'CA_1';
-    
-    const match = slotName.match(/Ca\s*(\d+)/i);
-    if (match) {
-      return `CA_${match[1]}`;
-    }
-    
-    return 'CA_1';
-  };
-
-  const extractLocation = (roomName?: string): string => {
-    if (!roomName) return '';
-    if (roomName.includes('E-Learning')) return 'E-Learning';
-    
-    const match = roomName.match(/\(([^)]+)\)/);
-    return match ? match[1] : '';
-  };
-
-  const getSessionsForSlot = (weekDayIndex: number, timeSlotId: string): ClassSession[] => {
-    return sessions.filter(session => {
-      const dayMapping = DAY_MAPPING[session.dayOfWeek as keyof typeof DAY_MAPPING];
-      return dayMapping?.weekIndex === weekDayIndex && session.timeSlot === timeSlotId;
+  // Filter sessions by day and time slot
+  const getSessionsForSlot = (weekDayIndex: number, timeSlotId: string): ScheduleItem[] => {
+    return scheduleItems.filter(item => {
+      const dayMapping = DAY_MAPPING[item.dayOfWeek as keyof typeof DAY_MAPPING];
+      return dayMapping?.weekIndex === weekDayIndex && item.timeSlot === timeSlotId;
     });
   };
 
@@ -187,6 +180,7 @@ const TeacherSchedule = () => {
     return { day, date: dateStr };
   };
 
+  // Check if date is today
   const isToday = (date: Date): boolean => {
     const today = new Date();
     return (
@@ -195,14 +189,25 @@ const TeacherSchedule = () => {
       date.getFullYear() === today.getFullYear()
     );
   };
-  const user = useAuthStore((state: any) => state.user);
-
 
   const weekDates = getWeekDates();
 
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>Đang tải lịch giảng dạy...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="teacher-schedule-container">
-      {/* Header Controls */}
+      <div className="schedule-header">
+        <h2>📅 Lịch Giảng Dạy</h2>
+      </div>
+
+      {/* Controls */}
       <div className="schedule-controls">
         <input
           type="date"
@@ -213,27 +218,21 @@ const TeacherSchedule = () => {
         
         <div className="nav-buttons">
           <button onClick={goToPreviousWeek} className="nav-btn" title="Tuần trước">
-            ←
+            ← 
           </button>
           <button onClick={goToToday} className="today-btn">
-            📅 HIỆN TẠI
+            📅 Tuần này
           </button>
           <button onClick={goToNextWeek} className="nav-btn" title="Tuần sau">
-            →
+             →
           </button>
         </div>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Đang tải lịch giảng dạy...</p>
-        </div>
-      )}
+      
 
-      {/* Calendar Grid */}
-      {!loading && (
+      {/* Schedule Table */}
+      {scheduleItems.length > 0 && (
         <div className="calendar-wrapper">
           <table className="schedule-table">
             <thead>
@@ -258,46 +257,38 @@ const TeacherSchedule = () => {
                 
                 return periodSlots.map((slot, slotIndex) => (
                   <tr key={slot.id}>
-                    {/* Period label (merged cells) */}
                     {slotIndex === 0 && (
                       <td className="period-label-cell" rowSpan={periodSlots.length}>
-                        {period}
+                        <div className="period-label">{period}</div>
                       </td>
                     )}
                     
-                    {/* Time slot label */}
                     <td className="shift-label-cell">
                       <div className="shift-label">{slot.label}</div>
                       <div className="shift-time">{slot.time}</div>
                     </td>
                     
-                    {/* Day cells */}
                     {weekDates.map((date, dayIndex) => {
                       const todayClass = isToday(date) ? 'today-cell' : '';
-                      const daySessions = getSessionsForSlot(dayIndex, slot.id);
+                      const sessions = getSessionsForSlot(dayIndex, slot.id);
                       
                       return (
                         <td key={dayIndex} className={`session-cell ${todayClass}`}>
-                          {daySessions.map(session => (
-                            <div key={session.classId} className="session-card">
+                          {sessions.map(session => (
+                            <div key={session.classId} className="session-card teacher-session">
                               <div className="session-title">{session.subjectName}</div>
                               <div className="session-code">{session.classCode}</div>
                               <div className="session-info">
-                                🕐 {session.startTime} - {session.endTime}
+                                📚 Buổi {session.sessionNumber}
                               </div>
                               <div className="session-info">
-                                📍 Phòng: {session.roomCode}
+                                📍 Phòng: {session.room}
                               </div>
-                              {session.location && (
-                                <div className="session-location">
-                                  📌 {session.location}
-                                </div>
-                              )}
-                              <div className="session-info">
-                                👥 {session.currentStudents}/{session.maxStudents} SV
+                              <div className="session-info campus">
+                                🏢 {session.campus}
                               </div>
-                              {session.isOnline && (
-                                <div className="lms-badge">🎓 LMS</div>
+                              {session.sessionType === 'E_LEARNING' && (
+                                <div className="online-badge">💻 E-Learning</div>
                               )}
                             </div>
                           ))}
@@ -311,14 +302,6 @@ const TeacherSchedule = () => {
           </table>
         </div>
       )}
-
-      {/* Empty State */}
-      {!loading && sessions.length === 0 && (
-        <div className="empty-state">
-          <p>📅 Không có lịch giảng dạy trong tuần này</p>
-        </div>
-      )}
-      <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />
     </div>
   );
 };

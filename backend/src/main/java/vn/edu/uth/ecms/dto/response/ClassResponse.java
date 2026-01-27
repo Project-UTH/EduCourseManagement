@@ -12,11 +12,12 @@ import java.util.List;
 /**
  * Class Response DTO - COMPLETE VERSION WITH PREREQUISITES
  *
- * ✅ UPDATED: Added prerequisites and isRegistered fields
+ * ✅ UPDATED: Added prerequisites, isRegistered, and subjectDescription fields
  *
  * NEW FIELDS:
  * - prerequisites (List<PrerequisiteInfo>) - Danh sách môn tiên quyết
  * - isRegistered (Boolean) - Sinh viên đã đăng ký chưa
+ * - subjectDescription (String) - Mô tả môn học
  * - fixedRoom (room code)
  * - fixedRoomName (display name)
  * - fixedRoomCapacity
@@ -46,6 +47,12 @@ public class ClassResponse {
     private Integer totalSessions;
     private Integer inPersonSessions;
     private Integer eLearningSessions;
+    
+    /**
+     * ✅ NEW: Subject description
+     * Mô tả chi tiết về môn học (hiển thị cho sinh viên)
+     */
+    private String subjectDescription;
 
     // ==================== TEACHER INFO ====================
 

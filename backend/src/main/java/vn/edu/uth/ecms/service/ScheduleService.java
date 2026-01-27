@@ -14,4 +14,5 @@ public interface ScheduleService {
      * @return List of schedule items for the week
      */
     List<ScheduleItemResponse> getStudentWeeklySchedule(Long studentId, LocalDate weekStartDate);
+     List<ScheduleItemResponse> getTeacherWeeklySchedule(Long teacherId, LocalDate weekStartDate);
 }

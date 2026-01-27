@@ -79,9 +79,10 @@ const TeacherClasses = () => {
   const stats = {
     totalClasses: classes.length,
     activeClasses: classes.filter(c => c.status?.toUpperCase() === 'OPEN' || c.status?.toUpperCase() === 'ACTIVE').length,
-    totalStudents: classes.reduce((sum, c) => sum + (c.currentStudents || 0), 0),
+    // ⭐ FIX: Use enrolledCount from backend
+    totalStudents: classes.reduce((sum, c) => sum + (c.enrolledCount || c.currentStudents || 0), 0),
     avgClassSize: classes.length > 0 
-      ? Math.round(classes.reduce((sum, c) => sum + (c.currentStudents || 0), 0) / classes.length)
+      ? Math.round(classes.reduce((sum, c) => sum + (c.enrolledCount || c.currentStudents || 0), 0) / classes.length)
       : 0,
   };
 
@@ -123,10 +124,8 @@ const TeacherClasses = () => {
     navigate(`/teacher/assignments/create?classId=${classId}`);
   };
 
-  // --- Đã khôi phục hàm xử lý nút Chấm điểm ---
   const handleViewGrades = (classId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    // Điều hướng đến trang chấm điểm (hoặc tab điểm)
     navigate(`/teacher/grading?classId=${classId}`);
   };
 
@@ -134,7 +133,8 @@ const TeacherClasses = () => {
     e.stopPropagation();
     navigate(`/teacher/grade-statistics?classId=${classId}`);
   }
-const user = useAuthStore((state: any) => state.user);
+
+  const user = useAuthStore((state: any) => state.user);
 
   return (
     <div className="tc-container">
@@ -231,80 +231,85 @@ const user = useAuthStore((state: any) => state.user);
       {/* Class Cards Grid */}
       {!loading && (
         <div className="tc-classes-grid">
-          {filteredClasses.map(cls => (
-            <div 
-              key={cls.classId} 
-              className="tc-class-card"
-              onClick={() => handleViewDetail(cls.classId)}
-              style={{ cursor: 'pointer' }}
-            >
-              {/* Card Header */}
-              <div className="tc-card-header">
-                <div className="tc-class-title">
-                  <h3>{cls.subjectName}</h3>
-                  <span className="tc-class-code">{cls.classCode}</span>
-                </div>
-                <span className={`tc-status-badge ${getStatusBadge(cls.status).class}`}>
-                  {getStatusBadge(cls.status).text}
-                </span>
-              </div>
+          {filteredClasses.map(cls => {
+            // ⭐ Calculate current students (use enrolledCount if available)
+            const currentStudents = cls.enrolledCount ?? cls.currentStudents ?? 0;
+            const maxStudents = cls.maxStudents || 40;
+            const capacityPercent = maxStudents > 0 ? (currentStudents / maxStudents) * 100 : 0;
 
-              {/* Card Body */}
-              <div className="tc-card-body">
-                <div className="tc-info-row">
-                  <span className="tc-info-label">📖 Số tín chỉ:</span>
-                  <span className="tc-info-value">{cls.subjectCredits} TC</span>
-                </div>
-
-                <div className="tc-info-row">
-                  <span className="tc-info-label">📅 Học kỳ:</span>
-                  <span className="tc-info-value">{cls.semesterName}</span>
-                </div>
-
-               
-
-                <div className="tc-info-row">
-                  <span className="tc-info-label">👥 Sĩ số:</span>
-                  <span className="tc-info-value">
-                    {cls.currentStudents} / {cls.maxStudents}
-                    <span className="tc-capacity-bar">
-                      <span 
-                        className="tc-capacity-fill" 
-                        style={{ width: `${(cls.currentStudents / cls.maxStudents) * 100}%` }}
-                      ></span>
-                    </span>
+            return (
+              <div 
+                key={cls.classId} 
+                className="tc-class-card"
+                onClick={() => handleViewDetail(cls.classId)}
+                style={{ cursor: 'pointer' }}
+              >
+                {/* Card Header */}
+                <div className="tc-card-header">
+                  <div className="tc-class-title">
+                    <h3>{cls.subjectName}</h3>
+                    <span className="tc-class-code">{cls.classCode}</span>
+                  </div>
+                  <span className={`tc-status-badge ${getStatusBadge(cls.status).class}`}>
+                    {getStatusBadge(cls.status).text}
                   </span>
                 </div>
-              </div>
 
-              {/* Card Actions: Đã bổ sung nút Chấm điểm */}
-              <div className="tc-card-actions">
-                <button 
-                  className="tc-action-btn tc-btn-primary"
-                  onClick={(e) => handleCreateHomework(cls.classId, e)}
-                  title="Tạo bài tập mới"
-                >
-                  ➕ Bài tập
-                </button>
+                {/* Card Body */}
+                <div className="tc-card-body">
+                  <div className="tc-info-row">
+                    <span className="tc-info-label">📖 Số tín chỉ:</span>
+                    <span className="tc-info-value">{cls.subjectCredits || cls.credits} TC</span>
+                  </div>
 
-                <button 
-                  className="tc-action-btn tc-btn-secondary"
-                  onClick={(e) => handleViewGrades(cls.classId, e)}
-                  title="Quản lý điểm"
-                >
-                  📝 Chấm điểm
-                </button>
-                
-                <button 
-                  className="tc-action-btn tc-btn-secondary"
-                  onClick={(e) => handleViewStats(cls.classId, e)}
-                  title="Thống kê"
-                >
-                  📊 Thống kê
-                </button>
+                  <div className="tc-info-row">
+                    <span className="tc-info-label">📅 Học kỳ:</span>
+                    <span className="tc-info-value">{cls.semesterName}</span>
+                  </div>
+
+                  <div className="tc-info-row">
+                    <span className="tc-info-label">👥 Sĩ số:</span>
+                    <span className="tc-info-value">
+                      {currentStudents} / {maxStudents}
+                      <span className="tc-capacity-bar">
+                        <span 
+                          className="tc-capacity-fill" 
+                          style={{ width: `${capacityPercent}%` }}
+                        ></span>
+                      </span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Card Actions */}
+                <div className="tc-card-actions">
+                  <button 
+                    className="tc-action-btn tc-btn-primary"
+                    onClick={(e) => handleCreateHomework(cls.classId, e)}
+                    title="Tạo bài tập mới"
+                  >
+                    ➕ Bài tập
+                  </button>
+
+                  <button 
+                    className="tc-action-btn tc-btn-secondary"
+                    onClick={(e) => handleViewGrades(cls.classId, e)}
+                    title="Quản lý điểm"
+                  >
+                    📝 Chấm điểm
+                  </button>
+                  
+                  <button 
+                    className="tc-action-btn tc-btn-secondary"
+                    onClick={(e) => handleViewStats(cls.classId, e)}
+                    title="Thống kê"
+                  >
+                    📊 Thống kê
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

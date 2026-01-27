@@ -1,10 +1,9 @@
 import React from 'react';
-// Đảm bảo import file CSS (hoặc để ClassDetail import cũng được, nhưng import ở đây cho chắc chắn)
 import './ClassDetail.css';
 
 /**
  * InfoTab - Hiển thị thông tin chi tiết lớp học và tiêu chí đánh giá
- * Style: Được định nghĩa trong ClassDetail.css (.info-tab, .info-section, .grading-table...)
+ * ⭐ NEW: Added description section
  */
 
 interface InfoTabProps {
@@ -19,10 +18,14 @@ interface InfoTabProps {
     credits: number;
     maxStudents: number;
     enrolledCount: number;
+    description?: string; // ⭐ NEW: Mô tả môn học
   };
 }
 
 const InfoTab = ({ classInfo }: InfoTabProps) => {
+  console.log('📊 [InfoTab] Received classInfo:', classInfo);
+  console.log('📊 [InfoTab] Sĩ số:', classInfo.enrolledCount, '/', classInfo.maxStudents);
+
   return (
     <div className="info-tab">
       {/* 1. Phần thông tin chung */}
@@ -67,14 +70,44 @@ const InfoTab = ({ classInfo }: InfoTabProps) => {
 
           <div className="info-item">
             <span className="info-label">Sĩ số lớp</span>
-            <span className="info-value">
+            <span className="info-value" style={{ fontWeight: 600 }}>
               {classInfo.enrolledCount} / {classInfo.maxStudents} sinh viên
+              {classInfo.enrolledCount > 0 && (
+                <span style={{ 
+                  marginLeft: '8px', 
+                  fontSize: '12px', 
+                  color: '#059669',
+                  fontWeight: 400
+                }}>
+                  ({Math.round((classInfo.enrolledCount / classInfo.maxStudents) * 100)}% đã đăng ký)
+                </span>
+              )}
             </span>
           </div>
         </div>
       </div>
 
-      {/* 2. Phần tiêu chí đánh giá (Điểm thành phần) */}
+      {/* ⭐ NEW: 2. Phần mô tả môn học */}
+      {classInfo.description && (
+        <div className="info-section">
+          <h3>📝 Mô tả môn học</h3>
+          <div style={{
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+            padding: '16px',
+            lineHeight: '1.8',
+            color: '#334155',
+            fontSize: '0.95rem',
+            whiteSpace: 'pre-wrap', // Giữ nguyên xuống dòng
+            wordWrap: 'break-word'
+          }}>
+            {classInfo.description}
+          </div>
+        </div>
+      )}
+
+      {/* 3. Phần tiêu chí đánh giá (Điểm thành phần) */}
       <div className="info-section">
         <h3>📊 Tiêu chí đánh giá</h3>
         <div className="grading-table">
@@ -113,14 +146,47 @@ const InfoTab = ({ classInfo }: InfoTabProps) => {
         </div>
       </div>
       
-      {/* 3. Phần thông tin liên hệ (Optional) */}
+      {/* 4. Phần thông tin liên hệ */}
       <div className="info-section">
         <h3>📞 Liên hệ giảng viên</h3>
         <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6' }}>
-          Sinh viên có thắc mắc về bài giảng hoặc điểm số vui lòng liên hệ trực tiếp giảng viên qua email hoặc gặp mặt vào giờ hành chính tại văn phòng khoa.
+          Sinh viên có thắc mắc về bài giảng hoặc điểm số vui lòng liên hệ trực tiếp giảng viên <strong>{classInfo.teacherName}</strong> qua email hoặc gặp mặt vào giờ hành chính tại văn phòng khoa.
         </p>
       </div>
 
+      {/* 5. Thống kê lớp học */}
+      {classInfo.enrolledCount > 0 && (
+        <div className="info-section">
+          <h3>📈 Thống kê</h3>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon">👥</div>
+              <div className="stat-info">
+                <div className="stat-value">{classInfo.enrolledCount}</div>
+                <div className="stat-label">Sinh viên đã đăng ký</div>
+              </div>
+            </div>
+            
+            <div className="stat-card">
+              <div className="stat-icon">🪑</div>
+              <div className="stat-info">
+                <div className="stat-value">{classInfo.maxStudents - classInfo.enrolledCount}</div>
+                <div className="stat-label">Chỗ còn lại</div>
+              </div>
+            </div>
+            
+            <div className="stat-card">
+              <div className="stat-icon">📊</div>
+              <div className="stat-info">
+                <div className="stat-value">
+                  {Math.round((classInfo.enrolledCount / classInfo.maxStudents) * 100)}%
+                </div>
+                <div className="stat-label">Tỷ lệ lấp đầy</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

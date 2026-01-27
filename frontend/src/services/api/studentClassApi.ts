@@ -28,7 +28,7 @@ export interface StudentClassResponse {
   roomName?: string;
   schedule?: string; // "Thứ 2, Ca 1 (06:45 - 09:15)"
   maxStudents: number;
-  currentStudents: number;
+  enrolledCount: number; // ⭐ FIXED: Changed from currentStudents to match backend
   status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   registrationDate?: string;
 }
@@ -67,7 +67,7 @@ export interface ClassDetailResponse {
   };
   schedule: ClassSchedule[];
   maxStudents: number;
-  currentStudents: number;
+  enrolledCount: number; // ⭐ FIXED: Changed from currentStudents to match backend
   registrationDate?: string;
 }
 

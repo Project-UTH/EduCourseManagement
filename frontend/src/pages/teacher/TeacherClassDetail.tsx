@@ -58,6 +58,9 @@ const TeacherClassDetail = () => {
       
       const classData = classes.find((c: any) => c.classId === Number(classId));
       
+      console.log('🔍 [TeacherClassDetail] classData:', classData); // ⭐ DEBUG
+      console.log('🔍 [TeacherClassDetail] enrolledCount:', classData?.enrolledCount); // ⭐ DEBUG
+      
       if (!classData) {
         setError('Không tìm thấy lớp học');
         return;
@@ -73,10 +76,13 @@ const TeacherClassDetail = () => {
         timeSlotDisplay: classData.timeSlotDisplay || '',
         room: classData.fixedRoom || 'Chưa có phòng',
         teacherName: classData.teacherName || 'N/A',
-        studentCount: (classData as any).studentCount || 0,
+        // ⭐ FIX: Use enrolledCount from backend (ClassResponse DTO)
+        studentCount: classData.enrolledCount || (classData as any).studentCount || 0,
         maxStudents: classData.maxStudents || 40,
         semesterCode: classData.semesterCode || 'N/A'
       });
+
+      console.log('📊 [TeacherClassDetail] Final studentCount:', classData.enrolledCount || 0); // ⭐ DEBUG
       
     } catch (err: any) {
       console.error('[ClassDetail] Failed:', err);
