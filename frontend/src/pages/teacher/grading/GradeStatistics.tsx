@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import gradeApi, { GradeStatsResponse, GradeResponse } from '../../../services/api/gradeApi';
 import classApi from '../../../services/api/classApi';
+import teacherApi from '../../../services/api/teacherApi';
+import { message } from 'antd';
 import './GradeStatistics.css';
 import ChatList from '../../../components/chat/ChatList';
 import { useAuthStore } from '@/store/authStore';
@@ -8,15 +10,19 @@ import { useAuthStore } from '@/store/authStore';
 
 /**
  * GradeStatistics Component - Namespaced (tgs-)
- * * Statistics and analytics page for class grades
+ * Statistics and analytics page for class grades
+ * 
+ * @updated 2026-01-28 - Added Excel export functionality
  */
 
 const GradeStatistics = () => {
   const [classes, setClasses] = useState<any[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
   const [stats, setStats] = useState<GradeStatsResponse | null>(null);
   const [grades, setGrades] = useState<GradeResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
@@ -27,9 +33,14 @@ const GradeStatistics = () => {
     if (selectedClassId) {
       loadStatistics();
       loadGrades();
+      
+      // Update selected class object
+      const cls = classes.find(c => c.classId === selectedClassId);
+      setSelectedClass(cls);
     } else {
       setStats(null);
       setGrades([]);
+      setSelectedClass(null);
     }
   }, [selectedClassId]);
   
@@ -74,8 +85,57 @@ const GradeStatistics = () => {
     }
   };
   
-  const handleExportExcel = () => {
-    alert('Tính năng xuất Excel đang phát triển');
+  /**
+   * Handle Excel export
+   * Downloads grade statistics as Excel file
+   */
+  const handleExportExcel = async () => {
+    if (!selectedClassId) {
+      message.warning('Vui lòng chọn lớp học trước!');
+      return;
+    }
+
+    try {
+      setExportingExcel(true);
+      
+      // Call API to get Excel file
+      const response = await teacherApi.exportGradeStatisticsExcel(selectedClassId);
+      
+      // Create blob from response
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      
+      // Generate filename
+      const filename = `ThongKeDiem_${selectedClass?.classCode || 'Class'}_${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`;
+      
+      link.setAttribute("download", filename);
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      // Show success message
+      message.success('Xuất Excel thành công!');
+    } catch (error: any) {
+      console.error('Error exporting Excel:', error);
+      message.error(
+        error.response?.data?.message || 'Không thể xuất Excel. Vui lòng thử lại!'
+      );
+    } finally {
+      setExportingExcel(false);
+    }
   };
   
   const showError = (message: string) => {
@@ -116,8 +176,12 @@ const GradeStatistics = () => {
           <h1>📊 Thống kê điểm</h1>
           <p>Phân tích và thống kê kết quả học tập</p>
         </div>
-        <button className="tgs-btn-export" onClick={handleExportExcel}>
-          📥 Xuất Excel
+        <button 
+          className="tgs-btn-export" 
+          onClick={handleExportExcel}
+          disabled={exportingExcel || !selectedClassId}
+        >
+          {exportingExcel ? '⏳ Đang xuất...' : '📥 Xuất Excel'}
         </button>
       </div>
       

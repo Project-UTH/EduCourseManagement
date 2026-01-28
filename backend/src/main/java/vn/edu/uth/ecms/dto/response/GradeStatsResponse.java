@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 /**
  * GradeStatsResponse DTO
@@ -16,6 +15,7 @@ import java.util.Map;
  * 
  * @author Phase 4 - Teacher Features
  * @since 2026-01-06
+ * @updated 2026-01-28 - Added helper methods for Excel export
  */
 @Data
 @Builder
@@ -52,6 +52,19 @@ public class GradeStatsResponse {
         private BigDecimal highest;
         private BigDecimal lowest;
         private BigDecimal standardDeviation;
+        
+        // Helper methods for Excel export (return Double)
+        public Double getAverageDouble() {
+            return average != null ? average.doubleValue() : null;
+        }
+        
+        public Double getHighestDouble() {
+            return highest != null ? highest.doubleValue() : null;
+        }
+        
+        public Double getLowestDouble() {
+            return lowest != null ? lowest.doubleValue() : null;
+        }
     }
     
     @Data

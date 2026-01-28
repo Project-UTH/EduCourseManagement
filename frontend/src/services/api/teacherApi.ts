@@ -2,6 +2,8 @@ import apiClient from './apiClient';
 
 /**
  * Teacher API Service
+ * 
+ * @updated 2026-01-28 - Added exportGradeStatisticsExcel method
  */
 
 export interface TeacherCreateRequest {
@@ -67,7 +69,7 @@ export interface TeacherSubjectResponse {
   notes?: string;
 }
 
-// ==================== ✅ NEW: STUDENT ENROLLMENT DTO ====================
+// ==================== ✅ STUDENT ENROLLMENT DTO ====================
 
 /**
  * StudentEnrollmentDto
@@ -138,6 +140,7 @@ export interface PageResponse<T> {
 interface ApiError {
   response?: {
     data?: unknown;
+    status?: number;
   };
   message: string;
 }
@@ -462,7 +465,7 @@ const teacherApi = {
     }
   },
 
-  // ==================== ✅ NEW: CLASS ROSTER MANAGEMENT ====================
+  // ==================== ✅ CLASS ROSTER MANAGEMENT ====================
 
   /**
    * Get list of students enrolled in a class
@@ -494,6 +497,50 @@ const teacherApi = {
       
       if (error.response?.status === 403) {
         throw new Error('Bạn không có quyền xem danh sách sinh viên của lớp này');
+      } else if (error.response?.status === 404) {
+        throw new Error('Không tìm thấy lớp học');
+      }
+      
+      throw error;
+    }
+  },
+
+  // ==================== ✅ EXCEL EXPORT ====================
+
+  /**
+   * Export grade statistics to Excel
+   * GET /api/teacher/classes/{classId}/grades/export-excel
+   * 
+   * Downloads an Excel file containing:
+   * - Sheet 1: Overview statistics (average, pass rate, distribution)
+   * - Sheet 2: Detailed student list with all scores
+   * 
+   * @param classId Class ID
+   * @returns Excel file as blob (auto-download in browser)
+   * @throws Error if teacher doesn't own the class or class not found
+   * 
+   * @author ECMS Team
+   * @since 2026-01-28
+   */
+  exportGradeStatisticsExcel: async (classId: number) => {
+    console.log('[teacherApi] 📊 Exporting grade statistics to Excel for class:', classId);
+    
+    try {
+      const response = await apiClient.get(
+        `/api/teacher/classes/${classId}/grades/export-excel`,
+        {
+          responseType: 'blob', // CRITICAL: Must be 'blob' to receive binary data
+        }
+      );
+      
+      console.log('[teacherApi] ✅ Excel file downloaded successfully');
+      return response;
+      
+    } catch (error: any) {
+      console.error('[teacherApi] ❌ Failed to export Excel:', error);
+      
+      if (error.response?.status === 403) {
+        throw new Error('Bạn không có quyền xuất báo cáo của lớp này');
       } else if (error.response?.status === 404) {
         throw new Error('Không tìm thấy lớp học');
       }

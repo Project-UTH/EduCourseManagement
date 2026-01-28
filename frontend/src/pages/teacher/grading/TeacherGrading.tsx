@@ -7,15 +7,17 @@ import { useAuthStore } from '@/store/authStore';
 
 /**
  * TeacherGrading Component - Namespaced (tgr-)
- * * Grade management page for teachers
+ * Grade management page for teachers
  * - Inline editing
  * - Auto-calculation
  * - Bulk save
+ * 
+ * @updated 2026-01-28 - Changed GK and CK to Auto (readonly) like TX
  */
 
 interface EditingCell {
   gradeId: number;
-  field: 'midtermScore' | 'finalScore' | 'attendanceRate' | 'teacherComment';
+  field: 'attendanceRate' | 'teacherComment'; // ✅ REMOVED: midtermScore, finalScore
   value: string;
 }
 
@@ -95,7 +97,8 @@ const TeacherGrading = () => {
     }
   };
   
-  const handleCellClick = (grade: GradeRow, field: 'midtermScore' | 'finalScore' | 'attendanceRate' | 'teacherComment') => {
+  // ✅ UPDATED: Only allow editing attendanceRate and teacherComment
+  const handleCellClick = (grade: GradeRow, field: 'attendanceRate' | 'teacherComment') => {
     setEditingCell({
       gradeId: grade.gradeId,
       field,
@@ -117,9 +120,8 @@ const TeacherGrading = () => {
     // Validate
     if (field !== 'teacherComment') {
       const numValue = parseFloat(value);
-      if (value !== '' && (isNaN(numValue) || numValue < 0 || numValue > 10)) {
-        showError('Điểm phải từ 0 đến 10');
-        // Don't close input if invalid
+      if (value !== '' && (isNaN(numValue) || numValue < 0 || numValue > 100)) {
+        showError('Điểm danh phải từ 0 đến 100');
         return; 
       }
     }
@@ -133,16 +135,6 @@ const TeacherGrading = () => {
           updated[field] = value;
         } else {
           updated[field] = value === '' ? undefined : parseFloat(value);
-        }
-        
-        // Auto-calculate total
-        if (field === 'midtermScore' || field === 'finalScore') {
-          updated.totalScore = calculateTotal(
-            updated.regularScore,
-            updated.midtermScore,
-            updated.finalScore
-          );
-          // TODO: Letter grade calculation logic should ideally be on backend or duplicated here
         }
         
         return updated;
@@ -165,17 +157,6 @@ const TeacherGrading = () => {
       e.preventDefault();
       handleCellCancel();
     }
-  };
-  
-  const calculateTotal = (
-    regularScore?: number,
-    midtermScore?: number,
-    finalScore?: number
-  ): number | undefined => {
-    if (regularScore !== undefined && midtermScore !== undefined && finalScore !== undefined) {
-      return Math.round((regularScore * 0.3 + midtermScore * 0.3 + finalScore * 0.4) * 100) / 100;
-    }
-    return undefined;
   };
   
   const handleSaveAll = async () => {
@@ -204,7 +185,7 @@ const TeacherGrading = () => {
       
       await gradeApi.bulkUpdateGrades(requests);
       showSuccess(`✅ Đã lưu thành công ${modifiedGrades.length} điểm!`);
-      await loadGrades(); // Reload to get fresh data (including backend calculated letter grades)
+      await loadGrades(); // Reload to get fresh data
     } catch (err: any) {
       showError('Không thể lưu điểm. Vui lòng thử lại.');
     } finally {
@@ -331,11 +312,11 @@ const TeacherGrading = () => {
                   </th>
                   <th style={{ width: '100px' }}>
                     GK (30%)
-                    <div className="tgr-header-hint tgr-hint-edit">Edit</div>
+                    <div className="tgr-header-hint tgr-hint-auto">Auto</div>
                   </th>
                   <th style={{ width: '100px' }}>
                     CK (40%)
-                    <div className="tgr-header-hint tgr-hint-edit">Edit</div>
+                    <div className="tgr-header-hint tgr-hint-auto">Auto</div>
                   </th>
                   <th style={{ width: '100px' }}>
                     Tổng
@@ -353,65 +334,37 @@ const TeacherGrading = () => {
                     <td><b>{grade.studentInfo.studentCode}</b></td>
                     <td>{grade.studentInfo.fullName}</td>
                     
-                    {/* TX - READ ONLY */}
+                    {/* TX - READ ONLY (AUTO) */}
                     <td className="tgr-cell-score tgr-cell-readonly">
                       {grade.regularScore?.toFixed(2) ?? '--'}
                       <span className="tgr-lock-icon">🔒</span>
                     </td>
                     
-                    {/* GK */}
-                    <td 
-                      className="tgr-cell-score tgr-cell-editable" 
-                      onClick={() => handleCellClick(grade, 'midtermScore')}
-                    >
-                      {editingCell?.gradeId === grade.gradeId && editingCell.field === 'midtermScore' ? (
-                        <input 
-                          type="number" step="0.01" min="0" max="10" 
-                          value={editingCell.value} 
-                          onChange={(e) => handleCellChange(e.target.value)} 
-                          onBlur={handleCellSave} 
-                          onKeyDown={handleKeyDown} 
-                          autoFocus 
-                          className="tgr-input" 
-                        />
-                      ) : (
-                        <span>{grade.midtermScore?.toFixed(2) ?? '--'}</span>
-                      )}
+                    {/* GK - READ ONLY (AUTO) - ✅ CHANGED FROM EDITABLE */}
+                    <td className="tgr-cell-score tgr-cell-readonly">
+                      {grade.midtermScore?.toFixed(2) ?? '--'}
+                      <span className="tgr-lock-icon">🔒</span>
                     </td>
                     
-                    {/* CK */}
-                    <td 
-                      className="tgr-cell-score tgr-cell-editable" 
-                      onClick={() => handleCellClick(grade, 'finalScore')}
-                    >
-                      {editingCell?.gradeId === grade.gradeId && editingCell.field === 'finalScore' ? (
-                        <input 
-                          type="number" step="0.01" min="0" max="10" 
-                          value={editingCell.value} 
-                          onChange={(e) => handleCellChange(e.target.value)} 
-                          onBlur={handleCellSave} 
-                          onKeyDown={handleKeyDown} 
-                          autoFocus 
-                          className="tgr-input" 
-                        />
-                      ) : (
-                        <span>{grade.finalScore?.toFixed(2) ?? '--'}</span>
-                      )}
+                    {/* CK - READ ONLY (AUTO) - ✅ CHANGED FROM EDITABLE */}
+                    <td className="tgr-cell-score tgr-cell-readonly">
+                      {grade.finalScore?.toFixed(2) ?? '--'}
+                      <span className="tgr-lock-icon">🔒</span>
                     </td>
                     
-                    {/* TOTAL */}
+                    {/* TOTAL - AUTO */}
                     <td className="tgr-cell-score tgr-cell-total">
                       {grade.totalScore?.toFixed(2) ?? '--'}
                     </td>
                     
-                    {/* LETTER */}
+                    {/* LETTER GRADE */}
                     <td className="tgr-center">
                       <span className={`tgr-badge ${getLetterGradeClass(grade.letterGrade)}`}>
                         {grade.letterGrade || '-'}
                       </span>
                     </td>
                     
-                    {/* ATTENDANCE */}
+                    {/* ATTENDANCE - EDITABLE */}
                     <td 
                       className="tgr-cell-score tgr-cell-editable" 
                       onClick={() => handleCellClick(grade, 'attendanceRate')}
@@ -431,7 +384,7 @@ const TeacherGrading = () => {
                       )}
                     </td>
                     
-                    {/* COMMENT */}
+                    {/* COMMENT - EDITABLE */}
                     <td 
                       className="tgr-cell-comment" 
                       onClick={() => handleCellClick(grade, 'teacherComment')}
@@ -463,11 +416,11 @@ const TeacherGrading = () => {
           <div className="tgr-legend">
             <div className="tgr-legend-item">
               <span className="tgr-legend-icon tgr-icon-readonly">🔒</span>
-              <span>TX - Tự động từ bài tập (Read-only)</span>
+              <span>TX, GK, CK - Tự động từ bài tập/kiểm tra (Read-only)</span>
             </div>
             <div className="tgr-legend-item">
               <span className="tgr-legend-icon tgr-icon-edit">✏️</span>
-              <span>GK, CK - Click vào ô để sửa</span>
+              <span>Điểm danh, Nhận xét - Click vào ô để sửa</span>
             </div>
             <div className="tgr-legend-item">
               <span className="tgr-legend-icon tgr-icon-total">⚡</span>
