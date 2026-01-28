@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.request.ClassCreateRequest;
 import vn.edu.uth.ecms.dto.request.ClassUpdateRequest;
 import vn.edu.uth.ecms.dto.response.ClassResponse;
+import vn.edu.uth.ecms.dto.response.StudentEnrollmentDto;
 import vn.edu.uth.ecms.entity.*;
 import vn.edu.uth.ecms.exception.*;
 import vn.edu.uth.ecms.repository.*;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
  * 1. createClass() - Auto find and assign room
  * 2. generateInitialSessions() - Create FIXED + PENDING EXTRA + ELEARNING
  * 3. No more manual room input from admin
+ * 4. ✅ NEW: getEnrolledStudents() - Get student roster for teacher (Phase 4)
  *
  * PART 1 of 2 - This file contains createClass() and session generation
  */
@@ -47,6 +49,7 @@ public class ClassServiceImpl implements ClassService {
     private final CourseRegistrationRepository courseRegistrationRepository;
     private final RoomService roomService;
     private final StudentRepository studentRepository;
+    private final GradeRepository gradeRepository;  // ← NEW for grades
 
     // ==================== CREATE CLASS (UPDATED) ====================
 
@@ -496,6 +499,94 @@ public class ClassServiceImpl implements ClassService {
         return  classRepository.count();
     }
 
+// ==================== ✅ NEW: GET ENROLLED STUDENTS (PHASE 4) ====================
+
+    /**
+     * Get list of students enrolled in a class (for Teacher)
+     * 
+     * @param classId Class ID
+     * @param teacherId Teacher ID (to verify ownership)
+     * @return List of enrolled students with their information
+     * @throws ForbiddenException if teacher doesn't own this class
+     * @throws ResourceNotFoundException if class not found
+     * 
+     * @author ECMS Team
+     * @since 2026-01-28
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<StudentEnrollmentDto> getEnrolledStudents(Long classId, Long teacherId) {
+        log.info("🔍 Fetching enrolled students for class {} by teacher {}", classId, teacherId);
+        
+        // 1. Verify class exists and teacher owns it
+        ClassEntity classEntity = classRepository.findById(classId)
+                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + classId));
+        
+        if (!classEntity.getTeacher().getTeacherId().equals(teacherId)) {
+            log.warn("❌ Teacher {} tried to access class {} owned by teacher {}", 
+                    teacherId, classId, classEntity.getTeacher().getTeacherId());
+            throw new ForbiddenException("You don't have permission to access this class");
+        }
+        
+        // 2. Get all enrollments for this class with status REGISTERED
+        List<CourseRegistration> enrollments = courseRegistrationRepository
+                .findByClassEntity_ClassIdAndStatus(classId, RegistrationStatus.REGISTERED);
+        
+        log.info("✅ Found {} enrolled students in class {}", enrollments.size(), classId);
+        
+        // 3. Map to DTO
+        return enrollments.stream()
+                .map(this::mapToStudentEnrollmentDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Helper method: Map CourseRegistration to StudentEnrollmentDto
+     * 
+     * @param registration Course registration entity
+     * @return Student enrollment DTO with all information
+     */
+    private StudentEnrollmentDto mapToStudentEnrollmentDto(CourseRegistration registration) {
+        Student student = registration.getStudent();
+        ClassEntity classEntity = registration.getClassEntity();
+        
+        // Get grade if exists (using studentId and classId)
+        Grade grade = gradeRepository.findByStudent_StudentIdAndClassEntity_ClassId(
+                student.getStudentId(), 
+                classEntity.getClassId()
+        ).orElse(null);
+        
+        return StudentEnrollmentDto.builder()
+                // Student info
+                .studentId(student.getStudentId())
+                .studentCode(student.getStudentCode())
+                .fullName(student.getFullName())
+                .gender(student.getGender() != null ? student.getGender().toString() : null)
+                .email(student.getEmail())
+                .phone(student.getPhone())
+                
+                // Academic info
+                .majorName(student.getMajor() != null ? student.getMajor().getMajorName() : null)
+                .majorCode(student.getMajor() != null ? student.getMajor().getMajorCode() : null)
+                .academicYear(student.getAcademicYear() != null ? student.getAcademicYear().toString() : null)
+                .educationLevel(student.getEducationLevel() != null ? student.getEducationLevel().toString() : null)
+                
+                // Enrollment info
+                .enrollmentId(registration.getRegistrationId())
+                .registrationDate(registration.getCreatedAt())
+                .enrollmentStatus(registration.getStatus() != null ? registration.getStatus().toString() : null)
+                .enrollmentType(registration.getEnrollmentType() != null ? registration.getEnrollmentType().toString() : null)
+                
+                // Performance info (from Grade entity)
+                .regularScore(grade != null && grade.getRegularScore() != null ? grade.getRegularScore().doubleValue() : null)
+                .midtermScore(grade != null && grade.getMidtermScore() != null ? grade.getMidtermScore().doubleValue() : null)
+                .finalScore(grade != null && grade.getFinalScore() != null ? grade.getFinalScore().doubleValue() : null)
+                .totalScore(grade != null && grade.getTotalScore() != null ? grade.getTotalScore().doubleValue() : null)
+                .letterGrade(grade != null ? grade.getLetterGrade() : null)
+                .gradeStatus(grade != null && grade.getStatus() != null ? grade.getStatus().name() : null)
+                .build();
+    }
+
 // ==================== MAPPER (UPDATED) ====================
 
     private ClassResponse mapToResponse(ClassEntity entity) {
@@ -506,12 +597,6 @@ public class ClassServiceImpl implements ClassService {
 
         // Get session statistics
         long totalSessions = sessionRepository.countByClass(entity.getClassId());
-        long inPerson = sessionRepository.countByClassAndType(
-                entity.getClassId(), SessionType.IN_PERSON
-        );
-        long eLearning = sessionRepository.countByClassAndType(
-                entity.getClassId(), SessionType.E_LEARNING
-        );
         long pending = sessionRepository.countPendingByClass(entity.getClassId());
         long rescheduled = sessionRepository.countRescheduledSessions(entity.getClassId());
 

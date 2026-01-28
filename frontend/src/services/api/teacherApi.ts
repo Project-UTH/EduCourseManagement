@@ -67,6 +67,46 @@ export interface TeacherSubjectResponse {
   notes?: string;
 }
 
+// ==================== ✅ NEW: STUDENT ENROLLMENT DTO ====================
+
+/**
+ * StudentEnrollmentDto
+ * 
+ * Response DTO for displaying students enrolled in a class
+ * Used by Teacher to view their class roster with grades
+ * 
+ * @since 2026-01-28
+ */
+export interface StudentEnrollmentDto {
+  // Student info
+  studentId: number;
+  studentCode: string;
+  fullName: string;
+  gender: 'MALE' | 'FEMALE';
+  email?: string;
+  phone?: string;
+  
+  // Academic info
+  majorName?: string;
+  majorCode?: string;
+  academicYear?: string;
+  educationLevel?: string;
+  
+  // Enrollment info
+  enrollmentId: number;
+  registrationDate: string;
+  enrollmentStatus: 'REGISTERED' | 'COMPLETED' | 'DROPPED';
+  enrollmentType: 'NORMAL' | 'RETAKE' | 'IMPROVE';
+  
+  // Performance info (optional)
+  regularScore?: number;
+  midtermScore?: number;
+  finalScore?: number;
+  totalScore?: number;
+  letterGrade?: string;
+  gradeStatus?: 'PASSED' | 'FAILED' | 'IN_PROGRESS';
+}
+
 export interface ImportResult {
   totalRows: number;
   successCount: number;
@@ -418,6 +458,46 @@ const teacherApi = {
     } catch (error) {
       const apiError = error as ApiError;
       console.error('[teacherApi] Failed to change password:', apiError.response?.data || apiError.message);
+      throw error;
+    }
+  },
+
+  // ==================== ✅ NEW: CLASS ROSTER MANAGEMENT ====================
+
+  /**
+   * Get list of students enrolled in a class
+   * GET /api/teacher/classes/{classId}/students
+   * 
+   * Returns list of students with their information and current grades
+   * Only accessible if teacher owns this class
+   * 
+   * @param classId Class ID
+   * @returns List of enrolled students with their info and grades
+   * @throws Error if teacher doesn't own the class or class not found
+   * 
+   * @author ECMS Team
+   * @since 2026-01-28
+   */
+  getEnrolledStudents: async (classId: number): Promise<StudentEnrollmentDto[]> => {
+    console.log('[teacherApi] Fetching enrolled students for class:', classId);
+    
+    try {
+      const response = await apiClient.get<StudentEnrollmentDto[]>(
+        `/api/teacher/classes/${classId}/students`
+      );
+      
+      console.log('[teacherApi] ✅ Enrolled students fetched:', response.data.length);
+      return response.data;
+      
+    } catch (error: any) {
+      console.error('[teacherApi] ❌ Failed to fetch enrolled students:', error);
+      
+      if (error.response?.status === 403) {
+        throw new Error('Bạn không có quyền xem danh sách sinh viên của lớp này');
+      } else if (error.response?.status === 404) {
+        throw new Error('Không tìm thấy lớp học');
+      }
+      
       throw error;
     }
   },

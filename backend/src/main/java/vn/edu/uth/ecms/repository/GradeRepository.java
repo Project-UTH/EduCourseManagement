@@ -23,6 +23,7 @@ import java.util.Optional;
  * 
  * @author Phase 4 - Teacher Features
  * @since 2026-01-06
+ * @updated 2026-01-28 - FIXED: Removed invalid method findByCourseRegistration_RegistrationId
  */
 @Repository
 public interface GradeRepository extends JpaRepository<Grade, Long> {
@@ -481,4 +482,18 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
      * @return Number of deleted records
      */
     long deleteByClassEntity_ClassId(Long classId);
+    
+    // ========================================
+    // ❌ REMOVED INVALID METHOD (Fixed on 2026-01-28)
+    // ========================================
+    // Optional<Subject> findByCourseRegistration_RegistrationId(Long registrationId);
+    //
+    // This method was INVALID and caused Spring Boot startup failure:
+    // 1. Wrong return type: returned Subject instead of Grade
+    // 2. Invalid property path: Grade entity has no courseRegistration field
+    // 3. Error: "No property 'courseRegistration' found for type 'Grade'"
+    //
+    // If you need to find Grade by registration, use:
+    // findByStudent_StudentIdAndClassEntity_ClassId(studentId, classId)
+    // ========================================
 }

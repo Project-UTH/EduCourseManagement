@@ -1,3 +1,7 @@
+import React from 'react';
+import EnrolledStudentsList from './EnrolledStudentsList';
+import './TabComponents.css';
+
 /**
  * ClassInfo Tab
  * 
@@ -6,6 +10,7 @@
  * - Subject details
  * - Schedule info
  * - Teacher info
+ * - Enrolled students list (NEW)
  */
 
 interface Props {
@@ -99,6 +104,14 @@ const ClassInfo: React.FC<Props> = ({ classDetail }) => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ==================== ✅ NEW: ENROLLED STUDENTS LIST ==================== */}
+      <div className="class-students-section">
+        <EnrolledStudentsList 
+          classId={classDetail.classId} 
+          enrolledCount={classDetail.studentCount} 
+        />
       </div>
     </div>
   );

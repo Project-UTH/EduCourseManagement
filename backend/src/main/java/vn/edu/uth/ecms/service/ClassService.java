@@ -5,9 +5,8 @@ import org.springframework.data.domain.Pageable;
 import vn.edu.uth.ecms.dto.request.ClassCreateRequest;
 import vn.edu.uth.ecms.dto.request.ClassUpdateRequest;
 import vn.edu.uth.ecms.dto.response.ClassResponse;
-import vn.edu.uth.ecms.entity.TimeSlot;
+import vn.edu.uth.ecms.dto.response.StudentEnrollmentDto;
 
-import java.time.DayOfWeek;
 import java.util.List;
 
 /**
@@ -17,6 +16,7 @@ import java.util.List;
  * - Extra schedule conflict detection
  * - E-learning schedule conflict detection
  * - New session generation (fixed + extra + elearning)
+ * - Get enrolled students (Phase 4)
  *
  * MAIN RESPONSIBILITIES:
  * 1. CRUD operations for classes
@@ -24,10 +24,12 @@ import java.util.List;
  * 3. Conflict detection (teacher, room) for ALL schedules
  * 4. Enrollment management
  * 5. Search & filter
+ * 6. Get enrolled students with grades
  */
 public interface ClassService {
 
     // ==================== CRUD OPERATIONS ====================
+    
     ClassResponse createClass(ClassCreateRequest request);
 
     /**
@@ -111,4 +113,30 @@ public interface ClassService {
     boolean canRegister(Long classId);
 
     long countAll();
+    
+    // ==================== ✅ NEW: PHASE 4 - STUDENT ROSTER ====================
+    
+    /**
+     * Get list of students enrolled in a class (for Teacher)
+     * 
+     * Returns detailed information about each student including:
+     * - Personal info (name, email, phone, gender)
+     * - Academic info (major, academic year)
+     * - Enrollment info (registration date, type, status)
+     * - Performance info (scores, grade status)
+     * 
+     * SECURITY:
+     * - Only teacher who owns the class can access
+     * - Throws ForbiddenException if teacher doesn't own class
+     * 
+     * @param classId Class ID
+     * @param teacherId Teacher ID (to verify ownership)
+     * @return List of enrolled students with their information
+     * @throws ForbiddenException if teacher doesn't own this class
+     * @throws ResourceNotFoundException if class not found
+     * 
+     * @author ECMS Team
+     * @since 2026-01-28
+     */
+    List<StudentEnrollmentDto> getEnrolledStudents(Long classId, Long teacherId);
 }
