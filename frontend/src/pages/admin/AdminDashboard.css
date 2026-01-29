@@ -264,6 +264,8 @@
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-dashboard .action-card:hover {
@@ -273,10 +275,13 @@
 
 .admin-dashboard .action-header {
   padding: 1.25rem;
-  color: white;
+  color: black;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0;
+  border-radius: 1rem /* ⭐ bo góc trên */
+
 }
 
 .admin-dashboard .action-icon {
@@ -290,17 +295,23 @@
 }
 
 .admin-dashboard .action-list {
+  display: flex;
+  flex-direction: column;
   padding: 0.5rem 0;
+  flex: 1; /* ⭐ nằm dưới header */
 }
+
 
 .admin-dashboard .action-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.875rem 1.25rem;
+
   color: #374151;
   text-decoration: none;
   transition: all 0.2s;
+
   border-left: 3px solid transparent;
 }
 

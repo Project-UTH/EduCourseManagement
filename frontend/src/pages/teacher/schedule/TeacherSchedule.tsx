@@ -232,7 +232,7 @@ const TeacherSchedule: React.FC = () => {
       
 
       {/* Schedule Table */}
-      {scheduleItems.length > 0 && (
+      
         <div className="calendar-wrapper">
           <table className="schedule-table">
             <thead>
@@ -301,7 +301,6 @@ const TeacherSchedule: React.FC = () => {
             </tbody>
           </table>
         </div>
-      )}
     </div>
   );
 };

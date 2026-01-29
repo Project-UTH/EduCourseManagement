@@ -337,7 +337,6 @@ const ClassList: React.FC = () => {
                   <th>Môn học</th>
                   <th>Giảng viên</th>
                   <th>Học kỳ</th>
-                  <th>Lịch & Phòng</th>
                   <th>Sĩ số</th>
                   <th>Tiến độ</th>
                   <th>Trạng thái</th>
@@ -364,17 +363,6 @@ const ClassList: React.FC = () => {
                       <div className="semester-info">
                         <span>{cls.semesterCode}</span>
                         {getSemesterBadge(cls.semesterStatus)}
-                      </div>
-                    </td>
-                    <td data-label="Lịch học">
-                      <div className="schedule-info">
-                        <div>{cls.dayOfWeekDisplay}, {cls.timeSlotDisplay}</div>
-                        <div className="room">{cls.room || 'Chưa xếp phòng'}</div>
-                        {cls.rescheduledSessionsCount > 0 && (
-                          <div className="rescheduled-badge">
-                            🔄 {cls.rescheduledSessionsCount} đổi lịch
-                          </div>
-                        )}
                       </div>
                     </td>
                     <td data-label="Sĩ số">

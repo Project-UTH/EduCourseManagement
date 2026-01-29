@@ -221,6 +221,7 @@
   background: white;
   border: 1px solid var(--tm-border);
   color: var(--tm-text-sec);
+  white-space: nowrap;
 }
 .teacher-modal-wrapper .btn-cancel:hover {
   background: #f3f4f6;
