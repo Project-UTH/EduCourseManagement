@@ -471,7 +471,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .semesterCode(semester.getSemesterCode())
                 .registeredAt(registration.getRegisteredAt())
                 .droppedAt(registration.getDroppedAt())
-                .enrollmentType(registration.getEnrollmentType().toString())
+                .enrollmentType(registration.getEnrollmentType() != null
+                        ? registration.getEnrollmentType().toString()
+                        : "UNKNOWN")
                 .manualReason(registration.getManualReason())
                 .manualNote(registration.getManualNote())
                 .enrolledByAdmin(registration.getEnrolledByAdmin() != null
