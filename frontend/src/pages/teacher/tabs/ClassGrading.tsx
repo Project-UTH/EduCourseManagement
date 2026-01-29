@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
  * Features:
  * - Quick link to grading page
  * - Quick link to statistics page
- * - Overview of grading progress
  */
 
 interface Props {
@@ -48,32 +47,6 @@ const ClassGrading: React.FC<Props> = ({ classId }) => {
           </div>
           <div className="action-arrow">→</div>
         </div>
-      </div>
-
-      <div className="grading-overview">
-        <h3>📋 Tổng quan</h3>
-        <div className="overview-stats">
-          <div className="overview-stat">
-            <span className="stat-label">Tổng sinh viên:</span>
-            <span className="stat-value">40</span>
-          </div>
-          <div className="overview-stat">
-            <span className="stat-label">Đã chấm điểm:</span>
-            <span className="stat-value">0</span>
-          </div>
-          <div className="overview-stat">
-            <span className="stat-label">Chưa chấm:</span>
-            <span className="stat-value">40</span>
-          </div>
-          <div className="overview-stat">
-            <span className="stat-label">Điểm trung bình:</span>
-            <span className="stat-value">--</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="info-box">
-        <p>💡 <strong>Công thức:</strong> Tổng = TX×30% + GK×30% + CK×40%</p>
       </div>
     </div>
   );

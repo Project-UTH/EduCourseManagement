@@ -424,7 +424,7 @@ const TeacherGrading = () => {
             </div>
             <div className="tgr-legend-item">
               <span className="tgr-legend-icon tgr-icon-total">⚡</span>
-              <span>Tổng = TX×30% + GK×30% + CK×40%</span>
+              <span>Tổng = TX×20% + GK×30% + CK×50%</span>
             </div>
             <div className="tgr-legend-item">
               <span className="tgr-legend-icon tgr-icon-modified">🔥</span>

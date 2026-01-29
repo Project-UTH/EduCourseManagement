@@ -447,7 +447,6 @@ const StudentTranscript: React.FC = () => {
                     <th className="col-score">Điểm tổng kết</th>
                     <th className="col-score">Điểm hệ 4</th>
                     <th className="col-letter">Điểm chữ</th>
-                    <th className="col-status">Xếp loại</th>
                     <th className="col-note">Ghi chú</th>
                   </tr>
                 </thead>
@@ -481,15 +480,7 @@ const StudentTranscript: React.FC = () => {
                           </span>
                         </td>
                         <td className="text-center">
-                          <span 
-                            className="letter-grade-badge"
-                            style={{
-                              backgroundColor: `${getLetterGradeColor(grade.letterGrade)}15`,
-                              color: getLetterGradeColor(grade.letterGrade)
-                            }}
-                          >
-                            {getGradeClassification(grade.letterGrade)}
-                          </span>
+                          
                         </td>
                         <td className="text-center text-gray-500">
                           {grade.status === 'IN_PROGRESS' ? 'Đang học' : ''}

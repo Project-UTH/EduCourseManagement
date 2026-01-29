@@ -84,7 +84,7 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
             label: 'Chấm điểm',
             path: '/teacher/grading-menu',
             children: [
-              { icon: '🎯', label: 'Nhập điểm', path: '/teacher/grading' },
+              { icon: '🎯', label: 'Quản lí điểm', path: '/teacher/grading' },
               { icon: '📈', label: 'Thống kê điểm', path: '/teacher/grade-statistics' },
             ]
           },
