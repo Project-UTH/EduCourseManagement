@@ -170,21 +170,9 @@ const ClassDetail = () => {
               </div>
             </div>
 
-            <div className="info-card">
-              <div className="info-icon">📅</div>
-              <div className="info-content">
-                <span className="info-label">Lịch học</span>
-                <span className="info-value">{classInfo.schedule}</span>
-              </div>
-            </div>
+            
 
-            <div className="info-card">
-              <div className="info-icon">🏫</div>
-              <div className="info-content">
-                <span className="info-label">Phòng học</span>
-                <span className="info-value">Phòng {classInfo.room}</span>
-              </div>
-            </div>
+          
           </div>
         </div>
       </div>

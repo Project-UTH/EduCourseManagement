@@ -59,16 +59,6 @@ const InfoTab = ({ classInfo }: InfoTabProps) => {
           </div>
 
           <div className="info-item">
-            <span className="info-label">Lịch học</span>
-            <span className="info-value">{classInfo.schedule}</span>
-          </div>
-
-          <div className="info-item">
-            <span className="info-label">Phòng học</span>
-            <span className="info-value">{classInfo.room}</span>
-          </div>
-
-          <div className="info-item">
             <span className="info-label">Sĩ số lớp</span>
             <span className="info-value" style={{ fontWeight: 600 }}>
               {classInfo.enrolledCount} / {classInfo.maxStudents} sinh viên
