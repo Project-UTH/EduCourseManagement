@@ -12,6 +12,7 @@ import vn.edu.uth.ecms.exception.*;
 import vn.edu.uth.ecms.repository.*;
 import vn.edu.uth.ecms.service.EnrollmentService;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -426,14 +427,32 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         List<StudentSchedule> schedules = new ArrayList<>();
 
         for (ClassSession session : sessions) {
+            // ✅ FIX: E-learning MUST have date/day/slot!
+            LocalDate sessionDate = session.getEffectiveDate();
+            DayOfWeek dayOfWeek = session.getEffectiveDayOfWeek();
+            TimeSlot timeSlot = session.getEffectiveTimeSlot();
+            Room room = session.getEffectiveRoom();
+
+            // ✅ VALIDATE: E-learning must have schedule info
+            if (session.getSessionType() == SessionType.E_LEARNING) {
+                if (sessionDate == null || dayOfWeek == null || timeSlot == null) {
+                    log.error("❌ E-learning session {} missing schedule!", session.getSessionNumber());
+                    throw new IllegalStateException("E-learning session missing date/time!");
+                }
+
+                // ✅ LOG for verification
+                log.info("✅ E-learning session {}: {} {} {} ONLINE",
+                        session.getSessionNumber(), sessionDate, dayOfWeek, timeSlot);
+            }
+
             StudentSchedule schedule = StudentSchedule.builder()
                     .student(student)
                     .classSession(session)
                     .classEntity(session.getClassEntity())
-                    .sessionDate(session.getEffectiveDate())        // NULL for E_LEARNING
-                    .dayOfWeek(session.getEffectiveDayOfWeek())     // NULL for E_LEARNING
-                    .timeSlot(session.getEffectiveTimeSlot())       // NULL for E_LEARNING
-                    .room(session.getEffectiveRoom())               // NULL for E_LEARNING
+                    .sessionDate(sessionDate)           // ✅ NOT NULL for E-learning
+                    .dayOfWeek(dayOfWeek)               // ✅ NOT NULL for E-learning
+                    .timeSlot(timeSlot)                 // ✅ NOT NULL for E-learning
+                    .room(room)                         // ✅ ONLINE for E-learning
                     .attendanceStatus(AttendanceStatus.ABSENT)
                     .build();
 

@@ -278,10 +278,18 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                           {/* 2. LOẠI */}
                           <td>{getSessionTypeBadge(session.sessionType)}</td>
                           
-                          {/* 3. LỊCH GỐC */}
+                          {/* 3. LỊCH GỐC - ✅ FIX: Hiển thị đầy đủ cho E-learning */}
                           <td>
                             {session.sessionType === 'E_LEARNING' ? (
-                              <span className="slm-time" style={{fontStyle:'italic'}}>Lịch online</span>
+                              <div className="slm-cell-content">
+                                <span className="slm-date">{formatDate(session.originalDate)}</span>
+                                <span className="slm-time" style={{fontStyle:'italic'}}>
+                                  {session.originalDayOfWeekDisplay}, {session.originalTimeSlotDisplay}
+                                </span>
+                                <span className="slm-room" style={{background:'#dbeafe', color:'#1e40af', padding:'2px 8px', borderRadius:'4px', fontSize:'12px'}}>
+                                  💻 ONLINE
+                                </span>
+                              </div>
                             ) : (
                               <div className="slm-cell-content">
                                 <span className="slm-date">{formatDate(session.originalDate)}</span>
@@ -291,7 +299,7 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                             )}
                           </td>
                           
-                          {/* 4. LỊCH HIỆN TẠI (EDITABLE) */}
+                          {/* 4. LỊCH HIỆN TẠI - ✅ FIX: Hiển thị đầy đủ cho E-learning */}
                           <td>
                             {editingSession === session.sessionId ? (
                               <div className="slm-edit-form">
@@ -337,7 +345,13 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                             ) : (
                               session.sessionType === 'E_LEARNING' ? (
                                 <div className="slm-cell-content">
-                                  <span className="slm-room" style={{background:'#dbeafe', color:'#1e40af'}}>💻 ONLINE</span>
+                                  <span className="slm-date">{formatDate(session.effectiveDate)}</span>
+                                  <span className="slm-time" style={{fontStyle:'italic'}}>
+                                    {session.effectiveDayOfWeekDisplay}, {session.effectiveTimeSlotDisplay}
+                                  </span>
+                                  <span className="slm-room" style={{background:'#dbeafe', color:'#1e40af', padding:'2px 8px', borderRadius:'4px', fontSize:'12px'}}>
+                                    💻 ONLINE
+                                  </span>
                                 </div>
                               ) : (
                                 <div className="slm-cell-content">

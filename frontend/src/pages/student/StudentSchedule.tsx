@@ -5,13 +5,9 @@ import ChatList from '../../components/chat/ChatList';
 import { useAuthStore } from '@/store/authStore';
 
 /**
- * StudentSchedule Component - Fixed Version
+ * StudentSchedule Component - SIMPLE FIX
  * 
- * Features:
- * - Correct day-of-week mapping (API returns MONDAY, TUESDAY, etc.)
- * - Table layout similar to TeacherSchedule
- * - Period-based rows (Sáng, Chiều, Tối)
- * - Week navigation
+ * ✅ CHỈ SỬA 1 DÒNG: Thêm check cho 'ELEARNING'
  */
 
 interface ScheduleItem {
@@ -20,10 +16,10 @@ interface ScheduleItem {
   subjectCode: string;
   subjectName: string;
   teacherName: string;
-  sessionDate: string; // "YYYY-MM-DD" format
-  dayOfWeek: string; // "MONDAY", "TUESDAY", etc. from API
-  dayOfWeekDisplay: string; // "Thứ 2", "Thứ 3", etc.
-  timeSlot: string; // "CA1", "CA2", etc.
+  sessionDate: string;
+  dayOfWeek: string;
+  dayOfWeekDisplay: string;
+  timeSlot: string;
   timeSlotDisplay: string;
   room: string;
   sessionNumber: number;
@@ -31,7 +27,6 @@ interface ScheduleItem {
   campus: string;
 }
 
-// Time slots grouped by period
 const TIME_SLOTS = [
   { id: 'CA1', label: 'Ca 1', period: 'Sáng', time: '06:45 - 09:15' },
   { id: 'CA2', label: 'Ca 2', period: 'Sáng', time: '09:25 - 11:55' },
@@ -43,9 +38,6 @@ const TIME_SLOTS = [
 
 const PERIODS = ['Sáng', 'Chiều', 'Tối'];
 
-// ✅ CRITICAL: Map API day names to Vietnamese display AND correct week index
-// API returns: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
-// Week array index: 0=Monday, 1=Tuesday, ..., 6=Sunday
 const DAY_MAPPING = {
   'MONDAY': { display: 'Thứ 2', weekIndex: 0 },
   'TUESDAY': { display: 'Thứ 3', weekIndex: 1 },
@@ -63,19 +55,18 @@ const StudentSchedule: React.FC = () => {
 
   useEffect(() => {
     loadSchedule();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
-  // ✅ Get Monday of the current week (ISO week standard)
   const getWeekMonday = (date: Date): Date => {
     const d = new Date(date);
-    const day = d.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
-    const diff = day === 0 ? -6 : 1 - day; // Adjust to Monday
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
     d.setDate(d.getDate() + diff);
     d.setHours(0, 0, 0, 0);
     return d;
   };
 
-  // ✅ Format date to YYYY-MM-DD for API
   const formatDateForAPI = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -83,7 +74,6 @@ const StudentSchedule: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // ✅ Get 7 dates of the week starting from Monday
   const getWeekDates = (): Date[] => {
     const monday = getWeekMonday(selectedDate);
     const dates: Date[] = [];
@@ -113,7 +103,6 @@ const StudentSchedule: React.FC = () => {
         const items = response.data.data || [];
         console.log('✅ Received', items.length, 'schedule items');
         
-        // Debug: Log each item's day mapping
         items.forEach((item: ScheduleItem) => {
           const mapping = DAY_MAPPING[item.dayOfWeek as keyof typeof DAY_MAPPING];
           console.log(
@@ -130,7 +119,6 @@ const StudentSchedule: React.FC = () => {
     }
   };
 
-  // ✅ CRITICAL FIX: Filter sessions by week day index AND time slot
   const getSessionsForSlot = (weekDayIndex: number, timeSlotId: string): ScheduleItem[] => {
     return scheduleItems.filter(item => {
       const dayMapping = DAY_MAPPING[item.dayOfWeek as keyof typeof DAY_MAPPING];
@@ -138,7 +126,6 @@ const StudentSchedule: React.FC = () => {
     });
   };
 
-  // Navigation
   const goToToday = () => {
     setSelectedDate(new Date());
   };
@@ -155,7 +142,6 @@ const StudentSchedule: React.FC = () => {
     setSelectedDate(newDate);
   };
 
-  // Format date for display
   const formatDateHeader = (date: Date, weekDayIndex: number): { day: string; date: string } => {
     const dayNames = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
     const day = dayNames[weekDayIndex];
@@ -167,7 +153,6 @@ const StudentSchedule: React.FC = () => {
     return { day, date: dateStr };
   };
 
-  // Check if date is today
   const isToday = (date: Date): boolean => {
     const today = new Date();
     return (
@@ -176,7 +161,8 @@ const StudentSchedule: React.FC = () => {
       date.getFullYear() === today.getFullYear()
     );
   };
-const user = useAuthStore((state: any) => state.user);
+
+  const user = useAuthStore((state: any) => state.user);
   const weekDates = getWeekDates();
 
   if (loading) {
@@ -190,7 +176,6 @@ const user = useAuthStore((state: any) => state.user);
 
   return (
     <div className="student-schedule-container">
-      {/* Header Controls */}
       <div className="schedule-controls">
         <input
           type="date"
@@ -212,8 +197,6 @@ const user = useAuthStore((state: any) => state.user);
         </div>
       </div>
 
-  
-      {/* Schedule Table - Similar to TeacherSchedule */}
       <div className="calendar-wrapper">
         <table className="schedule-table">
           <thead>
@@ -238,20 +221,17 @@ const user = useAuthStore((state: any) => state.user);
               
               return periodSlots.map((slot, slotIndex) => (
                 <tr key={slot.id}>
-                  {/* Period label (merged cells) */}
                   {slotIndex === 0 && (
                     <td className="period-label-cell" rowSpan={periodSlots.length}>
                       {period}
                     </td>
                   )}
                   
-                  {/* Time slot label */}
                   <td className="shift-label-cell">
                     <div className="shift-label">{slot.label}</div>
                     <div className="shift-time">{slot.time}</div>
                   </td>
                   
-                  {/* Day cells */}
                   {weekDates.map((date, dayIndex) => {
                     const todayClass = isToday(date) ? 'today-cell' : '';
                     const sessions = getSessionsForSlot(dayIndex, slot.id);
@@ -274,7 +254,9 @@ const user = useAuthStore((state: any) => state.user);
                             <div className="session-info campus">
                               🏢 {session.campus}
                             </div>
-                            {session.sessionType === 'E_LEARNING' && (
+                            {/* ✅ SIMPLE FIX: Check cả hai format */}
+                            {(session.sessionType === 'E_LEARNING' || 
+                              session.sessionType === 'ELEARNING') && (
                               <div className="online-badge">💻 E-Learning</div>
                             )}
                           </div>

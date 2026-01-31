@@ -235,7 +235,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     // ==================== DATE RANGE QUERY ====================
 
     @Query("SELECT s FROM ClassSession s WHERE s.classEntity.classId = :classId " +
-            "AND s.sessionType = 'IN_PERSON' " +
+            "AND (s.sessionType = 'IN_PERSON' OR s.sessionType = 'E_LEARNING') " +
             "AND s.isPending = false " +
             "AND COALESCE(s.actualDate, s.originalDate) >= :startDate " +
             "AND COALESCE(s.actualDate, s.originalDate) <= :endDate " +
