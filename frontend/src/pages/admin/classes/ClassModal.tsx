@@ -3,7 +3,6 @@ import './ClassModal.css'; // File CSS độc lập
 import { 
   DAYS_OF_WEEK, 
   TIME_SLOTS,
-  getScheduleInfo
 } from '../../../utils/constants';
 
 // --- TYPES ---
@@ -143,7 +142,7 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
 
     } catch (err) {
       console.error(err);
-      alert('❌ Lỗi kết nối hệ thống');
+      alert(' Lỗi kết nối hệ thống');
     }
   };
 
@@ -267,16 +266,14 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
 
       if (res.ok) {
         const result = await res.json();
-        alert(isEdit ? '✅ Cập nhật thành công!' : `✅ Tạo lớp thành công!\nPhòng: ${result.data.fixedRoom || 'Tự động gán'}`);
+        alert(isEdit ? ' Cập nhật thành công!' : ` Tạo lớp thành công!\nPhòng: ${result.data.fixedRoom || 'Tự động gán'}`);
         onSuccess();
         onClose();
       } else {
         const err = await res.json();
         alert(`❌ ${err.message}`);
       }
-    } catch (err) {
-      alert('❌ Lỗi hệ thống');
-    } finally {
+    }  finally {
       setLoading(false);
     }
   };
@@ -301,7 +298,7 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
         {/* HEADER */}
         <div className="cm-header">
           <h2 className="cm-title">
-            {isEdit ? '✏️ Chỉnh sửa Lớp học phần' : '➕ Mở Lớp học phần mới'}
+            {isEdit ? ' Chỉnh sửa Lớp học phần' : ' Mở Lớp học phần mới'}
           </h2>
           <button className="cm-close" onClick={onClose}>&times;</button>
         </div>
@@ -311,7 +308,7 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
           
           {/* INFO BOX */}
           <div className="cm-info-main">
-            <strong>🚀 Quy trình tự động:</strong>
+            <strong> Quy trình tự động:</strong>
             <ul>
               <li>Hệ thống tự động gán phòng học phù hợp (theo sức chứa).</li>
               <li>Lịch học (10-15 tuần) sẽ được tạo tự động ngay khi lưu.</li>
@@ -391,13 +388,13 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
               {selectedSubject && (
                 <div className="cm-info-subject">
                   <div className="subject-stat-row">
-                    <span>📚 Tín chỉ:</span> <strong>{selectedSubject.credits}</strong>
+                    <span>Tín chỉ:</span> <strong>{selectedSubject.credits}</strong>
                   </div>
                   <div className="subject-stat-row">
-                    <span>🏫 Trực tiếp:</span> <strong>{selectedSubject.inpersonSessions} buổi</strong>
+                    <span>Trực tiếp:</span> <strong>{selectedSubject.inpersonSessions} buổi</strong>
                   </div>
                   <div className="subject-stat-row">
-                    <span>💻 E-learning:</span> <strong>{selectedSubject.elearningSessions} buổi</strong>
+                    <span>E-learning:</span> <strong>{selectedSubject.elearningSessions} buổi</strong>
                   </div>
                 </div>
               )}
@@ -432,7 +429,7 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
           {/* SCHEDULE SECTION 1: FIXED */}
           <div className="cm-schedule-box">
             <div className="cm-box-title title-fixed">
-              📅 Lịch học Cố định (Trực tiếp)
+              Lịch học Cố định (Trực tiếp)
             </div>
             <div className="cm-schedule-grid">
               <div className="cm-group" style={{marginBottom:0}}>
@@ -453,7 +450,7 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
               </div>
             </div>
             <div className="cm-hint" style={{marginTop:'12px', color:'#16a34a'}}>
-              ✅ Phòng học sẽ được gán tự động dựa trên sức chứa.
+              Phòng học sẽ được gán tự động dựa trên sức chứa.
             </div>
           </div>
 
@@ -461,7 +458,7 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
           {hasElearning && (
             <div className="cm-schedule-box elearning">
               <div className="cm-box-title title-elearning">
-                💻 Lịch E-learning ({selectedSubject?.elearningSessions} buổi)
+                Lịch E-learning ({selectedSubject?.elearningSessions} buổi)
               </div>
               <div className="cm-schedule-grid">
                 <div className="cm-group" style={{marginBottom:0}}>
@@ -482,7 +479,7 @@ const ClassModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, classData }) 
                 </div>
               </div>
               <div className="cm-hint" style={{marginTop:'12px', color:'#b45309'}}>
-                🌐 Không kiểm tra trùng lịch phòng học (Room ONLINE).
+                Không kiểm tra trùng lịch phòng học (Room ONLINE).
               </div>
             </div>
           )}

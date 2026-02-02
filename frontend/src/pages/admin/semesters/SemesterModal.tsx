@@ -197,7 +197,7 @@ const SemesterModal: React.FC<SemesterModalProps> = ({ semester, onClose, onSucc
       <div className="semester-modal-content" onClick={(e) => e.stopPropagation()}>
         {/* HEADER */}
         <div className="semester-modal-header">
-          <h2>{isEditMode ? '✏️ Sửa Học kỳ' : '➕ Thêm Học kỳ'}</h2>
+          <h2>{isEditMode ? ' Sửa Học kỳ' : ' Thêm Học kỳ'}</h2>
           <button className="semester-btn-close" onClick={onClose}>×</button>
         </div>
 
@@ -304,7 +304,7 @@ const SemesterModal: React.FC<SemesterModalProps> = ({ semester, onClose, onSucc
 
           {/* Registration Period Section */}
           <div className="semester-form-section">
-            <h3>⏰ Thời gian đăng ký (Tùy chọn)</h3>
+            <h3> Thời gian đăng ký (Tùy chọn)</h3>
             
             <div className="semester-form-row">
               <div className="semester-form-group">

@@ -178,19 +178,19 @@ const SemesterList: React.FC = () => {
                           <div className="btn-action-group">
                             {semester.status === 'UPCOMING' && (
                               <>
-                                <button className="btn-sm btn-activate" onClick={() => handleActivate(semester.semesterId, semester.semesterName)} title="Kích hoạt">▶️</button>
+                                <button className="btn-sm btn-activate" onClick={() => handleActivate(semester.semesterId, semester.semesterName)} title="Kích hoạt">Bắt đầu</button>
                                 <button 
                                   className={`btn-sm ${semester.registrationEnabled ? 'btn-reg-off' : 'btn-reg-on'}`} 
                                   onClick={() => handleToggleRegistration(semester)} 
                                   title={semester.registrationEnabled ? 'Tắt đăng ký' : 'Bật đăng ký'}
                                 >
-                                  {semester.registrationEnabled ? '🔒' : '🔓'}
+                                  {semester.registrationEnabled ? 'Tắt ĐK' : 'Mở ĐK'}
                                 </button>
                               </>
                             )}
                             
                             {semester.status === 'ACTIVE' && (
-                              <button className="btn-sm btn-complete" onClick={() => handleComplete(semester.semesterId, semester.semesterName)} title="Hoàn thành">✅</button>
+                              <button className="btn-sm btn-complete" onClick={() => handleComplete(semester.semesterId, semester.semesterName)} title="Hoàn thành">HT</button>
                             )}
                             
                             {semester.status !== 'COMPLETED' && (

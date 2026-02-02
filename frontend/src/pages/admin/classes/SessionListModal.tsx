@@ -78,7 +78,7 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
   
   const handleStartEdit = (session: Session) => {
     if (session.sessionType === 'E_LEARNING') {
-      alert('⚠️ Không thể đổi lịch cho buổi E-learning!');
+      alert(' Không thể đổi lịch cho buổi E-learning!');
       return;
     }
     setEditingSession(session.sessionId);
@@ -117,12 +117,12 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
         const error = await response.json();
         throw new Error(error.message || 'Lỗi đổi lịch');
       }
-      alert('✅ Đổi lịch thành công!');
+      alert(' Đổi lịch thành công!');
       handleCancelEdit();
       fetchSessions();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      alert(`❌ Lỗi: ${err.message}`);
+      alert(` Lỗi: ${err.message}`);
     }
   };
   
@@ -137,11 +137,11 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
         }
       );
       if (!response.ok) throw new Error('Lỗi reset');
-      alert('✅ Đã reset về lịch gốc!');
+      alert(' Đã reset về lịch gốc!');
       fetchSessions();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      alert(`❌ Lỗi: ${err.message}`);
+      alert(` Lỗi: ${err.message}`);
     }
   };
   
@@ -170,8 +170,8 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
   };
   
   const getSessionTypeBadge = (type: string) => {
-    if (type === 'IN_PERSON') return <span className="slm-badge badge-inperson">🏫 Trực tiếp</span>;
-    return <span className="slm-badge badge-elearning">💻 E-learning</span>;
+    if (type === 'IN_PERSON') return <span className="slm-badge badge-inperson"> Trực tiếp</span>;
+    return <span className="slm-badge badge-elearning"> E-learning</span>;
   };
   
   const filteredSessions = sessions.filter(session => {
@@ -193,7 +193,7 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
         {/* HEADER */}
         <div className="slm-header">
           <div>
-            <h2 className="slm-title">📅 Quản lý Lịch học - {classData.classCode}</h2>
+            <h2 className="slm-title"> Quản lý Lịch học - {classData.classCode}</h2>
             <p className="slm-subtitle">{classData.subjectName} • {classData.semesterCode}</p>
           </div>
           <button className="slm-close" onClick={onClose}>&times;</button>
@@ -202,7 +202,7 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
         {/* BODY */}
         <div className="slm-body">
           {loading ? (
-            <div className="slm-loading">⏳ Đang tải dữ liệu lịch học...</div>
+            <div className="slm-loading"> Đang tải dữ liệu lịch học...</div>
           ) : error ? (
             <div className="slm-no-data" style={{color: 'red'}}>❌ {error}</div>
           ) : (
@@ -214,13 +214,13 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                     <span>Tổng:</span> <span className="slm-stat-val">{stats.total}</span>
                   </div>
                   <div className="slm-stat-item">
-                    <span>🏫 Trực tiếp:</span> <span className="slm-stat-val">{stats.inPerson}</span>
+                    <span>Trực tiếp:</span> <span className="slm-stat-val">{stats.inPerson}</span>
                   </div>
                   <div className="slm-stat-item">
-                    <span>💻 Online:</span> <span className="slm-stat-val">{stats.eLearning}</span>
+                    <span>Online:</span> <span className="slm-stat-val">{stats.eLearning}</span>
                   </div>
                   <div className="slm-stat-item">
-                    <span>🔄 Đổi lịch:</span> <span className="slm-stat-val" style={{color:'#d97706'}}>{stats.rescheduled}</span>
+                    <span>Đổi lịch:</span> <span className="slm-stat-val" style={{color:'#d97706'}}>{stats.rescheduled}</span>
                   </div>
                 </div>
                 
@@ -270,7 +270,7 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                             <div className="slm-cell-content">
                               <span style={{fontWeight: 700}}>#{session.sessionNumber}</span>
                               {session.isRescheduled && (
-                                <span className="slm-badge badge-rescheduled">🔄 Đã đổi</span>
+                                <span className="slm-badge badge-rescheduled">Đã đổi</span>
                               )}
                             </div>
                           </td>
@@ -278,7 +278,7 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                           {/* 2. LOẠI */}
                           <td>{getSessionTypeBadge(session.sessionType)}</td>
                           
-                          {/* 3. LỊCH GỐC - ✅ FIX: Hiển thị đầy đủ cho E-learning */}
+                          {/* 3. LỊCH GỐC - FIX: Hiển thị đầy đủ cho E-learning */}
                           <td>
                             {session.sessionType === 'E_LEARNING' ? (
                               <div className="slm-cell-content">
@@ -287,19 +287,19 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                                   {session.originalDayOfWeekDisplay}, {session.originalTimeSlotDisplay}
                                 </span>
                                 <span className="slm-room" style={{background:'#dbeafe', color:'#1e40af', padding:'2px 8px', borderRadius:'4px', fontSize:'12px'}}>
-                                  💻 ONLINE
+                                  ONLINE
                                 </span>
                               </div>
                             ) : (
                               <div className="slm-cell-content">
                                 <span className="slm-date">{formatDate(session.originalDate)}</span>
                                 <span className="slm-time">{session.originalDayOfWeekDisplay}, {session.originalTimeSlotDisplay}</span>
-                                <span className="slm-room">📍 {session.originalRoom}</span>
+                                <span className="slm-room">{session.originalRoom}</span>
                               </div>
                             )}
                           </td>
                           
-                          {/* 4. LỊCH HIỆN TẠI - ✅ FIX: Hiển thị đầy đủ cho E-learning */}
+                          {/* 4. LỊCH HIỆN TẠI - FIX: Hiển thị đầy đủ cho E-learning */}
                           <td>
                             {editingSession === session.sessionId ? (
                               <div className="slm-edit-form">
@@ -350,14 +350,14 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                                     {session.effectiveDayOfWeekDisplay}, {session.effectiveTimeSlotDisplay}
                                   </span>
                                   <span className="slm-room" style={{background:'#dbeafe', color:'#1e40af', padding:'2px 8px', borderRadius:'4px', fontSize:'12px'}}>
-                                    💻 ONLINE
+                                    ONLINE
                                   </span>
                                 </div>
                               ) : (
                                 <div className="slm-cell-content">
                                   <span className="slm-date">{formatDate(session.effectiveDate)}</span>
                                   <span className="slm-time">{session.effectiveDayOfWeekDisplay}, {session.effectiveTimeSlotDisplay}</span>
-                                  <span className="slm-room">📍 {session.effectiveRoom}</span>
+                                  <span className="slm-room">{session.effectiveRoom}</span>
                                 </div>
                               )
                             )}
@@ -384,8 +384,8 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                             {session.sessionType === 'IN_PERSON' && (
                               editingSession === session.sessionId ? (
                                 <div className="slm-actions">
-                                  <button className="slm-btn btn-save" onClick={() => handleReschedule(session.sessionId)}>💾 Lưu</button>
-                                  <button className="slm-btn btn-cancel" onClick={handleCancelEdit}>✖ Hủy</button>
+                                  <button className="slm-btn btn-save" onClick={() => handleReschedule(session.sessionId)}> Lưu</button>
+                                  <button className="slm-btn btn-cancel" onClick={handleCancelEdit}> Hủy</button>
                                 </div>
                               ) : (
                                 <div className="slm-actions">
@@ -394,7 +394,7 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                                     onClick={() => handleStartEdit(session)}
                                     title="Đổi lịch buổi này"
                                   >
-                                    ✏️ Đổi
+                                    Đổi
                                   </button>
                                   {session.isRescheduled && (
                                     <button 
@@ -402,7 +402,7 @@ const SessionListModal: React.FC<Props> = ({ classData, onClose }) => {
                                       onClick={() => handleResetToOriginal(session.sessionId)}
                                       title="Quay về lịch gốc"
                                     >
-                                      ↩️
+                                      Quay lại
                                     </button>
                                   )}
                                 </div>

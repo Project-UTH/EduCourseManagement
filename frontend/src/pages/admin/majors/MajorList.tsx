@@ -24,7 +24,7 @@ const MajorList: React.FC = () => {
   const [editingMajor, setEditingMajor] = useState<Major | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  // ⭐ TOOLTIP STATE
+  //  TOOLTIP STATE
   const [descriptionTooltip, setDescriptionTooltip] = useState<{
     show: boolean; content: string; x: number; y: number;
   }>({ show: false, content: '', x: 0, y: 0 });
@@ -147,7 +147,7 @@ const MajorList: React.FC = () => {
 
       </div>
 
-      {error && <div className="error-message">⚠️ Lỗi: {error}</div>}
+      {error && <div className="error-message">Lỗi: {error}</div>}
 
       {/* 2. Main Card Wrapper */}
       <div className="main-card">
@@ -157,7 +157,7 @@ const MajorList: React.FC = () => {
           <form onSubmit={handleSearch} className="search-form">
             <input
               type="text"
-              placeholder="🔍 Tìm kiếm mã/tên ngành..."
+              placeholder="Tìm kiếm mã/tên ngành..."
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="search-input"
@@ -195,10 +195,10 @@ const MajorList: React.FC = () => {
         {/* Table Responsive Wrapper */}
         <div className="table-responsive">
           {loading ? (
-            <div className="loading">⏳ Đang tải dữ liệu...</div>
+            <div className="loading">Đang tải dữ liệu...</div>
           ) : !majors || majors.length === 0 ? (
             <div className="no-data">
-              {searchKeyword || selectedDepartmentId ? '🔍 Không tìm thấy kết quả' : '📭 Chưa có chuyên ngành nào'}
+              {searchKeyword || selectedDepartmentId ? 'Không tìm thấy kết quả' : 'Chưa có chuyên ngành nào'}
             </div>
           ) : (
             <>
@@ -245,6 +245,13 @@ const MajorList: React.FC = () => {
                           <button className="btn btn-edit" onClick={() => handleEdit(major)}>
                             Sửa
                           </button>
+                          <button
+      className="btn btn-delete"
+      onClick={() => handleDelete(major.majorId)}
+      disabled={deletingId === major.majorId}
+    >
+      {deletingId === major.majorId ? 'Đang xóa...' : 'Xóa'}
+    </button>
                         </div>
                       </td>
                     </tr>

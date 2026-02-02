@@ -17,10 +17,6 @@ const DeleteConfirmation = ({
   return (
     <div className="delete-modal-overlay" onClick={onCancel}>
       <div className="delete-modal-content" onClick={(e) => e.stopPropagation()}>
-        {/* ICON */}
-        <div className="delete-icon-wrapper">
-          <span className="delete-icon">🗑️</span>
-        </div>
 
         {/* TITLE */}
         <h2 className="delete-title">Xác nhận xóa phòng</h2>
@@ -32,7 +28,7 @@ const DeleteConfirmation = ({
             <strong>{roomCode}</strong> - {roomName}
           </div>
           <p className="delete-warning">
-            ⚠️ <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác!
+             <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác!
           </p>
         </div>
 
@@ -48,7 +44,7 @@ const DeleteConfirmation = ({
             className="delete-btn-confirm"
             onClick={onConfirm}
           >
-            🗑️ Xóa phòng
+             Xóa phòng
           </button>
         </div>
       </div>

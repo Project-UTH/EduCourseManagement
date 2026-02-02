@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import studentClassApi from '../../services/api/studentClassApi';
 import studentHomeworkApi from '../../services/api/studentHomeworkApi';
-import ChatList from '../chat/ChatList';  
 import './RightSidebar.css';
 
 interface RightSidebarProps {
@@ -18,20 +17,20 @@ interface Deadline {
   type: 'assignment' | 'exam' | 'project';
 }
 
-const RightSidebar = ({ userRole, currentUsername }: RightSidebarProps) => {
+const RightSidebar = ({ userRole }: RightSidebarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [ setSelectedDate] = useState<Date | null>(null);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [setLoading] = useState(true);
 
-  // ✅ Load REAL homework deadlines from API
+  //  Load REAL homework deadlines from API
   useEffect(() => {
     if (userRole === 'STUDENT') {
       loadDeadlines();
     }
   }, [userRole]);
 
-  const loadDeadlines = async () => {
+  async function loadDeadlines() {
     setLoading(true);
     try {
       console.log('[RightSidebar] Loading homework deadlines...');
@@ -66,20 +65,20 @@ const RightSidebar = ({ userRole, currentUsername }: RightSidebarProps) => {
           courseName: hw.className,
           subjectName: hw.subjectName,
           dueDate: new Date(hw.deadline),
-          type: hw.homeworkType === 'MIDTERM' ? 'exam' as const : 
-                hw.homeworkType === 'FINAL' ? 'exam' as const : 
-                'assignment' as const
+          type: hw.homeworkType === 'MIDTERM' ? 'exam' as const :
+            hw.homeworkType === 'FINAL' ? 'exam' as const :
+              'assignment' as const
         }));
 
       setDeadlines(transformedDeadlines);
-      console.log('[RightSidebar] ✅ Loaded deadlines:', transformedDeadlines.length);
+      console.log('[RightSidebar]  Loaded deadlines:', transformedDeadlines.length);
 
     } catch (err) {
-      console.error('[RightSidebar] ❌ Failed to load deadlines:', err);
+      console.error('[RightSidebar]  Failed to load deadlines:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   // Calendar functions
   const getDaysInMonth = (date: Date) => {
@@ -105,29 +104,7 @@ const RightSidebar = ({ userRole, currentUsername }: RightSidebarProps) => {
            date.getFullYear() === today.getFullYear();
   };
 
-  const formatTimeLeft = (dueDate: Date) => {
-    const now = new Date();
-    const diff = dueDate.getTime() - now.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
-    if (diff < 0) return 'Quá hạn';
-    if (days === 0 && hours < 1) return 'Sắp hết hạn';
-    if (days === 0) return `Còn ${hours} giờ`;
-    if (days === 1) return 'Còn 1 ngày';
-    return `Còn ${days} ngày`;
-  };
-
-  const getDeadlineColor = (dueDate: Date) => {
-    const now = new Date();
-    const diff = dueDate.getTime() - now.getTime();
-    const hours = diff / (1000 * 60 * 60);
-
-    if (diff < 0) return 'overdue';
-    if (hours < 24) return 'urgent';
-    if (hours < 72) return 'soon';
-    return 'normal';
-  };
 
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentMonth);
@@ -163,10 +140,6 @@ const RightSidebar = ({ userRole, currentUsername }: RightSidebarProps) => {
   const changeMonth = (increment: number) => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + increment, 1));
   };
-
-  const sortedDeadlines = [...deadlines]
-    .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
-    .slice(0, 5);
 
   return (
     <aside className="right-sidebar">
@@ -213,7 +186,7 @@ const RightSidebar = ({ userRole, currentUsername }: RightSidebarProps) => {
       {/* Upcoming Deadlines */}
 
       {/* 
-        ✅ THAY THẾ phần "Nhóm Chat" cũ bằng ChatList component
+         THAY THẾ phần "Nhóm Chat" cũ bằng ChatList component
         ChatList sẽ hiển thị floating button ở góc dưới phải
         Không cần render trong RightSidebar nữa
       */}

@@ -129,7 +129,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
         <div className="modal-body">
           {/* Instructions */}
           <div className="import-instructions">
-            <h3>📋 Hướng dẫn:</h3>
+            <h3> Hướng dẫn:</h3>
             <ol>
               <li>Tải file Excel mẫu về máy</li>
               <li>Điền thông tin {entityLabel} vào file mẫu</li>
@@ -143,7 +143,6 @@ const ImportModal: React.FC<ImportModalProps> = ({
               className="btn btn-secondary"
               onClick={handleDownloadTemplate}
             >
-              <span className="icon">📥</span>
               Tải file Excel mẫu
             </button>
           </div>
@@ -163,7 +162,6 @@ const ImportModal: React.FC<ImportModalProps> = ({
               id="file-input"
             />
             <label htmlFor="file-input" className="file-upload-label">
-              <div className="upload-icon">📂</div>
               <p className="upload-text">
                 {file ? file.name : `Kéo thả file Excel vào đây hoặc nhấn để chọn`}
               </p>
@@ -176,7 +174,6 @@ const ImportModal: React.FC<ImportModalProps> = ({
           {/* Error Message */}
           {error && (
             <div className="alert alert-error">
-              <span className="icon">⚠️</span>
               {error}
             </div>
           )}
@@ -242,7 +239,6 @@ const ImportModal: React.FC<ImportModalProps> = ({
                 </>
               ) : (
                 <>
-                  <span className="icon">📤</span>
                   Import
                 </>
               )}

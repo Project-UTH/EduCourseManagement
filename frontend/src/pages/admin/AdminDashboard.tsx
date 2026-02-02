@@ -41,7 +41,6 @@ const AdminDashboard = () => {
     return (
       <div className="admin-dashboard">
         <div className="error-message">
-          <span className="error-icon">⚠️</span>
           <p>{error || 'Không thể tải dữ liệu'}</p>
           <button onClick={fetchDashboardStats} className="retry-btn">
             Thử lại
@@ -56,49 +55,42 @@ const AdminDashboard = () => {
     {
       label: 'Sinh viên',
       value: stats.totalStudents,
-      icon: '👨‍🎓',
       color: '#3b82f6',
       route: '/admin/students',
     },
     {
       label: 'Giảng viên',
       value: stats.totalTeachers,
-      icon: '👨‍🏫',
       color: '#8b5cf6',
       route: '/admin/teachers',
     },
     {
       label: 'Khoa',
       value: stats.totalDepartments,
-      icon: '🏢',
       color: '#10b981',
       route: '/admin/departments',
     },
     {
       label: 'Chuyên ngành',
       value: stats.totalMajors,
-      icon: '📖',
       color: '#f59e0b',
       route: '/admin/majors',
     },
     {
       label: 'Môn học',
       value: stats.totalSubjects,
-      icon: '📚',
       color: '#ec4899',
       route: '/admin/subjects',
     },
     {
       label: 'Phòng học',
       value: stats.totalRooms,
-      icon: '🏫',
       color: '#06b6d4',
       route: '/admin/rooms',
     },
     {
       label: 'Lớp học',
       value: stats.totalClasses,
-      icon: '📋',
       color: '#84cc16',
       route: '/admin/classes',
     },
@@ -108,7 +100,6 @@ const AdminDashboard = () => {
   const quickActions = [
     {
       title: 'Quản lý Sinh viên',
-      icon: '👨‍🎓',
       color: '#3b82f6',
       actions: [
         { label: 'Danh sách sinh viên', route: '/admin/students' },
@@ -118,7 +109,6 @@ const AdminDashboard = () => {
     },
     {
       title: 'Quản lý Giảng viên',
-      icon: '👨‍🏫',
       color: '#8b5cf6',
       actions: [
         { label: 'Danh sách giảng viên', route: '/admin/teachers' },
@@ -128,7 +118,6 @@ const AdminDashboard = () => {
     },
     {
       title: 'Quản lý Học vụ',
-      icon: '📚',
       color: '#10b981',
       actions: [
         { label: 'Quản lý Khoa', route: '/admin/departments' },
@@ -139,7 +128,6 @@ const AdminDashboard = () => {
     },
     {
       title: 'Quản lý Lớp học',
-      icon: '🏫',
       color: '#f59e0b',
       actions: [
         { label: 'Danh sách lớp học', route: '/admin/classes' },
@@ -156,19 +144,18 @@ const AdminDashboard = () => {
       {stats.currentSemester && (
         <div className="current-semester-card">
           <div className="semester-header">
-            <span className="semester-icon">📅</span>
             <div className="semester-info">
               <h3>{stats.currentSemester.semesterName}</h3>
               <p className="semester-code">{stats.currentSemester.semesterCode}</p>
             </div>
             <span className={`semester-status status-${stats.currentSemester.status.toLowerCase()}`}>
-              {stats.currentSemester.status === 'ACTIVE' ? '🟢 Đang hoạt động' : 
-               stats.currentSemester.status === 'UPCOMING' ? '🟡 Sắp diễn ra' : 
-               '🔴 Đã kết thúc'}
+              {stats.currentSemester.status === 'ACTIVE' ? 'Đang hoạt động' : 
+               stats.currentSemester.status === 'UPCOMING' ? ' Sắp diễn ra' : 
+               ' Đã kết thúc'}
             </span>
           </div>
           <div className="semester-dates">
-            <span>📆 Từ {new Date(stats.currentSemester.startDate).toLocaleDateString('vi-VN')}</span>
+            <span> Từ {new Date(stats.currentSemester.startDate).toLocaleDateString('vi-VN')}</span>
             <span>đến {new Date(stats.currentSemester.endDate).toLocaleDateString('vi-VN')}</span>
           </div>
         </div>
@@ -183,7 +170,6 @@ const AdminDashboard = () => {
             className="stat-card"
             style={{ '--card-color': stat.color } as React.CSSProperties}
           >
-            <div className="stat-icon">{stat.icon}</div>
             <div className="stat-content">
               <h3 className="stat-value">
                 {stat.value.toLocaleString('vi-VN')}
@@ -197,7 +183,7 @@ const AdminDashboard = () => {
 
       {/* Quick Actions */}
       <div className="quick-actions-section">
-        <h2 className="section-title">⚡ Thao tác nhanh</h2>
+        <h2 className="section-title"> Thao tác nhanh</h2>
         <div className="quick-actions-grid">
           {quickActions.map((section, index) => (
             <div key={index} className="action-card">
@@ -205,7 +191,6 @@ const AdminDashboard = () => {
                 className="action-header"
                 style={{ backgroundColor: section.color }}
               >
-                <span className="action-icon">{section.icon}</span>
                 <h3>{section.title}</h3>
               </div>
               <div className="action-list">

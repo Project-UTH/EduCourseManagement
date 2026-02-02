@@ -51,7 +51,7 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
-  // ⭐ AUTO-CALCULATE totalSessions
+  // AUTO-CALCULATE totalSessions
   const totalSessions = formData.elearningSessions + formData.inpersonSessions;
 
   // --- INITIALIZATION ---
@@ -182,10 +182,10 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
 
       if (isEditMode) {
         await subjectApi.update(subject.subjectId, submitData as SubjectUpdateRequest);
-        alert('✅ Cập nhật môn học thành công!');
+        alert(' Cập nhật môn học thành công!');
       } else {
         await subjectApi.create(submitData as SubjectCreateRequest);
-        alert('✅ Thêm môn học thành công!');
+        alert('Thêm môn học thành công!');
       }
       onSuccess();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -193,7 +193,7 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
       console.error('[SubjectModal] Lỗi:', err);
       const msg = err.response?.data?.message || 'Có lỗi xảy ra';
       if (msg.includes('already exists')) setErrors({ subjectCode: 'Mã môn học đã tồn tại' });
-      else alert(`❌ Lỗi: ${msg}`);
+      else alert(` Lỗi: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -216,7 +216,7 @@ const SubjectModal: React.FC<SubjectModalProps> = ({
         
         {/* HEADER */}
         <div className="sm-header">
-          <h2 className="sm-title">{isEditMode ? '✏️ Sửa Môn học' : '➕ Thêm Môn học Mới'}</h2>
+          <h2 className="sm-title">{isEditMode ? ' Sửa Môn học' : 'Thêm Môn học Mới'}</h2>
           <button className="sm-close" onClick={onClose}>&times;</button>
         </div>
 

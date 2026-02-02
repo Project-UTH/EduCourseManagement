@@ -86,7 +86,7 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
       }
     } catch (err) {
       console.error('Load enrolled students failed:', err);
-      alert('❌ Không thể tải danh sách sinh viên!');
+      alert(' Không thể tải danh sách sinh viên!');
     } finally {
       setLoading(false);
     }
@@ -126,16 +126,16 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
         setEligibleStudents(data.data || []);
         
         if (data.data.length === 0) {
-          alert('⚠️ Không có sinh viên nào đủ điều kiện hoặc tất cả đã đăng ký!');
+          alert(' Không có sinh viên nào đủ điều kiện hoặc tất cả đã đăng ký!');
           setShowAddModal(false);
         }
       } else {
-        alert('❌ Không thể tải danh sách sinh viên!');
+        alert(' Không thể tải danh sách sinh viên!');
         setShowAddModal(false);
       }
     } catch (err) {
       console.error('Load eligible students failed:', err);
-      alert('❌ Lỗi khi tải danh sách sinh viên!');
+      alert(' Lỗi khi tải danh sách sinh viên!');
       setShowAddModal(false);
     } finally {
       setLoadingEligible(false);
@@ -179,7 +179,7 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
       );
 
       if (response.ok) {
-        alert('✅ Thêm sinh viên thành công!');
+        alert(' Thêm sinh viên thành công!');
         setShowAddModal(false);
         setSelectedStudentId(0);
         setEnrollReason('');
@@ -188,11 +188,11 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
         onUpdate();
       } else {
         const error = await response.json();
-        alert(`❌ ${error.message || 'Thêm sinh viên thất bại!'}`);
+        alert(` ${error.message || 'Thêm sinh viên thất bại!'}`);
       }
     } catch (err) {
       console.error('Enroll failed:', err);
-      alert('❌ Có lỗi xảy ra!');
+      alert(' Có lỗi xảy ra!');
     }
   };
 
@@ -213,16 +213,16 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
       );
 
       if (response.ok) {
-        alert('✅ Xóa sinh viên thành công!');
+        alert(' Xóa sinh viên thành công!');
         loadEnrolledStudents();
         onUpdate();
       } else {
         const error = await response.json();
-        alert(`❌ ${error.message || 'Xóa sinh viên thất bại!'}`);
+        alert(` ${error.message || 'Xóa sinh viên thất bại!'}`);
       }
     } catch (err) {
       console.error('Remove failed:', err);
-      alert('❌ Có lỗi xảy ra!');
+      alert(' Có lỗi xảy ra!');
     }
   };
 
@@ -258,7 +258,7 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
             {/* INFO BOX */}
             {eligibilityInfo && (
               <div className="info-box">
-                <strong>ℹ️ Điều kiện đăng ký:</strong>
+                <strong>Điều kiện đăng ký:</strong>
                 <p>{eligibilityInfo}</p>
               </div>
             )}
@@ -276,13 +276,13 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
                 onClick={handleAddStudent}
                 disabled={enrolledStudents.length >= classData.maxStudents}
               >
-                ➕ Thêm sinh viên
+                Thêm sinh viên
               </button>
             </div>
 
             {/* TABLE */}
             {loading ? (
-              <div className="loading">⏳ Đang tải...</div>
+              <div className="loading">Đang tải...</div>
             ) : enrolledStudents.length === 0 ? (
               <div className="no-data">Chưa có sinh viên nào đăng ký</div>
             ) : (
@@ -322,7 +322,7 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
                           </span>
                           {student.manualReason && (
                             <small className="manual-reason" title={student.manualReason}>
-                              📝 {student.manualReason}
+                               {student.manualReason}
                             </small>
                           )}
                         </td>
@@ -332,7 +332,7 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
                             onClick={() => handleRemoveStudent(student.studentId, student.studentName)}
                             title="Xóa sinh viên"
                           >
-                            🗑️
+                            Xóa
                           </button>
                         </td>
                       </tr>
@@ -358,7 +358,7 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
           <div className="modal-content modal-medium" onClick={e => e.stopPropagation()}>
             
             <div className="modal-header">
-              <h3>➕ Thêm sinh viên vào lớp</h3>
+              <h3> Thêm sinh viên vào lớp</h3>
               <button className="btn-close" onClick={handleCloseAddModal}>×</button>
             </div>
 
@@ -367,13 +367,13 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
               {/* ELIGIBILITY INFO */}
               {eligibilityInfo && (
                 <div className="info-box info-box-small">
-                  <strong>💡 {eligibilityInfo}</strong>
+                  <strong> {eligibilityInfo}</strong>
                 </div>
               )}
 
               {/* LOADING STATE */}
               {loadingEligible ? (
-                <div className="loading">⏳ Đang tải danh sách sinh viên...</div>
+                <div className="loading"> Đang tải danh sách sinh viên...</div>
               ) : (
                 <>
                   {/* STUDENT SELECT */}
@@ -395,7 +395,7 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
                     </select>
                     {eligibleStudents.length > 0 && (
                       <span className="form-hint form-hint-success">
-                        ✅ {eligibleStudents.length} sinh viên có thể thêm
+                        {eligibleStudents.length} sinh viên có thể thêm
                       </span>
                     )}
                   </div>
@@ -446,7 +446,7 @@ const StudentListModal: React.FC<Props> = ({ classData, onClose, onUpdate }) => 
                 onClick={handleEnroll}
                 disabled={!selectedStudentId || !enrollReason || loadingEligible}
               >
-                ➕ Thêm sinh viên
+                Thêm sinh viên
               </button>
             </div>
           </div>

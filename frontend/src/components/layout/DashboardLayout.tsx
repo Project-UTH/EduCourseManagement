@@ -10,7 +10,7 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout = ({ userRole }: DashboardLayoutProps) => {
-  // ⭐ KHÔNG CẦN STATE - Sidebar tự động collapsed bằng CSS
+  //  KHÔNG CẦN STATE - Sidebar tự động collapsed bằng CSS
   // Chỉ cần state cho mobile
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const currentUsername = localStorage.getItem('username') || 'User';
@@ -24,7 +24,7 @@ const DashboardLayout = ({ userRole }: DashboardLayoutProps) => {
       
       <div className="dashboard-body">
         <Sidebar 
-          collapsed={true} // ⭐ LUÔN TRUE - CSS sẽ xử lý hover
+          collapsed={true} //  LUÔN TRUE - CSS sẽ xử lý hover
           userRole={userRole}
         />
         

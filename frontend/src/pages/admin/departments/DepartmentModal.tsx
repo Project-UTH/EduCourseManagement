@@ -103,10 +103,10 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
           department.departmentId,
           formData as unknown as DepartmentUpdateRequest
         );
-        alert('✅ Cập nhật khoa thành công!');
+        alert(' Cập nhật khoa thành công!');
       } else {
         await departmentApi.create(formData as unknown as DepartmentCreateRequest);
-        alert('✅ Thêm khoa thành công!');
+        alert(' Thêm khoa thành công!');
       }
       onSuccess();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -117,7 +117,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
       if (msg.includes('already exists')) {
         setErrors({ departmentCode: 'Mã khoa đã tồn tại' });
       } else {
-        alert(`❌ Lỗi: ${msg}`);
+        alert(` Lỗi: ${msg}`);
       }
     } finally {
       setLoading(false);
@@ -136,7 +136,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
         
         {/* HEADER */}
         <div className="dm-header">
-          <h2 className="dm-title">{isEditMode ? '✏️ Sửa Khoa / Viện' : '➕ Thêm Khoa Mới'}</h2>
+          <h2 className="dm-title">{isEditMode ? ' Sửa Khoa / Viện' : 'Thêm Khoa Mới'}</h2>
           <button className="dm-close" onClick={onClose}>&times;</button>
         </div>
 
@@ -151,11 +151,11 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
               name="departmentCode"
               value={formData.departmentCode}
               onChange={(e) => {
-                 handleChange({
-                  ...e,
-                  target: { ...e.target, value: e.target.value.toUpperCase() }
-                });
-              }}
+  const val = e.target.value.toUpperCase();
+  setFormData(prev => ({ ...prev, departmentCode: val }));
+  // Xóa lỗi nếu có
+  if (errors.departmentCode) setErrors(prev => ({ ...prev, departmentCode: '' }));
+}}
               placeholder="VD: IT, MATH, ENG"
               className={`dm-input ${errors.departmentCode ? 'error' : ''}`}
               maxLength={10}

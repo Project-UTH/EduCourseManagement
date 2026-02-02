@@ -3,7 +3,7 @@ import { MessageCircle, X } from 'lucide-react';
 import './ChatList.css';
 import ChatBox from './ChatBox';
 import studentClassApi from '../../services/api/studentClassApi';
-import classApi from '../../services/api/classApi'; // ✅ CORRECT: Use classApi for teacher
+import classApi from '../../services/api/classApi'; //  CORRECT: Use classApi for teacher
 
 interface ClassChatItem {
   classId: number;
@@ -30,7 +30,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Play notification sound
+  //  Play notification sound
   const playNotificationSound = () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -53,7 +53,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
     }
   };
 
-  // ✅ Show browser notification
+  //  Show browser notification
   const showBrowserNotification = (title: string, body: string) => {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(title, {
@@ -64,19 +64,19 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
     }
   };
 
-  // ✅ Request notification permission
+  //  Request notification permission
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
   }, []);
 
-  // ✅ Load classes and unread counts
+  //  Load classes and unread counts
   useEffect(() => {
     loadClassesWithUnreadCounts();
   }, [currentRole]);
 
-  // ✅ Load classes AND their unread counts from database
+  //  Load classes AND their unread counts from database
   const loadClassesWithUnreadCounts = async () => {
     setLoading(true);
     try {
@@ -85,11 +85,11 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
       // 1. Load classes
       let classes: any[] = [];
       if (currentRole === 'TEACHER') {
-        // ✅ CORRECT: Use classApi.getMyClasses() for teachers
+        //  CORRECT: Use classApi.getMyClasses() for teachers
         classes = await classApi.getMyClasses();
         console.log('[ChatList] Teacher classes loaded:', classes);
       } else {
-        // ✅ Use studentClassApi for students
+        //  Use studentClassApi for students
         classes = await studentClassApi.getMyClasses();
         console.log('[ChatList] Student classes loaded:', classes);
       }
@@ -108,7 +108,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
       if (unreadResponse.ok) {
         const unreadData = await unreadResponse.json();
         unreadByClass = unreadData.unreadByClass || {};
-        console.log('[ChatList] ✅ Loaded unread counts:', unreadByClass);
+        console.log('[ChatList]  Loaded unread counts:', unreadByClass);
       } else {
         console.error('[ChatList] ❌ Failed to load unread counts:', unreadResponse.status);
       }
@@ -120,7 +120,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
   return {
     classId: cls.classId,
     classCode: cls.classCode,
-    // ✅ FIX: Handle both student and teacher responses
+    //  FIX: Handle both student and teacher responses
     className: cls.subjectName || cls.className || cls.classCode || 'Lớp học',
     subjectName: cls.subjectName || cls.className || cls.classCode || 'Lớp học',
     unreadCount: unreadByClass[cls.classId] || 0,
@@ -128,7 +128,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
     hasNewMessages: (unreadByClass[cls.classId] || 0) > 0,
   };
 });
-      console.log('[ChatList] ✅ Merged chat items:', chatItems);
+      console.log('[ChatList]  Merged chat items:', chatItems);
 
       // 4. Sort by unread count
       chatItems.sort((a, b) => {
@@ -145,7 +145,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
     }
   };
 
-  // ✅ ENHANCED: Open chat and mark as read in database
+  //  ENHANCED: Open chat and mark as read in database
   const openChat = async (classId: number) => {
     setOpenChats((prev) => new Set(prev).add(classId));
     setMinimizedChats((prev) => {
@@ -154,7 +154,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
       return newSet;
     });
     
-    // ✅ Mark as read in database
+    //  Mark as read in database
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:8080/api/chat/${classId}/mark-read`, {
@@ -165,13 +165,13 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
       });
 
       if (response.ok) {
-        console.log('[ChatList] ✅ Marked all messages as read for class:', classId);
+        console.log('[ChatList]  Marked all messages as read for class:', classId);
       }
     } catch (error) {
-      console.error('[ChatList] ❌ Failed to mark as read:', error);
+      console.error('[ChatList]  Failed to mark as read:', error);
     }
 
-    // ✅ Reset UI immediately
+    //  Reset UI immediately
     setClassList((prev) =>
       prev.map((item) =>
         item.classId === classId 
@@ -195,7 +195,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
     });
   };
 
-  // ✅ ENHANCED: Minimize/Maximize with mark as read
+  //  ENHANCED: Minimize/Maximize with mark as read
   const minimizeChat = async (classId: number) => {
     const wasMinimized = minimizedChats.has(classId);
     
@@ -209,7 +209,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
       return newSet;
     });
 
-    // ✅ If maximizing (was minimized), mark as read
+    //  If maximizing (was minimized), mark as read
     if (wasMinimized) {
       try {
         const token = localStorage.getItem('token');
@@ -232,19 +232,19 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
     }
   };
 
-  // ✅ ENHANCED: Handle new message (increment unread in UI)
+  //  ENHANCED: Handle new message (increment unread in UI)
   const handleNewMessage = (classId: number, messageContent?: string, senderUsername?: string) => {
     const isMinimized = minimizedChats.has(classId);
     const isClosed = !openChats.has(classId);
     
-    // ✅ Only increment if minimized or closed
+    //  Only increment if minimized or closed
     if (isMinimized || isClosed) {
       setClassList((prev) => {
         const updated = prev.map((item) => {
           if (item.classId === classId) {
             return {
               ...item,
-              unreadCount: item.unreadCount + 1, // ✅ Optimistic UI update
+              unreadCount: item.unreadCount + 1, //  Optimistic UI update
               lastMessage: messageContent || 'Tin nhắn mới',
               lastMessageTime: new Date().toISOString(),
               lastMessageSender: senderUsername,
@@ -360,7 +360,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
                         )}
                       </div>
                       
-                      {/* ✅ "Tin nhắn mới chưa đọc" indicator */}
+                      {/*  "Tin nhắn mới chưa đọc" indicator */}
                       {item.hasNewMessages && item.unreadCount > 0 && (
                         <div className="new-messages-indicator">
                           <span className="new-messages-text">

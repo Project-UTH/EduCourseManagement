@@ -299,7 +299,7 @@ const ClassList: React.FC = () => {
             onChange={(e) => setSearchKeyword(e.target.value)}
           />
           <button type="submit" className="btn-search">
-            🔍 Tìm kiếm
+            Tìm kiếm
           </button>
         </form>
         
@@ -323,9 +323,9 @@ const ClassList: React.FC = () => {
       {/* TABLE */}
       <div className="table-container">
         {loading ? (
-          <div className="loading">⏳ Đang tải dữ liệu...</div>
+          <div className="loading"> Đang tải dữ liệu...</div>
         ) : error ? (
-          <div className="error-message">❌ {error}</div>
+          <div className="error-message"> {error}</div>
         ) : classes.length === 0 ? (
           <div className="no-data">Không tìm thấy lớp học nào</div>
         ) : (
@@ -404,7 +404,7 @@ const ClassList: React.FC = () => {
       onClick={() => handleViewSessions(cls)}
       title="Xem lịch chi tiết"
     >
-      📅 Lịch
+      Lịch
     </button>
 
     {/* Nút 2: Sinh viên (Góc trên phải) */}
@@ -413,7 +413,7 @@ const ClassList: React.FC = () => {
       onClick={() => handleViewStudents(cls)}
       title={`Xem danh sách sinh viên (${cls.enrolledCount})`}
     >
-      👥 SV
+      SV
     </button>
 
     {/* Nút 3: Sửa (Góc dưới trái) */}
@@ -422,7 +422,7 @@ const ClassList: React.FC = () => {
       onClick={() => handleEditClass(cls)}
       title="Chỉnh sửa thông tin"
     >
-      ✏️ Sửa
+      Sửa
     </button>
 
     {/* Nút 4: Xóa (Góc dưới phải) */}
@@ -432,7 +432,7 @@ const ClassList: React.FC = () => {
       title="Xóa lớp học"
       disabled={cls.enrolledCount > 0}
     >
-      🗑️ Xóa
+      Xóa
     </button>
   </div>
 </td>

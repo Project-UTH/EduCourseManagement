@@ -179,7 +179,7 @@ const RoomModal = ({ room, onClose, onSuccess }: RoomModalProps) => {
         {/* HEADER */}
         <div className="room-modal-header">
           <h2 className="room-modal-title">
-            {isEditMode ? '✏️ Sửa phòng học' : '➕ Thêm phòng học'}
+            {isEditMode ? ' Sửa phòng học' : 'Thêm phòng học'}
           </h2>
           <button className="room-modal-close-btn" onClick={onClose}>
             ✖
@@ -322,7 +322,7 @@ const RoomModal = ({ room, onClose, onSuccess }: RoomModalProps) => {
                     className="room-checkbox"
                   />
                   <span className="room-checkbox-text">
-                    {formData.isActive ? '✅ Đang hoạt động' : '⛔ Ngừng hoạt động'}
+                    {formData.isActive ? ' Đang hoạt động' : ' Ngừng hoạt động'}
                   </span>
                 </label>
               </div>
@@ -331,7 +331,7 @@ const RoomModal = ({ room, onClose, onSuccess }: RoomModalProps) => {
 
           {/* INFO BOX */}
           <div className="room-info-box">
-            <strong>📋 Thông tin:</strong>
+            <strong> Thông tin:</strong>
             <ul>
               <li>Mã phòng: Chỉ chữ IN HOA và số (VD: A201, LAB05)</li>
               <li>Tòa nhà: 1 chữ IN HOA (A-Z)</li>
@@ -355,7 +355,7 @@ const RoomModal = ({ room, onClose, onSuccess }: RoomModalProps) => {
               className="room-btn-submit"
               disabled={loading}
             >
-              {loading ? '⏳ Đang xử lý...' : isEditMode ? '💾 Cập nhật' : '➕ Thêm mới'}
+              {loading ? ' Đang xử lý...' : isEditMode ? ' Cập nhật' : ' Thêm mới'}
             </button>
           </div>
         </form>

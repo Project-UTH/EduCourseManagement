@@ -108,10 +108,10 @@ const MajorModal: React.FC<MajorModalProps> = ({
       setLoading(true);
       if (isEditMode) {
         await majorApi.update(major.majorId, formData as MajorUpdateRequest);
-        alert('✅ Cập nhật chuyên ngành thành công!');
+        alert(' Cập nhật chuyên ngành thành công!');
       } else {
         await majorApi.create(formData as MajorCreateRequest);
-        alert('✅ Thêm chuyên ngành thành công!');
+        alert(' Thêm chuyên ngành thành công!');
       }
       onSuccess();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,7 +122,7 @@ const MajorModal: React.FC<MajorModalProps> = ({
       if (msg.includes('already exists')) {
         setErrors({ majorCode: 'Mã chuyên ngành đã tồn tại' });
       } else {
-        alert(`❌ Lỗi: ${msg}`);
+        alert(` Lỗi: ${msg}`);
       }
     } finally {
       setLoading(false);
@@ -142,7 +142,7 @@ const MajorModal: React.FC<MajorModalProps> = ({
         {/* HEADER */}
         <div className="mm-header">
           <h2 className="mm-title">
-            {isEditMode ? '✏️ Sửa Chuyên ngành' : '➕ Thêm Chuyên ngành'}
+            {isEditMode ? ' Sửa Chuyên ngành' : 'Thêm Chuyên ngành'}
           </h2>
           <button className="mm-close" onClick={onClose}>&times;</button>
         </div>
@@ -172,7 +172,7 @@ const MajorModal: React.FC<MajorModalProps> = ({
             {/* Department Info Box */}
             {formData.departmentId > 0 && (
               <div className="mm-info-box">
-                <strong>🏢 Khoa trực thuộc:</strong>
+                <strong> Khoa trực thuộc:</strong>
                 <span>{getDepartmentName(formData.departmentId)}</span>
               </div>
             )}
@@ -185,13 +185,12 @@ const MajorModal: React.FC<MajorModalProps> = ({
               type="text"
               name="majorCode"
               value={formData.majorCode}
-              onChange={(e) => {
-                // Auto uppercase
-                handleChange({
-                  ...e,
-                  target: { ...e.target, value: e.target.value.toUpperCase() }
-                });
-              }}
+                          onChange={(e) => {
+  const val = e.target.value.toUpperCase();
+  setFormData(prev => ({ ...prev, majorCode: val }));
+  // Xóa lỗi nếu có
+  if (errors.majorCode) setErrors(prev => ({ ...prev, majorCode: '' }));
+}}
               placeholder="VD: SE, AI, IA"
               className={`mm-input ${errors.majorCode ? 'error' : ''}`}
               maxLength={10}

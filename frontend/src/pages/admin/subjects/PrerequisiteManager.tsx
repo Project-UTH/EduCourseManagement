@@ -128,6 +128,12 @@ const PrerequisiteManager: React.FC<PrerequisiteManagerProps> = ({
 
         {/* BODY */}
         <div className="modal-body">
+          {error && (
+  <div className="error-message">
+    {error}
+  </div>
+)}
+
           
           {/* ADD SECTION */}
           <div className="add-section">
@@ -153,7 +159,7 @@ const PrerequisiteManager: React.FC<PrerequisiteManagerProps> = ({
                 onClick={handleAdd}
                 disabled={!selectedSubjectId || loading}
               >
-                + Thêm
+                Thêm
               </button>
             </div>
           </div>

@@ -9,7 +9,6 @@ interface SidebarProps {
 }
 
 interface MenuItem {
-  icon: string;
   label: string;
   path: string;
   badge?: string;
@@ -21,38 +20,34 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
     switch (userRole) {
       case 'ADMIN':
         return [
-          { 
-            icon: '📊', 
-            label: 'Dashboard', 
+          {  
+            label: 'Trang chủ', 
             path: '/admin/dashboard' 
           },
           {
-            icon: '👥',
             label: 'Quản lý Người dùng',
             path: '/admin/users',
             children: [
-              { icon: '👨‍🏫', label: 'Giảng viên', path: '/admin/teachers' },
-              { icon: '👨‍🎓', label: 'Sinh viên', path: '/admin/students' },
+              { label: 'Giảng viên', path: '/admin/teachers' },
+              { label: 'Sinh viên', path: '/admin/students' },
             ]
           },
           {
-            icon: '📚',
             label: 'Quản lý Học vụ',
             path: '/admin/academic',
             children: [
-              { icon: '🏢', label: 'Khoa', path: '/admin/departments' },
-              { icon: '📖', label: 'Chuyên ngành', path: '/admin/majors' },
-              { icon: '📕', label: 'Môn học', path: '/admin/subjects' },
-              { icon: '📅', label: 'Học kỳ', path: '/admin/semesters' },
+              { label: 'Khoa', path: '/admin/departments' },
+              { label: 'Chuyên ngành', path: '/admin/majors' },
+              { label: 'Môn học', path: '/admin/subjects' },
+              { label: 'Học kỳ', path: '/admin/semesters' },
             ]
           },
           {
-            icon: '🏫',
             label: 'Quản lý Lớp học',
             path: '/admin/classes-management',
             children: [
-              { icon: '📋', label: 'Danh sách lớp', path: '/admin/classes' },
-              { icon: '🏢', label: 'Phòng học', path: '/admin/rooms' },
+              { label: 'Danh sách lớp', path: '/admin/classes' },
+              { label: 'Phòng học', path: '/admin/rooms' },
             ]
           },
         ];
@@ -60,36 +55,31 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
       case 'TEACHER':
         return [
           { 
-            icon: '🏠', 
             label: 'Trang chủ', 
             path: '/teacher/dashboard' 
           },
          
           { 
-            icon: '📅', 
             label: 'Lịch giảng dạy', 
             path: '/teacher/schedule' 
           },
           {
-            icon: '📝',
             label: 'Bài tập',
             path: '/teacher/assignments-menu',
             children: [
-              { icon: '📝', label: 'Quản lý bài tập', path: '/teacher/assignments' },
-              { icon: '📊', label: 'Bài nộp của SV', path: '/teacher/submissions' },
+              { label: 'Quản lý bài tập', path: '/teacher/assignments' },
+              { label: 'Bài nộp của SV', path: '/teacher/submissions' },
             ]
           },
           {
-            icon: '📊',
             label: 'Chấm điểm',
             path: '/teacher/grading-menu',
             children: [
-              { icon: '🎯', label: 'Quản lí điểm', path: '/teacher/grading' },
-              { icon: '📈', label: 'Thống kê điểm', path: '/teacher/grade-statistics' },
+              { label: 'Quản lí điểm', path: '/teacher/grading' },
+              { label: 'Thống kê điểm', path: '/teacher/grade-statistics' },
             ]
           },
           { 
-            icon: '👤', 
             label: 'Hồ sơ cá nhân', 
             path: '/teacher/profile' 
           },
@@ -98,34 +88,29 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
       case 'STUDENT':
         return [
           { 
-            icon: '🏠', 
             label: 'Trang chủ', 
             path: '/student/dashboard' 
           },
           {
-            icon: '📚',
             label: 'Khóa học',
             path: '/student/courses-menu',
             children: [
-              { icon: '📚', label: 'Đăng ký học phần', path: '/student/subjects' },        // ✅ MỚI
-             // ✅ CŨ
+              { label: 'Đăng ký học phần', path: '/student/subjects' },        //  MỚI
+             // CŨ
             ]
           },
           { 
-            icon: '📅', 
             label: 'Lịch học', 
             path: '/student/schedule' 
           },
           {
-            icon: '📊',
             label: 'Điểm số',
             path: '/student/grades-menu',
             children: [
-              { icon: '📄', label: 'Bảng điểm tích lũy', path: '/student/transcript' },  // ✅ UPDATED - Link đến trang mới
+              { label: 'Bảng điểm tích lũy', path: '/student/transcript' },  //  UPDATED - Link đến trang mới
             ]
           },
           { 
-            icon: '👤', 
             label: 'Hồ sơ cá nhân', 
             path: '/student/profile' 
           },
@@ -156,7 +141,6 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
         className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
         data-label={item.label}
       >
-        <span className="sidebar-icon">{item.icon}</span>
         <span className="sidebar-label">{item.label}</span>
         {item.badge && (
           <span className="sidebar-badge">{item.badge}</span>
@@ -167,6 +151,17 @@ const Sidebar = ({ collapsed, userRole }: SidebarProps) => {
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      {/* --- PHẦN MỚI: HEADER CHỨA 3 GẠCH --- */}
+      <div className="sidebar-header">
+        <div className="hamburger-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </div>
+        <span className="header-title">MENU</span>
+      </div>
+      {/* ------------------------------------- */}
+
       <nav className="sidebar-nav">
         {menuItems.map((item, index) => renderMenuItem(item, index))}
       </nav>
@@ -188,17 +183,13 @@ const SidebarSubmenu = ({ item }: SidebarSubmenuProps) => {
       <button
         className={`sidebar-item submenu-trigger ${expanded ? 'expanded' : ''}`}
         onClick={() => setExpanded(!expanded)}
-        data-label={item.label}
       >
-        <span className="sidebar-icon">{item.icon}</span>
         <span className="sidebar-label">{item.label}</span>
         <svg 
           className="submenu-arrow" 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
-          width="16"
-          height="16"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
@@ -211,13 +202,8 @@ const SidebarSubmenu = ({ item }: SidebarSubmenuProps) => {
               key={idx}
               to={child.path}
               className={({ isActive }) => `sidebar-item submenu-item ${isActive ? 'active' : ''}`}
-              data-label={child.label}
             >
-              <span className="sidebar-icon">{child.icon}</span>
               <span className="sidebar-label">{child.label}</span>
-              {child.badge && (
-                <span className="sidebar-badge">{child.badge}</span>
-              )}
             </NavLink>
           ))}
         </div>

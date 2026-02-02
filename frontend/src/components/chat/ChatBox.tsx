@@ -18,7 +18,7 @@ interface ChatBoxProps {
   onClose: () => void;
   onMinimize: () => void;
   isMinimized: boolean;
-  onNewMessage?: (content: string, sender: string) => void; // ✅ Enhanced with message details
+  onNewMessage?: (content: string, sender: string) => void; //  Enhanced with message details
 }
 
 const ChatBox = ({
@@ -36,7 +36,7 @@ const ChatBox = ({
   const [stompClient, setStompClient] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0); // ✅ Track unread in minimized state
+  const [unreadCount, setUnreadCount] = useState(0); //  Track unread in minimized state
 
   // Scroll to bottom
   const scrollToBottom = () => {
@@ -47,7 +47,7 @@ const ChatBox = ({
     scrollToBottom();
   }, [messages]);
 
-  // ✅ Reset unread count when chat is not minimized
+  //  Reset unread count when chat is not minimized
   useEffect(() => {
     if (!isMinimized) {
       setUnreadCount(0);
@@ -96,12 +96,12 @@ const ChatBox = ({
     client.connect(
       { Authorization: `Bearer ${token}` },
       () => {
-        console.log('[ChatBox] ✅ WebSocket connected for class:', classId);
+        console.log('[ChatBox]  WebSocket connected for class:', classId);
         setIsConnected(true);
 
         client.subscribe(`/topic/class/${classId}`, (message: any) => {
           const receivedMessage = JSON.parse(message.body);
-          console.log('[ChatBox] 📩 New message received:', receivedMessage);
+          console.log('[ChatBox]  New message received:', receivedMessage);
           
           // Prevent duplicate messages
           setMessages((prev) => {
@@ -111,14 +111,14 @@ const ChatBox = ({
             );
             
             if (exists) {
-              console.log('[ChatBox] ⚠️ Duplicate message detected, skipping');
+              console.log('[ChatBox]  Duplicate message detected, skipping');
               return prev;
             }
             
             return [...prev, receivedMessage];
           });
           
-          // ✅ Notify parent with message details
+          //  Notify parent with message details
           if (receivedMessage.senderUsername !== currentUsername) {
             // Increase unread count if minimized
             if (isMinimized) {
@@ -151,7 +151,7 @@ const ChatBox = ({
   const handleSendMessage = () => {
     if (!inputMessage.trim() || !stompClient || !isConnected) return;
 
-    console.log('[ChatBox] 📤 Sending message:', inputMessage);
+    console.log('[ChatBox]  Sending message:', inputMessage);
 
     stompClient.send(
       `/app/chat.sendMessage/${classId}`,
@@ -256,7 +256,7 @@ const ChatBox = ({
       <div className="chat-input-container">
         {!isConnected && (
           <div className="connection-warning">
-            ⚠️ Đang kết nối lại...
+             Đang kết nối lại...
           </div>
         )}
         <div className="chat-input-wrapper">

@@ -194,11 +194,11 @@ const RoomList = () => {
   const getStatusBadge = (room: RoomResponse) => {
     switch (room.currentStatus) {
       case 'IN_USE':
-        return <span className="room-status-badge status-in-use">🟢 Đang dùng</span>;
+        return <span className="room-status-badge status-in-use"> Đang dùng</span>;
       case 'AVAILABLE':
-        return <span className="room-status-badge status-available">⚪ Trống</span>;
+        return <span className="room-status-badge status-available"> Trống</span>;
       case 'INACTIVE':
-        return <span className="room-status-badge status-inactive">⚫ Ngừng HĐ</span>;
+        return <span className="room-status-badge status-inactive"> Ngừng HĐ</span>;
       default:
         return <span className="room-status-badge">—</span>;
     }
@@ -216,17 +216,6 @@ const RoomList = () => {
     );
   };
 
-  const renderUtilization = (percentage: number) => {
-    return (
-      <div className="utilization-container">
-        <div className="utilization-bar-wrapper">
-          <div className="utilization-bar-fill" style={{ width: `${percentage}%` }}></div>
-        </div>
-        <span className="utilization-percentage">{percentage.toFixed(1)}%</span>
-      </div>
-    );
-  };
-
   // ==================== MAIN RENDER ====================
 
   return (
@@ -235,15 +224,15 @@ const RoomList = () => {
       {/* HEADER */}
       <div className="room-list-header">
         <h1 className="page-title">
-          <span className="title-icon">🏢</span>
+          <span className="title-icon"></span>
           Quản lý Phòng học
         </h1>
         <div className="header-actions">
           <button className="create-room-button" onClick={handleCreate}>
-            <span className="create-icon"></span>+Thêm phòng
+            Thêm phòng
           </button>
           <button className="refresh-button" onClick={handleRefresh} disabled={loading} title="Làm mới dữ liệu">
-            <span className="refresh-icon">🔄</span> Làm mới
+             Làm mới
           </button>
         </div>
       </div>
@@ -259,7 +248,7 @@ const RoomList = () => {
             onChange={(e) => setSearchKeyword(e.target.value)}
           />
           <button type="submit" className="room-search-button">
-            <span className="search-icon">🔍</span> Tìm kiếm
+             Tìm kiếm
           </button>
         </form>
 
@@ -300,13 +289,13 @@ const RoomList = () => {
 
           <select className="room-filter-select filter-status-special" value={filterCurrentStatus} onChange={(e) => setFilterCurrentStatus(e.target.value)}>
             <option value="">Trạng thái: Tất cả</option>
-            <option value="IN_USE">🟢 Đang dùng</option>
-            <option value="AVAILABLE">⚪ Trống</option>
-            <option value="INACTIVE">⚫ Ngừng HĐ</option>
+            <option value="IN_USE"> Đang dùng</option>
+            <option value="AVAILABLE">Trống</option>
+            <option value="INACTIVE"> Ngừng HĐ</option>
           </select>
 
           <button className="room-clear-filters-button" onClick={handleClearFilters}>
-            <span className="clear-icon">✖</span> Xóa bộ lọc
+         Xóa bộ lọc
           </button>
         </div>
       </div>
@@ -377,7 +366,7 @@ const RoomList = () => {
       onClick={() => handleDelete(room)}
       title="Xóa phòng"
     >
-      🗑️ Xóa
+       Xóa
     </button>
   </div>
 
@@ -387,7 +376,7 @@ const RoomList = () => {
       onClick={() => handleEdit(room)}
       title="Sửa phòng"
     >
-      ✏️ Sửa
+       Sửa
     </button>
   </div>
 </div>

@@ -66,15 +66,15 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
 
   const getLabel = (): string => {
     switch (status) {
-      case 'SUBMITTED': return '✅ Đã nộp';
-      case 'GRADED': return '📝 Đã chấm';
-      case 'LATE': return '⚠️ Muộn';
-      case 'OVERDUE': return '⚠️ Quá hạn';
-      case 'PASSED': return '✅ Đạt';
-      case 'FAILED': return '❌ Không đạt';
-      case 'IN_PROGRESS': return '⏳ Đang học';
-      case 'OPEN': return '🟢 Mở';
-      case 'CLOSED': return '🔴 Đóng';
+      case 'SUBMITTED': return ' Đã nộp';
+      case 'GRADED': return ' Đã chấm';
+      case 'LATE': return ' Muộn';
+      case 'OVERDUE': return ' Quá hạn';
+      case 'PASSED': return ' Đạt';
+      case 'FAILED': return ' Không đạt';
+      case 'IN_PROGRESS': return ' Đang học';
+      case 'OPEN': return ' Mở';
+      case 'CLOSED': return ' Đóng';
       default: return status;
     }
   };

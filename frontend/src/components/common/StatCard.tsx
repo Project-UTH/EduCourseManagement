@@ -9,7 +9,7 @@ import './common.css';
  * 
  * @example
  * <StatCard 
- *   icon="📝" 
+ *   icon="" 
  *   label="Tổng bài tập" 
  *   value={24} 
  *   color="#10b981"

@@ -125,7 +125,7 @@ const DepartmentList: React.FC = () => {
           <form onSubmit={handleSearch} className="search-form">
             <input
               type="text"
-              placeholder="🔍 Tìm kiếm..."
+              placeholder=" Tìm kiếm..."
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="search-input"
@@ -190,6 +190,13 @@ const DepartmentList: React.FC = () => {
                           <button className="btn btn-edit" onClick={() => handleEdit(dept)}>
                             Sửa
                           </button>
+                          <button
+      className="btn btn-delete"
+      onClick={() => handleDelete(dept.departmentId)}
+      disabled={deletingId === dept.departmentId}
+    >
+      {deletingId === dept.departmentId ? 'Đang xóa...' : 'Xóa'}
+    </button>
                         </div>
                       </td>
                     </tr>

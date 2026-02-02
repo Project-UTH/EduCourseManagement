@@ -53,7 +53,7 @@ const SubjectList: React.FC = () => {
       try {
         const prereqsRes = await subjectApi.getPrerequisites(subject.subjectId);
         return { ...subject, prerequisitesList: Array.isArray(prereqsRes.data) ? prereqsRes.data : [], prerequisitesLoading: false };
-      } catch (err) {
+      } catch  {
         return { ...subject, prerequisitesList: [], prerequisitesLoading: false };
       }
     }));
@@ -89,7 +89,7 @@ const SubjectList: React.FC = () => {
     if (!window.confirm('Xóa môn học này?')) return;
     try {
       setDeletingId(id); await subjectApi.delete(id); alert('Xóa thành công!'); fetchSubjects();
-    } catch (err) { alert('Không thể xóa'); } finally { setDeletingId(null); }
+    } catch { alert('Không thể xóa'); } finally { setDeletingId(null); }
   };
   const handleModalSuccess = () => { setIsModalOpen(false); setEditingSubject(null); fetchSubjects(); };
   const handleModalClose = () => { setIsModalOpen(false); setEditingSubject(null); };
@@ -140,7 +140,7 @@ const SubjectList: React.FC = () => {
           <form onSubmit={handleSearch} className="search-form">
             <input
               type="text"
-              placeholder="🔍 Tìm mã/tên môn học..."
+              placeholder="Tìm mã/tên môn học..."
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="search-input"
@@ -163,6 +163,7 @@ const SubjectList: React.FC = () => {
         </div>
 
         <div className="table-responsive">
+          {error && <div className="error-message">{error}</div>}
           {loading ? <div className="loading">Đang tải...</div> : !subjects.length ? <div className="no-data">Chưa có dữ liệu</div> : (
             <>
               <table className="data-table">
@@ -229,7 +230,7 @@ const SubjectList: React.FC = () => {
         onClick={() => handleOpenPrerequisites(subj)}
         title="QL Môn điều kiện"
       >
-        📚
+        ĐK
       </button>
 
       <button
