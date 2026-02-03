@@ -2,20 +2,20 @@ package vn.edu.uth.ecms.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.math.BigDecimal;
+import vn.edu.uth.ecms.entity.enums.EnrollmentType;
+import vn.edu.uth.ecms.entity.enums.RegistrationStatus;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "course_registration",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"student_id", "class_id"})
-        },
-        indexes = {
-                @Index(name = "idx_registration_student", columnList = "student_id"),
-                @Index(name = "idx_registration_class", columnList = "class_id"),
-                @Index(name = "idx_registration_semester", columnList = "semester_id"),
-                @Index(name = "idx_registration_status", columnList = "status")
-        })
+@Table(name = "course_registration", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "student_id", "class_id" })
+}, indexes = {
+        @Index(name = "idx_registration_student", columnList = "student_id"),
+        @Index(name = "idx_registration_class", columnList = "class_id"),
+        @Index(name = "idx_registration_semester", columnList = "semester_id"),
+        @Index(name = "idx_registration_status", columnList = "status")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -50,11 +50,6 @@ public class CourseRegistration extends BaseEntity {
     @Column(name = "dropped_at")
     private LocalDateTime droppedAt;
 
-    
-    @Column(name = "final_grade", columnDefinition = "DECIMAL(3,2)")
-    private BigDecimal finalGrade;
-
-    
     @Enumerated(EnumType.STRING)
     @Column(name = "enrollment_type", length = 20)
     private EnrollmentType enrollmentType = EnrollmentType.NORMAL;
@@ -68,7 +63,6 @@ public class CourseRegistration extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "enrolled_by_admin_id")
     private Admin enrolledByAdmin;
-
 
     public boolean isActive() {
         return status == RegistrationStatus.REGISTERED;

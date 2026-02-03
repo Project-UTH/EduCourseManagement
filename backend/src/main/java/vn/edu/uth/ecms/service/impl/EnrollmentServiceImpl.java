@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.request.ManualEnrollRequest;
 import vn.edu.uth.ecms.dto.response.CourseRegistrationResponse;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.*;
 import vn.edu.uth.ecms.exception.*;
 import vn.edu.uth.ecms.repository.*;
 import vn.edu.uth.ecms.service.EnrollmentService;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -32,7 +32,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final ClassRepository classRepository;
     private final AdminRepository adminRepository;
     private final ClassSessionRepository sessionRepository;
-    private final StudentScheduleRepository scheduleRepository;
 
     @Override
     public CourseRegistrationResponse manuallyEnrollStudent(Long classId, ManualEnrollRequest request) {
@@ -62,14 +61,12 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             // Case 1: Already REGISTERED
             if (existing.getStatus() == RegistrationStatus.REGISTERED) {
                 throw new DuplicateException(
-                        " Sinh viên đã đăng ký lớp này. Registration ID: " + existing.getRegistrationId()
-                );
+                        " Sinh viên đã đăng ký lớp này. Registration ID: " + existing.getRegistrationId());
             }
 
             // Case 2: Was DROPPED → RE-ACTIVATE
             log.info(" Student was previously DROPPED. Re-activating registration...");
 
-          
             performEnrollmentValidation(student, classEntity, semester, "re-activation");
 
             existing.setStatus(RegistrationStatus.REGISTERED);
@@ -88,7 +85,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             // Case 3: NEW REGISTRATION
             log.info(" Creating new registration");
 
-            
             performEnrollmentValidation(student, classEntity, semester, "new enrollment");
 
             registration = CourseRegistration.builder()
@@ -112,16 +108,13 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         classEntity.incrementEnrolled();
         classRepository.save(classEntity);
 
-        // 4. Create student schedule
-        createStudentSchedule(student, classEntity, semester);
-
         log.info(" Student enrolled successfully");
         return mapToResponse(registration);
     }
 
     /**
      * @throws BadRequestException if semester is COMPLETED
-     * @throws ConflictException if schedule conflict detected
+     * @throws ConflictException   if schedule conflict detected
      */
     private void performEnrollmentValidation(
             Student student,
@@ -135,8 +128,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         // 1. Check semester status
         if (semester.getStatus() == SemesterStatus.COMPLETED) {
             throw new BadRequestException(
-                    " Cannot enroll to COMPLETED semester: " + semester.getSemesterCode()
-            );
+                    " Cannot enroll to COMPLETED semester: " + semester.getSemesterCode());
         }
 
         // 2. Check class capacity (warn but allow admin override)
@@ -147,7 +139,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                     classEntity.getMaxStudents());
         }
 
-    
         ScheduleConflictResult conflictResult = checkScheduleConflict(student, classEntity, semester);
 
         if (conflictResult.hasConflict()) {
@@ -186,7 +177,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return ScheduleConflictResult.noConflict();
     }
 
-   
     private ScheduleConflictResult checkFixedScheduleConflict(
             Student student,
             ClassEntity newClass,
@@ -225,8 +215,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                         newClass.getClassCode(),
                         newClass.getSubject().getSubjectName(),
                         getDayDisplay(newClass.getDayOfWeek()),
-                        newClass.getTimeSlot().getDisplayName()
-                );
+                        newClass.getTimeSlot().getDisplayName());
 
                 log.warn(" Fixed schedule conflict: {} ({} {}) vs {} ({} {})",
                         existing.getClassCode(),
@@ -257,46 +246,42 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .filter(s -> !s.getIsPending() && s.getSessionType() == SessionType.IN_PERSON)
                 .toList();
 
-        // Check each new session against student's existing schedule
+        // Check each new session against student's existing schedule (via existing
+        // registrations)
         for (ClassSession newSession : newSessions) {
             LocalDate date = newSession.getEffectiveDate();
             TimeSlot slot = newSession.getEffectiveTimeSlot();
 
             if (date == null || slot == null) {
-                continue;  // Skip if no date/time (shouldn't happen for IN_PERSON)
+                continue; // Skip if no date/time (shouldn't happen for IN_PERSON)
             }
 
-            // Query: Does student have any class at this date/time?
-            boolean hasConflict = scheduleRepository.existsByStudentAndDateAndTimeSlot(
-                    student.getStudentId(),
+            // Query: Does student have any OTHER class session at this date/time?
+            // Use sessionRepository to query conflicts directly via ClassSession +
+            // CourseRegistration
+            boolean hasConflict = sessionRepository.existsAnyStudentConflict(
+                    semester.getSemesterId(),
+                    List.of(student.getStudentId()), // Check for only this student
                     date,
-                    slot
+                    date.getDayOfWeek(),
+                    slot,
+                    newClass.getClassId() // Exclude the class we are trying to enroll in
             );
 
             if (hasConflict) {
-                // Find which class conflicts
-                List<StudentSchedule> conflictingSchedules = scheduleRepository
-                        .findByStudentAndDateAndTimeSlot(student.getStudentId(), date, slot);
-
-                String conflictingClass = conflictingSchedules.isEmpty() ? "Unknown" :
-                        conflictingSchedules.getFirst().getClassEntity().getClassCode();
-
                 String message = String.format(
                         " Trùng lịch buổi học!\n\n" +
                                 "Sinh viên: %s (%s)\n" +
-                                "Lớp đang học: %s\n" +
                                 "Lớp muốn thêm: %s - %s\n" +
                                 "Xung đột: Ngày %s, %s, %s\n\n" +
                                 "Không thể thêm sinh viên vào lớp này.",
                         student.getFullName(),
                         student.getStudentCode(),
-                        conflictingClass,
                         newClass.getClassCode(),
                         newClass.getSubject().getSubjectName(),
                         date,
                         getDayDisplay(date.getDayOfWeek()),
-                        slot.getDisplayName()
-                );
+                        slot.getDisplayName());
 
                 log.warn(" Extra session conflict at {} {} {}", date, date.getDayOfWeek(), slot);
 
@@ -327,8 +312,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         classEntity.decrementEnrolled();
         classRepository.save(classEntity);
 
-        deleteStudentSchedule(studentId, classId);
-
         log.info(" Student dropped successfully");
     }
 
@@ -358,75 +341,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return registrationRepository.countActiveStudents(classId);
     }
 
-    private void deleteStudentSchedule(Long studentId, Long classId) {
-        log.info(" Deleting schedule for student {} in class {}", studentId, classId);
-
-        long count = scheduleRepository.countByStudentAndClass(studentId, classId);
-        scheduleRepository.deleteByStudentAndClass(studentId, classId);
-
-        log.info(" Deleted {} schedule records", count);
-    }
-
-   
-    @Override
-    @Transactional
-    public void createStudentSchedule(Student student, ClassEntity classEntity, Semester semester) {
-        log.info(" Creating schedule for student {} in class {}",
-                student.getStudentCode(),
-                classEntity.getClassCode());
-
-        // Get ALL non-pending sessions (IN_PERSON + E_LEARNING + scheduled EXTRA)
-        List<ClassSession> sessions = sessionRepository
-                .findByClass(classEntity.getClassId())
-                .stream()
-                .filter(session -> !session.getIsPending())
-                .toList();
-
-        log.info(" Found {} non-pending sessions", sessions.size());
-
-        List<StudentSchedule> schedules = new ArrayList<>();
-
-        for (ClassSession session : sessions) {
-           
-            LocalDate sessionDate = session.getEffectiveDate();
-            DayOfWeek dayOfWeek = session.getEffectiveDayOfWeek();
-            TimeSlot timeSlot = session.getEffectiveTimeSlot();
-            Room room = session.getEffectiveRoom();
-
-            if (session.getSessionType() == SessionType.E_LEARNING) {
-                if (sessionDate == null || dayOfWeek == null || timeSlot == null) {
-                    log.error("❌ E-learning session {} missing schedule!", session.getSessionNumber());
-                    throw new IllegalStateException("E-learning session missing date/time!");
-                }
-
-              
-                log.info(" E-learning session {}: {} {} {} ONLINE",
-                        session.getSessionNumber(), sessionDate, dayOfWeek, timeSlot);
-            }
-
-            StudentSchedule schedule = StudentSchedule.builder()
-                    .student(student)
-                    .classSession(session)
-                    .classEntity(session.getClassEntity())
-                    .sessionDate(sessionDate)           
-                    .dayOfWeek(dayOfWeek)               
-                    .timeSlot(timeSlot)                
-                    .room(room)                         
-                    .attendanceStatus(AttendanceStatus.ABSENT)
-                    .build();
-
-            schedules.add(schedule);
-        }
-
-        scheduleRepository.saveAll(schedules);
-
-        long inPersonCount = schedules.stream().filter(s -> s.getSessionDate() != null).count();
-        long eLearningCount = schedules.stream().filter(s -> s.getSessionDate() == null).count();
-
-        log.info(" Created {} schedule entries (IN_PERSON: {}, E_LEARNING: {})",
-                schedules.size(), inPersonCount, eLearningCount);
-    }
-
     private CourseRegistrationResponse mapToResponse(CourseRegistration registration) {
         Student student = registration.getStudent();
         ClassEntity classEntity = registration.getClassEntity();
@@ -440,7 +354,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .studentEmail(student.getEmail())
                 .majorName(student.getMajor() != null ? student.getMajor().getMajorName() : null)
                 .departmentName(student.getMajor() != null && student.getMajor().getDepartment() != null
-                        ? student.getMajor().getDepartment().getDepartmentName() : null)
+                        ? student.getMajor().getDepartment().getDepartmentName()
+                        : null)
                 .classId(classEntity.getClassId())
                 .classCode(classEntity.getClassCode())
                 .subjectCode(classEntity.getSubject().getSubjectCode())
@@ -455,7 +370,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .manualReason(registration.getManualReason())
                 .manualNote(registration.getManualNote())
                 .enrolledByAdmin(registration.getEnrolledByAdmin() != null
-                        ? registration.getEnrolledByAdmin().getUsername() : null)
+                        ? registration.getEnrolledByAdmin().getUsername()
+                        : null)
                 .status(registration.getStatus().toString())
                 .createdAt(registration.getCreatedAt())
                 .build();
@@ -473,7 +389,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         };
     }
 
-   
     private static class ScheduleConflictResult {
         private final boolean hasConflict;
         @Getter

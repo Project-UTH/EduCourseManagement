@@ -1,4 +1,4 @@
-package vn.edu.uth.ecms.entity;
+package vn.edu.uth.ecms.entity.enums;
 
 /**
  * Training Type enum for Student

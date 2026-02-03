@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.uth.ecms.entity.KnowledgeType;
+import vn.edu.uth.ecms.entity.enums.KnowledgeType;
 
 import java.time.LocalDateTime;
 

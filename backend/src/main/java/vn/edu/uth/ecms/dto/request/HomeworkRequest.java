@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.uth.ecms.entity.HomeworkType;
+import vn.edu.uth.ecms.entity.enums.HomeworkType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

@@ -14,7 +14,7 @@ import vn.edu.uth.ecms.dto.response.ApiResponse;
 import vn.edu.uth.ecms.dto.response.RoomResponse;
 import vn.edu.uth.ecms.dto.response.RoomScheduleResponse;
 import vn.edu.uth.ecms.entity.Room;
-import vn.edu.uth.ecms.entity.RoomType;
+import vn.edu.uth.ecms.entity.enums.RoomType;
 import vn.edu.uth.ecms.service.RoomService;
 
 import org.springframework.http.HttpStatus;

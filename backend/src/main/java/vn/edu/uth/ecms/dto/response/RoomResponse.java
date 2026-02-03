@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.uth.ecms.entity.Room;
-import vn.edu.uth.ecms.entity.RoomAdminStatus;
 
 import java.time.LocalDateTime;
 

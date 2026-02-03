@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.ClassEntity;
 import vn.edu.uth.ecms.entity.Homework;
-import vn.edu.uth.ecms.entity.HomeworkType;
+import vn.edu.uth.ecms.entity.enums.HomeworkType;
 
 import java.time.LocalDateTime;
 import java.util.List;

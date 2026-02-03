@@ -6,6 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.SessionCategory;
+import vn.edu.uth.ecms.entity.enums.SessionStatus;
+import vn.edu.uth.ecms.entity.enums.SessionType;
+import vn.edu.uth.ecms.entity.enums.TimeSlot;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

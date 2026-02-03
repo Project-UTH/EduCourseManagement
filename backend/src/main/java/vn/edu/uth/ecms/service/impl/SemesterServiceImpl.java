@@ -11,21 +11,19 @@ import vn.edu.uth.ecms.dto.request.SemesterCreateRequest;
 import vn.edu.uth.ecms.dto.request.SemesterUpdateRequest;
 import vn.edu.uth.ecms.dto.response.SemesterResponse;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.SemesterStatus;
 import vn.edu.uth.ecms.exception.BadRequestException;
 import vn.edu.uth.ecms.exception.DuplicateException;
 import vn.edu.uth.ecms.exception.NotFoundException;
 import vn.edu.uth.ecms.repository.*;
-import vn.edu.uth.ecms.service.EnrollmentService;
 import vn.edu.uth.ecms.service.ExtraSessionScheduler;
 import vn.edu.uth.ecms.service.SemesterService;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Optional;
-
 
 @Service
 @RequiredArgsConstructor
@@ -36,12 +34,6 @@ public class SemesterServiceImpl implements SemesterService {
     private final SemesterRepository semesterRepository;
     private final ClassSessionRepository sessionRepository;
     private final ExtraSessionScheduler extraSessionScheduler;
-
-    private final ClassRepository classRepository;
-    private final CourseRegistrationRepository registrationRepository;
-    private final StudentScheduleRepository studentScheduleRepository;
-
-   
 
     private SemesterResponse mapToResponse(Semester semester) {
         return SemesterResponse.builder()
@@ -64,7 +56,6 @@ public class SemesterServiceImpl implements SemesterService {
                 .build();
     }
 
-    
     @Override
     public SemesterResponse createSemester(SemesterCreateRequest request) {
         log.info("Creating semester: {}", request.getSemesterCode());
@@ -207,7 +198,6 @@ public class SemesterServiceImpl implements SemesterService {
                 .map(this::mapToResponse);
     }
 
- 
     @Override
     public SemesterResponse activateSemester(Long id) {
         log.info(" Activating semester ID: {}", id);
@@ -215,14 +205,12 @@ public class SemesterServiceImpl implements SemesterService {
         Semester semesterToActivate = semesterRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Semester not found with ID: " + id));
 
-    
         if (semesterToActivate.getStatus() == SemesterStatus.ACTIVE) {
             log.warn(" Semester {} is already ACTIVE. Skipping re-activation and scheduling.",
                     semesterToActivate.getSemesterCode());
             return mapToResponse(semesterToActivate);
         }
 
-        
         if (semesterToActivate.getStatus() == SemesterStatus.COMPLETED) {
             throw new BadRequestException("Cannot activate COMPLETED semester");
         }
@@ -247,10 +235,8 @@ public class SemesterServiceImpl implements SemesterService {
 
         log.info(" Activated semester: {}", saved.getSemesterCode());
 
-       
         try {
             schedulePendingExtraSessions(id);
-            createStudentSchedulesForExtraSessions(id);
         } catch (Exception e) {
             log.error(" Failed to auto-schedule extra sessions: {}", e.getMessage(), e);
         }
@@ -313,99 +299,6 @@ public class SemesterServiceImpl implements SemesterService {
         }
     }
 
-    
-    private void createStudentSchedulesForExtraSessions(Long semesterId) {
-        log.info(" Creating student schedules for extra sessions in semester {}", semesterId);
-
-        List<ClassEntity> classes = classRepository.findBySemester(semesterId);
-
-        if (classes.isEmpty()) {
-            log.info(" No classes found in semester {}", semesterId);
-            return;
-        }
-
-        int totalSchedulesCreated = 0;
-        int totalSkipped = 0;
-
-        for (ClassEntity classEntity : classes) {
-            List<ClassSession> extraSessions = sessionRepository
-                    .findByClass(classEntity.getClassId())
-                    .stream()
-                    .filter(s -> !s.getIsPending()
-                            && s.getSessionNumber() > 10
-                            && s.getSessionType() == SessionType.IN_PERSON)
-                    .toList();
-
-            if (extraSessions.isEmpty()) {
-                log.debug("  No extra IN_PERSON sessions for class {}", classEntity.getClassCode());
-                continue;
-            }
-
-            log.info("  Class {}: Found {} extra IN_PERSON sessions",
-                    classEntity.getClassCode(), extraSessions.size());
-
-            List<CourseRegistration> registrations = registrationRepository
-                    .findByClassEntityClassIdAndStatus(
-                            classEntity.getClassId(),
-                            RegistrationStatus.REGISTERED
-                    );
-
-            if (registrations.isEmpty()) {
-                log.debug("  No enrolled students in class {}", classEntity.getClassCode());
-                continue;
-            }
-
-            List<StudentSchedule> schedules = new ArrayList<>();
-
-            for (CourseRegistration reg : registrations) {
-                for (ClassSession session : extraSessions) {
-
-                    
-                    long existingCount = studentScheduleRepository.countByStudentAndSession(
-                            reg.getStudent().getStudentId(),
-                            session.getSessionId()
-                    );
-
-                    if (existingCount > 0) {
-                        log.debug("    Skip: Schedule already exists for student {} session {}",
-                                reg.getStudent().getStudentCode(), session.getSessionNumber());
-                        totalSkipped++;
-                        continue;
-                    }
-
-                    // Create new schedule
-                    StudentSchedule schedule = StudentSchedule.builder()
-                            .student(reg.getStudent())
-                            .classSession(session)
-                            .classEntity(classEntity)
-                            .sessionDate(session.getEffectiveDate())
-                            .dayOfWeek(session.getEffectiveDayOfWeek())
-                            .timeSlot(session.getEffectiveTimeSlot())
-                            .room(session.getEffectiveRoom())
-                            .attendanceStatus(AttendanceStatus.ABSENT)
-                            .build();
-
-                    schedules.add(schedule);
-                }
-            }
-
-            if (!schedules.isEmpty()) {
-                studentScheduleRepository.saveAll(schedules);
-                totalSchedulesCreated += schedules.size();
-
-                log.info("   Created {} new schedules for {} students",
-                        schedules.size(), registrations.size());
-            }
-        }
-
-        if (totalSkipped > 0) {
-            log.info(" Skipped {} schedules (already exist)", totalSkipped);
-        }
-
-        log.info(" Total {} student schedules created for extra IN_PERSON sessions",
-                totalSchedulesCreated);
-    }
-
     @Override
     public SemesterResponse completeSemester(Long id) {
         log.info("Completing semester ID: {}", id);
@@ -462,8 +355,6 @@ public class SemesterServiceImpl implements SemesterService {
         return response;
     }
 
-   
-
     @Override
     public SemesterResponse enableRegistration(Long id) {
         log.info("Enabling registration for semester ID: {}", id);
@@ -482,8 +373,7 @@ public class SemesterServiceImpl implements SemesterService {
         validateRegistrationPeriod(
                 semester.getStartDate(),
                 semester.getRegistrationStartDate(),
-                semester.getRegistrationEndDate()
-        );
+                semester.getRegistrationEndDate());
 
         semester.setRegistrationEnabled(true);
         Semester saved = semesterRepository.save(semester);
@@ -546,8 +436,6 @@ public class SemesterServiceImpl implements SemesterService {
         return semester.isRegistrationOpen();
     }
 
-    
-
     @Override
     public void validateSemesterDates(LocalDate startDate, LocalDate endDate) {
         if (!endDate.isAfter(startDate)) {
@@ -573,8 +461,7 @@ public class SemesterServiceImpl implements SemesterService {
 
         if (registrationEnd.isAfter(semesterStart)) {
             throw new BadRequestException(
-                    "Registration must end before or on semester start date (" + semesterStart + ")"
-            );
+                    "Registration must end before or on semester start date (" + semesterStart + ")");
         }
 
         long days = ChronoUnit.DAYS.between(registrationStart, registrationEnd);
@@ -594,27 +481,26 @@ public class SemesterServiceImpl implements SemesterService {
 
         return !overlapping.isEmpty();
     }
-    @Override
-@Transactional(readOnly = true)
-public List<SemesterResponse> getActiveSemesters() {
-    List<Semester> semesters = semesterRepository.findByStatusIn(
-            Arrays.asList(SemesterStatus.ACTIVE, SemesterStatus.UPCOMING)
-    );
-    
-    return semesters.stream()
-            .map(this::mapToResponse)
-            .toList();
- }
 
-@Override
-@Transactional(readOnly = true)
-public List<SemesterResponse> getAllSemesters() {
-    List<Semester> semesters = semesterRepository.findAll(
-            Sort.by(Sort.Direction.DESC, "startDate")
-    );
-    
-    return semesters.stream()
-            .map(this::mapToResponse)
-            .toList();
- }
+    @Override
+    @Transactional(readOnly = true)
+    public List<SemesterResponse> getActiveSemesters() {
+        List<Semester> semesters = semesterRepository.findByStatusIn(
+                Arrays.asList(SemesterStatus.ACTIVE, SemesterStatus.UPCOMING));
+
+        return semesters.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SemesterResponse> getAllSemesters() {
+        List<Semester> semesters = semesterRepository.findAll(
+                Sort.by(Sort.Direction.DESC, "startDate"));
+
+        return semesters.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
 }

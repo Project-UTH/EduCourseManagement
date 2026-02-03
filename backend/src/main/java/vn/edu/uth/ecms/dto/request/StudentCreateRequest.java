@@ -5,9 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.uth.ecms.entity.EducationLevel;
-import vn.edu.uth.ecms.entity.Gender;
-import vn.edu.uth.ecms.entity.TrainingType;
+import vn.edu.uth.ecms.entity.enums.EducationLevel;
+import vn.edu.uth.ecms.entity.enums.Gender;
+import vn.edu.uth.ecms.entity.enums.TrainingType;
 
 /**
  * DTO for creating a new student

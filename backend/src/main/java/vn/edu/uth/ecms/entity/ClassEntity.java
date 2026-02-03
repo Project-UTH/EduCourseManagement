@@ -2,6 +2,8 @@ package vn.edu.uth.ecms.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import vn.edu.uth.ecms.entity.enums.ClassStatus;
+import vn.edu.uth.ecms.entity.enums.TimeSlot;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

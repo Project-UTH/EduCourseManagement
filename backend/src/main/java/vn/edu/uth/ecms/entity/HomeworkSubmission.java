@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import vn.edu.uth.ecms.entity.enums.SubmissionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

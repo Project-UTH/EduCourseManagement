@@ -47,7 +47,6 @@ public class TeacherSubjectServiceImpl implements TeacherSubjectService {
                 .subjectName(teacherSubject.getSubject().getSubjectName())
                 .credits(teacherSubject.getSubject().getCredits())
                 .isPrimary(teacherSubject.getIsPrimary())
-                .yearsOfExperience(teacherSubject.getYearsOfExperience())
                 .notes(teacherSubject.getNotes())
                 .build();
     }
@@ -74,7 +73,6 @@ public class TeacherSubjectServiceImpl implements TeacherSubjectService {
                 .teacher(teacher)
                 .subject(subject)
                 .isPrimary(request.getIsPrimary())
-                .yearsOfExperience(request.getYearsOfExperience())
                 .notes(request.getNotes())
                 .build();
 
@@ -123,7 +121,6 @@ public class TeacherSubjectServiceImpl implements TeacherSubjectService {
                 .orElseThrow(() -> new NotFoundException("Teacher-subject relationship not found"));
 
         teacherSubject.setIsPrimary(request.getIsPrimary());
-        teacherSubject.setYearsOfExperience(request.getYearsOfExperience());
         teacherSubject.setNotes(request.getNotes());
 
         TeacherSubject updated = teacherSubjectRepository.save(teacherSubject);

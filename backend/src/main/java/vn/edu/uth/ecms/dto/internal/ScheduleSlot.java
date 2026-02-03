@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.edu.uth.ecms.entity.Room;
-import vn.edu.uth.ecms.entity.TimeSlot;
+import vn.edu.uth.ecms.entity.enums.TimeSlot;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

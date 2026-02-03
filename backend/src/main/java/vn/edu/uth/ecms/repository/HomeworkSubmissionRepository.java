@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.Homework;
 import vn.edu.uth.ecms.entity.HomeworkSubmission;
 import vn.edu.uth.ecms.entity.Student;
-import vn.edu.uth.ecms.entity.SubmissionStatus;
+import vn.edu.uth.ecms.entity.enums.SubmissionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

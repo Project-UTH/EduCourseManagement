@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.uth.ecms.entity.Gender;
+import vn.edu.uth.ecms.entity.enums.Gender;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,7 +42,6 @@ public class TeacherResponse {
 
     private String degree;
     private String address;
-    private String avatarUrl;
     private Boolean isFirstLogin;
     private Boolean isActive;
 

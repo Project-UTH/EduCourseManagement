@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.RoomType;
 import vn.edu.uth.ecms.repository.*;
 
 /**

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import vn.edu.uth.ecms.entity.enums.KnowledgeType;
 
 @Entity
 @Table(name = "department")

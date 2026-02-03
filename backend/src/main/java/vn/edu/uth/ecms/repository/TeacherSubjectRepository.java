@@ -53,7 +53,7 @@ public interface TeacherSubjectRepository extends JpaRepository<TeacherSubject, 
     @Query("SELECT ts FROM TeacherSubject ts " +
             "WHERE ts.subject.subjectId = :subjectId " +
             "AND ts.teacher.isActive = true " +
-            "ORDER BY ts.isPrimary DESC, ts.yearsOfExperience DESC")
+            "ORDER BY ts.isPrimary DESC")
     List<TeacherSubject> findQualifiedTeachersForSubject(@Param("subjectId") Long subjectId);
 
     /**
@@ -84,6 +84,6 @@ public interface TeacherSubjectRepository extends JpaRepository<TeacherSubject, 
     @Query("SELECT ts.teacher FROM TeacherSubject ts " +
             "WHERE ts.subject.subjectId = :subjectId " +
             "AND ts.teacher.isActive = true " +
-            "ORDER BY ts.isPrimary DESC, ts.yearsOfExperience DESC")
+            "ORDER BY ts.isPrimary DESC")
     List<Teacher> findTeachersBySubjectId(@Param("subjectId") Long subjectId);
 }
