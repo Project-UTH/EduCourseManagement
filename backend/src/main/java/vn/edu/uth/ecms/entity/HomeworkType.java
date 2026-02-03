@@ -6,34 +6,18 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * HomeworkType Enum
  * 
  * Defines the type of homework/assignment
- * 
- * ✅ FIXED: Added @JsonValue to use enum name (REGULAR, MIDTERM, FINAL)
- * instead of displayName for JSON serialization
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 public enum HomeworkType {
     
-    /**
-     * Regular homework - Bài tập thường xuyên
-     * Multiple assignments throughout the semester
-     * Weight: 20% of total grade
-     */
+
     REGULAR("Thường xuyên", "Regular homework/assignments", 0.20),
     
-    /**
-     * Midterm exam/assignment - Bài kiểm tra giữa kỳ
-     * Usually one per semester
-     * Weight: 30% of total grade
-     */
+   
     MIDTERM("Giữa kỳ", "Midterm exam/assignment", 0.30),
     
-    /**
-     * Final exam/assignment - Bài thi cuối kỳ
-     * End of semester assessment
-     * Weight: 50% of total grade
-     */
+  
     FINAL("Cuối kỳ", "Final exam/assignment", 0.50);
     
     private final String displayName;
@@ -43,9 +27,9 @@ public enum HomeworkType {
     /**
      * Constructor
      * 
-     * @param displayName Vietnamese display name
-     * @param description English description
-     * @param weight Weight in grade calculation (0.0 - 1.0)
+     * @param displayName 
+     * @param description 
+     * @param weight 
      */
     HomeworkType(String displayName, String description, double weight) {
         this.displayName = displayName;
@@ -54,8 +38,6 @@ public enum HomeworkType {
     }
     
     /**
-     * Get Vietnamese display name
-     * 
      * @return Display name in Vietnamese
      */
     public String getDisplayName() {
@@ -63,8 +45,6 @@ public enum HomeworkType {
     }
     
     /**
-     * Get English description
-     * 
      * @return Description in English
      */
     public String getDescription() {
@@ -72,9 +52,7 @@ public enum HomeworkType {
     }
     
     /**
-     * Get weight for grade calculation
-     * 
-     * @return Weight as decimal (0.0 - 1.0)
+     * @return 
      */
     public double getWeight() {
         return weight;
@@ -131,10 +109,7 @@ public enum HomeworkType {
     }
     
     /**
-     * ✅ FIX: Use enum name (REGULAR, MIDTERM, FINAL) for JSON serialization
-     * This tells Jackson to serialize as "REGULAR" instead of "Thường xuyên"
-     * 
-     * @return Enum name (REGULAR, MIDTERM, FINAL)
+     * @return 
      */
     @JsonValue
     public String toJson() {
@@ -142,10 +117,7 @@ public enum HomeworkType {
     }
     
     /**
-     * ❌ REMOVED @JsonValue from toString()
-     * toString() now only returns displayName for logging purposes
-     * 
-     * @return Display name in Vietnamese
+     * @return 
      */
     @Override
     public String toString() {

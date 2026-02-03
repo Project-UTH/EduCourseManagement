@@ -15,13 +15,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * ✨ ENHANCED RoomRepository with Real-time Status Queries
- */
+
 @Repository
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
-    // ==================== EXISTING QUERIES (Keep as is) ====================
+    
 
     List<Room> findAllByIsActiveTrueOrderByBuildingAscFloorAscRoomCodeAsc();
 
@@ -107,16 +105,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query("SELECT COUNT(cs) FROM ClassSession cs WHERE cs.classEntity.semester.semesterId = :semesterId AND cs.isPending = false")
     Long countTotalSessionsInSemester(@Param("semesterId") Long semesterId);
 
-    // ==================== ✨ NEW: REAL-TIME STATUS QUERIES ====================
 
-    /**
-     * ✨ Find current session using a room RIGHT NOW
-     *
-     * Conditions:
-     * - Session date = TODAY
-     * - Current time is within session time slot
-     * - Session status = SCHEDULED (not COMPLETED or CANCELLED)
-     */
     @Query("SELECT cs FROM ClassSession cs " +
             "WHERE (cs.originalRoom.roomId = :roomId OR cs.actualRoom.roomId = :roomId) " +
             "AND cs.isPending = false " +
@@ -131,9 +120,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             @Param("today") LocalDate today
     );
 
-    /**
-     * ✨ Check if room is currently in use (optimized)
-     */
+
     @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
             "FROM ClassSession cs " +
             "WHERE (cs.originalRoom.roomId = :roomId OR cs.actualRoom.roomId = :roomId) " +
@@ -149,10 +136,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             @Param("today") LocalDate today
     );
 
-    /**
-     * ✨ Find rooms currently IN USE (across all rooms)
-     * Returns room IDs that have sessions happening now
-     */
     @Query("SELECT DISTINCT " +
             "CASE " +
             "    WHEN cs.isRescheduled = true THEN cs.actualRoom.roomId " +
@@ -168,9 +151,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             ")")
     List<Long> findRoomIdsInUseToday(@Param("today") LocalDate today);
 
-    /**
-     * ✨ Get next session in room (upcoming)
-     */
+ 
     @Query("SELECT cs FROM ClassSession cs " +
             "WHERE (cs.originalRoom.roomId = :roomId OR cs.actualRoom.roomId = :roomId) " +
             "AND cs.isPending = false " +
@@ -191,11 +172,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             Pageable pageable
     );
 
-    // ==================== ✨ NEW: SEARCH & FILTER ====================
-
-    /**
-     * Search rooms by keyword (code, name, building)
-     */
     @Query("SELECT r FROM Room r " +
             "WHERE UPPER(r.roomCode) LIKE UPPER(CONCAT('%', :keyword, '%')) " +
             "OR UPPER(r.roomName) LIKE UPPER(CONCAT('%', :keyword, '%')) " +
@@ -223,9 +199,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
      */
     Page<Room> findByIsActiveOrderByRoomCodeAsc(Boolean isActive, Pageable pageable);
 
-    /**
-     * ✨ Advanced filter: Combine multiple criteria
-     */
+  
     @Query("SELECT r FROM Room r " +
             "WHERE (:building IS NULL OR r.building = :building) " +
             "AND (:floor IS NULL OR r.floor = :floor) " +
@@ -240,11 +214,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             Pageable pageable
     );
 
-    // ==================== ✨ NEW: STATISTICS ====================
 
-    /**
-     * Count sessions by status in room
-     */
     @Query("SELECT cs.status, COUNT(cs) " +
             "FROM ClassSession cs " +
             "WHERE (cs.originalRoom.roomId = :roomId OR cs.actualRoom.roomId = :roomId) " +

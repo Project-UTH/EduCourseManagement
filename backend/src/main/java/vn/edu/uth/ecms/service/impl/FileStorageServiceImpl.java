@@ -7,7 +7,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.uth.ecms.service.FileStorageService;
 
-import jakarta.annotation.PostConstruct;  // ← DÙNG jakarta thay vì javax
+import jakarta.annotation.PostConstruct;  
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,8 +17,6 @@ import java.util.UUID;
 
 /**
  * FileStorageServiceImpl
- * 
- * Implementation for file storage operations
  */
 @Service
 @Slf4j
@@ -35,9 +33,9 @@ public class FileStorageServiceImpl implements FileStorageService {
         try {
             this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
             Files.createDirectories(this.fileStorageLocation);
-            log.info("✅ File storage initialized at: {}", this.fileStorageLocation);
+            log.info(" File storage initialized at: {}", this.fileStorageLocation);
         } catch (Exception e) {
-            log.error("❌ Failed to create upload directory", e);
+            log.error(" Failed to create upload directory", e);
             throw new RuntimeException("Could not create upload directory!", e);
         }
     }
@@ -70,12 +68,12 @@ public class FileStorageServiceImpl implements FileStorageService {
             Path targetFile = targetLocation.resolve(uniqueFilename);
             Files.copy(file.getInputStream(), targetFile, StandardCopyOption.REPLACE_EXISTING);
             
-            log.info("✅ File stored: {} -> {}", originalFilename, uniqueFilename);
+            log.info(" File stored: {} -> {}", originalFilename, uniqueFilename);
             
             return uniqueFilename;
             
         } catch (IOException e) {
-            log.error("❌ Failed to store file: {}", originalFilename, e);
+            log.error(" Failed to store file: {}", originalFilename, e);
             throw new IOException("Could not store file " + originalFilename, e);
         }
     }
@@ -88,11 +86,11 @@ public class FileStorageServiceImpl implements FileStorageService {
             if (Files.exists(filePath)) {
                 return filePath;
             } else {
-                log.warn("⚠️ File not found: {}", filePath);
+                log.warn(" File not found: {}", filePath);
                 return null;
             }
         } catch (Exception e) {
-            log.error("❌ Error loading file: {}", filename, e);
+            log.error(" Error loading file: {}", filename, e);
             return null;
         }
     }
@@ -104,14 +102,14 @@ public class FileStorageServiceImpl implements FileStorageService {
             
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
-                log.info("✅ File deleted: {}", filename);
+                log.info(" File deleted: {}", filename);
                 return true;
             } else {
-                log.warn("⚠️ File not found for deletion: {}", filename);
+                log.warn(" File not found for deletion: {}", filename);
                 return false;
             }
         } catch (Exception e) {
-            log.error("❌ Error deleting file: {}", filename, e);
+            log.error(" Error deleting file: {}", filename, e);
             return false;
         }
     }

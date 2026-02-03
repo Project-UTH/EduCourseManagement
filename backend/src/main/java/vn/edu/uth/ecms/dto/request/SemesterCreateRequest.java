@@ -12,12 +12,6 @@ import vn.edu.uth.ecms.entity.SemesterStatus;
 
 /**
  * DTO for creating a new semester
- *
- * Validation rules:
- * - Semester code: YYYY-S format
- * - Start date and end date required
- * - End date must be after start date
- * - Duration should be around 10 weeks (70 days)
  */
 @Data
 @NoArgsConstructor
@@ -43,8 +37,8 @@ public class SemesterCreateRequest {
     @NotNull(message = "Status is required")
     private SemesterStatus status;
 
-    private String registrationStartDate;  // Format: YYYY-MM-DD (optional)
-    private String registrationEndDate;    // Format: YYYY-MM-DD (optional)
+    private String registrationStartDate;  
+    private String registrationEndDate;    
 
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;

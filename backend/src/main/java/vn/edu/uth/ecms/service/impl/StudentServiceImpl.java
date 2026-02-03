@@ -291,12 +291,12 @@ public class StudentServiceImpl implements StudentService {
                 .map(this::mapToResponse);
     }
 
-    // ==================== PROFILE METHODS (NEW) ====================
+    
 
     @Override
     @Transactional(readOnly = true)
     public StudentResponse getByStudentCode(String studentCode) {
-        log.info("📋 [StudentService] Getting student by code: {}", studentCode);
+        log.info(" [StudentService] Getting student by code: {}", studentCode);
         
         Student student = studentRepository.findByStudentCode(studentCode)
                 .orElseThrow(() -> new NotFoundException("Student not found with code: " + studentCode));
@@ -307,7 +307,7 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public StudentResponse updateProfile(String studentCode, UpdateStudentProfileRequest request) {
-        log.info("✏️ [StudentService] Updating profile for student code: {}", studentCode);
+        log.info(" [StudentService] Updating profile for student code: {}", studentCode);
         
         Student student = studentRepository.findByStudentCode(studentCode)
                 .orElseThrow(() -> new NotFoundException("Student not found with code: " + studentCode));
@@ -321,7 +321,7 @@ public class StudentServiceImpl implements StudentService {
         }
         
         Student updated = studentRepository.save(student);
-        log.info("✅ [StudentService] Profile updated for: {}", updated.getFullName());
+        log.info(" [StudentService] Profile updated for: {}", updated.getFullName());
         
         return mapToResponse(updated);
     }
@@ -335,8 +335,7 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
                 .orElseThrow(() -> new RuntimeException("Student not found: " + studentCode));
         
         log.info("[StudentService] Found student ID: {}", student.getStudentId());
-        
-        // ✅ FIX: Lấy TẤT CẢ registrations (không filter semester)
+      
         List<CourseRegistration> registrations = registrationRepository
                 .findByStudentAndStatus(
                         student.getStudentId(), 
@@ -352,12 +351,12 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
                 })
                 .toList();
         
-        log.info("[StudentService] ✅ Returning {} classes", classes.size());
+        log.info("[StudentService]  Returning {} classes", classes.size());
         
         return classes;
         
     } catch (Exception e) {
-        log.error("[StudentService] ❌ Error getting enrolled classes", e);
+        log.error("[StudentService]  Error getting enrolled classes", e);
         throw new RuntimeException("Failed to get enrolled classes: " + e.getMessage(), e);
     }
 }
@@ -385,12 +384,12 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
             ClassEntity classEntity = registration.get().getClassEntity();
             ClassResponse response = mapClassToResponse(classEntity);
             
-            log.info("[StudentService] ✅ Class detail found: {}", response.getClassCode());
+            log.info("[StudentService]  Class detail found: {}", response.getClassCode());
             
             return response;
             
         } catch (Exception e) {
-            log.error("[StudentService] ❌ Error getting class detail", e);
+            log.error("[StudentService]  Error getting class detail", e);
             throw new RuntimeException("Failed to get class detail: " + e.getMessage(), e);
         }
     }
@@ -426,7 +425,7 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
             throw new RuntimeException("Failed to get schedule: " + e.getMessage(), e);
         }
     }
-    // FIX: Import method - dùng ngày sinh làm password (nhất quán với createStudent)
+    
 
     @Override
     @Transactional
@@ -513,7 +512,7 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
                     studentRepository.save(student);
                     successCount++;
 
-                    log.info("✅ Imported student: {} - Default password: {}",
+                    log.info(" Imported student: {} - Default password: {}",
                             studentCode, defaultPassword);
 
                 } catch (Exception e) {
@@ -695,7 +694,7 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
                 return 0;
         }
     }
-    // ==================== HELPER METHODS ====================
+    
 
     private ClassResponse mapClassToResponse(ClassEntity classEntity) {
         ClassResponse response = modelMapper.map(classEntity, ClassResponse.class);

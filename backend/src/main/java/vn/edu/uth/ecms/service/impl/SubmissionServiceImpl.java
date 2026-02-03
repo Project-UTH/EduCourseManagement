@@ -24,13 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Optional;
 
 /**
- * SubmissionServiceImpl - MULTI-FILE SUPPORT
- * 
- * Implementation of homework submission business logic
- * NOW SUPPORTS MULTIPLE FILES PER SUBMISSION
- * 
- * @author Phase 5 - Student Features (Updated)
- * @since 2026-01-13
+
+ * @author 
+ * @since 
  */
 @Service
 @RequiredArgsConstructor
@@ -45,7 +41,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final SubmissionFileRepository submissionFileRepository;
     private final GradeService gradeService;
     
-    // ==================== STUDENT SUBMIT (MULTI-FILE) ====================
+   
     
     @Override
     @Transactional
@@ -90,26 +86,26 @@ public class SubmissionServiceImpl implements SubmissionService {
         boolean isLateSub = LocalDateTime.now().isAfter(homework.getDeadline());
         if (isLateSub) { 
             submission.setStatus(SubmissionStatus.LATE);
-            log.warn("⚠️ Student {} submitting LATE homework {}", studentCode, homeworkId);
+            log.warn(" Student {} submitting LATE homework {}", studentCode, homeworkId);
         } else {
             submission.setStatus(SubmissionStatus.SUBMITTED);
-            log.info("✅ Student {} submitting ON TIME homework {}", studentCode, homeworkId);
+            log.info(" Student {} submitting ON TIME homework {}", studentCode, homeworkId);
         }
         
         // Save submission first to get ID
         submission = submissionRepository.save(submission);
         
-        // ✅ Handle file upload (multi-file support)
+        //  Handle file upload (multi-file support)
         if (file != null && !file.isEmpty()) {
             addFileToSubmission(submission, file, homework.getHomeworkId(), studentCode);
         }
         
-        log.info("✅ Submission created: ID={}", submission.getSubmissionId());
+        log.info(" Submission created: ID={}", submission.getSubmissionId());
         
         return SubmissionResponse.fromEntity(submission);
     }
     
-    // ==================== STUDENT UPDATE (ADD MORE FILES) ====================
+    
     
     @Override
     @Transactional
@@ -152,7 +148,7 @@ public class SubmissionServiceImpl implements SubmissionService {
             submission.setSubmissionText(submissionText);
         }
         
-        // ✅ ADD new file (không xóa file cũ)
+       
         if (hasNewFile) {
             addFileToSubmission(submission, file, homeworkId, studentCode);
         }
@@ -162,13 +158,13 @@ public class SubmissionServiceImpl implements SubmissionService {
         
         submission = submissionRepository.save(submission);
         
-        log.info("✅ Submission updated: ID={}, Total files: {}", 
+        log.info(" Submission updated: ID={}, Total files: {}", 
                 submission.getSubmissionId(), submission.getFileCount());
         
         return SubmissionResponse.fromEntity(submission);
     }
     
-    // ==================== DELETE FILE ====================
+  
     
     @Override
     @Transactional
@@ -191,7 +187,7 @@ public class SubmissionServiceImpl implements SubmissionService {
             throw new RuntimeException("Đã quá hạn! Không thể xóa file.");
         }
         
-        // ✅ Delete ALL files
+        //  Delete ALL files
         List<SubmissionFile> files = submission.getSubmissionFiles();
         if (files == null || files.isEmpty()) {
             throw new RuntimeException("Không có file để xóa!");
@@ -205,12 +201,9 @@ public class SubmissionServiceImpl implements SubmissionService {
         submission.getSubmissionFiles().clear();
         submissionRepository.save(submission);
         
-        log.info("✅ All files deleted from submission: ID={}", submission.getSubmissionId());
+        log.info(" All files deleted from submission: ID={}", submission.getSubmissionId());
     }
-    
-    /**
-     * ✅ NEW: Delete a specific file by fileId
-     */
+   
     @Transactional
     public void deleteSubmissionFileById(Long homeworkId, String studentCode, Long fileId) {
         log.info("[SubmissionService] Deleting specific file {} for homework: {} by student: {}", 
@@ -248,16 +241,10 @@ public class SubmissionServiceImpl implements SubmissionService {
         submission.removeFile(fileToDelete);
         submissionFileRepository.delete(fileToDelete);
         
-        log.info("✅ File deleted: {} from submission: {}", fileId, submission.getSubmissionId());
+        log.info(" File deleted: {} from submission: {}", fileId, submission.getSubmissionId());
     }
     
-    // ========================================
-    // HELPER METHODS
-    // ========================================
-    
-    /**
-     * ✅ NEW: Add a file to submission
-     */
+  
     private void addFileToSubmission(HomeworkSubmission submission, MultipartFile file, Long homeworkId, String studentCode) {
         try {
             // Store file using FileStorageService
@@ -279,18 +266,16 @@ public class SubmissionServiceImpl implements SubmissionService {
             // Add to submission
             submission.addFile(submissionFile);
             
-            log.info("✅ File added: {} -> {} (Size: {} bytes)", 
+            log.info(" File added: {} -> {} (Size: {} bytes)", 
                     file.getOriginalFilename(), storedFilename, file.getSize());
             
         } catch (Exception e) {
-            log.error("❌ Failed to upload file", e);
+            log.error(" Failed to upload file", e);
             throw new RuntimeException("Không thể upload file: " + e.getMessage());
         }
     }
     
-    /**
-     * ✅ NEW: Delete physical file from filesystem
-     */
+    
     private void deletePhysicalFile(SubmissionFile file) {
         try {
             String fileUrl = file.getFileUrl();
@@ -305,14 +290,14 @@ public class SubmissionServiceImpl implements SubmissionService {
                 String directory = "submissions/homework-" + homeworkId + "/" + studentCode;
                 
                 fileStorageService.deleteFile(filename, directory);
-                log.info("✅ Physical file deleted: {}", filename);
+                log.info(" Physical file deleted: {}", filename);
             }
         } catch (Exception e) {
-            log.warn("⚠️ Failed to delete physical file: {}", e.getMessage());
+            log.warn(" Failed to delete physical file: {}", e.getMessage());
         }
     }
     
-    // ==================== TEACHER GRADE (keep existing logic) ====================
+   
     
     @Override
     public SubmissionResponse gradeSubmission(Long submissionId, GradeSubmissionRequest request, Long teacherId) {
@@ -341,7 +326,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         return SubmissionResponse.fromEntity(graded);
     }
     
-    // ==================== OTHER METHODS (keep existing) ====================
+    
     
     @Override
     public SubmissionResponse submitHomework(SubmissionRequest request, Long studentId) {
@@ -355,13 +340,13 @@ public class SubmissionServiceImpl implements SubmissionService {
                 request.getHomeworkId(),
                 student.getStudentCode(),
                 request.getSubmissionText(),
-                null // No file in legacy method
+                null 
         );
     }
     
     @Override
     public SubmissionResponse updateSubmission(Long submissionId, SubmissionRequest request, Long studentId) {
-        // Legacy method - not recommended
+    
         log.warn("Using legacy updateSubmission method");
         throw new RuntimeException("Use updateSubmissionByStudent instead");
     }

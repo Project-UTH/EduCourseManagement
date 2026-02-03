@@ -33,10 +33,6 @@ public class DepartmentController {
 
     private final DepartmentService departmentService;
 
-    /**
-     * Create a new department
-     * POST /api/admin/departments
-     */
     @PostMapping
     public ResponseEntity<Map<String, Object>> createDepartment(
             @Valid @RequestBody DepartmentCreateRequest request) {
@@ -53,10 +49,7 @@ public class DepartmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    /**
-     * Update an existing department
-     * PUT /api/admin/departments/{id}
-     */
+   
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateDepartment(
             @PathVariable Long id,

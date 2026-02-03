@@ -13,13 +13,7 @@ import vn.edu.uth.ecms.service.EligibleStudentService;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Implementation of EligibleStudentService
- * Filters students based on:
- * 1. Subject's department knowledge type (GENERAL vs SPECIALIZED)
- * 2. Subject's major (if SPECIALIZED)
- * 3. Already enrolled students (excluded)
- */
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -30,13 +24,10 @@ public class EligibleStudentServiceImpl implements EligibleStudentService {
     private final StudentRepository studentRepository;
     private final CourseRegistrationRepository registrationRepository;
 
-    /**
-     * ✅ Get eligible students for a class
-     * Applies 3-tier filtering logic based on knowledge type
-     */
+ 
     @Override
     public List<StudentResponse> getEligibleStudentsForClass(Long classId) {
-        log.info("🔍 Finding eligible students for class ID: {}", classId);
+        log.info(" Finding eligible students for class ID: {}", classId);
 
         // 1. Find class and subject
         ClassEntity classEntity = classRepository.findById(classId)
@@ -45,18 +36,18 @@ public class EligibleStudentServiceImpl implements EligibleStudentService {
         Subject subject = classEntity.getSubject();
         Department department = subject.getDepartment();
 
-        log.info("📚 Class: {} - Subject: {} ({})",
+        log.info(" Class: {} - Subject: {} ({})",
                 classEntity.getClassCode(),
                 subject.getSubjectName(),
                 subject.getSubjectCode());
-        log.info("🏢 Department: {} - Knowledge Type: {}",
+        log.info(" Department: {} - Knowledge Type: {}",
                 department.getDepartmentName(),
                 department.getKnowledgeType());
 
         // 2. Get eligible students based on knowledge type
         List<Student> eligibleStudents = getEligibleStudentsByKnowledgeType(subject, department);
 
-        log.info("✅ Found {} eligible students (before filtering enrolled)",
+        log.info(" Found {} eligible students (before filtering enrolled)",
                 eligibleStudents.size());
 
         // 3. Filter out already enrolled students
@@ -70,7 +61,7 @@ public class EligibleStudentServiceImpl implements EligibleStudentService {
                 .filter(student -> !enrolledStudentIds.contains(student.getStudentId()))
                 .collect(Collectors.toList());
 
-        log.info("✅ {} students already enrolled, {} students available to add",
+        log.info(" {} students already enrolled, {} students available to add",
                 enrolledStudentIds.size(),
                 availableStudents.size());
 
@@ -80,12 +71,10 @@ public class EligibleStudentServiceImpl implements EligibleStudentService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * ✅ Check if specific student is eligible
-     */
+   
     @Override
     public boolean isStudentEligible(Long studentId, Long classId) {
-        log.info("🔍 Checking eligibility: Student {} for Class {}", studentId, classId);
+        log.info(" Checking eligibility: Student {} for Class {}", studentId, classId);
 
         // 1. Find student
         Student student = studentRepository.findById(studentId)
@@ -100,21 +89,19 @@ public class EligibleStudentServiceImpl implements EligibleStudentService {
 
         // 3. Check already enrolled
         if (registrationRepository.existsByStudentStudentIdAndClassEntityClassId(studentId, classId)) {
-            log.info("❌ Student already enrolled");
+            log.info(" Student already enrolled");
             return false;
         }
 
         // 4. Apply knowledge type logic
         boolean eligible = checkEligibility(student, subject, department);
 
-        log.info(eligible ? "✅ Student is eligible" : "❌ Student is NOT eligible");
+        log.info(eligible ? " Student is eligible" : "❌ Student is NOT eligible");
 
         return eligible;
     }
 
-    /**
-     * ✅ Get human-readable eligibility description
-     */
+  
     @Override
     public String getEligibilityInfo(Long classId) {
         ClassEntity classEntity = classRepository.findById(classId)
@@ -134,41 +121,33 @@ public class EligibleStudentServiceImpl implements EligibleStudentService {
         return "Môn chuyên ngành - Chỉ sinh viên ngành " + subject.getMajor().getMajorName();
     }
 
-    // ==================== PRIVATE HELPER METHODS ====================
-
-    /**
-     * Get eligible students based on knowledge type
-     * Returns all students before filtering enrolled
-     */
+   
     private List<Student> getEligibleStudentsByKnowledgeType(Subject subject, Department department) {
 
-        // ✅ CASE 1: GENERAL knowledge - All students
         if (department.getKnowledgeType() == KnowledgeType.GENERAL) {
-            log.info("📖 GENERAL knowledge subject - All students eligible");
+            log.info(" GENERAL knowledge subject - All students eligible");
             return studentRepository.findAll();
         }
 
-        // ✅ CASE 2: SPECIALIZED without major - Same department students
+        
         if (subject.getMajor() == null) {
-            log.info("📗 SPECIALIZED subject (no major) - Students from department {} eligible",
+            log.info(" SPECIALIZED subject (no major) - Students from department {} eligible",
                     department.getDepartmentName());
             return studentRepository.findByMajorDepartmentDepartmentId(department.getDepartmentId());
         }
 
-        // ✅ CASE 3: SPECIALIZED with major - Same major students only
-        log.info("📕 SPECIALIZED subject (major: {}) - Only students from this major eligible",
+        
+        log.info(" SPECIALIZED subject (major: {}) - Only students from this major eligible",
                 subject.getMajor().getMajorName());
         return studentRepository.findByMajorMajorId(subject.getMajor().getMajorId());
     }
 
-    /**
-     * Check if student is eligible based on knowledge type
-     */
+   
     private boolean checkEligibility(Student student, Subject subject, Department department) {
 
         // CASE 1: GENERAL - Always eligible
         if (department.getKnowledgeType() == KnowledgeType.GENERAL) {
-            log.info("✅ GENERAL subject - Student eligible");
+            log.info(" GENERAL subject - Student eligible");
             return true;
         }
 
@@ -178,10 +157,10 @@ public class EligibleStudentServiceImpl implements EligibleStudentService {
                     .equals(department.getDepartmentId());
 
             if (eligible) {
-                log.info("✅ Same department ({}) - Student eligible",
+                log.info(" Same department ({}) - Student eligible",
                         department.getDepartmentName());
             } else {
-                log.info("❌ Different department (Student: {}, Subject: {}) - NOT eligible",
+                log.info(" Different department (Student: {}, Subject: {}) - NOT eligible",
                         student.getMajor().getDepartment().getDepartmentName(),
                         department.getDepartmentName());
             }
@@ -194,10 +173,10 @@ public class EligibleStudentServiceImpl implements EligibleStudentService {
                 .equals(subject.getMajor().getMajorId());
 
         if (eligible) {
-            log.info("✅ Same major ({}) - Student eligible",
+            log.info(" Same major ({}) - Student eligible",
                     subject.getMajor().getMajorName());
         } else {
-            log.info("❌ Different major (Student: {}, Subject: {}) - NOT eligible",
+            log.info(" Different major (Student: {}, Subject: {}) - NOT eligible",
                     student.getMajor().getMajorName(),
                     subject.getMajor().getMajorName());
         }

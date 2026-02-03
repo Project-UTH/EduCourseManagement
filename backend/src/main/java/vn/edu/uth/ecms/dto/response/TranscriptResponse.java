@@ -11,12 +11,8 @@ import java.util.List;
 
 /**
  * TranscriptResponse DTO
- * 
- * Student's complete transcript (bảng điểm)
- * Shows all grades across all classes
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Data
 @Builder
@@ -39,10 +35,6 @@ public class TranscriptResponse {
      * List of grades by semester
      */
     private List<SemesterGrades> semesters;
-    
-    // ========================================
-    // NESTED CLASSES
-    // ========================================
     
     @Data
     @Builder
@@ -104,14 +96,7 @@ public class TranscriptResponse {
         private String teacherComment;          // Nhận xét giáo viên
     }
     
-    // ========================================
-    // HELPER METHODS
-    // ========================================
-    
-    /**
-     * Get academic standing based on GPA
-     * Excellent (≥3.6), Good (3.2-3.59), Average (2.5-3.19), Weak (<2.5)
-     */
+
     public String getAcademicStanding() {
         if (summary == null || summary.getOverallGPA() == null) {
             return "Unknown";
@@ -124,10 +109,7 @@ public class TranscriptResponse {
         return "Weak (Yếu)";
     }
     
-    /**
-     * Check if student is eligible for graduation
-     * Basic check: passed all required credits
-     */
+ 
     public boolean isEligibleForGraduation(int requiredCredits) {
         if (summary == null || summary.getPassedCredits() == null) {
             return false;

@@ -9,7 +9,6 @@ import vn.edu.uth.ecms.entity.RoomType;
 
 /**
  * DTO for updating an existing room
- * NOTE: Room code cannot be changed
  */
 @Data
 @Builder

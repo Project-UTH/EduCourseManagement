@@ -13,19 +13,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 
-/**
- * ✅ FIXED VERSION - Extra Session Scheduler
- *
- * FIXES:
- * 1. Exclude fixed schedule day/slot of the class itself
- * 2. Distribute extra sessions across different weeks (like fixed sessions)
- * 3. One extra session per week (similar to fixed schedule pattern)
- *
- * STRATEGY:
- * 1. Get available weeks (avoid weeks with existing fixed sessions if possible)
- * 2. For each extra session, find a slot in a different week
- * 3. Prefer: Different day + Different time from fixed schedule
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -35,11 +22,8 @@ public class ExtraSessionScheduler {
     private final CourseRegistrationRepository registrationRepository;
     private final RoomRepository roomRepository;
 
-    /**
-     * ✅ MAIN METHOD - Schedule a single extra session
-     */
     public boolean scheduleExtraSession(ClassSession session, Semester semester) {
-        log.info("🔄 Scheduling extra session {} for class {}",
+        log.info(" Scheduling extra session {} for class {}",
                 session.getSessionNumber(), session.getClassEntity().getClassCode());
 
         ClassEntity classEntity = session.getClassEntity();
@@ -53,14 +37,14 @@ public class ExtraSessionScheduler {
                 .map(Student::getStudentId)
                 .toList();
 
-        // ✅ STRATEGY 1: IDEAL - Physical room, different day/time from fixed
+        
         ScheduleSlot idealSlot = findIdealSlotWeekly(
                 semester, classEntity, teacher, studentIds, minCapacity, session.getSessionNumber());
         if (idealSlot != null) {
             return applyAndReturn(session, idealSlot, "Strategy 1 (Ideal - Weekly)");
         }
 
-        // ✅ STRATEGY 2: SUNDAY ONLINE - No conflicts
+        
         ScheduleSlot sundaySlot = findOnlineSlotByDays(
                 semester, classEntity, teacher, studentIds,
                 Collections.singletonList(DayOfWeek.SUNDAY));
@@ -68,7 +52,7 @@ public class ExtraSessionScheduler {
             return applyAndReturn(session, sundaySlot, "Strategy 2 (Sunday Online)");
         }
 
-        // ✅ STRATEGY 3: ANY DAY ONLINE - No conflicts
+    
         ScheduleSlot anyDayOnline = findOnlineSlotByDays(
                 semester, classEntity, teacher, studentIds,
                 Arrays.asList(DayOfWeek.values()));
@@ -76,27 +60,19 @@ public class ExtraSessionScheduler {
             return applyAndReturn(session, anyDayOnline, "Strategy 3 (Any Day Online)");
         }
 
-        // ✅ STRATEGY 4: FORCED ONLINE - Accept conflicts
+  
         ScheduleSlot forcedSlot = forceOnlineSlot(semester, classEntity);
         if (forcedSlot != null) {
             return applyAndReturn(session, forcedSlot, "Strategy 4 (Forced Online)");
         }
 
-        log.error("❌ Cannot schedule extra session {} after trying all strategies",
+        log.error(" Cannot schedule extra session {} after trying all strategies",
                 session.getSessionNumber());
         return false;
     }
 
-    // ==================== STRATEGY 1: IDEAL WEEKLY DISTRIBUTION ====================
-
+   
     /**
-     * ✅ Find ideal slot with WEEKLY distribution (like fixed sessions)
-     *
-     * Logic:
-     * - Extra session 11 → Find slot in a different week from session 1-10
-     * - Extra session 12 → Find slot in another week
-     * - Prefer: Different day AND different time slot from fixed schedule
-     *
      * @param sessionNumber Current extra session number (11, 12, 13, ...)
      */
     private ScheduleSlot findIdealSlotWeekly(
@@ -118,19 +94,17 @@ public class ExtraSessionScheduler {
                 DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
                 DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY
         ));
-        workingDays.remove(fixedDay);  // ✅ Don't schedule on same day as fixed
+        workingDays.remove(fixedDay);  
 
         log.debug("  Available days (excluding {}): {}", fixedDay, workingDays);
 
         // Time slots, prefer different from fixed
         List<TimeSlot> preferredSlots = new ArrayList<>(Arrays.asList(TimeSlot.values()));
-        preferredSlots.remove(fixedSlot);  // Try other slots first
-        preferredSlots.add(fixedSlot);     // But allow if no other option
+        preferredSlots.remove(fixedSlot);  
+        preferredSlots.add(fixedSlot);     
 
         // Calculate which week this extra session should go in
-        // Extra session 11 → Week 2 (or later)
-        // Extra session 12 → Week 3 (or later)
-        int weekOffset = (sessionNumber - 10);  // 11→1, 12→2, 13→3, ...
+        int weekOffset = (sessionNumber - 10);  
 
         // Try each day
         for (DayOfWeek day : workingDays) {
@@ -144,25 +118,25 @@ public class ExtraSessionScheduler {
                 // Try each time slot (prioritize non-fixed slots)
                 for (TimeSlot slot : preferredSlots) {
 
-                    // ✅ CHECK 1: Not same day AND slot as fixed schedule
+                    
                     if (conflictsWithFixedSchedule(classEntity, day, slot)) {
                         log.trace("    Skip {} {} - conflicts with fixed schedule", day, slot);
                         continue;
                     }
 
-                    // ✅ CHECK 2: No teacher conflict
+                  
                     if (hasTeacherConflict(semester, teacher, date, slot, classEntity.getClassId())) {
                         log.trace("    Skip {} {} {} - teacher conflict", date, day, slot);
                         continue;
                     }
 
-                    // ✅ CHECK 3: No student conflicts
+                   
                     if (hasStudentsConflict(semester, studentIds, date, slot, classEntity.getClassId())) {
                         log.trace("    Skip {} {} {} - student conflict", date, day, slot);
                         continue;
                     }
 
-                    // ✅ CHECK 4: Find available physical room
+                   
                     List<Room> availableRooms = roomRepository.findAvailableRoomsForSlot(
                             semester.getSemesterId(), date, slot, minCapacity);
 
@@ -172,7 +146,7 @@ public class ExtraSessionScheduler {
                                 .min(Comparator.comparing(Room::getCapacity))
                                 .get();
 
-                        log.info("  ✅ Found ideal slot: {} {} {} - Room {}",
+                        log.info("   Found ideal slot: {} {} {} - Room {}",
                                 date, day, slot, bestRoom.getRoomCode());
 
                         return new ScheduleSlot(date, day, slot, bestRoom);
@@ -183,20 +157,16 @@ public class ExtraSessionScheduler {
             }
         }
 
-        log.debug("  ❌ No ideal slot found");
+        log.debug("   No ideal slot found");
         return null;
     }
 
-    /**
-     * ✅ Check if day/slot conflicts with class's FIXED schedule
-     *
-     * CRITICAL: Prevents scheduling extra sessions at same time as fixed sessions
-     */
+ 
     private boolean conflictsWithFixedSchedule(ClassEntity classEntity, DayOfWeek day, TimeSlot slot) {
         return day == classEntity.getDayOfWeek() && slot == classEntity.getTimeSlot();
     }
 
-    // ==================== STRATEGY 2 & 3: ONLINE SLOTS ====================
+   
 
     private ScheduleSlot findOnlineSlotByDays(
             Semester semester,
@@ -221,7 +191,7 @@ public class ExtraSessionScheduler {
             for (LocalDate date : dates) {
                 for (TimeSlot slot : TimeSlot.values()) {
 
-                    // ✅ Skip if same as fixed schedule
+                    //  Skip if same as fixed schedule
                     if (day == fixedDay && slot == fixedSlot) {
                         continue;
                     }
@@ -230,7 +200,7 @@ public class ExtraSessionScheduler {
                     if (!hasTeacherConflict(semester, teacher, date, slot, classEntity.getClassId()) &&
                             !hasStudentsConflict(semester, studentIds, date, slot, classEntity.getClassId())) {
 
-                        log.info("  ✅ Found online slot: {} {} {} - ONLINE",
+                        log.info("   Found online slot: {} {} {} - ONLINE",
                                 date, day, slot);
 
                         return new ScheduleSlot(date, day, slot, onlineRoom);
@@ -239,11 +209,11 @@ public class ExtraSessionScheduler {
             }
         }
 
-        log.debug("  ❌ No online slot found");
+        log.debug("   No online slot found");
         return null;
     }
 
-    // ==================== STRATEGY 4: FORCED ONLINE ====================
+  
 
     private ScheduleSlot forceOnlineSlot(Semester semester, ClassEntity classEntity) {
         Room onlineRoom = roomRepository.findOnlineRoom().orElse(null);
@@ -279,13 +249,13 @@ public class ExtraSessionScheduler {
 
         TimeSlot randomSlot = slots.get(random.nextInt(slots.size()));
 
-        log.warn("  ⚠️ Forcing online slot: {} {} {} - ONLINE (may have conflicts)",
+        log.warn("   Forcing online slot: {} {} {} - ONLINE (may have conflicts)",
                 randomDate, randomDay, randomSlot);
 
         return new ScheduleSlot(randomDate, randomDay, randomSlot, onlineRoom);
     }
 
-    // ==================== HELPER METHODS ====================
+ 
 
     private boolean hasTeacherConflict(
             Semester semester,
@@ -345,7 +315,7 @@ public class ExtraSessionScheduler {
         session.setIsPending(false);
         session.setStatus(SessionStatus.SCHEDULED);
 
-        log.info("✅ Scheduled via {}: {} {} {} - Room {}",
+        log.info(" Scheduled via {}: {} {} {} - Room {}",
                 strategyName,
                 slot.getDate(),
                 slot.getDayOfWeek(),

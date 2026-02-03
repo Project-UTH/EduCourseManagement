@@ -12,32 +12,12 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Service interface for Session management
- *
- * MAIN RESPONSIBILITIES:
- * 1. Reschedule single or multiple sessions
- * 2. Reset sessions to original schedule
- * 3. Conflict detection for rescheduling
- * 4. Get sessions for display
- */
+
 public interface SessionService {
 
-    // ==================== RESCHEDULE OPERATIONS ====================
 
     /**
-     * Reschedule a single session
-     *
-     * LOGIC:
-     * 1. Find session
-     * 2. Validate: only IN_PERSON sessions can be rescheduled
-     * 3. Parse new schedule
-     * 4. Validate new date within semester
-     * 5. Check teacher conflict
-     * 6. Check room conflict
-     * 7. Update session: set actual* fields, isRescheduled = true
-     * 8. Return updated session
-     *
+     
      * @param sessionId Session to reschedule
      * @param request New schedule
      * @return Rescheduled session
@@ -50,32 +30,12 @@ public interface SessionService {
     );
 
     /**
-     * Reschedule multiple sessions at once
-     *
-     * USE CASES:
-     * - Move entire week to different room
-     * - Change all sessions to different time
-     *
-     * BEHAVIOR:
-     * - Continues on error (doesn't rollback all if one fails)
-     * - Returns list of successfully rescheduled sessions
-     * - Logs errors for failed sessions
-     *
      * @param request List of session IDs and new schedule
      * @return List of successfully rescheduled sessions
      */
     List<ClassSessionResponse> rescheduleSessions(BatchRescheduleRequest request);
 
     /**
-     * Reset session to original schedule
-     *
-     * LOGIC:
-     * 1. Find session
-     * 2. Clear actual* fields
-     * 3. Set isRescheduled = false
-     * 4. Clear rescheduleReason
-     * 5. Return session
-     *
      * @param sessionId Session to reset
      * @return Reset session
      */
@@ -89,7 +49,7 @@ public interface SessionService {
      */
     List<ClassSessionResponse> resetMultipleToOriginal(List<Long> sessionIds);
 
-    // ==================== QUERY OPERATIONS ====================
+   
 
     /**
      * Get all sessions for a class
@@ -118,7 +78,7 @@ public interface SessionService {
      */
     ClassSessionResponse getSessionById(Long sessionId);
 
-    // ==================== STATUS MANAGEMENT ====================
+   
 
     /**
      * Mark session as completed
@@ -130,7 +90,7 @@ public interface SessionService {
      */
     ClassSessionResponse markAsCancelled(Long sessionId, String reason);
 
-    // ==================== STATISTICS ====================
+   
 
     /**
      * Count total sessions for a class

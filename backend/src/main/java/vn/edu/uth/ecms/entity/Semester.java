@@ -10,7 +10,7 @@ import lombok.*;
 import java.time.LocalDate;
 
 /**
- * Semester Entity - Học kỳ
+ * Semester Entity 
  *
  * CRITICAL BUSINESS RULES:
  * 1. Only ONE semester can have status = ACTIVE at any time
@@ -34,7 +34,6 @@ public class Semester extends BaseEntity {
 
     /**
      * Semester Code: Format YYYY-S (S = 1, 2, 3)
-     * Examples: "2024-1", "2024-2", "2025-1"
      */
     @NotBlank(message = "Semester code is required")
     @Pattern(regexp = "^\\d{4}-[123]$",
@@ -44,7 +43,6 @@ public class Semester extends BaseEntity {
 
     /**
      * Semester Name
-     * Example: "Học kỳ 1 năm 2024-2025"
      */
     @NotBlank(message = "Semester name is required")
     @Size(max = 100, message = "Semester name must not exceed 100 characters")
@@ -102,7 +100,7 @@ public class Semester extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // ==================== BUSINESS LOGIC METHODS ====================
+    
 
     /**
      * Check if registration is currently open

@@ -19,21 +19,13 @@ import java.util.Optional;
 
 /**
  * HomeworkSubmissionRepository - MULTI-FILE SUPPORT
- * 
- * JPA Repository for HomeworkSubmission entity
- * Provides CRUD operations and custom queries for submissions
- * 
- * ✅ FIXED: Added @EntityGraph to load submissionFiles eagerly
- * 
- * @author Phase 4 - Teacher Features (Updated 2026-01-13)
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Repository
 public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubmission, Long> {
     
-    // ========================================
-    // BASIC QUERIES - BY HOMEWORK
-    // ========================================
+    
     
     /**
      * Find all submissions for a homework
@@ -60,10 +52,7 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
      */
     Page<HomeworkSubmission> findByHomework_HomeworkId(Long homeworkId, Pageable pageable);
     
-    // ========================================
-    // QUERIES - BY STUDENT
-    // ========================================
-    
+  
     /**
      * Find all submissions by a student
      * 
@@ -103,10 +92,7 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
     List<HomeworkSubmission> findByStudentAndClass(@Param("studentId") Long studentId,
                                                     @Param("classId") Long classId);
     
-    // ========================================
-    // QUERIES - SPECIFIC SUBMISSION
-    // ========================================
-    
+ 
     /**
      * Find submission by homework and student
      * Should be unique due to constraint
@@ -119,9 +105,6 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
         Long homeworkId, Long studentId);
     
     /**
-     * ✅ FIXED: Find submission by homework and student code (WITH FILES)
-     * EntityGraph ensures submissionFiles are loaded eagerly to avoid lazy loading issues
-     * 
      * @param homeworkId Homework ID
      * @param studentCode Student code
      * @return Optional submission with files loaded
@@ -140,17 +123,13 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
     boolean existsByHomework_HomeworkIdAndStudent_StudentId(Long homeworkId, Long studentId);
     
     /**
-     * ✅ NEW: Check if student has submitted for homework (by student code)
-     * 
      * @param homeworkId Homework ID
      * @param studentCode Student code
      * @return true if submission exists
      */
     boolean existsByHomework_HomeworkIdAndStudent_StudentCode(Long homeworkId, String studentCode);
     
-    // ========================================
-    // QUERIES - BY STATUS
-    // ========================================
+
     
     /**
      * Find submissions by status
@@ -192,9 +171,7 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
            "AND s.status = 'LATE' ORDER BY s.submissionDate ASC")
     List<HomeworkSubmission> findLateSubmissions(@Param("homeworkId") Long homeworkId);
     
-    // ========================================
-    // QUERIES - FOR TEACHER GRADING
-    // ========================================
+ 
     
     /**
      * Find all submissions needing grading for teacher's classes
@@ -235,9 +212,7 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
     List<HomeworkSubmission> findRecentByTeacherId(@Param("teacherId") Long teacherId,
                                                     @Param("since") LocalDateTime since);
     
-    // ========================================
-    // STATISTICS QUERIES
-    // ========================================
+
     
     /**
      * Calculate average score for homework
@@ -298,9 +273,7 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
                           @Param("minScore") BigDecimal minScore,
                           @Param("maxScore") BigDecimal maxScore);
     
-    // ========================================
-    // COUNT QUERIES
-    // ========================================
+ 
     
     /**
      * Count total submissions for homework
@@ -359,9 +332,7 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
            "WHERE s.homework.classEntity.teacher.teacherId = :teacherId")
     long countByTeacherId(@Param("teacherId") Long teacherId);
     
-    // ========================================
-    // SEARCH & FILTER
-    // ========================================
+ 
     
     /**
      * Search submissions by student name
@@ -400,9 +371,7 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
         @Param("maxScore") BigDecimal maxScore,
         Pageable pageable);
     
-    // ========================================
-    // RANKING QUERIES
-    // ========================================
+  
     
     /**
      * Get top submissions by score
@@ -433,9 +402,7 @@ public interface HomeworkSubmissionRepository extends JpaRepository<HomeworkSubm
     Long findStudentRank(@Param("homeworkId") Long homeworkId,
                         @Param("studentId") Long studentId);
     
-    // ========================================
-    // DELETE QUERIES
-    // ========================================
+ 
     
     /**
      * Delete all submissions for a homework

@@ -12,11 +12,7 @@ import vn.edu.uth.ecms.dto.response.ApiResponse;
 import vn.edu.uth.ecms.dto.response.TeacherResponse;
 import vn.edu.uth.ecms.service.TeacherService;
 
-/**
- * Teacher Profile Controller - FIXED VERSION
- * 
- * Handles teacher profile management endpoints
- */
+
 @Slf4j
 @RestController
 @RequestMapping("/api/teacher")
@@ -31,14 +27,12 @@ public class TeacherProfileController {
      */
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<TeacherResponse>> getProfile(Authentication authentication) {
-        log.info("📋 [TeacherProfile] Getting profile for: {}", authentication.getName());
+        log.info(" [TeacherProfile] Getting profile for: {}", authentication.getName());
         
         String citizenId = authentication.getName();
         TeacherResponse profile = teacherService.getByCitizenId(citizenId);
         
-        log.info("✅ [TeacherProfile] Profile fetched: {}", profile.getFullName());
-        
-        // FIXED: Use correct ApiResponse constructor
+        log.info(" [TeacherProfile] Profile fetched: {}", profile.getFullName());
         ApiResponse<TeacherResponse> response = new ApiResponse<>();
         response.setSuccess(true);
         response.setMessage("Profile retrieved successfully");
@@ -56,14 +50,14 @@ public class TeacherProfileController {
             Authentication authentication,
             @Valid @RequestBody UpdateTeacherProfileRequest request
     ) {
-        log.info("✏️ [TeacherProfile] Updating profile for: {}", authentication.getName());
+        log.info(" [TeacherProfile] Updating profile for: {}", authentication.getName());
         
         String citizenId = authentication.getName();
         TeacherResponse updatedProfile = teacherService.updateProfile(citizenId, request);
         
-        log.info("✅ [TeacherProfile] Profile updated: {}", updatedProfile.getFullName());
+        log.info("[TeacherProfile] Profile updated: {}", updatedProfile.getFullName());
         
-        // FIXED: Use correct ApiResponse constructor
+      
         ApiResponse<TeacherResponse> response = new ApiResponse<>();
         response.setSuccess(true);
         response.setMessage("Profile updated successfully");
@@ -81,14 +75,14 @@ public class TeacherProfileController {
             Authentication authentication,
             @Valid @RequestBody ChangePasswordRequest request
     ) {
-        log.info("🔒 [TeacherProfile] Changing password for: {}", authentication.getName());
+        log.info(" [TeacherProfile] Changing password for: {}", authentication.getName());
         
         String citizenId = authentication.getName();
         teacherService.changePassword(citizenId, request);
         
-        log.info("✅ [TeacherProfile] Password changed successfully");
+        log.info(" [TeacherProfile] Password changed successfully");
         
-        // FIXED: Use correct ApiResponse constructor
+       
         ApiResponse<Void> response = new ApiResponse<>();
         response.setSuccess(true);
         response.setMessage("Password changed successfully");

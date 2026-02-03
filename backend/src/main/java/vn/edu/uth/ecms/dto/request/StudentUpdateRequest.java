@@ -11,7 +11,6 @@ import vn.edu.uth.ecms.entity.TrainingType;
 
 /**
  * DTO for updating an existing student
- * Student code cannot be changed after creation
  */
 @Data
 @NoArgsConstructor

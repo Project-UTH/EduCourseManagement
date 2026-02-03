@@ -16,8 +16,8 @@ import java.util.List;
  * 
  * REST API for student to view/download class materials
  * 
- * @author ECMS Team
- * @since 2026-01-16
+ * @author 
+ * @since 
  */
 @RestController
 @RequestMapping("/api/student/materials")
@@ -36,7 +36,7 @@ public class StudentMaterialController {
     public ResponseEntity<ApiResponse<List<MaterialResponse>>> getMaterialsByClass(
             @PathVariable Long classId) {
         
-        log.info("📚 Student getting materials for class {}", classId);
+        log.info(" Student getting materials for class {}", classId);
         
         List<MaterialResponse> materials = materialService.getMaterialsByClass(classId);
         
@@ -52,7 +52,7 @@ public class StudentMaterialController {
     public ResponseEntity<ApiResponse<MaterialResponse>> getMaterialById(
             @PathVariable Long materialId) {
         
-        log.info("📄 Student getting material {}", materialId);
+        log.info(" Student getting material {}", materialId);
         
         MaterialResponse material = materialService.getMaterialById(materialId);
         

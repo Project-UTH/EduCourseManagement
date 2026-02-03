@@ -13,32 +13,19 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Repository for StudentSchedule
- *
- * ✅ ULTRA MINIMAL VERSION
- * - Removed ALL problematic queries
- * - Only keep essential DELETE and COUNT
- * - All status/semester queries removed
- */
+
 @Repository
 public interface StudentScheduleRepository extends JpaRepository<StudentSchedule, Long> {
 
-    // ==================== ESSENTIAL QUERIES ONLY ====================
+    
 
-    /**
-     * Get all schedules for a student's class session
-     */
+   
     @Query("SELECT ss FROM StudentSchedule ss " +
             "WHERE ss.classSession.sessionId = :sessionId " +
             "ORDER BY ss.student.studentCode ASC")
     List<StudentSchedule> findByClassSession(@Param("sessionId") Long sessionId);
 
-    // ==================== DELETE OPERATIONS ====================
-
-    /**
-     * ✅ DELETE: When student drops class
-     */
+ 
     @Modifying
     @Transactional
     @Query("DELETE FROM StudentSchedule ss " +
@@ -58,11 +45,7 @@ public interface StudentScheduleRepository extends JpaRepository<StudentSchedule
             "WHERE ss.classSession.sessionId = :sessionId")
     void deleteBySession(@Param("sessionId") Long sessionId);
 
-    // ==================== COUNT OPERATIONS ====================
 
-    /**
-     * Count schedules for student in class
-     */
     @Query("SELECT COUNT(ss) FROM StudentSchedule ss " +
             "WHERE ss.student.studentId = :studentId " +
             "AND ss.classSession.classEntity.classId = :classId")
@@ -87,10 +70,7 @@ public interface StudentScheduleRepository extends JpaRepository<StudentSchedule
             Long sessionId
     );
 
-    /**
-     * NEW: Check if student has schedule at specific date/time
-     * CRITICAL for extra session conflict detection
-     */
+  
     @Query("SELECT CASE WHEN COUNT(ss) > 0 THEN true ELSE false END " +
             "FROM StudentSchedule ss " +
             "WHERE ss.student.studentId = :studentId " +
@@ -102,10 +82,7 @@ public interface StudentScheduleRepository extends JpaRepository<StudentSchedule
             @Param("timeSlot") TimeSlot timeSlot
     );
 
-    /**
-     * NEW: Find schedules at specific date/time
-     * Used to identify which class conflicts
-     */
+   
     @Query("SELECT ss FROM StudentSchedule ss " +
             "WHERE ss.student.studentId = :studentId " +
             "AND ss.sessionDate = :date " +

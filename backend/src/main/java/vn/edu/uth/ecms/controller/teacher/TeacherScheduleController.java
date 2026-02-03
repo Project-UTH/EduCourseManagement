@@ -30,16 +30,12 @@ public class TeacherScheduleController {
     public ResponseEntity<ApiResponse<List<ScheduleItemResponse>>> getWeeklySchedule(
             @RequestParam(required = false) String weekStartDate) {
         
-        log.info("📅 Teacher requesting weekly schedule");
-        
-        // Get username (citizenId) from authentication
+        log.info(" Teacher requesting weekly schedule");
         String citizenId = SecurityContextHolder.getContext().getAuthentication().getName();
-        
-        // Find teacher by citizenId
         Teacher teacher = teacherRepository.findByCitizenId(citizenId)
                 .orElseThrow(() -> new NotFoundException("Teacher not found with citizenId: " + citizenId));
         
-        log.info("👤 Teacher: {} ({})", teacher.getFullName(), citizenId);
+        log.info(" Teacher: {} ({})", teacher.getFullName(), citizenId);
         
         LocalDate startDate;
         if (weekStartDate != null && !weekStartDate.isEmpty()) {
@@ -48,12 +44,12 @@ public class TeacherScheduleController {
             startDate = getThisWeekMonday();
         }
         
-        log.info("📆 Week start: {}", startDate);
+        log.info(" Week start: {}", startDate);
         
         List<ScheduleItemResponse> schedule = scheduleService.getTeacherWeeklySchedule(
                 teacher.getTeacherId(), startDate);
         
-        log.info("✅ Found {} schedule items", schedule.size());
+        log.info(" Found {} schedule items", schedule.size());
         
         return ResponseEntity.ok(
                 ApiResponse.success("Schedule retrieved", schedule)

@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 
 /**
  * DTO for Major response (includes department information)
- * Phase 3 Sprint 3.1
  */
 @Data
 @NoArgsConstructor
@@ -22,7 +21,6 @@ public class MajorResponse {
     private String majorName;
     private String description;
 
-    // Department information
     private Long departmentId;
     private String departmentCode;
     private String departmentName;
@@ -30,7 +28,6 @@ public class MajorResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Statistics (optional - for list view)
     private Integer totalStudents;
     private Integer totalTeachers;
 }

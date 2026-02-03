@@ -13,13 +13,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * HomeworkResponse DTO
- * 
- * Response body for homework data
- * Basic homework information without submissions
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Data
 @Builder
@@ -131,14 +126,9 @@ public class HomeworkResponse {
      */
     private BigDecimal averageScore;
     
-    // ========================================
-    // MAPPING METHODS
-    // ========================================
+   
     
     /**
-     * Convert Homework entity to HomeworkResponse DTO
-     * Basic mapping without statistics
-     * 
      * @param homework Homework entity
      * @return HomeworkResponse DTO
      */
@@ -171,9 +161,7 @@ public class HomeworkResponse {
     }
     
     /**
-     * Convert Homework entity to HomeworkResponse DTO with statistics
-     * Includes submission counts and average score
-     * 
+    
      * @param homework Homework entity
      * @return HomeworkResponse DTO with stats
      */
@@ -182,7 +170,7 @@ public class HomeworkResponse {
         
         HomeworkResponse response = fromEntity(homework);
         
-        // Add statistics
+        
         response.setSubmissionCount(homework.getSubmissionCount());
         response.setGradedCount(homework.getGradedCount());
         response.setUngradedCount(homework.getUngradedCount());
@@ -192,9 +180,6 @@ public class HomeworkResponse {
     }
     
     /**
-     * Get completion percentage
-     * Based on graded submissions vs total submissions
-     * 
      * @return Completion percentage (0-100)
      */
     public Double getCompletionPercentage() {
@@ -208,8 +193,6 @@ public class HomeworkResponse {
     }
     
     /**
-     * Get formatted deadline
-     * 
      * @return Formatted deadline string
      */
     public String getFormattedDeadline() {
@@ -219,8 +202,6 @@ public class HomeworkResponse {
     }
     
     /**
-     * Check if homework has attachment
-     * 
      * @return true if attachment URL is present
      */
     public boolean hasAttachment() {

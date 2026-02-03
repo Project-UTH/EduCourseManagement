@@ -18,10 +18,8 @@ import java.util.Optional;
 
 /**
  * ChatService with JPA-based Unread Tracking
- * Simplified version - doesn't require CourseRegistration entity
- * 
- * @author ECMS
- * @since 2026-01-21
+ * @author 
+ * @since 
  */
 @Service
 @RequiredArgsConstructor
@@ -47,7 +45,7 @@ public class ChatService {
                 .build();
         
         message = chatMessageRepository.save(message);
-        log.info("[ChatService] ✅ Message saved with ID: {}", message.getId());
+        log.info("[ChatService]  Message saved with ID: {}", message.getId());
 
         return message;
     }
@@ -81,17 +79,11 @@ public class ChatService {
             lastReadAt
         );
 
-        log.info("[ChatService] ✅ Unread count: {}", unreadCount);
+        log.info("[ChatService]  Unread count: {}", unreadCount);
         return unreadCount;
     }
 
-    /**
-     * Get unread counts for specific classes of a user
-     * Returns Map<ClassId, UnreadCount>
-     * 
-     * Note: This method receives classIds from the controller
-     * (no need to query CourseRegistration here)
-     */
+  
     @Transactional(readOnly = true)
     public Map<Long, Long> getUnreadCountsByUser(String username, List<Long> classIds) {
         log.info("[ChatService] Getting unread counts for {} classes", classIds.size());
@@ -105,24 +97,22 @@ public class ChatService {
             }
         }
 
-        log.info("[ChatService] ✅ Found {} classes with unread messages", unreadByClass.size());
+        log.info("[ChatService]  Found {} classes with unread messages", unreadByClass.size());
         return unreadByClass;
     }
 
-    /**
-     * Mark all messages in a class as read for a user
-     */
+    
     @Transactional
     public void markAllAsRead(Long classId, String username) {
         log.info("[ChatService] Marking all messages as read in class {} for {}", classId, username);
 
         try {
-            // Update or insert last read timestamp to NOW
+            
             userLastReadRepository.upsertLastRead(username, classId, LocalDateTime.now());
             
-            log.info("[ChatService] ✅ Successfully marked as read");
+            log.info("[ChatService]  Successfully marked as read");
         } catch (Exception e) {
-            log.error("[ChatService] ❌ Error marking as read", e);
+            log.error("[ChatService]  Error marking as read", e);
             throw e;
         }
     }

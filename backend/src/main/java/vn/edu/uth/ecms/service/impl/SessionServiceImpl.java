@@ -18,14 +18,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Implementation of SessionService - CORRECTED
- *
- * KEY CHANGES:
- * ✅ Fixed duplicate rescheduleSession() method
- * ✅ Added missing getDayOfWeekDisplay() method
- * ✅ Updated to use Room entity instead of String
- */
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -35,7 +28,7 @@ public class SessionServiceImpl implements SessionService {
     private final ClassSessionRepository sessionRepository;
     private final RoomRepository roomRepository;
 
-    // ==================== RESCHEDULE SINGLE SESSION ====================
+    
 
     @Override
     public ClassSessionResponse rescheduleSession(
@@ -66,7 +59,7 @@ public class SessionServiceImpl implements SessionService {
         DayOfWeek newDay = DayOfWeek.valueOf(request.getNewDayOfWeek());
         TimeSlot newSlot = TimeSlot.valueOf(request.getNewTimeSlot());
 
-        // 5. ✅ FIND NEW ROOM (from request.getNewRoomId() or by code)
+        // 5.  FIND NEW ROOM (from request.getNewRoomId() or by code)
         Room newRoom;
         if (request.getNewRoomId() != null) {
             // Option A: Frontend sends room ID
@@ -99,7 +92,7 @@ public class SessionServiceImpl implements SessionService {
                 newDate,
                 newDay,
                 newSlot,
-                newRoom.getRoomId(),  // ← Room ID, not String
+                newRoom.getRoomId(),  
                 sessionId)) {
             throw new ConflictException(
                     "Schedule conflict detected at " + newDate + " " +
@@ -111,13 +104,13 @@ public class SessionServiceImpl implements SessionService {
         session.setActualDate(newDate);
         session.setActualDayOfWeek(newDay);
         session.setActualTimeSlot(newSlot);
-        session.setActualRoom(newRoom);  // ← Room entity
+        session.setActualRoom(newRoom); 
         session.setIsRescheduled(true);
         session.setRescheduleReason(request.getReason());
 
         ClassSession saved = sessionRepository.save(session);
 
-        log.info("✅ Session {} rescheduled: {} {} {} {} → {} {} {} {}",
+        log.info(" Session {} rescheduled: {} {} {} {} → {} {} {} {}",
                 session.getSessionNumber(),
                 session.getOriginalDate(),
                 session.getOriginalDayOfWeek(),
@@ -128,7 +121,7 @@ public class SessionServiceImpl implements SessionService {
         return mapToResponse(saved);
     }
 
-    // ==================== RESCHEDULE MULTIPLE SESSIONS ====================
+    
 
     @Override
     public List<ClassSessionResponse> rescheduleSessions(
@@ -152,7 +145,7 @@ public class SessionServiceImpl implements SessionService {
             }
         }
 
-        log.info("✅ Batch reschedule completed: {} success, {} failed",
+        log.info(" Batch reschedule completed: {} success, {} failed",
                 results.size(), errors.size());
 
         if (!errors.isEmpty()) {
@@ -162,7 +155,7 @@ public class SessionServiceImpl implements SessionService {
         return results;
     }
 
-    // ==================== RESET TO ORIGINAL ====================
+    
 
     @Override
     public ClassSessionResponse resetToOriginal(Long sessionId) {
@@ -181,7 +174,7 @@ public class SessionServiceImpl implements SessionService {
 
         ClassSession saved = sessionRepository.save(session);
 
-        log.info("✅ Session {} reset to original: {} {} {} {}",
+        log.info(" Session {} reset to original: {} {} {} {}",
                 session.getSessionNumber(),
                 session.getOriginalDate(),
                 session.getOriginalDayOfWeek(),
@@ -206,12 +199,12 @@ public class SessionServiceImpl implements SessionService {
             }
         }
 
-        log.info("✅ Batch reset completed: {} sessions", results.size());
+        log.info(" Batch reset completed: {} sessions", results.size());
 
         return results;
     }
 
-    // ==================== QUERY METHODS ====================
+    
 
     @Override
     @Transactional(readOnly = true)
@@ -255,15 +248,11 @@ public class SessionServiceImpl implements SessionService {
         return mapToResponse(session);
     }
 
-    // ==================== CONFLICT DETECTION ====================
-
-    /**
-     * ✅ UPDATED: Conflict detection with Room ID
-     */
+  
     public boolean hasScheduleConflict(
             Long semesterId, Long teacherId,
             LocalDate date, DayOfWeek dayOfWeek,
-            TimeSlot timeSlot, Long roomId,  // ← Changed from String room
+            TimeSlot timeSlot, Long roomId,  
             Long excludeSessionId) {
 
         // Check teacher conflict
@@ -279,7 +268,7 @@ public class SessionServiceImpl implements SessionService {
         return teacherConflict || roomConflict;
     }
 
-    // ==================== STATUS MANAGEMENT ====================
+   
 
     @Override
     public ClassSessionResponse markAsCompleted(Long sessionId) {
@@ -289,7 +278,7 @@ public class SessionServiceImpl implements SessionService {
         session.setStatus(SessionStatus.COMPLETED);
         ClassSession saved = sessionRepository.save(session);
 
-        log.info("✅ Session {} marked as COMPLETED", sessionId);
+        log.info(" Session {} marked as COMPLETED", sessionId);
 
         return mapToResponse(saved);
     }
@@ -303,12 +292,12 @@ public class SessionServiceImpl implements SessionService {
         session.setRescheduleReason(reason);
         ClassSession saved = sessionRepository.save(session);
 
-        log.info("✅ Session {} marked as CANCELLED: {}", sessionId, reason);
+        log.info(" Session {} marked as CANCELLED: {}", sessionId, reason);
 
         return mapToResponse(saved);
     }
 
-    // ==================== STATISTICS ====================
+   
 
     @Override
     @Transactional(readOnly = true)
@@ -328,11 +317,7 @@ public class SessionServiceImpl implements SessionService {
         return sessionRepository.countByStatus(classId, SessionStatus.COMPLETED);
     }
 
-    // ==================== MAPPER ====================
-
-    /**
-     * ✅ UPDATED: Map Room entity to response
-     */
+   
     private ClassSessionResponse mapToResponse(ClassSession entity) {
         return ClassSessionResponse.builder()
                 .sessionId(entity.getSessionId())
@@ -395,9 +380,7 @@ public class SessionServiceImpl implements SessionService {
                 .build();
     }
 
-    /**
-     * ✅ NEW: Helper method to convert DayOfWeek to Vietnamese display
-     */
+   
     private String getDayOfWeekDisplay(DayOfWeek day) {
         return switch (day) {
             case MONDAY -> "Thứ 2";

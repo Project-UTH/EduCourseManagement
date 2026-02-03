@@ -12,14 +12,12 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * ClassSession Repository - CORRECTED
- *
- * ✅ FIXED: existsRoomConflict() - Use original/actual fields, not effective getters
+ * ClassSession Repository 
  */
 @Repository
 public interface ClassSessionRepository extends JpaRepository<ClassSession, Long> {
 
-    // ==================== BASIC QUERIES ====================
+   
 
     @Query("SELECT cs FROM ClassSession cs " +
             "WHERE cs.classEntity.classId = :classId " +
@@ -51,7 +49,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     List<ClassSession> findRescheduledSessions(@Param("classId") Long classId);
 
 
-    // ==================== PENDING SESSION (NEW) ====================
+    
 
     /**
      * Find sessions by class and pending status
@@ -93,7 +91,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     long countPendingByClass(@Param("classId") Long classId);
 
 
-    // ==================== CONFLICT DETECTION ====================
+   
 
     @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
             "FROM ClassSession cs " +
@@ -141,9 +139,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             @Param("excludeClassId") Long excludeClassId
     );
 
-    /**
-     * ✅ FIXED: Room conflict including rescheduled sessions
-     */
+    
     @Query("SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END " +
             "FROM ClassSession cs " +
             "WHERE cs.classEntity.semester.semesterId = :semesterId " +
@@ -172,7 +168,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     );
 
 
-    // ==================== DELETE ====================
+    
 
     @Modifying
     @Query("DELETE FROM ClassSession cs WHERE cs.classEntity.classId = :classId")
@@ -185,7 +181,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     void deletePendingByClass(@Param("classId") Long classId);
 
 
-    // ==================== STATISTICS ====================
+    
 
     @Query("SELECT COUNT(cs) FROM ClassSession cs " +
             "WHERE cs.classEntity.classId = :classId")
@@ -213,7 +209,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     );
 
 
-    // ==================== SEMESTER STATISTICS ====================
+    
 
     @Query("SELECT cs.category, COUNT(cs) " +
             "FROM ClassSession cs " +
@@ -232,7 +228,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     long countScheduledInSemester(@Param("semesterId") Long semesterId);
 
 
-    // ==================== DATE RANGE QUERY ====================
+   
 
     @Query("SELECT s FROM ClassSession s WHERE s.classEntity.classId = :classId " +
             "AND (s.sessionType = 'IN_PERSON' OR s.sessionType = 'E_LEARNING') " +

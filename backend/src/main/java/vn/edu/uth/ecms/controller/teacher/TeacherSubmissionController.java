@@ -22,8 +22,8 @@ import java.util.List;
  * 
  * REST API endpoints for teacher to manage homework submissions
  * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @RestController
 @RequestMapping("/api/teacher/submissions")
@@ -34,7 +34,7 @@ public class TeacherSubmissionController {
     
     private final SubmissionService submissionService;
     
-    // ==================== GRADE SUBMISSION ====================
+    
     
     /**
      * Grade a submission
@@ -70,11 +70,7 @@ public class TeacherSubmissionController {
         
         return ResponseEntity.ok(response);
     }
-    
-    /**
-     * Bulk grade submissions
-     * POST /api/teacher/submissions/bulk-grade
-     */
+   
     @PostMapping("/bulk-grade")
     public ResponseEntity<List<SubmissionResponse>> bulkGrade(
             @Valid @RequestBody List<GradeSubmissionRequest> requests,
@@ -89,7 +85,7 @@ public class TeacherSubmissionController {
         return ResponseEntity.ok(responses);
     }
     
-    // ==================== GET SUBMISSIONS ====================
+    
     
     /**
      * Get submissions needing grading for a homework
@@ -146,7 +142,7 @@ public class TeacherSubmissionController {
         return ResponseEntity.ok(responses);
     }
     
-    // ==================== STATISTICS ====================
+   
     
     /**
      * Get submission statistics for a homework

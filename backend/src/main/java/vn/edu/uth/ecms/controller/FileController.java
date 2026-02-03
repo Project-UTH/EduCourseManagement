@@ -14,12 +14,8 @@ import vn.edu.uth.ecms.service.FileStorageService;
 import java.nio.file.Path;
 
 /**
- * FileController
- * 
- * Controller for file download operations
- * 
- * @author Phase 5 - Student Features
- * @since 2026-01-11
+ * @author 
+ * @since 
  */
 @RestController
 @RequestMapping("/api/files")
@@ -39,7 +35,7 @@ public class FileController {
             @PathVariable String studentCode,
             @PathVariable String filename
     ) {
-        log.info("📥 Downloading file: {} for homework: {} by student: {}", filename, homeworkId, studentCode);
+        log.info(" Downloading file: {} for homework: {} by student: {}", filename, homeworkId, studentCode);
         
         try {
             // Build directory path
@@ -49,21 +45,21 @@ public class FileController {
             Path filePath = fileStorageService.loadFile(filename, directory);
             
             if (filePath == null) {
-                log.warn("⚠️ File not found: {}", filename);
+                log.warn(" File not found: {}", filename);
                 return ResponseEntity.notFound().build();
             }
             
             Resource resource = new UrlResource(filePath.toUri());
             
             if (!resource.exists() || !resource.isReadable()) {
-                log.warn("⚠️ File not readable: {}", filename);
+                log.warn(" File not readable: {}", filename);
                 return ResponseEntity.notFound().build();
             }
             
-            // Determine content type
+            
             String contentType = "application/octet-stream";
             
-            log.info("✅ File downloaded: {}", filename);
+            log.info(" File downloaded: {}", filename);
             
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
@@ -72,7 +68,7 @@ public class FileController {
                     .body(resource);
                     
         } catch (Exception e) {
-            log.error("❌ Error downloading file: {}", filename, e);
+            log.error(" Error downloading file: {}", filename, e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -86,7 +82,7 @@ public class FileController {
             @PathVariable Long homeworkId,
             @PathVariable String filename
     ) {
-        log.info("📥 Downloading attachment: {} for homework: {}", filename, homeworkId);
+        log.info(" Downloading attachment: {} for homework: {}", filename, homeworkId);
         
         try {
             String directory = "attachments/homework-" + homeworkId;
@@ -112,7 +108,7 @@ public class FileController {
                     .body(resource);
                     
         } catch (Exception e) {
-            log.error("❌ Error downloading attachment: {}", filename, e);
+            log.error(" Error downloading attachment: {}", filename, e);
             return ResponseEntity.internalServerError().build();
         }
     }

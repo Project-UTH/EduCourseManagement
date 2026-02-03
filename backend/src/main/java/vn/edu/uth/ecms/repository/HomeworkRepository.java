@@ -16,19 +16,13 @@ import java.util.Optional;
 
 /**
  * HomeworkRepository
- * 
- * JPA Repository for Homework entity
- * Provides CRUD operations and custom queries
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Repository
 public interface HomeworkRepository extends JpaRepository<Homework, Long> {
     
-    // ========================================
-    // BASIC QUERIES - BY CLASS
-    // ========================================
+   
     
     /**
      * Find all homework for a specific class
@@ -55,9 +49,7 @@ public interface HomeworkRepository extends JpaRepository<Homework, Long> {
      */
     Page<Homework> findByClassEntity_ClassId(Long classId, Pageable pageable);
     
-    // ========================================
-    // QUERIES - BY TYPE
-    // ========================================
+
     
     /**
      * Find homework by class and type
@@ -100,9 +92,7 @@ public interface HomeworkRepository extends JpaRepository<Homework, Long> {
            "AND h.homeworkType = 'FINAL'")
     Optional<Homework> findFinalByClassId(@Param("classId") Long classId);
     
-    // ========================================
-    // QUERIES - BY DEADLINE STATUS
-    // ========================================
+
     
     /**
      * Find upcoming homework (deadline in future)
@@ -142,9 +132,6 @@ public interface HomeworkRepository extends JpaRepository<Homework, Long> {
                                        @Param("startDate") LocalDateTime startDate,
                                        @Param("endDate") LocalDateTime endDate);
     
-    // ========================================
-    // QUERIES - BY TEACHER
-    // ========================================
     
     /**
      * Find all homework created by a teacher
@@ -180,9 +167,6 @@ public interface HomeworkRepository extends JpaRepository<Homework, Long> {
     List<Homework> findUpcomingByTeacherId(@Param("teacherId") Long teacherId,
                                            @Param("now") LocalDateTime now);
     
-    // ========================================
-    // QUERIES - WITH SUBMISSION STATS
-    // ========================================
     
     /**
      * Find homework with submission count
@@ -216,9 +200,7 @@ public interface HomeworkRepository extends JpaRepository<Homework, Long> {
            "AND s.status != 'GRADED'")
     long countNeedingGradingByTeacherId(@Param("teacherId") Long teacherId);
     
-    // ========================================
-    // QUERIES - SEARCH & FILTER
-    // ========================================
+  
     
     /**
      * Search homework by title
@@ -254,9 +236,7 @@ public interface HomeworkRepository extends JpaRepository<Homework, Long> {
                                   @Param("endDate") LocalDateTime endDate,
                                   Pageable pageable);
     
-    // ========================================
-    // EXISTENCE CHECKS
-    // ========================================
+
     
     /**
      * Check if homework exists for class
@@ -287,10 +267,7 @@ public interface HomeworkRepository extends JpaRepository<Homework, Long> {
            "WHERE h.classEntity.classId = :classId AND h.homeworkType = 'FINAL'")
     boolean hasFinal(@Param("classId") Long classId);
     
-    // ========================================
-    // COUNT QUERIES
-    // ========================================
-    
+
     /**
      * Count total homework for a class
      * 
@@ -330,9 +307,7 @@ public interface HomeworkRepository extends JpaRepository<Homework, Long> {
            "AND h.deadline < :now")
     long countOverdue(@Param("classId") Long classId, @Param("now") LocalDateTime now);
     
-    // ========================================
-    // DELETE QUERIES
-    // ========================================
+   
     
     /**
      * Delete all homework for a class

@@ -82,8 +82,6 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> logout() {
         String username = getCurrentUsername();
         logger.info("Logout request for username: {}", username);
-
-        // JWT is stateless, so just clear the security context
         SecurityContextHolder.clearContext();
 
         return ResponseEntity.ok(

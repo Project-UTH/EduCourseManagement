@@ -12,8 +12,8 @@ import java.math.BigDecimal;
  * 
  * Response format for student viewing their grades
  * 
- * @author Phase 4 - Student Features
- * @since 2026-01-22
+ * @author 
+ * @since 
  */
 @Data
 @NoArgsConstructor

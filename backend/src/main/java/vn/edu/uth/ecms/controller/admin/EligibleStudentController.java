@@ -13,11 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Controller for managing eligible students
- * Provides endpoints to find students who can enroll in a class
- * based on subject's department and knowledge type
- */
+
 @RestController
 @RequestMapping("/api/admin/classes")
 @RequiredArgsConstructor
@@ -27,10 +23,6 @@ public class EligibleStudentController {
     private final EligibleStudentService eligibleStudentService;
 
     /**
-     * ✅ Get list of students eligible to enroll in a class
-     * Filters by department/major based on knowledge type
-     * Excludes already enrolled students
-     *
      * @param classId Class ID
      * @return List of eligible students
      */
@@ -39,7 +31,7 @@ public class EligibleStudentController {
     public ResponseEntity<ApiResponse<List<StudentResponse>>> getEligibleStudents(
             @PathVariable Long classId) {
 
-        log.info("📚 GET /api/admin/classes/{}/eligible-students", classId);
+        log.info(" GET /api/admin/classes/{}/eligible-students", classId);
 
         try {
             List<StudentResponse> students = eligibleStudentService
@@ -57,7 +49,7 @@ public class EligibleStudentController {
                             .build()
             );
         } catch (Exception e) {
-            log.error("❌ Error getting eligible students: {}", e.getMessage());
+            log.error(" Error getting eligible students: {}", e.getMessage());
             return ResponseEntity.badRequest().body(
                     ApiResponse.<List<StudentResponse>>builder()
                             .success(false)
@@ -68,8 +60,6 @@ public class EligibleStudentController {
     }
 
     /**
-     * ✅ Check if specific student is eligible for a class
-     *
      * @param classId Class ID
      * @param studentId Student ID
      * @return Eligibility status
@@ -80,7 +70,7 @@ public class EligibleStudentController {
             @PathVariable Long classId,
             @PathVariable Long studentId) {
 
-        log.info("🔍 GET /api/admin/classes/{}/check-eligibility/{}", classId, studentId);
+        log.info(" GET /api/admin/classes/{}/check-eligibility/{}", classId, studentId);
 
         try {
             boolean isEligible = eligibleStudentService.isStudentEligible(studentId, classId);
@@ -98,7 +88,7 @@ public class EligibleStudentController {
                             .build()
             );
         } catch (Exception e) {
-            log.error("❌ Error checking eligibility: {}", e.getMessage());
+            log.error(" Error checking eligibility: {}", e.getMessage());
             return ResponseEntity.badRequest().body(
                     ApiResponse.<Map<String, Object>>builder()
                             .success(false)
@@ -109,8 +99,6 @@ public class EligibleStudentController {
     }
 
     /**
-     * ✅ Get eligibility info/description for a class
-     *
      * @param classId Class ID
      * @return Eligibility description
      */
@@ -119,7 +107,7 @@ public class EligibleStudentController {
     public ResponseEntity<ApiResponse<String>> getEligibilityInfo(
             @PathVariable Long classId) {
 
-        log.info("ℹ️ GET /api/admin/classes/{}/eligibility-info", classId);
+        log.info(" GET /api/admin/classes/{}/eligibility-info", classId);
 
         try {
             String info = eligibleStudentService.getEligibilityInfo(classId);
@@ -132,7 +120,7 @@ public class EligibleStudentController {
                             .build()
             );
         } catch (Exception e) {
-            log.error("❌ Error getting eligibility info: {}", e.getMessage());
+            log.error(" Error getting eligibility info: {}", e.getMessage());
             return ResponseEntity.badRequest().body(
                     ApiResponse.<String>builder()
                             .success(false)

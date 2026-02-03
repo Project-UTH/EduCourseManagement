@@ -9,9 +9,6 @@ import java.time.LocalDate;
 
 /**
  * RoomScheduleResponse DTO
- *
- * Shows which classes/sessions are using a room
- * Used for displaying room schedule in calendar view
  */
 @Data
 @Builder
@@ -19,14 +16,14 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class RoomScheduleResponse {
 
-    // ==================== SESSION INFO ====================
+    
 
     private Long sessionId;
     private Integer sessionNumber;           // Buổi thứ mấy (1, 2, 3...)
     private String sessionType;              // "IN_PERSON", "E_LEARNING"
     private String category;                 // "FIXED", "EXTRA" (nullable)
 
-    // ==================== SCHEDULE INFO ====================
+   
 
     private LocalDate sessionDate;
     private String dayOfWeek;                // "MONDAY", "TUESDAY", etc.
@@ -36,20 +33,20 @@ public class RoomScheduleResponse {
     private String startTime;                // "06:45"
     private String endTime;                  // "09:15"
 
-    // ==================== CLASS INFO ====================
+    
 
     private Long classId;
     private String classCode;                // "IT101-01"
     private String subjectName;              // "Lập trình Web"
     private Integer credits;                 // 3
 
-    // ==================== TEACHER INFO ====================
+    
 
     private Long teacherId;
-    private String teacherName;              // "TS. Nguyễn Văn A"
+    private String teacherName;              
     private String teacherEmail;
 
-    // ==================== STATUS INFO ====================
+    
 
     private String status;                   // "SCHEDULED", "COMPLETED", "CANCELLED"
     private String statusDisplay;            // "Đã lên lịch", "Hoàn thành", "Đã hủy"
@@ -59,11 +56,7 @@ public class RoomScheduleResponse {
 
     private Boolean isPending;               // Session đang chờ xếp lịch?
 
-    // ==================== HELPER METHODS ====================
-
-    /**
-     * Get status display in Vietnamese
-     */
+    
     public String getStatusDisplay() {
         if (statusDisplay != null) {
             return statusDisplay;
@@ -101,10 +94,7 @@ public class RoomScheduleResponse {
         };
     }
 
-    /**
-     * Get full schedule summary
-     * Example: "Thứ 2, Ca 1 (06:45-09:15)"
-     */
+   
     public String getScheduleSummary() {
         StringBuilder summary = new StringBuilder();
 
@@ -127,10 +117,7 @@ public class RoomScheduleResponse {
         return summary.toString();
     }
 
-    /**
-     * Get class info summary
-     * Example: "IT101-01 - Lập trình Web (3 TC)"
-     */
+   
     public String getClassSummary() {
         StringBuilder summary = new StringBuilder();
 
@@ -182,12 +169,7 @@ public class RoomScheduleResponse {
         return sessionDate.isAfter(LocalDate.now());
     }
 
-    /**
-     * Get badge color for UI based on status
-     * - green: COMPLETED
-     * - blue: SCHEDULED
-     * - gray: CANCELLED
-     */
+  
     public String getStatusBadgeColor() {
         return switch (status) {
             case "COMPLETED" -> "green";
@@ -197,11 +179,7 @@ public class RoomScheduleResponse {
         };
     }
 
-    /**
-     * Get icon for session type
-     * - 🏫 IN_PERSON
-     * - 💻 E_LEARNING
-     */
+    
     public String getSessionTypeIcon() {
         return switch (sessionType) {
             case "IN_PERSON" -> "🏫";

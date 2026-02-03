@@ -7,10 +7,7 @@ import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.Department;
 import java.util.Optional;
 
-/**
- * Repository for Department entity
- * Phase 3 Sprint 3.1
- */
+
 @Repository
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
 

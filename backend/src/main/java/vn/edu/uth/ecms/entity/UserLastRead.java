@@ -7,12 +7,8 @@ import java.time.LocalDateTime;
 
 /**
  * UserLastRead Entity
- * 
- * Tracks the last time each user read messages in each class
- * Used for calculating unread message counts
- * 
- * @author ECMS
- * @since 2026-01-21
+ * @author 
+ * @since 
  */
 @Entity
 @Table(name = "user_last_read", 

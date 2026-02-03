@@ -9,12 +9,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 /**
- * GradeSubmissionRequest DTO
- * 
- * Request body for teacher grading a homework submission
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Data
 @Builder
@@ -22,34 +18,23 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class GradeSubmissionRequest {
     
-    /**
-     * Submission ID (from path variable)
-     */
+   
     private Long submissionId;
     
-    /**
-     * Score assigned by teacher
-     * Must be between 0 and homework's maxScore
-     */
+   
     @NotNull(message = "Score is required")
     @DecimalMin(value = "0.0", message = "Score must be at least 0")
     @DecimalMax(value = "10.0", message = "Score must not exceed 10")
     private BigDecimal score;
     
-    /**
-     * Teacher's feedback/comments
-     * Optional but recommended
-     */
+   
     @Size(max = 5000, message = "Teacher feedback must not exceed 5000 characters")
     private String teacherFeedback;
     
-    // ========================================
-    // VALIDATION METHODS
-    // ========================================
+   
     
     /**
-     * Validate score is within homework's max score
-     * 
+
      * @param maxScore Homework's maximum score
      * @return true if valid
      */

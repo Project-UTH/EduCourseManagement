@@ -26,11 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ChatController with JPA-based Unread Tracking
- * Uses RestTemplate to call existing APIs - NO ClassRepository dependencies
- * 
- * @author ECMS
- * @since 2026-01-21
+ * @author 
+ * @since 
  */
 @RestController
 @RequiredArgsConstructor
@@ -41,13 +38,7 @@ public class ChatController {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    // ============================================================================
-    // WebSocket Endpoints
-    // ============================================================================
-
-    /**
-     * Send message via WebSocket
-     */
+   
     @MessageMapping("/chat.sendMessage/{classId}")
     @SendTo("/topic/class/{classId}")
     public ChatMessage sendMessage(
@@ -68,10 +59,6 @@ public class ChatController {
             content
         );
     }
-
-    // ============================================================================
-    // REST API Endpoints
-    // ============================================================================
 
     /**
      * Get chat history for a class
@@ -130,12 +117,12 @@ public class ChatController {
         log.info("[ChatController] Get all unread counts for {} ({})", username, role);
 
         try {
-            // ✅ Call existing APIs to get class IDs
+            
             List<Long> classIds = getClassIdsForUser(role, authHeader);
             
             log.info("[ChatController] Found {} classes for user", classIds.size());
 
-            // Get unread counts for all classes
+            
             Map<Long, Long> unreadByClass = chatService.getUnreadCountsByUser(username, classIds);
             
             Long totalUnread = unreadByClass.values().stream()
@@ -146,12 +133,12 @@ public class ChatController {
             response.put("unreadByClass", unreadByClass);
             response.put("totalUnread", totalUnread);
 
-            log.info("[ChatController] ✅ Total unread: {}", totalUnread);
+            log.info("[ChatController]  Total unread: {}", totalUnread);
 
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            log.error("[ChatController] ❌ Error getting unread counts", e);
+            log.error("[ChatController]  Error getting unread counts", e);
             
             // Return empty result on error (don't fail the request)
             Map<String, Object> errorResponse = new HashMap<>();
@@ -162,12 +149,7 @@ public class ChatController {
         }
     }
 
-    /**
-     * Helper method: Call existing REST APIs to get class IDs
-     * This method calls:
-     * - /api/teacher/classes (for teachers)
-     * - /api/student/classes (for students)
-     */
+    
     private List<Long> getClassIdsForUser(String role, String authHeader) {
         List<Long> classIds = new ArrayList<>();
         
@@ -215,20 +197,19 @@ public class ChatController {
                     }
                 }
                 
-                log.info("[ChatController] ✅ Retrieved {} class IDs from API", classIds.size());
+                log.info("[ChatController]  Retrieved {} class IDs from API", classIds.size());
             } else {
                 log.warn("[ChatController] API returned status: {}", response.getStatusCode());
             }
             
         } catch (Exception e) {
-            log.error("[ChatController] ❌ Error calling class API: {}", e.getMessage(), e);
+            log.error("[ChatController]  Error calling class API: {}", e.getMessage(), e);
         }
         
         return classIds;
     }
 
     /**
-     * Mark all messages in a class as read
      * POST /api/chat/{classId}/mark-read
      */
     @PostMapping("/api/chat/{classId}/mark-read")

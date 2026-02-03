@@ -41,7 +41,6 @@ public class TeacherUpdateRequest {
     @NotNull(message = "Department is required")
     private Long departmentId;
 
-    // Optional - nullable if teacher teaches multiple majors
     private Long majorId;
 
     @Size(max = 50, message = "Degree must not exceed 50 characters")

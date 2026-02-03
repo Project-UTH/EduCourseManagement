@@ -3,10 +3,7 @@ package vn.edu.uth.ecms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-/**
- * Entity representing the many-to-many relationship between Teacher and Subject
- * A teacher can teach multiple subjects, and a subject can be taught by multiple teachers
- */
+
 @Entity
 @Table(name = "teacher_subject",
         uniqueConstraints = @UniqueConstraint(columnNames = {"teacher_id", "subject_id"}))

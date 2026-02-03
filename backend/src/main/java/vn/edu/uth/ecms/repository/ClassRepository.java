@@ -12,16 +12,7 @@ import vn.edu.uth.ecms.entity.ClassStatus;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository for ClassEntity - FINAL FIX
- *
- * ✅ CRITICAL FIXES:
- * 1. Removed c.room (String) → Use c.room.roomId (Room entity FK)
- * 2. Removed findClassesWithExtraSchedule() - field doesn't exist
- * 3. Removed findClassesWithElearning() with old field
- *
- * ⚠️ IMPORTANT: ClassEntity now has Room entity, not String room!
- */
+
 @Repository
 public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
 
@@ -29,7 +20,7 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
      List<ClassEntity> findByTeacher_TeacherId(Long teacherId);
 
 
-    // ==================== BASIC QUERIES ====================
+  
 
     /**
      * Find class by code
@@ -41,7 +32,7 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
      */
     boolean existsByClassCode(String classCode);
 
-    // ==================== FILTER QUERIES ====================
+    
 
     /**
      * Find all classes by semester
@@ -77,7 +68,7 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
             @Param("status") ClassStatus status
     );
 
-    // ==================== SEARCH QUERIES ====================
+    
 
     /**
      * Search classes by keyword (class code, subject name, teacher name)
@@ -88,14 +79,7 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
             "OR LOWER(c.teacher.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<ClassEntity> searchClasses(@Param("keyword") String keyword, Pageable pageable);
 
-    // ==================== CONFLICT DETECTION (FIXED SCHEDULE ONLY) ====================
-
-    /**
-     * ✅ FIXED: Check teacher conflict - uses Room entity now
-     *
-     * NOTE: This only checks FIXED schedule (ClassEntity level)
-     * For individual session conflicts, use ClassSessionRepository
-     */
+ 
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END " +
             "FROM ClassEntity c " +
             "WHERE c.semester.semesterId = :semesterId " +
@@ -111,35 +95,23 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
             @Param("excludeClassId") Long excludeClassId
     );
 
-    /**
-     * ✅ FIXED: Check room conflict - uses Room entity FK
-     *
-     * BEFORE (ERROR):
-     * AND c.room = :room  // room was String
-     *
-     * AFTER (CORRECT):
-     * AND c.room.roomId = :roomId  // room is Room entity
-     */
+   
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END " +
             "FROM ClassEntity c " +
             "WHERE c.semester.semesterId = :semesterId " +
-            "AND c.fixedRoom.roomId = :roomId " +  // ✅ FIXED: Room entity FK
+            "AND c.fixedRoom.roomId = :roomId " +  
             "AND c.dayOfWeek = :dayOfWeek " +
             "AND c.timeSlot = :timeSlot " +
             "AND (:excludeClassId IS NULL OR c.classId != :excludeClassId)")
     boolean existsRoomConflict(
             @Param("semesterId") Long semesterId,
-            @Param("roomId") Long roomId,  // ✅ Changed from String room to Long roomId
+            @Param("roomId") Long roomId,  
             @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek,
             @Param("timeSlot") vn.edu.uth.ecms.entity.TimeSlot timeSlot,
             @Param("excludeClassId") Long excludeClassId
     );
 
-    // ==================== STATISTICS ====================
 
-    /**
-     * Count classes by semester
-     */
     @Query("SELECT COUNT(c) FROM ClassEntity c WHERE c.semester.semesterId = :semesterId")
     long countBySemester(@Param("semesterId") Long semesterId);
 
@@ -156,11 +128,7 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
             "WHERE c.semester.semesterId = :semesterId")
     long getTotalEnrolledInSemester(@Param("semesterId") Long semesterId);
 
-    // ==================== PAGINATION ====================
-
-    /**
-     * Find all classes with pagination, ordered by class code
-     */
+ 
     Page<ClassEntity> findAllByOrderByClassCodeAsc(Pageable pageable);
 
     /**
@@ -171,11 +139,7 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
             "ORDER BY c.classCode ASC")
     Page<ClassEntity> findBySemester(@Param("semesterId") Long semesterId, Pageable pageable);
 
-    // ==================== ✅ NEW: CLASSES WITH SESSIONS ====================
 
-    /**
-     * Find classes with extra sessions (via ClassSession table)
-     */
     @Query("SELECT DISTINCT cs.classEntity FROM ClassSession cs " +
             "WHERE cs.classEntity.semester.semesterId = :semesterId " +
             "AND cs.category = 'EXTRA' " +

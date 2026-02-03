@@ -90,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("New password and confirm password do not match");
         }
 
-        // Try to find and update password for each user type
+        
         Admin admin = adminRepository.findByUsername(username).orElse(null);
         if (admin != null) {
             updateAdminPassword(admin, request);
@@ -152,7 +152,7 @@ public class AuthServiceImpl implements AuthService {
                     student.getStudentId(),
                     student.getStudentCode(),
                     student.getFullName(),
-                    null, // Students don't have email in entity
+                    null, 
                     "STUDENT",
                     student.getIsFirstLogin(),
                     student.getIsActive()
@@ -162,7 +162,7 @@ public class AuthServiceImpl implements AuthService {
         throw new ResourceNotFoundException("User", "username", username);
     }
 
-    // ==================== Private Helper Methods ====================
+    
 
     private void updateAdminPassword(Admin admin, ChangePasswordRequest request) {
         // Verify old password
@@ -219,7 +219,7 @@ public class AuthServiceImpl implements AuthService {
                         .map(Teacher::getEmail)
                         .orElse(null);
             case "STUDENT":
-                return null; // Students don't have email
+                return null; 
             default:
                 return null;
         }

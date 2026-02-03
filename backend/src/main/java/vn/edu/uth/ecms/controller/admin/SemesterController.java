@@ -17,13 +17,7 @@ import vn.edu.uth.ecms.service.SemesterService;
 
 import java.time.LocalDate;
 
-/**
- * ⭐ FIXED: Added missing endpoints
- * - PUT /activate
- * - PUT /complete
- * - PUT /enable-registration
- * - PUT /disable-registration
- */
+
 @RestController
 @RequestMapping("/api/admin/semesters")
 @RequiredArgsConstructor
@@ -33,13 +27,13 @@ public class SemesterController {
 
     private final SemesterService semesterService;
 
-    // ==================== CRUD ====================
+    
 
     @PostMapping
     public ResponseEntity<ApiResponse<SemesterResponse>> createSemester(
             @Valid @RequestBody SemesterCreateRequest request) {
 
-        log.info("📝 POST /api/admin/semesters - Creating semester: {}", request.getSemesterCode());
+        log.info("POST /api/admin/semesters - Creating semester: {}", request.getSemesterCode());
 
         SemesterResponse response = semesterService.createSemester(request);
 
@@ -54,7 +48,7 @@ public class SemesterController {
             @PathVariable Long id,
             @Valid @RequestBody SemesterUpdateRequest request) {
 
-        log.info("✏️ PUT /api/admin/semesters/{} - Updating semester", id);
+        log.info(" PUT /api/admin/semesters/{} - Updating semester", id);
 
         SemesterResponse response = semesterService.updateSemester(id, request);
 
@@ -66,7 +60,7 @@ public class SemesterController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteSemester(@PathVariable Long id) {
-        log.info("🗑️ DELETE /api/admin/semesters/{} - Deleting semester", id);
+        log.info(" DELETE /api/admin/semesters/{} - Deleting semester", id);
 
         semesterService.deleteSemester(id);
 
@@ -78,7 +72,7 @@ public class SemesterController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<SemesterResponse>> getSemesterById(@PathVariable Long id) {
-        log.info("📖 GET /api/admin/semesters/{}", id);
+        log.info(" GET /api/admin/semesters/{}", id);
 
         SemesterResponse response = semesterService.getSemesterById(id);
 
@@ -93,7 +87,7 @@ public class SemesterController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        log.info("📚 GET /api/admin/semesters - page: {}, size: {}", page, size);
+        log.info(" GET /api/admin/semesters - page: {}, size: {}", page, size);
 
         Pageable pageable = PageRequest.of(page, size);
         Page<SemesterResponse> response = semesterService.getAllSemesters(pageable);
@@ -110,7 +104,7 @@ public class SemesterController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        log.info("🔍 GET /api/admin/semesters/search?keyword={}", keyword);
+        log.info(" GET /api/admin/semesters/search?keyword={}", keyword);
 
         Pageable pageable = PageRequest.of(page, size);
         Page<SemesterResponse> response = semesterService.searchSemesters(keyword, pageable);
@@ -121,17 +115,10 @@ public class SemesterController {
         ));
     }
 
-    // ==================== STATUS MANAGEMENT (⭐ MISSING!) ====================
-
-    /**
-     * ⭐ ACTIVATE SEMESTER
-     * - Auto-complete previous ACTIVE semester
-     * - Activate new semester
-     * - Auto-schedule ALL pending extra sessions
-     */
+    
     @PutMapping("/{id}/activate")
     public ResponseEntity<ApiResponse<SemesterResponse>> activateSemester(@PathVariable Long id) {
-        log.info("🚀 PUT /api/admin/semesters/{}/activate", id);
+        log.info(" PUT /api/admin/semesters/{}/activate", id);
 
         SemesterResponse response = semesterService.activateSemester(id);
 
@@ -142,11 +129,11 @@ public class SemesterController {
     }
 
     /**
-     * ⭐ COMPLETE SEMESTER
+     *  COMPLETE SEMESTER
      */
     @PutMapping("/{id}/complete")
     public ResponseEntity<ApiResponse<SemesterResponse>> completeSemester(@PathVariable Long id) {
-        log.info("✅ PUT /api/admin/semesters/{}/complete", id);
+        log.info(" PUT /api/admin/semesters/{}/complete", id);
 
         SemesterResponse response = semesterService.completeSemester(id);
 
@@ -157,11 +144,11 @@ public class SemesterController {
     }
 
     /**
-     * ⭐ ENABLE REGISTRATION
+     *  ENABLE REGISTRATION
      */
     @PutMapping("/{id}/enable-registration")
     public ResponseEntity<ApiResponse<SemesterResponse>> enableRegistration(@PathVariable Long id) {
-        log.info("🔓 PUT /api/admin/semesters/{}/enable-registration", id);
+        log.info(" PUT /api/admin/semesters/{}/enable-registration", id);
 
         SemesterResponse response = semesterService.enableRegistration(id);
 
@@ -172,11 +159,11 @@ public class SemesterController {
     }
 
     /**
-     * ⭐ DISABLE REGISTRATION
+     *  DISABLE REGISTRATION
      */
     @PutMapping("/{id}/disable-registration")
     public ResponseEntity<ApiResponse<SemesterResponse>> disableRegistration(@PathVariable Long id) {
-        log.info("🔒 PUT /api/admin/semesters/{}/disable-registration", id);
+        log.info(" PUT /api/admin/semesters/{}/disable-registration", id);
 
         SemesterResponse response = semesterService.disableRegistration(id);
 
@@ -186,11 +173,9 @@ public class SemesterController {
         ));
     }
 
-    // ==================== QUERY ====================
-
     @GetMapping("/current")
     public ResponseEntity<ApiResponse<SemesterResponse>> getCurrentSemester() {
-        log.info("📅 GET /api/admin/semesters/current");
+        log.info(" GET /api/admin/semesters/current");
 
         SemesterResponse response = semesterService.getCurrentSemester();
 
@@ -209,7 +194,7 @@ public class SemesterController {
 
     @GetMapping("/registration-open")
     public ResponseEntity<ApiResponse<SemesterResponse>> getRegistrationOpenSemester() {
-        log.info("📝 GET /api/admin/semesters/registration-open");
+        log.info(" GET /api/admin/semesters/registration-open");
 
         SemesterResponse response = semesterService.getRegistrationOpenSemester();
 

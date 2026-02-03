@@ -12,11 +12,8 @@ import java.util.List;
 
 /**
  * Excel Export Service for Grade Statistics
- * 
- * Generates professional Excel reports for teacher grade statistics
- * 
- * @author ECMS Team
- * @since 2026-01-28
+ * @author 
+ * @since 
  */
 @Service
 public class GradeExcelExportService {
@@ -304,7 +301,7 @@ public class GradeExcelExportService {
         }
     }
     
-    // ==================== HELPER METHODS ====================
+    
     
     private void createInfoRow(Sheet sheet, int rowNum, String label, String value,
                                CellStyle labelStyle, CellStyle valueStyle) {
@@ -359,7 +356,7 @@ public class GradeExcelExportService {
         
         Cell valueCell = row.createCell(1);
         if (value != null) {
-            valueCell.setCellValue(value / 100.0); // Convert to decimal for percent format
+            valueCell.setCellValue(value / 100.0); 
             valueCell.setCellStyle(percentStyle);
         }
     }
@@ -381,7 +378,7 @@ public class GradeExcelExportService {
         countCell.setCellStyle(valueStyle);
     }
     
-    // ==================== STYLE CREATION ====================
+
     
     private CellStyle createHeaderStyle(Workbook workbook) {
         CellStyle style = workbook.createCellStyle();

@@ -12,18 +12,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ✅ FIXED VERSION - SemesterCompletionService
- * 
- * Service xử lý logic hoàn thành học kỳ
- * - Tính điểm tổng kết từ homework submissions
- * - Tự động sync sang bảng GRADE (không dùng completed_subjects nữa)
- * 
- * CHANGES:
- * 1. Thay vì sync vào completed_subjects → Sync vào bảng grade
- * 2. Grade.status = PASSED (nếu điểm >= 4.0) hoặc FAILED (< 4.0)
- * 3. Dùng Grade entity để kiểm tra prerequisite
- */
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -33,22 +22,19 @@ public class SemesterCompletionService {
     private final HomeworkSubmissionRepository submissionRepository;
     private final HomeworkRepository homeworkRepository;
     
-    // ✅ NEW: Dùng GradeRepository thay vì CompletedSubjectRepository
+  
     private final GradeRepository gradeRepository;
 
-    /**
-     * Xử lý hoàn thành học kỳ
-     * Được gọi khi admin ấn "Complete Semester"
-     */
+   
     @Transactional
     public void processSemesterCompletion(Long semesterId) {
-        log.info("🎓 Processing semester completion for semester ID: {}", semesterId);
+        log.info(" Processing semester completion for semester ID: {}", semesterId);
 
         // Lấy tất cả đăng ký REGISTERED trong học kỳ này
         List<CourseRegistration> registrations = registrationRepository
                 .findBySemesterAndStatus(semesterId, RegistrationStatus.REGISTERED);
 
-        log.info("📊 Found {} active registrations", registrations.size());
+        log.info(" Found {} active registrations", registrations.size());
 
         int processedCount = 0;
         int gradedCount = 0;
@@ -77,26 +63,26 @@ public class SemesterCompletionService {
                 registrationRepository.save(reg);
                 processedCount++;
 
-                log.info("✅ Calculated final grade for student {} in class {}: {}",
+                log.info(" Calculated final grade for student {} in class {}: {}",
                         reg.getStudent().getStudentCode(),
                         reg.getClassEntity().getClassCode(),
                         totalScore);
 
-                // ✅ 4. SYNC VÀO BẢNG GRADE
+                //  4. SYNC VÀO BẢNG GRADE
                 syncToGradeTable(reg, components, totalScore);
                 gradedCount++;
 
             } catch (Exception e) {
-                log.error("❌ Error processing registration {}: {}",
+                log.error(" Error processing registration {}: {}",
                         reg.getRegistrationId(), e.getMessage(), e);
                 failedCount++;
             }
         }
 
-        log.info("🎉 Semester completion finished:");
-        log.info("   ✅ Processed registrations: {}", processedCount);
-        log.info("   ✅ Grades synced to grade table: {}", gradedCount);
-        log.info("   ⚠️ Failed/Skipped: {}", failedCount);
+        log.info(" Semester completion finished:");
+        log.info("    Processed registrations: {}", processedCount);
+        log.info("    Grades synced to grade table: {}", gradedCount);
+        log.info("    Failed/Skipped: {}", failedCount);
     }
 
     /**
@@ -168,10 +154,7 @@ public class SemesterCompletionService {
         return new GradeComponents(txAverage, midtermScore, finalScore);
     }
 
-    /**
-     * ✅ NEW: Đồng bộ sang bảng GRADE
-     * Thay thế logic sync vào completed_subjects
-     */
+ 
     private void syncToGradeTable(CourseRegistration registration, 
                                   GradeComponents components, 
                                   BigDecimal totalScore) {
@@ -193,27 +176,24 @@ public class SemesterCompletionService {
             grade.setClassEntity(classEntity);
         }
 
-        // ✅ CẬP NHẬT CÁC THÀNH PHẦN ĐIỂM
+        
         grade.setRegularScore(components.regularScore);
         grade.setMidtermScore(components.midtermScore);
         grade.setFinalScore(components.finalScore);
         
-        // ✅ TỰ ĐỘNG TÍNH TOÁN totalScore, letterGrade, status
-        // Grade entity có @PreUpdate hook sẽ tự động recalculate()
+        
         grade.recalculate();
 
         gradeRepository.save(grade);
 
-        log.info("✅ Synced to grade table: Student {} - Class {} - Total {} - Status {}",
+        log.info(" Synced to grade table: Student {} - Class {} - Total {} - Status {}",
                 student.getStudentCode(),
                 classEntity.getClassCode(),
                 grade.getTotalScore(),
                 grade.getStatus());
     }
 
-    /**
-     * Helper class để lưu các thành phần điểm
-     */
+    
     private static class GradeComponents {
         final BigDecimal regularScore;
         final BigDecimal midtermScore;

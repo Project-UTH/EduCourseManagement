@@ -4,19 +4,13 @@ package vn.edu.uth.ecms.entity;
  * Room Status Enum
  */
 public enum RoomStatus {
-    /**
-     * Phòng sẵn sàng sử dụng
-     */
+   
     AVAILABLE("Sẵn sàng", "Available for use"),
 
-    /**
-     * Phòng đang bảo trì
-     */
+ 
     MAINTENANCE("Đang bảo trì", "Under maintenance"),
 
-    /**
-     * Phòng không khả dụng
-     */
+    
     UNAVAILABLE("Không khả dụng", "Unavailable");
 
     private final String vietnameseName;
@@ -35,9 +29,7 @@ public enum RoomStatus {
         return description;
     }
 
-    /**
-     * Check if room can be used for classes
-     */
+   
     public boolean canBeUsed() {
         return this == AVAILABLE;
     }

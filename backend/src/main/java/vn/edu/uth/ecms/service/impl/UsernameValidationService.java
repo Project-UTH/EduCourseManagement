@@ -23,11 +23,11 @@ public class UsernameValidationService {
      * @throws DuplicateException if username exists
      */
     public void validateUsernameUnique(String username) {
-        log.info("🔍 Validating username uniqueness: {}", username);
+        log.info(" Validating username uniqueness: {}", username);
 
         // Check Admin
         if (adminRepository.existsByUsername(username)) {
-            log.error("❌ Username exists as Admin: {}", username);
+            log.error(" Username exists as Admin: {}", username);
             throw new DuplicateException(
                     "Username already exists in system: " + username
             );
@@ -35,7 +35,7 @@ public class UsernameValidationService {
 
         // Check Teacher (citizenId)
         if (teacherRepository.existsByCitizenId(username)) {
-            log.error("❌ Username exists as Teacher: {}", username);
+            log.error(" Username exists as Teacher: {}", username);
             throw new DuplicateException(
                     "Username already exists in system: " + username
             );
@@ -43,13 +43,13 @@ public class UsernameValidationService {
 
         // Check Student (studentCode)
         if (studentRepository.existsByStudentCode(username)) {
-            log.error("❌ Username exists as Student: {}", username);
+            log.error(" Username exists as Student: {}", username);
             throw new DuplicateException(
                     "Username already exists in system: " + username
             );
         }
 
-        log.info("✅ Username is unique: {}", username);
+        log.info(" Username is unique: {}", username);
     }
 
     /**

@@ -17,20 +17,13 @@ import java.util.Optional;
 
 /**
  * GradeRepository
- * 
- * JPA Repository for Grade entity
- * Provides CRUD operations and custom queries for grades
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
- * @updated 2026-01-28 - FIXED: Removed invalid method findByCourseRegistration_RegistrationId
+ * @author 
+ * @since 
+ * @updated
  */
 @Repository
 public interface GradeRepository extends JpaRepository<Grade, Long> {
     
-    // ========================================
-    // BASIC QUERIES - BY STUDENT
-    // ========================================
     
     /**
      * Find all grades for a student
@@ -57,9 +50,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
      */
     Page<Grade> findByStudent_StudentId(Long studentId, Pageable pageable);
     
-    // ========================================
-    // QUERIES - BY CLASS
-    // ========================================
+   
     
     /**
      * Find all grades for a class
@@ -96,10 +87,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
            "AND g.totalScore IS NOT NULL ORDER BY g.totalScore DESC")
     List<Grade> findByClassIdOrderByScore(@Param("classId") Long classId);
     
-    // ========================================
-    // SPECIFIC GRADE QUERY
-    // ========================================
-    
+ 
     /**
      * Find grade for student in class
      * Should be unique due to constraint
@@ -119,10 +107,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
      */
     boolean existsByStudent_StudentIdAndClassEntity_ClassId(Long studentId, Long classId);
     
-    // ========================================
-    // QUERIES - BY STATUS
-    // ========================================
-    
+
     /**
      * Find grades by status
      * 
@@ -162,10 +147,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
            "AND g.status = 'IN_PROGRESS'")
     List<Grade> findIncompleteGrades(@Param("classId") Long classId);
     
-    // ========================================
-    // QUERIES - BY LETTER GRADE
-    // ========================================
-    
+   
     /**
      * Find grades by letter grade
      * 
@@ -188,9 +170,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
            "GROUP BY g.letterGrade ORDER BY g.letterGrade")
     List<Object[]> countByLetterGrade(@Param("classId") Long classId);
     
-    // ========================================
-    // QUERIES - FOR TEACHER
-    // ========================================
+   
     
     /**
      * Find all grades for teacher's classes
@@ -212,9 +192,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
            "AND g.status = 'IN_PROGRESS'")
     List<Grade> findIncompleteByTeacherId(@Param("teacherId") Long teacherId);
     
-    // ========================================
-    // STATISTICS QUERIES - CLASS
-    // ========================================
+
     
     /**
      * Calculate class average
@@ -268,9 +246,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
            "FROM Grade g WHERE g.classEntity.classId = :classId AND g.totalScore IS NOT NULL")
     BigDecimal calculatePassRate(@Param("classId") Long classId);
     
-    // ========================================
-    // STATISTICS QUERIES - STUDENT
-    // ========================================
+ 
     
     /**
      * Calculate student's GPA
@@ -333,9 +309,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
            "AND g.status = 'FAILED'")
     long countFailedCourses(@Param("studentId") Long studentId);
     
-    // ========================================
-    // COUNT QUERIES
-    // ========================================
+    
     
     /**
      * Count total grades for class
@@ -388,9 +362,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
                           @Param("minScore") BigDecimal minScore,
                           @Param("maxScore") BigDecimal maxScore);
     
-    // ========================================
-    // RANKING QUERIES
-    // ========================================
+    
     
     /**
      * Get top students in class by score
@@ -419,9 +391,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
            "AND g1.totalScore IS NOT NULL AND g2.totalScore IS NOT NULL")
     Long findStudentRank(@Param("classId") Long classId, @Param("studentId") Long studentId);
     
-    // ========================================
-    // SEARCH & FILTER
-    // ========================================
+   
     
     /**
      * Search grades by student name
@@ -461,9 +431,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
         @Param("maxScore") BigDecimal maxScore,
         Pageable pageable);
     
-    // ========================================
-    // DELETE QUERIES
-    // ========================================
+    
     
     /**
      * Delete grade for student in class
@@ -482,18 +450,4 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
      * @return Number of deleted records
      */
     long deleteByClassEntity_ClassId(Long classId);
-    
-    // ========================================
-    // ❌ REMOVED INVALID METHOD (Fixed on 2026-01-28)
-    // ========================================
-    // Optional<Subject> findByCourseRegistration_RegistrationId(Long registrationId);
-    //
-    // This method was INVALID and caused Spring Boot startup failure:
-    // 1. Wrong return type: returned Subject instead of Grade
-    // 2. Invalid property path: Grade entity has no courseRegistration field
-    // 3. Error: "No property 'courseRegistration' found for type 'Grade'"
-    //
-    // If you need to find Grade by registration, use:
-    // findByStudent_StudentIdAndClassEntity_ClassId(studentId, classId)
-    // ========================================
 }

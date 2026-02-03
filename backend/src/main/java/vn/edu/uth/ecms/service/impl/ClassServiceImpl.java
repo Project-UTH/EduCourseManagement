@@ -24,17 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * ClassServiceImpl - UPDATED with Auto Room Assignment
- *
- * KEY CHANGES:
- * 1. createClass() - Auto find and assign room
- * 2. generateInitialSessions() - Create FIXED + PENDING EXTRA + ELEARNING
- * 3. No more manual room input from admin
- * 4. ✅ NEW: getEnrolledStudents() - Get student roster for teacher (Phase 4)
- *
- * PART 1 of 2 - This file contains createClass() and session generation
- */
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -49,13 +39,13 @@ public class ClassServiceImpl implements ClassService {
     private final CourseRegistrationRepository courseRegistrationRepository;
     private final RoomService roomService;
     private final StudentRepository studentRepository;
-    private final GradeRepository gradeRepository;  // ← NEW for grades
+    private final GradeRepository gradeRepository; 
 
-    // ==================== CREATE CLASS (UPDATED) ====================
+  
 
     @Override
     public ClassResponse createClass(ClassCreateRequest request) {
-        log.info("🎓 Creating class: {}", request.getClassCode());
+        log.info(" Creating class: {}", request.getClassCode());
 
         // 1. Validate class code unique
         if (classRepository.existsByClassCode(request.getClassCode())) {
@@ -75,7 +65,7 @@ public class ClassServiceImpl implements ClassService {
         // 3. Validate semester status (MUST be UPCOMING)
         if (semester.getStatus() != SemesterStatus.UPCOMING) {
             throw new BadRequestException(
-                    "❌ Can only create classes for UPCOMING semester. " +
+                    " Can only create classes for UPCOMING semester. " +
                             "Semester " + semester.getSemesterCode() + " is " + semester.getStatus() +
                             ". Classes must be created BEFORE semester starts."
             );
@@ -84,14 +74,14 @@ public class ClassServiceImpl implements ClassService {
         // 4. Validate semester dates
         if (semester.getStartDate() == null || semester.getEndDate() == null) {
             throw new BadRequestException(
-                    "❌ Semester " + semester.getSemesterCode() + " must have start and end dates"
+                    " Semester " + semester.getSemesterCode() + " must have start and end dates"
             );
         }
 
         LocalDate today = LocalDate.now();
         if (semester.getStartDate().isBefore(today)) {
             throw new BadRequestException(
-                    "❌ Cannot create class for semester that has already started. " +
+                    " Cannot create class for semester that has already started. " +
                             "Semester start date: " + semester.getStartDate() + ", Today: " + today
             );
         }
@@ -104,12 +94,12 @@ public class ClassServiceImpl implements ClassService {
         LocalDate firstOccurrence = findFirstDayOfWeek(semester.getStartDate(), dayOfWeek);
         if (firstOccurrence.isAfter(semester.getEndDate())) {
             throw new BadRequestException(
-                    "❌ Day " + dayOfWeek + " does not occur within semester period"
+                    " Day " + dayOfWeek + " does not occur within semester period"
             );
         }
 
-        // 7. ✅ AUTO FIND ROOM for FIXED schedule (10 sessions)
-        log.info("🔍 Auto-finding room for fixed schedule: {} {}", dayOfWeek, timeSlot);
+        // 7.  AUTO FIND ROOM for FIXED schedule (10 sessions)
+        log.info(" Auto-finding room for fixed schedule: {} {}", dayOfWeek, timeSlot);
 
         int fixedSessionCount = Math.min(10, subject.getInpersonSessions());
         List<LocalDate> fixedDates = generateFixedDates(
@@ -129,12 +119,12 @@ public class ClassServiceImpl implements ClassService {
 
         if (fixedRoom == null) {
             throw new NoAvailableRoomException(
-                    "❌ No available room found for schedule: " + dayOfWeek + " " + timeSlot + ". " +
+                    " No available room found for schedule: " + dayOfWeek + " " + timeSlot + ". " +
                             "All rooms are occupied. Please choose different day/time or increase room capacity."
             );
         }
 
-        log.info("✅ Auto-assigned room: {} (capacity: {}) for {} sessions",
+        log.info(" Auto-assigned room: {} (capacity: {}) for {} sessions",
                 fixedRoom.getRoomCode(), fixedRoom.getCapacity(), fixedDates.size());
 
         // 8. Parse e-learning schedule (optional)
@@ -144,7 +134,7 @@ public class ClassServiceImpl implements ClassService {
         if (subject.getElearningSessions() > 0) {
             if (request.getElearningDayOfWeek() == null || request.getElearningTimeSlot() == null) {
                 throw new BadRequestException(
-                        "❌ Subject has " + subject.getElearningSessions() + " e-learning sessions. " +
+                        " Subject has " + subject.getElearningSessions() + " e-learning sessions. " +
                                 "Please provide elearningDayOfWeek and elearningTimeSlot."
                 );
             }
@@ -163,7 +153,7 @@ public class ClassServiceImpl implements ClassService {
                 .status(ClassStatus.OPEN)
                 .dayOfWeek(dayOfWeek)
                 .timeSlot(timeSlot)
-                .fixedRoom(fixedRoom)  // ← AUTO ASSIGNED!
+                .fixedRoom(fixedRoom)  
                 .elearningDayOfWeek(elearningDay)
                 .elearningTimeSlot(elearningSlot)
                 .startDate(semester.getStartDate())
@@ -172,10 +162,10 @@ public class ClassServiceImpl implements ClassService {
 
         ClassEntity saved = classRepository.save(classEntity);
 
-        // 10. ✅ AUTO-GENERATE SESSIONS
+        // 10.  AUTO-GENERATE SESSIONS
         generateInitialSessions(saved, fixedDates);
 
-        log.info("✅ Class created successfully: {} with room {} and {} sessions",
+        log.info(" Class created successfully: {} with room {} and {} sessions",
                 saved.getClassCode(),
                 fixedRoom.getRoomCode(),
                 subject.getTotalSessions());
@@ -183,16 +173,7 @@ public class ClassServiceImpl implements ClassService {
         return mapToResponse(saved);
     }
 
-    // ==================== GENERATE INITIAL SESSIONS (UPDATED) ====================
-
-    /**
-     * ✅ UPDATED: Generate sessions with categories
-     *
-     * CREATES:
-     * 1. FIXED sessions (up to 10) - Scheduled immediately with room
-     * 2. EXTRA sessions (if inPerson > 10) - Pending, no room yet
-     * 3. ELEARNING sessions - Scheduled immediately with ONLINE room
-     */
+    
     private void generateInitialSessions(ClassEntity classEntity, List<LocalDate> fixedDates) {
         log.info("📅 Generating initial sessions for class: {}", classEntity.getClassCode());
 
@@ -205,7 +186,7 @@ public class ClassServiceImpl implements ClassService {
         List<ClassSession> sessions = new ArrayList<>();
         int sessionNumber = 1;
 
-        // ===== 1. FIXED SESSIONS (up to 10) =====
+        
 
         for (LocalDate date : fixedDates) {
             ClassSession session = ClassSession.builder()
@@ -225,10 +206,10 @@ public class ClassServiceImpl implements ClassService {
             sessions.add(session);
         }
 
-        log.info("✅ Created {} FIXED sessions with room {}",
+        log.info(" Created {} FIXED sessions with room {}",
                 fixedDates.size(), classEntity.getFixedRoom().getRoomCode());
 
-        // ===== 2. EXTRA SESSIONS (pending, will be scheduled on activation) =====
+        
 
         int extraCount = inPersonSessions - fixedDates.size();
 
@@ -251,11 +232,11 @@ public class ClassServiceImpl implements ClassService {
         }
 
         if (extraCount > 0) {
-            log.info("✅ Created {} EXTRA sessions (PENDING - will be scheduled on activation)",
+            log.info(" Created {} EXTRA sessions (PENDING - will be scheduled on activation)",
                     extraCount);
         }
 
-        // ===== 3. E-LEARNING SESSIONS =====
+      
 
         if (eLearningSessions > 0 && classEntity.hasElearningSchedule()) {
             Room onlineRoom = roomService.getOnlineRoom();
@@ -286,24 +267,20 @@ public class ClassServiceImpl implements ClassService {
                 elCreated++;
             }
 
-            log.info("✅ Created {} E-LEARNING sessions with ONLINE room", elCreated);
+            log.info(" Created {} E-LEARNING sessions with ONLINE room", elCreated);
         }
 
         // Save all sessions
         sessionRepository.saveAll(sessions);
 
-        log.info("✅ Total sessions created: {} (Fixed: {}, Extra pending: {}, E-learning: {})",
+        log.info(" Total sessions created: {} (Fixed: {}, Extra pending: {}, E-learning: {})",
                 sessions.size(),
                 fixedDates.size(),
                 extraCount,
                 eLearningSessions);
     }
 
-    // ==================== HELPER METHODS ====================
-
-    /**
-     * Generate list of fixed dates (up to 10 weekly occurrences)
-     */
+   
     private List<LocalDate> generateFixedDates(
             LocalDate semesterStart,
             LocalDate semesterEnd,
@@ -321,9 +298,7 @@ public class ClassServiceImpl implements ClassService {
         return dates;
     }
 
-    /**
-     * Find first occurrence of targetDay on or after startDate
-     */
+  
     private LocalDate findFirstDayOfWeek(LocalDate startDate, DayOfWeek targetDay) {
         LocalDate current = startDate;
 
@@ -334,19 +309,7 @@ public class ClassServiceImpl implements ClassService {
         return current;
     }
 
-    /**
-     * ClassServiceImpl - PART 2 of 2
-     *
-     * Contains:
-     * - updateClass() - NOT CHANGED (still updates teacher, max students, schedule)
-     * - deleteClass() - UPDATED (auto cleanup dropped registrations)
-     * - Query methods - NOT CHANGED
-     * - mapToResponse() - UPDATED (include fixedRoom info)
-     *
-     * NOTE: Copy these methods to the same ClassServiceImpl.java from PART 1
-     */
-
-// ==================== UPDATE CLASS ====================
+    
 
     @Override
     public ClassResponse updateClass(Long id, ClassUpdateRequest request) {
@@ -358,7 +321,7 @@ public class ClassServiceImpl implements ClassService {
 
         // 2. Warn if has enrolled students
         if (classEntity.getEnrolledCount() > 0) {
-            log.warn("⚠️ Updating class {} with {} enrolled students",
+            log.warn(" Updating class {} with {} enrolled students",
                     classEntity.getClassCode(), classEntity.getEnrolledCount());
         }
 
@@ -372,12 +335,12 @@ public class ClassServiceImpl implements ClassService {
 
         ClassEntity updated = classRepository.save(classEntity);
 
-        log.info("✅ Class updated: {}", updated.getClassCode());
+        log.info(" Class updated: {}", updated.getClassCode());
 
         return mapToResponse(updated);
     }
 
-// ==================== DELETE CLASS (UPDATED) ====================
+
 
     @Override
     public void deleteClass(Long id) {
@@ -397,10 +360,10 @@ public class ClassServiceImpl implements ClassService {
             );
         }
 
-        log.info("✅ No active enrollments (field shows: {})",
+        log.info(" No active enrollments (field shows: {})",
                 classEntity.getEnrolledCount());
 
-        // ✅ Auto cleanup DROPPED registrations
+        //  Auto cleanup DROPPED registrations
         int droppedCount = courseRegistrationRepository.deleteDroppedByClassId(id);
 
         if (droppedCount > 0) {
@@ -417,7 +380,7 @@ public class ClassServiceImpl implements ClassService {
         log.info("✅ Class deleted successfully: {}", classEntity.getClassCode());
     }
 
-// ==================== QUERY METHODS (NOT CHANGED) ====================
+
 
     @Override
     @Transactional(readOnly = true)
@@ -465,7 +428,7 @@ public class ClassServiceImpl implements ClassService {
                 .map(this::mapToResponse);
     }
 
-// ==================== ENROLLMENT MANAGEMENT (NOT CHANGED) ====================
+
 
     @Override
     public void incrementEnrollment(Long classId) {
@@ -499,7 +462,6 @@ public class ClassServiceImpl implements ClassService {
         return  classRepository.count();
     }
 
-// ==================== ✅ NEW: GET ENROLLED STUDENTS (PHASE 4) ====================
 
     /**
      * Get list of students enrolled in a class (for Teacher)
@@ -510,13 +472,13 @@ public class ClassServiceImpl implements ClassService {
      * @throws ForbiddenException if teacher doesn't own this class
      * @throws ResourceNotFoundException if class not found
      * 
-     * @author ECMS Team
-     * @since 2026-01-28
+     * @author 
+     * @since 
      */
     @Override
     @Transactional(readOnly = true)
     public List<StudentEnrollmentDto> getEnrolledStudents(Long classId, Long teacherId) {
-        log.info("🔍 Fetching enrolled students for class {} by teacher {}", classId, teacherId);
+        log.info(" Fetching enrolled students for class {} by teacher {}", classId, teacherId);
         
         // 1. Verify class exists and teacher owns it
         ClassEntity classEntity = classRepository.findById(classId)
@@ -532,7 +494,7 @@ public class ClassServiceImpl implements ClassService {
         List<CourseRegistration> enrollments = courseRegistrationRepository
                 .findByClassEntity_ClassIdAndStatus(classId, RegistrationStatus.REGISTERED);
         
-        log.info("✅ Found {} enrolled students in class {}", enrollments.size(), classId);
+        log.info(" Found {} enrolled students in class {}", enrollments.size(), classId);
         
         // 3. Map to DTO
         return enrollments.stream()
@@ -587,7 +549,7 @@ public class ClassServiceImpl implements ClassService {
                 .build();
     }
 
-// ==================== MAPPER (UPDATED) ====================
+
 
     private ClassResponse mapToResponse(ClassEntity entity) {
         Subject subject = entity.getSubject();
@@ -634,9 +596,9 @@ public class ClassServiceImpl implements ClassService {
                 .dayOfWeekDisplay(getDayOfWeekDisplay(entity.getDayOfWeek()))
                 .timeSlot(entity.getTimeSlot().toString())
                 .timeSlotDisplay(entity.getTimeSlot().getFullDisplay())
-                .fixedRoom(fixedRoom != null ? fixedRoom.getRoomCode() : null)  // ← NEW
-                .fixedRoomName(fixedRoom != null ? fixedRoom.getDisplayName() : null)  // ← NEW
-                .fixedRoomCapacity(fixedRoom != null ? fixedRoom.getCapacity() : null)  // ← NEW
+                .fixedRoom(fixedRoom != null ? fixedRoom.getRoomCode() : null)  
+                .fixedRoomName(fixedRoom != null ? fixedRoom.getDisplayName() : null)  
+                .fixedRoomCapacity(fixedRoom != null ? fixedRoom.getCapacity() : null)  
                 // E-learning Schedule (optional)
                 .elearningDayOfWeek(entity.getElearningDayOfWeek() != null ?
                         entity.getElearningDayOfWeek().toString() : null)

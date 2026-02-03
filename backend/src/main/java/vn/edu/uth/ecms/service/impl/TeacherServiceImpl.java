@@ -323,12 +323,11 @@ public class TeacherServiceImpl implements TeacherService {
                 .collect(Collectors.toList());
     }
 
-    // ==================== PROFILE METHODS (NEW) ====================
-
+    
     @Override
     @Transactional(readOnly = true)
     public TeacherResponse getByCitizenId(String citizenId) {
-        log.info("📋 [TeacherService] Getting teacher by citizenId: {}", citizenId);
+        log.info(" [TeacherService] Getting teacher by citizenId: {}", citizenId);
         
         Teacher teacher = teacherRepository.findByCitizenId(citizenId)
                 .orElseThrow(() -> new NotFoundException("Teacher not found with citizenId: " + citizenId));
@@ -339,7 +338,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public TeacherResponse updateProfile(String citizenId, UpdateTeacherProfileRequest request) {
-        log.info("✏️ [TeacherService] Updating profile for citizenId: {}", citizenId);
+        log.info(" [TeacherService] Updating profile for citizenId: {}", citizenId);
         
         Teacher teacher = teacherRepository.findByCitizenId(citizenId)
                 .orElseThrow(() -> new NotFoundException("Teacher not found with citizenId: " + citizenId));
@@ -356,7 +355,7 @@ public class TeacherServiceImpl implements TeacherService {
         }
         
         Teacher updated = teacherRepository.save(teacher);
-        log.info("✅ [TeacherService] Profile updated for: {}", updated.getFullName());
+        log.info(" [TeacherService] Profile updated for: {}", updated.getFullName());
         
         return mapToResponse(updated);
     }
@@ -364,7 +363,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public void changePassword(String citizenId, ChangePasswordRequest request) {
-        log.info("🔒 [TeacherService] Changing password for citizenId: {}", citizenId);
+        log.info(" [TeacherService] Changing password for citizenId: {}", citizenId);
         
         Teacher teacher = teacherRepository.findByCitizenId(citizenId)
                 .orElseThrow(() -> new NotFoundException("Teacher not found with citizenId: " + citizenId));
@@ -384,7 +383,7 @@ public class TeacherServiceImpl implements TeacherService {
         teacher.setIsFirstLogin(false); // Mark as not first login anymore
         
         teacherRepository.save(teacher);
-        log.info("✅ [TeacherService] Password changed successfully for: {}", teacher.getFullName());
+        log.info(" [TeacherService] Password changed successfully for: {}", teacher.getFullName());
     }
     @Override
     @Transactional

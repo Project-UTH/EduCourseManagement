@@ -7,10 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO for creating a new Major
- * Phase 3 Sprint 3.1
- */
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

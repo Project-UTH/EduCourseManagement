@@ -15,10 +15,8 @@ import java.util.List;
 /**
  * HomeworkService Interface
  * 
- * Service layer for homework management
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author
+ * @since
  */
 public interface HomeworkService {
     

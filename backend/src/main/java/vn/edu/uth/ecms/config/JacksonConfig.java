@@ -12,14 +12,8 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Jackson Configuration
- * 
- * Ensures proper serialization of Java 8 date/time types
- * 
- * ✅ CRITICAL: LocalDate always serializes as "yyyy-MM-dd" (ISO format)
- * ✅ NO timezone issues in frontend
- * 
- * @author ECMS Team
- * @since 2026-01-15
+ * @author 
+ * @since 
  */
 @Configuration
 public class JacksonConfig {

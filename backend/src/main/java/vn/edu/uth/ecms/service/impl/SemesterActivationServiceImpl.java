@@ -27,7 +27,7 @@ public class SemesterActivationServiceImpl implements SemesterActivationService 
 
     @Override
     public void startSemester(Long semesterId) {
-        log.info("🚀 Starting semester ID: {}", semesterId);
+        log.info(" Starting semester ID: {}", semesterId);
         
         // Get semester
         Semester semester = semesterRepository.findById(semesterId)
@@ -40,14 +40,14 @@ public class SemesterActivationServiceImpl implements SemesterActivationService 
             );
         }
         
-        log.info("📅 Semester: {} ({} to {})", 
+        log.info(" Semester: {} ({} to {})", 
                 semester.getSemesterCode(), 
                 semester.getStartDate(), 
                 semester.getEndDate());
         
         // Get all classes in this semester
         List<ClassEntity> classes = classRepository.findBySemester_SemesterId(semesterId);
-        log.info("📚 Found {} classes in semester", classes.size());
+        log.info(" Found {} classes in semester", classes.size());
         
         int totalGenerated = 0;
         
@@ -61,29 +61,27 @@ public class SemesterActivationServiceImpl implements SemesterActivationService 
             log.info("  ✓ Generated {} sessions", generated);
         }
         
-        // Update semester status to ACTIVE
+      
         semester.setStatus(SemesterStatus.ACTIVE);
         semesterRepository.save(semester);
         
-        log.info("✅ Semester started successfully. Generated {} schedules. Status: ACTIVE", 
+        log.info(" Semester started successfully. Generated {} schedules. Status: ACTIVE", 
                 totalGenerated);
     }
     
-    /**
-     * Generate schedules for PENDING sessions of a class
-     */
+   
     private int generatePendingSessions(ClassEntity classEntity, Semester semester) {
         
-        // Get PENDING sessions (is_pending = true)
+        
         List<ClassSession> pendingSessions = sessionRepository
                 .findByClassAndPending(classEntity.getClassId(), true);
         
         if (pendingSessions.isEmpty()) {
-            log.info("  ℹ️ No pending sessions for class {}", classEntity.getClassCode());
+            log.info(" No pending sessions for class {}", classEntity.getClassCode());
             return 0;
         }
         
-        log.info("  📝 Found {} pending sessions", pendingSessions.size());
+        log.info(" Found {} pending sessions", pendingSessions.size());
         
         // Get occupied slots (from FIXED sessions)
         Set<String> occupiedSlots = getOccupiedSlots(classEntity.getClassId());
@@ -97,7 +95,7 @@ public class SemesterActivationServiceImpl implements SemesterActivationService 
                 DayOfWeek.FRIDAY
         );
         availableDays = new ArrayList<>(availableDays);
-        availableDays.remove(classEntity.getDayOfWeek()); // Exclude fixed day
+        availableDays.remove(classEntity.getDayOfWeek());
         
         // Available time slots
         List<TimeSlot> availableSlots = Arrays.asList(
@@ -169,7 +167,7 @@ public class SemesterActivationServiceImpl implements SemesterActivationService 
             }
             
             if (!assigned) {
-                log.warn("  ⚠️ Could not assign schedule for session {}", 
+                log.warn("   Could not assign schedule for session {}", 
                         session.getSessionNumber());
             }
         }

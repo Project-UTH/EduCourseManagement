@@ -147,20 +147,24 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
           <div className="dm-group">
             <label className="dm-label">Mã Khoa <span className="required">*</span></label>
             <input
-              type="text"
-              name="departmentCode"
-              value={formData.departmentCode}
-              onChange={(e) => {
-                 handleChange({
-                  ...e,
-                  target: { ...e.target, value: e.target.value.toUpperCase() }
-                });
-              }}
-              placeholder="VD: IT, MATH, ENG"
-              className={`dm-input ${errors.departmentCode ? 'error' : ''}`}
-              maxLength={10}
-              disabled={loading || isEditMode}
-            />
+  type="text"
+  name="departmentCode"
+  value={formData.departmentCode}
+  onChange={(e) => {
+    const uppercasedValue = e.target.value.toUpperCase();
+    const syntheticEvent = {
+      target: {
+        name: 'departmentCode',
+        value: uppercasedValue
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    handleChange(syntheticEvent);
+  }}
+  placeholder="VD: IT, MATH, ENG"
+  className={`dm-input ${errors.departmentCode ? 'error' : ''}`}
+  maxLength={10}
+  disabled={loading || isEditMode}
+/>
             {errors.departmentCode && <span className="dm-error-msg">{errors.departmentCode}</span>}
           </div>
 

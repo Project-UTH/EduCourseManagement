@@ -11,11 +11,8 @@ import java.util.Optional;
 
 /**
  * SubmissionFileRepository
- * 
- * Repository for SubmissionFile entity
- * 
- * @author Phase 5 - Student Features
- * @since 2026-01-13
+ * @author 
+ * @since 
  */
 @Repository
 public interface SubmissionFileRepository extends JpaRepository<SubmissionFile, Long> {

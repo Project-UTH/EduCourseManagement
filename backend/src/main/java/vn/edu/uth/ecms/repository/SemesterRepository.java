@@ -16,10 +16,6 @@ import java.util.Optional;
 
 /**
  * Repository for Semester entity
- *
- * CRITICAL QUERIES:
- * - findByStatus(ACTIVE) - Get current active semester (max 1)
- * - findActiveWithOpenRegistration() - Get semester that's accepting registrations
  */
 @Repository
 public interface SemesterRepository extends JpaRepository<Semester, Long> {
@@ -40,26 +36,9 @@ public interface SemesterRepository extends JpaRepository<Semester, Long> {
      */
     Optional<Semester> findByStatus(SemesterStatus status);
 
-    /**
-     * Find all semesters by status
-     */
 
-
-    /**
-     * Find all semesters ordered by start date descending
-     */
     Page<Semester> findAllByOrderByStartDateDesc(Pageable pageable);
 
-    /**
-     * Get current ACTIVE semester with OPEN registration
-     *
-     * Requirements:
-     * 1. status = ACTIVE
-     * 2. registrationEnabled = true
-     * 3. Current date between registrationStartDate and registrationEndDate
-     *
-     * This is the semester students can register for classes
-     */
     @Query("SELECT s FROM Semester s WHERE " +
             "s.status = 'ACTIVE' AND " +
             "s.registrationEnabled = true AND " +

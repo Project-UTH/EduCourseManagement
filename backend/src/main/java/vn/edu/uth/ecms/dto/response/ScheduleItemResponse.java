@@ -34,11 +34,10 @@ public class ScheduleItemResponse {
     private String timeSlotDisplay;       // "Ca 1 (06:45 - 09:15)"
     private String room;                  // "C209 - CS1"
     
-    // Session info
     private Long sessionId;
     private Integer sessionNumber;        // Buổi thứ mấy (1-15)
     private String sessionType;           // "IN_PERSON" hoặc "E_LEARNING"
     
-    // Additional
+    
     private String campus;                // "P.Thanh Mỹ Tây, TP.HCM" hoặc "LMS"
 }

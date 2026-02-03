@@ -11,7 +11,6 @@ import java.util.Optional;
 
 /**
  * Repository for Subject entity
- * Phase 3 Sprint 3.2
  */
 @Repository
 public interface SubjectRepository extends JpaRepository<Subject, Long> {

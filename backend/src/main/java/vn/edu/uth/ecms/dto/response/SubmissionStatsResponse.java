@@ -11,12 +11,8 @@ import java.util.List;
 
 /**
  * SubmissionStatsResponse DTO
- * 
- * Aggregated statistics for homework submissions
- * Used for teacher analytics and reports
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author
+ * @since 
  */
 @Data
 @Builder
@@ -50,10 +46,7 @@ public class SubmissionStatsResponse {
      */
     private List<TopSubmission> topSubmissions;
     
-    // ========================================
-    // NESTED CLASSES
-    // ========================================
-    
+   
     @Data
     @Builder
     @NoArgsConstructor

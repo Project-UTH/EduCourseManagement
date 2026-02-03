@@ -23,8 +23,8 @@ import java.util.List;
  * 
  * REST API endpoints for teacher grade management
  * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @RestController
 @RequestMapping("/api/teacher/grades")
@@ -35,7 +35,6 @@ public class TeacherGradeController {
     
     private final GradeService gradeService;
     
-    // ==================== CREATE/UPDATE GRADE ====================
     
     /**
      * Create or update grade
@@ -73,7 +72,7 @@ public class TeacherGradeController {
         return ResponseEntity.ok(responses);
     }
     
-    // ==================== GET GRADES ====================
+    
     
     /**
      * Get grade for a student in a class
@@ -122,7 +121,7 @@ public class TeacherGradeController {
         return ResponseEntity.ok(response);
     }
     
-    // ==================== CALCULATE OPERATIONS ====================
+    
     
     /**
      * Manually recalculate regular score for a student
@@ -152,7 +151,7 @@ public class TeacherGradeController {
         return ResponseEntity.ok(gpa);
     }
     
-    // ==================== STATISTICS ====================
+ 
     
     /**
      * Get class grade statistics
@@ -181,7 +180,7 @@ public class TeacherGradeController {
         return ResponseEntity.ok(rank);
     }
     
-    // ==================== UTILITY ====================
+    
     
     /**
      * Initialize grades for all students in class

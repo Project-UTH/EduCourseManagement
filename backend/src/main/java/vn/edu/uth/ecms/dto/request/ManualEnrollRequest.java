@@ -28,5 +28,5 @@ public class ManualEnrollRequest {
     @Size(min = 0, max = 500, message = "Reason must be between 10 and 500 characters")
     private String reason;  // "Học bù", "Chuyển lớp", "Đăng ký muộn", etc.
 
-    private String note;  // Optional additional note
+    private String note;  
 }

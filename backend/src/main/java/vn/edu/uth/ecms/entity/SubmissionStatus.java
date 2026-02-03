@@ -2,31 +2,18 @@ package vn.edu.uth.ecms.entity;
 
 /**
  * SubmissionStatus Enum
- * 
- * Defines the status of a homework submission
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 public enum SubmissionStatus {
     
-    /**
-     * Submitted on time - Đã nộp đúng hạn
-     * Student submitted before or at deadline
-     */
+ 
     SUBMITTED("Đã nộp", "Submitted on time", true),
     
-    /**
-     * Graded by teacher - Đã chấm điểm
-     * Teacher has reviewed and assigned a score
-     */
+
     GRADED("Đã chấm", "Graded by teacher", true),
     
-    /**
-     * Submitted late - Nộp trễ hạn
-     * Student submitted after deadline
-     * May result in score penalty
-     */
+
     LATE("Nộp trễ", "Submitted late (after deadline)", false);
     
     private final String displayName;
@@ -34,8 +21,6 @@ public enum SubmissionStatus {
     private final boolean onTime;
     
     /**
-     * Constructor
-     * 
      * @param displayName Vietnamese display name
      * @param description English description
      * @param onTime Whether submission was on time
@@ -101,9 +86,6 @@ public enum SubmissionStatus {
     }
     
     /**
-     * Check if submission needs grading
-     * SUBMITTED and LATE need grading
-     * 
      * @return true if not yet graded
      */
     public boolean needsGrading() {
@@ -111,9 +93,6 @@ public enum SubmissionStatus {
     }
     
     /**
-     * Check if submission can be edited by student
-     * Only ungraded submissions can be edited
-     * 
      * @return true if student can still edit
      */
     public boolean canEdit() {
@@ -140,9 +119,9 @@ public enum SubmissionStatus {
      */
     public String getColorCode() {
         return switch (this) {
-            case SUBMITTED -> "#1890ff"; // Blue
-            case GRADED -> "#52c41a";    // Green
-            case LATE -> "#faad14";      // Orange/Yellow
+            case SUBMITTED -> "#1890ff"; 
+            case GRADED -> "#52c41a";    
+            case LATE -> "#faad14";     
         };
     }
     

@@ -11,8 +11,6 @@ import java.util.List;
 
 /**
  * Service interface for student enrollment management
- *
- * ✅ FIXED: Removed duplicate createStudentSchedule method
  */
 public interface EnrollmentService {
 
@@ -59,9 +57,6 @@ public interface EnrollmentService {
     long countStudentsInClass(Long classId);
 
     /**
-     * ✅ FIXED: Single method with 3 parameters
-     * Create student schedule entries when enrolling
-     *
      * @param student Student entity
      * @param classEntity Class entity
      * @param semester Semester entity

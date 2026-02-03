@@ -32,10 +32,7 @@
 
     /**
      * HomeworkServiceImpl
-     * 
-     * Implementation of homework management business logic
-     * 
-     * @author Phase 4 - Teacher Fe
+     * @author 
      */
     @Service
     @RequiredArgsConstructor
@@ -49,7 +46,7 @@
         private final TeacherRepository teacherRepository;
         
         
-        // ==================== CREATE HOMEWORK ====================
+       
         
         @Override
         public HomeworkResponse createHomework(HomeworkRequest request, Long teacherId) {
@@ -92,7 +89,7 @@
             return HomeworkResponse.fromEntity(savedHomework);
         }
         
-        // ==================== UPDATE HOMEWORK ====================
+       
         
         @Override
         public HomeworkResponse updateHomework(Long homeworkId, HomeworkRequest request, Long teacherId) {
@@ -132,7 +129,7 @@
             return HomeworkResponse.fromEntity(updatedHomework);
         }
         
-        // ==================== DELETE HOMEWORK ====================
+       
         
         @Override
         public void deleteHomework(Long homeworkId, Long teacherId) {
@@ -158,7 +155,7 @@
             log.info("Deleted homework ID: {}", homeworkId);
         }
         
-        // ==================== GET HOMEWORK ====================
+       
         
         @Override
         @Transactional(readOnly = true)
@@ -250,7 +247,7 @@
             return homeworks.map(HomeworkResponse::fromEntityWithStats);
         }
         
-        // ==================== GET STATISTICS ====================
+       
         
         @Override
         @Transactional(readOnly = true)
@@ -261,7 +258,7 @@
             
             // Get class info
             ClassEntity classEntity = homework.getClassEntity();
-            int totalStudents = (int) submissionRepository.countByHomework_HomeworkId(homeworkId); // TODO: Get from course_registration
+            int totalStudents = (int) submissionRepository.countByHomework_HomeworkId(homeworkId); 
             
             // Get submission counts
             int totalSubmissions = homework.getSubmissionCount();
@@ -311,11 +308,7 @@
                 .build();
         }
         
-        // ==================== HELPER METHODS ====================
-        
-        /**
-         * Validate homework type constraints for creation
-         */
+     
         private void validateHomeworkType(Long classId, HomeworkType type) {
             if (type == HomeworkType.MIDTERM) {
                 if (homeworkRepository.hasMidterm(classId)) {
@@ -394,7 +387,7 @@
             
             // Map to response DTOs
             return homeworks.stream()
-                    .map(this::mapToResponse)  // Assuming you have this helper method
+                    .map(this::mapToResponse)  
                     .toList();
                     
         } catch (Exception e) {
@@ -403,19 +396,14 @@
         }
     }
 
-    // ==================== HELPER METHOD (nếu chưa có) ====================
 
-    /**
-     * Map Homework entity to HomeworkResponse DTO
-     * Nếu class HomeworkServiceImpl ĐÃ CÓ method này rồi, BỎ QUA phần này!
-     */
     private HomeworkResponse mapToResponse(Homework homework) {
         HomeworkResponse response = new HomeworkResponse();
         
         response.setHomeworkId(homework.getHomeworkId());
         response.setTitle(homework.getTitle());
         response.setDescription(homework.getDescription());
-        response.setHomeworkType(homework.getHomeworkType());  // ← ĐÚNG (không cần .name())
+        response.setHomeworkType(homework.getHomeworkType());  
         response.setDeadline(homework.getDeadline());
         response.setMaxScore(homework.getMaxScore());
         
@@ -458,7 +446,7 @@
     Optional<HomeworkSubmission> submission = submissionRepository
     .findByHomework_HomeworkIdAndStudent_StudentCode(homeworkId, studentCode);
 
-// ✅ FIX: Force load submissionFiles before mapping
+
 if (submission.isPresent()) {
     HomeworkSubmission sub = submission.get();
     
@@ -468,17 +456,17 @@ if (submission.isPresent()) {
         
         if (files != null) {
             int size = files.size(); // Force Hibernate to load
-            log.info("🔍 [DEBUG] Loaded {} files for submission {}", size, sub.getSubmissionId());
+            log.info(" [DEBUG] Loaded {} files for submission {}", size, sub.getSubmissionId());
             
             // Log each file
             for (SubmissionFile f : files) {
                 log.info("   - File {}: {} ({})", f.getFileId(), f.getOriginalFilename(), f.getFormattedFileSize());
             }
         } else {
-            log.warn("⚠️ [DEBUG] submissionFiles is NULL");
+            log.warn(" [DEBUG] submissionFiles is NULL");
         }
     } catch (Exception e) {
-        log.error("❌ [DEBUG] Failed to load files: {}", e.getMessage(), e);
+        log.error(" [DEBUG] Failed to load files: {}", e.getMessage(), e);
     }
 }
        if (submission.isPresent()) {
@@ -487,7 +475,7 @@ if (submission.isPresent()) {
     
     // Ensure files are loaded before mapping
     if (sub.getSubmissionFiles() != null) {
-        sub.getSubmissionFiles().size(); // Force load
+        sub.getSubmissionFiles().size(); 
     }
     
     response.setSubmission(mapToSubmissionDto(sub));
@@ -542,11 +530,11 @@ if (submission.isPresent()) {
     dto.setSubmissionId(submission.getSubmissionId());
     dto.setSubmissionText(submission.getSubmissionText());
     
-    // ✅ Legacy fields (deprecated)
+ 
     dto.setSubmissionFileUrl(submission.getSubmissionFileUrl());
     dto.setSubmissionFileName(submission.getSubmissionFileName());
     
-    // ✅ NEW: Map multiple files
+ 
     if (submission.getSubmissionFiles() != null && !submission.getSubmissionFiles().isEmpty()) {
         List<vn.edu.uth.ecms.dto.response.SubmissionFileResponse> fileResponses = 
             submission.getSubmissionFiles().stream()
@@ -554,7 +542,7 @@ if (submission.isPresent()) {
                 .collect(Collectors.toList());
         dto.setSubmissionFiles(fileResponses);
         
-        log.info("🔍 [DEBUG] Mapped {} files to DTO", fileResponses.size());
+        log.info(" [DEBUG] Mapped {} files to DTO", fileResponses.size());
     }
     
     dto.setSubmissionDate(submission.getSubmissionDate());
@@ -605,7 +593,7 @@ public List<HomeworkWithSubmissionResponse> getHomeworksByClassWithSubmissionSta
                     HomeworkSubmission sub = submission.get();
                     try {
                         if (sub.getSubmissionFiles() != null) {
-                            sub.getSubmissionFiles().size(); // Trigger lazy load
+                            sub.getSubmissionFiles().size(); 
                         }
                     } catch (Exception e) {
                         log.warn("Failed to load files for submission {}", sub.getSubmissionId());

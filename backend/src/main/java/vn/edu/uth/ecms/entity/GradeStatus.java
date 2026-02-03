@@ -5,8 +5,8 @@ package vn.edu.uth.ecms.entity;
  * 
  * Defines the status of a student's grade in a class
  * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since
  */
 public enum GradeStatus {
     
@@ -52,8 +52,6 @@ public enum GradeStatus {
     }
     
     /**
-     * Get Vietnamese display name
-     * 
      * @return Display name in Vietnamese
      */
     public String getDisplayName() {
@@ -61,8 +59,6 @@ public enum GradeStatus {
     }
     
     /**
-     * Get English description
-     * 
      * @return Description in English
      */
     public String getDescription() {
@@ -70,8 +66,6 @@ public enum GradeStatus {
     }
     
     /**
-     * Check if this status means student passed
-     * 
      * @return true if PASSED
      */
     public boolean isPassed() {
@@ -162,9 +156,9 @@ public enum GradeStatus {
      */
     public String getColorCode() {
         return switch (this) {
-            case PASSED -> "#52c41a";    // Green
-            case FAILED -> "#f5222d";    // Red
-            case IN_PROGRESS -> "#1890ff"; // Blue
+            case PASSED -> "#52c41a";    
+            case FAILED -> "#f5222d";   
+            case IN_PROGRESS -> "#1890ff"; 
         };
     }
     

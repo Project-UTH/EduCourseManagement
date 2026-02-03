@@ -26,43 +26,7 @@ import vn.edu.uth.ecms.exception.NotFoundException;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * ✨ ENHANCED RoomController with Real-time Status
- *
- * ENDPOINTS: 20 total
- *
- * CORE (5):
- * - GET all rooms with status
- * - GET room by ID with status
- * - GET rooms by current status
- * - Search rooms
- * - Filter rooms
- *
- * FILTERS (5):
- * - By building
- * - By floor
- * - By type
- * - By admin status
- * - Advanced filter
- *
- * SCHEDULE (3):
- * - Get room schedule (semester)
- * - Get room schedule (today)
- * - Get room schedule (specific date)
- *
- * STATISTICS (2):
- * - Get room statistics
- * - Get utilization
- *
- * LOOKUPS (2):
- * - Get all buildings
- * - Get floors by building
- *
- * STATUS (3):
- * - Check if room in use
- * - Get current session
- * - Calculate current status
- */
+
 @RestController
 @RequestMapping("/api/admin/rooms")
 @RequiredArgsConstructor
@@ -72,19 +36,10 @@ public class RoomController {
 
     private final RoomService roomService;
 
-    // ==================== CORE ENDPOINTS ====================
-
     /**
      * 1. Get all rooms with real-time status (paginated)
      *
      * GET /api/admin/rooms?semesterId=1&page=0&size=10&sortBy=roomCode&sortDir=asc
-     *
-     * Response includes:
-     * - Basic room info
-     * - Admin status (ACTIVE/INACTIVE)
-     * - Real-time status (IN_USE/AVAILABLE/INACTIVE)
-     * - Current session info (if in use)
-     * - Usage statistics
      */
     @GetMapping
     public ResponseEntity<ApiResponse<Page<RoomResponse>>> getAllRooms(
@@ -136,11 +91,6 @@ public class RoomController {
      * 3. Get rooms by current real-time status
      *
      * GET /api/admin/rooms/by-status?status=IN_USE&semesterId=1&page=0&size=10
-     *
-     * Status options:
-     * - IN_USE: Rooms with sessions happening RIGHT NOW
-     * - AVAILABLE: Rooms that are free RIGHT NOW
-     * - INACTIVE: Rooms disabled by admin
      */
     @GetMapping("/by-status")
     public ResponseEntity<ApiResponse<Page<RoomResponse>>> getRoomsByStatus(
@@ -330,14 +280,11 @@ public class RoomController {
         );
     }
 
-    // ==================== SCHEDULE ENDPOINTS ====================
 
     /**
      * 10. Get room schedule for semester
      *
      * GET /api/admin/rooms/{id}/schedule?semesterId=1
-     *
-     * Shows all sessions using this room in the semester
      */
     @GetMapping("/{id}/schedule")
     public ResponseEntity<ApiResponse<List<RoomScheduleResponse>>> getRoomSchedule(
@@ -399,7 +346,6 @@ public class RoomController {
         );
     }
 
-    // ==================== STATISTICS ENDPOINTS ====================
 
     /**
      * 13. Get room statistics
@@ -442,7 +388,6 @@ public class RoomController {
         );
     }
 
-    // ==================== LOOKUP ENDPOINTS ====================
 
     /**
      * 15. Get all buildings
@@ -485,7 +430,6 @@ public class RoomController {
         );
     }
 
-    // ==================== REAL-TIME STATUS ENDPOINTS ====================
 
     /**
      * 17. Check if room is currently in use
@@ -595,7 +539,7 @@ public class RoomController {
             // Save using service
             Room saved = roomService.createRoom(room);
 
-            log.info("✅ Room created: {}", saved.getRoomCode());
+            log.info(" Room created: {}", saved.getRoomCode());
 
             // Return with status
             RoomResponse response = roomService.getRoomWithStatus(saved.getRoomId(), semesterId);
@@ -605,7 +549,7 @@ public class RoomController {
                     .body(ApiResponse.success("Room created successfully", response));
 
         } catch (Exception e) {
-            log.error("❌ Error creating room: {}", e.getMessage());
+            log.error(" Error creating room: {}", e.getMessage());
             return ResponseEntity
                     .badRequest()
                     .body(ApiResponse.<RoomResponse>builder()
@@ -641,7 +585,7 @@ public class RoomController {
 
             Room updated = roomService.updateRoom(room);
 
-            log.info("✅ Room updated: {}", updated.getRoomCode());
+            log.info(" Room updated: {}", updated.getRoomCode());
 
             // Return with status
             RoomResponse response = roomService.getRoomWithStatus(updated.getRoomId(), semesterId);
@@ -672,8 +616,6 @@ public class RoomController {
      * 22. DELETE: Delete a room
      *
      * DELETE /api/admin/rooms/{id}
-     *
-     * NOTE: Cannot delete room if it has sessions
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteRoom(
@@ -700,7 +642,7 @@ public class RoomController {
 
             roomService.deleteRoom(room.getRoomId());
 
-            log.info("✅ Room deleted: {}", room.getRoomCode());
+            log.info(" Room deleted: {}", room.getRoomCode());
 
             return ResponseEntity.ok(
                     ApiResponse.<Void>builder()
@@ -717,7 +659,7 @@ public class RoomController {
                             .message(e.getMessage())
                             .build());
         } catch (Exception e) {
-            log.error("❌ Error deleting room: {}", e.getMessage());
+            log.error(" Error deleting room: {}", e.getMessage());
             return ResponseEntity
                     .badRequest()
                     .body(ApiResponse.<Void>builder()

@@ -10,11 +10,6 @@ import java.util.List;
 
 /**
  * Request DTO for rescheduling multiple sessions at once
- *
- * USE CASES:
- * - Move entire week to different time
- * - Change room for multiple sessions
- * - Reschedule all sessions of a class
  */
 @Data
 @NoArgsConstructor

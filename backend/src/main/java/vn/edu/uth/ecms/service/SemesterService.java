@@ -9,25 +9,10 @@ import vn.edu.uth.ecms.dto.response.SemesterResponse;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Service interface for Semester operations
- *
- * CRITICAL BUSINESS RULES:
- * 1. Only ONE semester can be ACTIVE at any time
- * 2. When activating semester A, automatically complete current ACTIVE semester
- * 3. Registration period must be within semester dates
- * 4. Cannot delete semester with classes
- * 5. Cannot edit COMPLETED semesters
- */
+
 public interface SemesterService {
 
 
-    // ==================== CRUD OPERATIONS ====================
-
-    /**
-     * Create a new semester
-     * Validates dates and prevents overlaps
-     */
     SemesterResponse createSemester(SemesterCreateRequest request);
 
     /**
@@ -59,18 +44,7 @@ public interface SemesterService {
      */
     Page<SemesterResponse> searchSemesters(String keyword, Pageable pageable);
 
-    // ==================== STATUS MANAGEMENT ====================
-
-    /**
-     * Activate a semester
-     *
-     * CRITICAL LOGIC:
-     * 1. Find current ACTIVE semester (if exists)
-     * 2. Set current ACTIVE to COMPLETED
-     * 3. Set target semester to ACTIVE
-     *
-     * Only ONE semester can be ACTIVE
-     */
+   
     SemesterResponse activateSemester(Long id);
 
     /**
@@ -86,28 +60,12 @@ public interface SemesterService {
      */
     SemesterResponse getCurrentSemester();
 
-    /**
-     * Get semester accepting registrations
-     *
-     * Returns semester where:
-     * 1. status = ACTIVE
-     * 2. registrationEnabled = true
-     * 3. Current date within registration period
-     *
-     * This is what students see in registration page
-     */
+
     SemesterResponse getRegistrationOpenSemester();
 
-    // ==================== REGISTRATION CONTROL ====================
+ 
 
-    /**
-     * Enable registration for a semester
-     *
-     * Validation:
-     * - Semester must be ACTIVE
-     * - Registration period must be set
-     * - Registration dates must be valid
-     */
+
     SemesterResponse enableRegistration(Long id);
 
     /**
@@ -115,13 +73,7 @@ public interface SemesterService {
      */
     SemesterResponse disableRegistration(Long id);
 
-    /**
-     * Update registration period
-     *
-     * Validation:
-     * - Start date before end date
-     * - End date before or on semester start date
-     */
+
     SemesterResponse updateRegistrationPeriod(
             Long id,
             LocalDate registrationStartDate,
@@ -133,13 +85,7 @@ public interface SemesterService {
      */
     boolean isRegistrationOpen(Long semesterId);
 
-    // ==================== VALIDATION ====================
-
-    /**
-     * Validate semester dates
-     * - End date after start date
-     * - Duration around 10 weeks (60-80 days recommended)
-     */
+   
     void validateSemesterDates(LocalDate startDate, LocalDate endDate);
 
     /**
