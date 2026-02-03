@@ -12,12 +12,8 @@ import java.util.Map;
 
 /**
  * HomeworkStatsResponse DTO
- * 
- * Statistics and analytics for homework
- * Used for teacher dashboard and reports
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Data
 @Builder
@@ -66,13 +62,6 @@ public class HomeworkStatsResponse {
      */
     private LateStats lateStats;
     
-    // ========================================
-    // NESTED CLASSES
-    // ========================================
-    
-    /**
-     * Submission statistics
-     */
     @Data
     @Builder
     @NoArgsConstructor
@@ -82,13 +71,11 @@ public class HomeworkStatsResponse {
         private Integer gradedSubmissions;
         private Integer ungradedSubmissions;
         private Integer notSubmitted;
-        private Double submissionRate;      // Percentage submitted
-        private Double gradingCompletion;   // Percentage graded
+        private Double submissionRate;      
+        private Double gradingCompletion;   
     }
     
-    /**
-     * Score statistics
-     */
+   
     @Data
     @Builder
     @NoArgsConstructor
@@ -99,13 +86,10 @@ public class HomeworkStatsResponse {
         private BigDecimal highestScore;
         private BigDecimal lowestScore;
         private BigDecimal standardDeviation;
-        private Double passRate;            // Percentage >= 4.0
+        private Double passRate;            
     }
     
-    /**
-     * Score distribution
-     * Count of students in each score range
-     */
+ 
     @Data
     @Builder
     @NoArgsConstructor
@@ -119,9 +103,7 @@ public class HomeworkStatsResponse {
         private Integer range_8_9;      // B+, A (8.0-8.9)
         private Integer range_9_10;     // A (9.0-10.0)
         
-        /**
-         * Get distribution as list for charts
-         */
+     
         public List<RangeCount> toList() {
             return List.of(
                 new RangeCount("0-4 (F)", range_0_4),
@@ -135,9 +117,7 @@ public class HomeworkStatsResponse {
         }
     }
     
-    /**
-     * Range count for distribution
-     */
+    
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -146,9 +126,7 @@ public class HomeworkStatsResponse {
         private Integer count;
     }
     
-    /**
-     * Late submission statistics
-     */
+   
     @Data
     @Builder
     @NoArgsConstructor
@@ -161,13 +139,7 @@ public class HomeworkStatsResponse {
         private String averageLateDuration; // Human-readable
     }
     
-    // ========================================
-    // BUILDER METHODS
-    // ========================================
-    
-    /**
-     * Create SubmissionStats
-     */
+   
     public static SubmissionStats buildSubmissionStats(
         int totalStudents,
         int totalSubmissions,
@@ -190,9 +162,7 @@ public class HomeworkStatsResponse {
             .build();
     }
     
-    /**
-     * Create ScoreStats
-     */
+  
     public static ScoreStats buildScoreStats(
         BigDecimal average,
         BigDecimal median,
@@ -214,10 +184,7 @@ public class HomeworkStatsResponse {
             .passRate(Math.round(passRate * 100.0) / 100.0)
             .build();
     }
-    
-    /**
-     * Create ScoreDistribution from counts map
-     */
+   
     public static ScoreDistribution buildScoreDistribution(Map<String, Integer> counts) {
         return ScoreDistribution.builder()
             .range_0_4(counts.getOrDefault("0-4", 0))
@@ -230,9 +197,7 @@ public class HomeworkStatsResponse {
             .build();
     }
     
-    /**
-     * Create LateStats
-     */
+  
     public static LateStats buildLateStats(
         int totalLate,
         int totalSubmissions,

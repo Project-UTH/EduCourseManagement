@@ -181,14 +181,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    /**
-     * Handle ConflictException (409 Conflict)
-     *
-     * Thrown when:
-     * - Teacher schedule conflict
-     * - Room conflict
-     * - Session reschedule conflict
-     */
+  
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex) {
         log.error("Conflict: {}", ex.getMessage());

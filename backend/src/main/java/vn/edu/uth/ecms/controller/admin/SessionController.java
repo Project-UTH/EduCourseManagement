@@ -14,21 +14,7 @@ import vn.edu.uth.ecms.service.SessionService;
 
 import java.util.List;
 
-/**
- * SessionController - Admin session management
- *
- * ENDPOINTS:
- * - PUT    /api/admin/sessions/{id}/reschedule       - Reschedule single session
- * - PUT    /api/admin/sessions/batch-reschedule      - Reschedule multiple sessions
- * - PUT    /api/admin/sessions/{id}/reset            - Reset to original schedule
- * - PUT    /api/admin/sessions/{id}/complete         - Mark as completed
- * - PUT    /api/admin/sessions/{id}/cancel           - Mark as cancelled
- * - GET    /api/admin/sessions/{id}                  - Get session by ID
- * - GET    /api/admin/sessions/class/{classId}       - Get all sessions for class
- * - GET    /api/admin/sessions/class/{classId}/in-person    - Get in-person sessions
- * - GET    /api/admin/sessions/class/{classId}/e-learning   - Get e-learning sessions
- * - GET    /api/admin/sessions/class/{classId}/rescheduled  - Get rescheduled sessions
- */
+
 @RestController
 @RequestMapping("/api/admin/sessions")
 @RequiredArgsConstructor
@@ -38,11 +24,7 @@ public class SessionController {
 
     private final SessionService sessionService;
 
-    // ==================== SESSION MANAGEMENT ====================
-
     /**
-     * Reschedule a single session
-     *
      * @param sessionId Session ID
      * @param request Reschedule request (new date, time, room, reason)
      * @return Rescheduled session
@@ -52,7 +34,7 @@ public class SessionController {
             @PathVariable Long sessionId,
             @Valid @RequestBody RescheduleSessionRequest request) {
 
-        log.info("📅 Rescheduling session {}", sessionId);
+        log.info(" Rescheduling session {}", sessionId);
 
         ClassSessionResponse response = sessionService.rescheduleSession(sessionId, request);
 
@@ -62,9 +44,6 @@ public class SessionController {
     }
 
     /**
-     * Batch reschedule multiple sessions
-     * Use case: Teacher requests to move all sessions on a specific week
-     *
      * @param request Batch reschedule request
      * @return List of rescheduled sessions
      */
@@ -72,7 +51,7 @@ public class SessionController {
     public ResponseEntity<ApiResponse<List<ClassSessionResponse>>> batchReschedule(
             @Valid @RequestBody BatchRescheduleRequest request) {
 
-        log.info("📅 Batch rescheduling {} sessions", request.getSessionIds().size());
+        log.info(" Batch rescheduling {} sessions", request.getSessionIds().size());
 
         List<ClassSessionResponse> responses = sessionService.rescheduleSessions(request);
 
@@ -85,9 +64,6 @@ public class SessionController {
     }
 
     /**
-     * Reset session to original schedule
-     * Undo reschedule
-     *
      * @param sessionId Session ID
      * @return Reset session
      */
@@ -95,7 +71,7 @@ public class SessionController {
     public ResponseEntity<ApiResponse<ClassSessionResponse>> resetToOriginal(
             @PathVariable Long sessionId) {
 
-        log.info("🔄 Resetting session {} to original", sessionId);
+        log.info(" Resetting session {} to original", sessionId);
 
         ClassSessionResponse response = sessionService.resetToOriginal(sessionId);
 
@@ -105,9 +81,6 @@ public class SessionController {
     }
 
     /**
-     * Mark session as completed
-     * Used after session finishes
-     *
      * @param sessionId Session ID
      * @return Updated session
      */
@@ -115,7 +88,7 @@ public class SessionController {
     public ResponseEntity<ApiResponse<ClassSessionResponse>> markAsCompleted(
             @PathVariable Long sessionId) {
 
-        log.info("✅ Marking session {} as completed", sessionId);
+        log.info(" Marking session {} as completed", sessionId);
 
         ClassSessionResponse response = sessionService.markAsCompleted(sessionId);
 
@@ -125,9 +98,6 @@ public class SessionController {
     }
 
     /**
-     * Mark session as cancelled
-     * Use case: Teacher sick, holiday, emergency
-     *
      * @param sessionId Session ID
      * @param reason Cancellation reason (optional)
      * @return Updated session
@@ -137,7 +107,7 @@ public class SessionController {
             @PathVariable Long sessionId,
             @RequestParam(required = false) String reason) {
 
-        log.info("❌ Cancelling session {}: {}", sessionId, reason);
+        log.info(" Cancelling session {}: {}", sessionId, reason);
 
         ClassSessionResponse response = sessionService.markAsCancelled(sessionId, reason);
 
@@ -146,11 +116,8 @@ public class SessionController {
         );
     }
 
-    // ==================== QUERY ENDPOINTS ====================
 
     /**
-     * Get session by ID
-     *
      * @param sessionId Session ID
      * @return Session details
      */
@@ -166,9 +133,6 @@ public class SessionController {
     }
 
     /**
-     * Get all sessions for a class
-     * Returns both in-person and e-learning sessions
-     *
      * @param classId Class ID
      * @return List of all sessions
      */
@@ -186,9 +150,6 @@ public class SessionController {
     }
 
     /**
-     * Get in-person sessions for a class
-     * Filters out e-learning sessions
-     *
      * @param classId Class ID
      * @return List of in-person sessions
      */
@@ -206,8 +167,6 @@ public class SessionController {
     }
 
     /**
-     * Get e-learning sessions for a class
-     *
      * @param classId Class ID
      * @return List of e-learning sessions
      */
@@ -225,9 +184,6 @@ public class SessionController {
     }
 
     /**
-     * Get rescheduled sessions for a class
-     * Shows which sessions have been moved from original schedule
-     *
      * @param classId Class ID
      * @return List of rescheduled sessions
      */

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ImportError {
     private int row;
-    private String identifier; // or citizenId for teachers
+    private String identifier; 
     private String field;
     private String message;
 }

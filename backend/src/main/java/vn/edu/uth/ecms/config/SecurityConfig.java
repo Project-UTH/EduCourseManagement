@@ -23,17 +23,8 @@ import vn.edu.uth.ecms.security.JwtAuthenticationFilter;
 
 /**
  * SecurityConfig
- * 
- * Spring Security configuration with JWT authentication
- * 
- * Security Rules:
- * - Public: /api/auth/**, /api/files/**, /api/health, /uploads/**, /favicon.ico
- * - Admin: /api/admin/**
- * - Teacher: /api/teacher/**
- * - Student: /api/student/**
- * 
- * @author Education Course Management System
- * @since 2026-01-11
+ * @author 
+ * @since 
  */
 @Configuration
 @EnableWebSecurity
@@ -75,29 +66,13 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                     
-                        // ==================== CORS PREFLIGHT ====================
-                        // Allow OPTIONS requests for CORS preflight
+                        
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // ==================== PUBLIC ENDPOINTS ====================
-                        // Authentication endpoints
                         .requestMatchers("/api/auth/**").permitAll()
-                        
-                        // File download endpoints - PUBLIC ACCESS
-                        // Students/Teachers can download without re-authentication
                         .requestMatchers("/api/files/**").permitAll()
-                        
-                        // ✅ ADDED: Uploaded files - PUBLIC ACCESS
-                        // Allow direct download of homework and materials
                         .requestMatchers("/uploads/**").permitAll()
-                        
-                        // ✅ ADDED: Favicon and static resources
                         .requestMatchers("/favicon.ico", "/*.png", "/*.ico").permitAll()
-                        
-                        // Health check
                         .requestMatchers("/api/health").permitAll()
-                        
-                        // API Documentation (Swagger)
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // ==================== ADMIN ENDPOINTS ====================

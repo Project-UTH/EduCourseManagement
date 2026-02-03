@@ -15,12 +15,8 @@ import java.time.LocalDateTime;
 
 /**
  * Grade Entity
- * 
- * Represents final grades for a student in a class
- * Calculated from: Regular (20%), Midterm (30%), Final (50%)
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Entity
 @Table(name = "grade",
@@ -46,38 +42,26 @@ public class Grade {
     @Column(name = "grade_id")
     private Long gradeId;
     
-    // ========================================
-    // RELATIONSHIPS
-    // ========================================
-    
-    /**
-     * The student this grade belongs to
-     * Many grades belong to one student
-     */
+
+  
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false,
                 foreignKey = @ForeignKey(name = "fk_grade_student"))
     @NotNull(message = "Student is required")
     private Student student;
     
-    /**
-     * The class this grade is for
-     * Many grades belong to one class
-     */
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id", nullable = false,
                 foreignKey = @ForeignKey(name = "fk_grade_class"))
     @NotNull(message = "Class is required")
     private ClassEntity classEntity;
     
-    // ========================================
-    // COMPONENT SCORES
-    // ========================================
+   
     
     /**
      * Regular score (average of all REGULAR homework)
      * Weight: 20% of total grade
-     * Điểm thường xuyên
      */
     @Column(name = "regular_score", precision = 4, scale = 2)
     @DecimalMin(value = "0.0", message = "Regular score must be at least 0")
@@ -87,7 +71,6 @@ public class Grade {
     /**
      * Midterm score (from MIDTERM homework)
      * Weight: 30% of total grade
-     * Điểm giữa kỳ
      */
     @Column(name = "midterm_score", precision = 4, scale = 2)
     @DecimalMin(value = "0.0", message = "Midterm score must be at least 0")
@@ -97,16 +80,13 @@ public class Grade {
     /**
      * Final score (from FINAL homework)
      * Weight: 50% of total grade
-     * Điểm cuối kỳ
      */
     @Column(name = "final_score", precision = 4, scale = 2)
     @DecimalMin(value = "0.0", message = "Final score must be at least 0")
     @DecimalMax(value = "10.0", message = "Final score must not exceed 10")
     private BigDecimal finalScore;
     
-    // ========================================
-    // CALCULATED TOTAL SCORE
-    // ========================================
+  
     
     /**
      * Total score (calculated)
@@ -126,10 +106,7 @@ public class Grade {
     @Size(max = 2, message = "Letter grade must not exceed 2 characters")
     private String letterGrade;
     
-    // ========================================
-    // STATUS
-    // ========================================
-    
+   
     /**
      * Grade status
      * PASSED (>=4.0), FAILED (<4.0), IN_PROGRESS (incomplete)
@@ -140,69 +117,38 @@ public class Grade {
     @NotNull(message = "Status is required")
     private GradeStatus status = GradeStatus.IN_PROGRESS;
     
-    // ========================================
-    // ADDITIONAL INFO
-    // ========================================
     
-    /**
-     * Attendance rate percentage
-     * Optional - can be calculated from student_schedule
-     */
     @Column(name = "attendance_rate", precision = 5, scale = 2)
     @DecimalMin(value = "0.0", message = "Attendance rate must be at least 0")
     @DecimalMax(value = "100.0", message = "Attendance rate must not exceed 100")
     private BigDecimal attendanceRate;
     
-    /**
-     * Overall teacher comment
-     * Optional feedback about student's performance
-     */
+   
     @Column(name = "teacher_comment", columnDefinition = "TEXT")
     @Size(max = 5000, message = "Teacher comment must not exceed 5000 characters")
     private String teacherComment;
     
-    // ========================================
-    // TIMESTAMPS
-    // ========================================
-    
-    /**
-     * When record was created
-     * Automatically set on creation
-     */
+ 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false,
             columnDefinition = "DATETIME(6)")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     
-    /**
-     * When record was last updated
-     * Automatically updated on modification
-     */
+ 
     @UpdateTimestamp
     @Column(name = "updated_at", columnDefinition = "DATETIME(6)")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     
-    // ========================================
-    // CONSTANTS
-    // ========================================
-    
-    /**
-     * Component weights for grade calculation
-     */
+  
     public static final BigDecimal REGULAR_WEIGHT = new BigDecimal("0.20");
     public static final BigDecimal MIDTERM_WEIGHT = new BigDecimal("0.30");
     public static final BigDecimal FINAL_WEIGHT = new BigDecimal("0.50");
     
-    /**
-     * Minimum passing score
-     */
+    
     public static final BigDecimal MIN_PASSING_SCORE = new BigDecimal("4.0");
     
-    // ========================================
-    // BUSINESS METHODS
-    // ========================================
     
     /**
      * Calculate total score from component scores
@@ -245,10 +191,7 @@ public class Grade {
         return "F";
     }
     
-    /**
-     * Calculate and update all derived fields
-     * Updates: totalScore, letterGrade, status
-     */
+   
     public void recalculate() {
         // Calculate total score
         this.totalScore = calculateTotalScore();
@@ -401,13 +344,7 @@ public class Grade {
         recalculate();
     }
     
-    // ========================================
-    // LIFECYCLE CALLBACKS
-    // ========================================
-    
-    /**
-     * Before persist - set default status
-     */
+ 
     @PrePersist
     protected void onCreate() {
         if (status == null) {

@@ -13,7 +13,6 @@ import java.util.Optional;
 
 /**
  * Repository for Major entity
- * Phase 3 Sprint 3.1
  */
 @Repository
 public interface MajorRepository extends JpaRepository<Major, Long> {

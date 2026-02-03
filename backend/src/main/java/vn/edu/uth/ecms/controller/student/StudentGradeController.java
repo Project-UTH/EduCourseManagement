@@ -16,11 +16,10 @@ import java.util.List;
 
 /**
  * Student Grade Controller
- * 
  * REST API for students to view their grades and transcript
  * 
- * @author Phase 4 - Student Features
- * @since 2026-01-22
+ * @author 
+ * @since 
  */
 @RestController
 @RequestMapping("/api/student")
@@ -32,12 +31,6 @@ public class StudentGradeController {
     private final StudentGradeService studentGradeService;
     
     /**
-     * Get all grades for the authenticated student
-     * 
-     * GET /api/student/grades
-     * 
-     * Returns list of all grades across all classes
-     * 
      * @param userPrincipal Authenticated student
      * @return List of grades
      */
@@ -64,12 +57,6 @@ public class StudentGradeController {
      * Get complete transcript for the authenticated student
      * 
      * GET /api/student/transcript
-     * 
-     * Returns comprehensive transcript with:
-     * - Student info
-     * - GPA and overall statistics
-     * - Grades grouped by semester
-     * 
      * @param userPrincipal Authenticated student
      * @return Complete transcript
      */

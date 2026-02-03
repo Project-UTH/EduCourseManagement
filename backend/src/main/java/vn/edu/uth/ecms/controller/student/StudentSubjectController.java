@@ -18,16 +18,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Student Subject Controller - Updated with Prerequisites
- * 
- * LOGIC LỌC MÔN HỌC:
- * 1. ĐẠI CƯƠNG (GENERAL): Tất cả sinh viên đều thấy
- * 2. CHUYÊN NGÀNH (SPECIALIZED): Chỉ sinh viên cùng KHOA mới thấy
- *    - So sánh: student.major.department_id = subject.department_id
- * 
- * ✅ NEW: Hiển thị môn tiên quyết và trạng thái hoàn thành
- */
+
 @RestController
 @RequestMapping("/api/student/subjects")
 @RequiredArgsConstructor
@@ -41,18 +32,14 @@ public class StudentSubjectController {
     private final SubjectPrerequisiteRepository subjectPrerequisiteRepository;
     private final GradeRepository gradeRepository;
 
-    /**
-     * Get available subjects for student - WITH PREREQUISITES
-     * 
-     * ✅ NEW: Returns prerequisites with completion status
-     */
+  
     @GetMapping("/available")
     public ResponseEntity<ApiResponse<List<SubjectResponse>>> getAvailableSubjects(
             @RequestParam(required = false) Long semesterId) {
         
         log.info("=== FETCHING AVAILABLE SUBJECTS WITH PREREQUISITES ===");
         if (semesterId != null) {
-            log.info("📅 Filter by semester ID: {}", semesterId);
+            log.info(" Filter by semester ID: {}", semesterId);
         }
         
         // 1. Get current student
@@ -60,7 +47,7 @@ public class StudentSubjectController {
         Student student = studentRepository.findByStudentCode(username)
                 .orElseThrow(() -> new NotFoundException("Student not found"));
 
-        log.info("👤 Student: {} ({})", student.getFullName(), student.getStudentCode());
+        log.info(" Student: {} ({})", student.getFullName(), student.getStudentCode());
         log.info("   Department: {}", 
                 student.getMajor() != null && student.getMajor().getDepartment() != null 
                 ? student.getMajor().getDepartment().getDepartmentName() 
@@ -68,19 +55,19 @@ public class StudentSubjectController {
 
         // 2. Get all subjects
         List<SubjectResponse> allSubjects = subjectService.getAllSubjects();
-        log.info("📖 Total subjects in database: {}", allSubjects.size());
+        log.info(" Total subjects in database: {}", allSubjects.size());
         
         // 3. Filter subjects based on knowledge type and semester
         List<SubjectResponse> filteredSubjects = allSubjects.stream()
                 .filter(subject -> {
                     String knowledgeType = subject.getDepartmentKnowledgeType();
                     
-                    log.info("🔍 Checking: {} - {}", subject.getSubjectCode(), subject.getSubjectName());
+                    log.info(" Checking: {} - {}", subject.getSubjectCode(), subject.getSubjectName());
                     log.info("   Knowledge type: {}", knowledgeType);
                     
                     // RULE 1: GENERAL → Tất cả sinh viên
                     if ("GENERAL".equalsIgnoreCase(knowledgeType)) {
-                        log.info("   ✅ GENERAL → Check classes...");
+                        log.info("    GENERAL → Check classes...");
                         
                         // Nếu chọn semester → Check có class trong semester không?
                         if (semesterId != null) {
@@ -88,16 +75,16 @@ public class StudentSubjectController {
                                     subject.getSubjectId(), semesterId);
                             
                             if (hasClass) {
-                                log.info("   ✅ Has class in semester {} → PASS", semesterId);
+                                log.info("    Has class in semester {} → PASS", semesterId);
                                 return true;
                             } else {
-                                log.info("   ❌ No class in semester {} → FAIL", semesterId);
+                                log.info("    No class in semester {} → FAIL", semesterId);
                                 return false;
                             }
                         }
                         
                         // Không chọn semester → Hiện tất cả
-                        log.info("   ✅ GENERAL (no semester filter) → PASS");
+                        log.info("    GENERAL (no semester filter) → PASS");
                         return true;
                     }
                     
@@ -105,7 +92,7 @@ public class StudentSubjectController {
                     if ("SPECIALIZED".equalsIgnoreCase(knowledgeType)) {
                         
                         if (student.getMajor() == null || student.getMajor().getDepartment() == null) {
-                            log.info("   ❌ Student no department → FAIL");
+                            log.info("    Student no department → FAIL");
                             return false;
                         }
                         
@@ -113,18 +100,18 @@ public class StudentSubjectController {
                         Long subjectDeptId = subject.getDepartmentId();
                         
                         if (studentDeptId == null || subjectDeptId == null) {
-                            log.info("   ❌ NULL department_id → FAIL");
+                            log.info("    NULL department_id → FAIL");
                             return false;
                         }
                         
                         boolean sameDepart = studentDeptId.equals(subjectDeptId);
                         
                         if (!sameDepart) {
-                            log.info("   ❌ Different department → FAIL");
+                            log.info("    Different department → FAIL");
                             return false;
                         }
                         
-                        log.info("   ✅ Same department → Check classes...");
+                        log.info("    Same department → Check classes...");
                         
                         // Nếu chọn semester → Check có class trong semester không?
                         if (semesterId != null) {
@@ -132,38 +119,38 @@ public class StudentSubjectController {
                                     subject.getSubjectId(), semesterId);
                             
                             if (hasClass) {
-                                log.info("   ✅ Has class in semester {} → PASS", semesterId);
+                                log.info("   Has class in semester {} → PASS", semesterId);
                                 return true;
                             } else {
-                                log.info("   ❌ No class in semester {} → FAIL", semesterId);
+                                log.info("    No class in semester {} → FAIL", semesterId);
                                 return false;
                             }
                         }
                         
                         // Không chọn semester → Hiện nếu cùng khoa
-                        log.info("   ✅ SPECIALIZED same dept (no semester filter) → PASS");
+                        log.info("    SPECIALIZED same dept (no semester filter) → PASS");
                         return true;
                     }
                     
                     if (knowledgeType == null) {
-                        log.warn("   ⚠️ Knowledge type NULL → SKIP");
+                        log.warn("    Knowledge type NULL → SKIP");
                         return false;
                     }
                     
-                    log.info("   ❌ Unknown knowledge type '{}' → FAIL", knowledgeType);
+                    log.info("    Unknown knowledge type '{}' → FAIL", knowledgeType);
                     return false;
                 })
                 .toList();
 
-        log.info("✅ Filtered to {} subjects, now adding prerequisites...", filteredSubjects.size());
+        log.info(" Filtered to {} subjects, now adding prerequisites...", filteredSubjects.size());
         
-        // 4. ✅ ADD PREREQUISITES TO EACH SUBJECT
+        // 4.  ADD PREREQUISITES TO EACH SUBJECT
         List<SubjectResponse> subjectsWithPrerequisites = enrichSubjectsWithPrerequisites(
                 filteredSubjects, 
                 student.getStudentId()
         );
         
-        log.info("✅ Final result: {} subjects with prerequisites", subjectsWithPrerequisites.size());
+        log.info(" Final result: {} subjects with prerequisites", subjectsWithPrerequisites.size());
         subjectsWithPrerequisites.forEach(s -> {
             log.info("  ✓ {} - {} (Prerequisites: {})", 
                     s.getSubjectCode(), 
@@ -177,14 +164,7 @@ public class StudentSubjectController {
         );
     }
 
-    /**
-     * ✅ NEW METHOD: Enrich subjects with prerequisite information
-     * 
-     * For each subject:
-     * 1. Get its prerequisites from subject_prerequisite table
-     * 2. Check if student has completed each prerequisite (from grade table)
-     * 3. Add PrerequisiteInfo with completion status
-     */
+   
     private List<SubjectResponse> enrichSubjectsWithPrerequisites(
             List<SubjectResponse> subjects,
             Long studentId) {
@@ -208,7 +188,7 @@ public class StudentSubjectController {
         Map<Long, List<SubjectPrerequisite>> prerequisitesMap = allPrerequisites.stream()
                 .collect(Collectors.groupingBy(sp -> sp.getSubject().getSubjectId()));
         
-        log.info("📚 Found prerequisites for {} subjects", prerequisitesMap.size());
+        log.info(" Found prerequisites for {} subjects", prerequisitesMap.size());
         
         // 4. Get student's grades (to check completion)
         List<Grade> studentGrades = gradeRepository.findByStudent_StudentId(studentId);
@@ -223,7 +203,7 @@ public class StudentSubjectController {
                                 ? existing : replacement
                 ));
         
-        log.info("📊 Student has {} completed subjects", gradesMap.size());
+        log.info(" Student has {} completed subjects", gradesMap.size());
         
         // 5. Enrich each subject with prerequisites
         subjects.forEach(subject -> {
@@ -246,16 +226,14 @@ public class StudentSubjectController {
         return subjects;
     }
     
-    /**
-     * ✅ Build PrerequisiteInfo for a subject
-     */
+   
     private PrerequisiteInfo buildPrerequisiteInfo(Subject prerequisiteSubject, Map<Long, Grade> gradesMap) {
         Long prereqId = prerequisiteSubject.getSubjectId();
         Grade grade = gradesMap.get(prereqId);
         
         boolean isCompleted = false;
         BigDecimal totalScore = null;
-        BigDecimal minPassGrade = BigDecimal.valueOf(4.0); // Default
+        BigDecimal minPassGrade = BigDecimal.valueOf(4.0); 
         
         if (grade != null) {
             totalScore = grade.getTotalScore();

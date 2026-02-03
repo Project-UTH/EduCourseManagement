@@ -95,5 +95,5 @@ public class Student extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    // Note: BaseEntity provides createdAt and updatedAt
+    
 }

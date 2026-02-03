@@ -2,10 +2,7 @@ package vn.edu.uth.ecms.entity;
 
 import lombok.Getter;
 
-/**
- * Time slots for class sessions
- * Vietnamese university schedule: 5 slots per day
- */
+
 @Getter
 public enum TimeSlot {
     CA1("Ca 1", "06:45", "09:15"),

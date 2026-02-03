@@ -11,10 +11,6 @@ import lombok.NoArgsConstructor;
 /**
  * DTO for updating an existing semester
  *
- * Notes:
- * - Semester code cannot be changed (immutable)
- * - Status should be changed via separate endpoints (activate, complete)
- * - COMPLETED semesters cannot be edited
  */
 @Data
 @NoArgsConstructor

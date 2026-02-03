@@ -86,17 +86,12 @@ public class Teacher extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    /**
-     * Many-to-many relationship with Subject through TeacherSubject
-     * Represents the subjects this teacher CAN TEACH
-     */
+    
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<TeacherSubject> teacherSubjects = new ArrayList<>();
 
-    /**
-     * Helper method to add a subject to this teacher
-     */
+  
     public void addSubject(Subject subject, Boolean isPrimary, Integer yearsOfExperience) {
         TeacherSubject teacherSubject = TeacherSubject.builder()
                 .teacher(this)
@@ -107,16 +102,12 @@ public class Teacher extends BaseEntity {
         teacherSubjects.add(teacherSubject);
     }
 
-    /**
-     * Helper method to remove a subject from this teacher
-     */
+
     public void removeSubject(Subject subject) {
         teacherSubjects.removeIf(ts -> ts.getSubject().equals(subject));
     }
 
-    /**
-     * Get all subjects this teacher can teach
-     */
+ 
     public List<Subject> getSubjects() {
         return teacherSubjects.stream()
                 .map(TeacherSubject::getSubject)

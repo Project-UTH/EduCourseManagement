@@ -4,12 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 /**
- * Room entity - ENHANCED with Real-time Status
- *
- * ✅ NEW FEATURES:
- * - Real-time status calculation based on ClassSession
- * - Better integration with scheduling system
- * - Status tracking (ACTIVE, AVAILABLE, INACTIVE)
+ * Room entity 
  */
 @Entity
 @Table(name = "room")
@@ -46,8 +41,6 @@ public class Room extends BaseEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
-
-    // ==================== EXISTING METHODS (Keep as is) ====================
 
     public String getRoomCode() {
         return this.roomCode;
@@ -115,54 +108,31 @@ public class Room extends BaseEntity {
         };
     }
 
-    // ==================== ✨ NEW: REAL-TIME STATUS METHODS ====================
-
-    /**
-     * ✨ NEW: Get administrative status
-     * - ACTIVE: Room is enabled by admin
-     * - INACTIVE: Room is disabled by admin
-     *
-     * This is static status set by admin, not based on current usage
-     */
+ 
     public RoomAdminStatus getAdminStatus() {
         return this.isActive ? RoomAdminStatus.ACTIVE : RoomAdminStatus.INACTIVE;
     }
 
-    /**
-     * ✨ NEW: Get admin status display
-     */
+ 
     public String getAdminStatusDisplay() {
         return this.isActive ? "Hoạt động" : "Ngừng hoạt động";
     }
 
-    /**
-     * Check if room can be assigned to new sessions
-     * Only active rooms can be assigned
-     */
+  
     public boolean canBeAssigned() {
         return this.isActive;
     }
 
-    /**
-     * Check if room is suitable for a class
-     * - Must be active
-     * - Must have enough capacity
-     */
     public boolean isSuitableFor(int requiredCapacity) {
         return this.isActive && this.capacity >= requiredCapacity;
     }
 
-    /**
-     * Get status badge color for UI
-     * - green: ACTIVE
-     * - gray: INACTIVE
-     */
+  
     public String getStatusBadgeColor() {
         return this.isActive ? "green" : "gray";
     }
 
-    // ==================== OVERRIDE METHODS ====================
-
+    
     @Override
     public String toString() {
         return "Room{" +

@@ -15,13 +15,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * HomeworkDetailResponse DTO - UPDATED VERSION
- * 
- * Detailed homework response with submissions list
- * Used for both teacher and student views
- * 
- * @author Phase 4 - Teacher Features + Phase 5 Student Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Data
 @Builder
@@ -30,7 +25,7 @@ import java.util.stream.Collectors;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class HomeworkDetailResponse {
     
-    // ==================== BASIC INFO ====================
+    
     
     private Long homeworkId;
     private String title;
@@ -51,7 +46,6 @@ public class HomeworkDetailResponse {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     
-    // ==================== NEW FIELDS FOR STUDENT VIEW ====================
     
     /**
      * Class ID (for student view)
@@ -88,22 +82,14 @@ public class HomeworkDetailResponse {
      */
     private boolean canSubmit;
     
-    // ==================== EXISTING FIELDS FOR TEACHER VIEW ====================
-    
     private ClassInfo classInfo;
-    private Boolean IsOverdue;  // Keep for backward compatibility
-    private Boolean CanSubmit;  // Keep for backward compatibility
+    private Boolean IsOverdue; 
+    private Boolean CanSubmit;  
     private String timeRemaining;
     private HomeworkStats statistics;
     private List<SubmissionResponse> submissions;
     
-    // ========================================
-    // NESTED CLASSES
-    // ========================================
-    
-    /**
-     * Class information
-     */
+   
     @Data
     @Builder
     @NoArgsConstructor
@@ -135,13 +121,7 @@ public class HomeworkDetailResponse {
         private Double completionRate;
     }
     
-    // ========================================
-    // MAPPING METHODS
-    // ========================================
-    
-    /**
-     * Convert Homework entity to detailed response (for teacher)
-     */
+   
     public static HomeworkDetailResponse fromEntity(Homework homework) {
         if (homework == null) return null;
         

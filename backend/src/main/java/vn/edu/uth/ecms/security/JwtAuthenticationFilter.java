@@ -34,11 +34,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        logger.info("🔍 JWT Filter called for: {} {}", request.getMethod(), request.getRequestURI());
+        logger.info(" JWT Filter called for: {} {}", request.getMethod(), request.getRequestURI());
 
-        // ✅ FIX: Skip authentication for OPTIONS requests (CORS preflight)
+       
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            logger.info("⏩ Skipping JWT authentication for OPTIONS request (CORS preflight)");
+            logger.info(" Skipping JWT authentication for OPTIONS request (CORS preflight)");
             filterChain.doFilter(request, response);
             return;
         }
@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = tokenProvider.getUsernameFromToken(jwt);
                 Claims claims = tokenProvider.getClaimsFromToken(jwt);
                 
-                // Extract data from JWT claims
+                
                 Long userId = claims.get("id", Long.class);
                 String role = claims.get("role", String.class);
                 String fullName = claims.get("fullName", String.class);
@@ -62,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 logger.info("JWT Authentication - Username: {}, Role: {}, ID: {}", username, role, userId);
 
-                // ✅ FIX: Create UserPrincipal using AllArgsConstructor
+                
                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role != null ? role : "ROLE_USER");
                 
                 UserPrincipal userPrincipal = new UserPrincipal(
@@ -87,11 +87,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                logger.info("✅ Authentication successful for user: {} (ID: {}) with authority: {}",
+                logger.info(" Authentication successful for user: {} (ID: {}) with authority: {}",
                         username, userId, authority.getAuthority());
             }
         } catch (Exception ex) {
-            logger.error("❌ Could not set user authentication in security context", ex);
+            logger.error(" Could not set user authentication in security context", ex);
         }
 
         filterChain.doFilter(request, response);

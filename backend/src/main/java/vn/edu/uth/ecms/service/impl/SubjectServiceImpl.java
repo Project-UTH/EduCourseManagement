@@ -26,12 +26,6 @@ import java.util.stream.Collectors;
 
 /**
  * Implementation of SubjectService
- * Phase 3 Sprint 3.2 - Version 2
- *
- * Changes:
- * - Added Major support
- * - Replaced hours with sessions
- * - Added auto-calculation for sessions based on credits
  */
 @Service
 @RequiredArgsConstructor
@@ -331,9 +325,7 @@ public class SubjectServiceImpl implements SubjectService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Check if subject has prerequisites
-     */
+   
     @Override
     @Transactional(readOnly = true)
     public boolean hasPrerequisites(Long subjectId) {
@@ -342,17 +334,12 @@ public class SubjectServiceImpl implements SubjectService {
         return !prerequisites.isEmpty();
     }
 
-    /**
-     * Helper: Check if adding prerequisite would create circular dependency
-     */
     private boolean wouldCreateCircularDependency(Long subjectId, Long newPrerequisiteId) {
         Set<Long> visited = new HashSet<>();
         return hasPath(newPrerequisiteId, subjectId, visited);
     }
 
-    /**
-     * Helper: DFS to detect cycle
-     */
+   
     private boolean hasPath(Long from, Long to, Set<Long> visited) {
         if (from.equals(to)) {
             return true;
@@ -422,7 +409,7 @@ public class SubjectServiceImpl implements SubjectService {
         .updatedAt(subject.getUpdatedAt())
         .build();
 
-log.info("✅ Mapped knowledge_type: {}", response.getDepartmentKnowledgeType());
+log.info(" Mapped knowledge_type: {}", response.getDepartmentKnowledgeType());
 log.info("mapToResponse DONE");
             return response;
 
@@ -442,15 +429,7 @@ log.info("mapToResponse DONE");
                 ));
     }
 
-    /**
-     * BACKEND AUTO-CALCULATION: Calculate sessions based on credits
-     *
-     * Rules:
-     * - 2 credits = 10 sessions (5 E-Learning + 5 In-person)
-     * - 3 credits = 15 sessions (5 E-Learning + 10 In-person)
-     * - 4 credits = 20 sessions (5 E-Learning + 15 In-person)
-     * - Other credits = 5 sessions per credit (1/3 E-Learning)
-     */
+ 
     private SessionCalculation calculateSessions(int credits) {
         switch (credits) {
             case 2:
@@ -492,7 +471,7 @@ log.info("mapToResponse DONE");
 
         List<Teacher> teachers = teacherSubjectRepository.findTeachersBySubjectId(subjectId);
 
-        log.info("✅ Found {} teachers for subject {}", teachers.size(), subject.getSubjectCode());
+        log.info(" Found {} teachers for subject {}", teachers.size(), subject.getSubjectCode());
 
         return teachers.stream()
                 .map(this::mapTeacherToResponse)

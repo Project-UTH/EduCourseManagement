@@ -23,12 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * REST Controller for Subject management (Admin only)
- * Phase 3 Sprint 3.2
- *
- * FLAT RESPONSE STRUCTURE - consistent with Department & Major
- */
 @RestController
 @RequestMapping("/api/admin/subjects")
 @RequiredArgsConstructor
@@ -113,12 +107,7 @@ public class SubjectController {
         return ResponseEntity.ok(result);
     }
 
-    /**
-     * Get all subjects with pagination
-     * GET /api/admin/subjects?page=0&size=10&sortBy=subjectName&sortDir=asc
-     *
-     * FLAT RESPONSE STRUCTURE
-     */
+    
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllSubjects(
             @RequestParam(defaultValue = "0") int page,
@@ -135,7 +124,7 @@ public class SubjectController {
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<SubjectResponse> subjects = subjectService.getAllSubjects(pageable);
 
-        // FLAT RESPONSE - NOT NESTED
+       
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         result.put("data", subjects.getContent());  // Array directly
@@ -276,12 +265,12 @@ public class SubjectController {
     public ResponseEntity<ApiResponse<List<TeacherResponse>>> getTeachersForSubject(
             @PathVariable Long subjectId) {
 
-        log.info("📚 Fetching teachers for subject ID: {}", subjectId);
+        log.info(" Fetching teachers for subject ID: {}", subjectId);
 
         try {
             List<TeacherResponse> teachers = subjectService.getTeachersForSubject(subjectId);
 
-            log.info("✅ Found {} teachers who can teach subject {}", teachers.size(), subjectId);
+            log.info("Found {} teachers who can teach subject {}", teachers.size(), subjectId);
 
             return ResponseEntity.ok(
                     ApiResponse.<List<TeacherResponse>>builder()
@@ -293,7 +282,7 @@ public class SubjectController {
                             .build()
             );
         } catch (Exception e) {
-            log.error("❌ Error fetching teachers for subject {}: {}", subjectId, e.getMessage());
+            log.error("Error fetching teachers for subject {}: {}", subjectId, e.getMessage());
 
             return ResponseEntity.badRequest().body(
                     ApiResponse.<List<TeacherResponse>>builder()

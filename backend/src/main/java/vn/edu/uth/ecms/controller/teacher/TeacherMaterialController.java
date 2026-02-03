@@ -20,8 +20,8 @@ import java.util.List;
  * 
  * REST API for teacher to manage class materials
  * 
- * @author ECMS Team
- * @since 2026-01-16
+ * @author 
+ * @since 
  */
 @RestController
 @RequestMapping("/api/teacher/materials")
@@ -44,7 +44,7 @@ public class TeacherMaterialController {
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal UserPrincipal principal) {
         
-        log.info("📤 Teacher {} uploading material for class {}", principal.getId(), classId);
+        log.info(" Teacher {} uploading material for class {}", principal.getId(), classId);
         
         MaterialResponse response = materialService.uploadMaterial(
                 classId, title, description, file, principal.getId());
@@ -62,7 +62,7 @@ public class TeacherMaterialController {
     public ResponseEntity<ApiResponse<List<MaterialResponse>>> getMaterialsByClass(
             @PathVariable Long classId) {
         
-        log.info("📚 Getting materials for class {}", classId);
+        log.info(" Getting materials for class {}", classId);
         
         List<MaterialResponse> materials = materialService.getMaterialsByClass(classId);
         
@@ -79,7 +79,7 @@ public class TeacherMaterialController {
             @PathVariable Long materialId,
             @AuthenticationPrincipal UserPrincipal principal) {
         
-        log.info("🗑️ Teacher {} deleting material {}", principal.getId(), materialId);
+        log.info(" Teacher {} deleting material {}", principal.getId(), materialId);
         
         materialService.deleteMaterial(materialId, principal.getId());
         

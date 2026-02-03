@@ -8,10 +8,7 @@ import vn.edu.uth.ecms.dto.response.MajorResponse;
 
 import java.util.List;
 
-/**
- * Service interface for Major management
- * Phase 3 Sprint 3.1
- */
+
 public interface MajorService {
 
     /**

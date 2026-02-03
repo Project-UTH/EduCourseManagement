@@ -6,12 +6,9 @@ import vn.edu.uth.ecms.dto.response.MaterialResponse;
 import java.util.List;
 
 /**
- * MaterialService
- * 
- * Service interface for managing class materials
- * 
- * @author ECMS Team
- * @since 2026-01-16
+ * MaterialService 
+ * @author
+ * @since 
  */
 public interface MaterialService {
     

@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * Service interface for Department management
- * Phase 3 Sprint 3.1
  */
 public interface DepartmentService {
 

@@ -6,19 +6,7 @@ import lombok.*;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 
-/**
- * ClassEntity - UPDATED with Room FK instead of String
- *
- * CHANGES:
- * 1. room (String) → fixedRoom (Room FK)
- * 2. Removed: extraRoom, extraDayOfWeek, extraTimeSlot
- * 3. E-learning keeps same structure
- *
- * LOGIC:
- * - Admin only inputs: dayOfWeek, timeSlot
- * - System auto-assigns: fixedRoom
- * - Extra sessions: Created as PENDING, scheduled on activation
- */
+
 @Entity
 @Table(name = "class", indexes = {
         @Index(name = "idx_class_code", columnList = "class_code", unique = true),
@@ -41,7 +29,7 @@ public class ClassEntity extends BaseEntity {
     @Column(name = "class_code", unique = true, nullable = false, length = 20)
     private String classCode;
 
-    // ==================== RELATIONSHIPS ====================
+    
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id", nullable = false)
@@ -55,7 +43,7 @@ public class ClassEntity extends BaseEntity {
     @JoinColumn(name = "semester_id", nullable = false)
     private Semester semester;
 
-    // ==================== CAPACITY ====================
+   
 
     @Column(name = "max_students", nullable = false)
     private Integer maxStudents;
@@ -69,12 +57,7 @@ public class ClassEntity extends BaseEntity {
     @Builder.Default
     private ClassStatus status = ClassStatus.OPEN;
 
-    // ==================== FIXED SCHEDULE (10 sessions) ====================
-
-    /**
-     * Day of week for FIXED sessions (10 sessions)
-     * Admin inputs this
-     */
+   
     @Enumerated(EnumType.STRING)
     @Column(name = "day_of_week", nullable = false, length = 10)
     private DayOfWeek dayOfWeek;
@@ -87,16 +70,11 @@ public class ClassEntity extends BaseEntity {
     @Column(name = "time_slot", nullable = false, length = 10)
     private TimeSlot timeSlot;
 
-    /**
-     * ✅ NEW: Room FK for FIXED sessions
-     * System auto-assigns this (finds available room)
-     */
+   
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fixed_room_id", nullable = false)
     private Room fixedRoom;
-
-    // ==================== E-LEARNING SCHEDULE ====================
-
+    
     /**
      * Day of week for E-LEARNING sessions
      * Optional - NULL if no e-learning
@@ -113,15 +91,14 @@ public class ClassEntity extends BaseEntity {
     @Column(name = "elearning_time_slot", length = 10)
     private TimeSlot elearningTimeSlot;
 
-    // ==================== DATES ====================
-
+    
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    // ==================== HELPER METHODS ====================
+    
 
     public int getAvailableSeats() {
         return maxStudents - enrolledCount;

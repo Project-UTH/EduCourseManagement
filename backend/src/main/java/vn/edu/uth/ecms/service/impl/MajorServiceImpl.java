@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 /**
  * Implementation of MajorService
- * Phase 3 Sprint 3.1
  */
 @Service
 @RequiredArgsConstructor
@@ -35,7 +34,7 @@ public class MajorServiceImpl implements MajorService {
 
 
     @Override
-    @Transactional(timeout = 30)  // ← THÊM timeout
+    @Transactional(timeout = 30)  
     public MajorResponse createMajor(MajorCreateRequest request) {
         log.info("Creating major with code: {}", request.getMajorCode());
 
@@ -123,8 +122,7 @@ public class MajorServiceImpl implements MajorService {
             throw new ResourceNotFoundException("Major not found with ID: " + id);
         }
 
-        // TODO: Check if major has related data (students, teachers) before deleting
-        // For now, just delete
+        
         majorRepository.deleteById(id);
         log.info("Major deleted successfully: {}", id);
     }

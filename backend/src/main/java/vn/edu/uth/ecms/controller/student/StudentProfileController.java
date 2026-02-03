@@ -11,15 +11,6 @@ import vn.edu.uth.ecms.dto.response.ApiResponse;
 import vn.edu.uth.ecms.dto.response.StudentResponse;
 import vn.edu.uth.ecms.service.StudentService;
 
-/**
- * Student Profile Controller
- * 
- * Handles student profile management endpoints:
- * - GET /api/student/profile - Get current student profile
- * - PUT /api/student/profile - Update profile
- * 
- * Note: Password change uses shared /api/auth/change-password endpoint
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/student")
@@ -34,12 +25,12 @@ public class StudentProfileController {
      */
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<StudentResponse>> getProfile(Authentication authentication) {
-        log.info("📋 [StudentProfile] Getting profile for: {}", authentication.getName());
+        log.info(" [StudentProfile] Getting profile for: {}", authentication.getName());
         
-        String studentCode = authentication.getName(); // JWT contains student code
+        String studentCode = authentication.getName(); 
         StudentResponse profile = studentService.getByStudentCode(studentCode);
         
-        log.info("✅ [StudentProfile] Profile fetched: {}", profile.getFullName());
+        log.info(" [StudentProfile] Profile fetched: {}", profile.getFullName());
         
         ApiResponse<StudentResponse> response = new ApiResponse<>();
         response.setSuccess(true);
@@ -49,22 +40,18 @@ public class StudentProfileController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Update current student profile
-     * PUT /api/student/profile
-     * Only allows updating: email, phone
-     */
+    
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<StudentResponse>> updateProfile(
             Authentication authentication,
             @Valid @RequestBody UpdateStudentProfileRequest request
     ) {
-        log.info("✏️ [StudentProfile] Updating profile for: {}", authentication.getName());
+        log.info(" [StudentProfile] Updating profile for: {}", authentication.getName());
         
         String studentCode = authentication.getName();
         StudentResponse updatedProfile = studentService.updateProfile(studentCode, request);
         
-        log.info("✅ [StudentProfile] Profile updated: {}", updatedProfile.getFullName());
+        log.info(" [StudentProfile] Profile updated: {}", updatedProfile.getFullName());
         
         ApiResponse<StudentResponse> response = new ApiResponse<>();
         response.setSuccess(true);

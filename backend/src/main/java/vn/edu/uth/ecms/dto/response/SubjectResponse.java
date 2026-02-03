@@ -11,8 +11,8 @@ import java.util.List;
 /**
  * Subject Response DTO - Updated with Prerequisites
  * 
- * @author Phase 4 - Student Features
- * @since 2026-01-22
+ * @author 
+ * @since 
  */
 @Data
 @Builder
@@ -49,10 +49,8 @@ public class SubjectResponse {
     private Integer totalClasses;
     private Integer totalStudents;
     
-    private String departmentKnowledgeType; // BASIC or SPECIALIZED
+    private String departmentKnowledgeType; 
     
-    /**
-     * ✅ NEW: List of prerequisite subjects with completion status
-     */
+    
     private List<PrerequisiteInfo> prerequisites;
 }

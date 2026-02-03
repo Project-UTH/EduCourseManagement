@@ -19,8 +19,8 @@ import java.util.List;
  * 
  * Represents a student's submission for a homework assignment
  * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author
+ * @since 
  */
 @Entity
 @Table(name = "homework_submission",
@@ -46,38 +46,21 @@ public class HomeworkSubmission {
     @Column(name = "submission_id")
     private Long submissionId;
     
-    // ========================================
-    // RELATIONSHIPS
-    // ========================================
-    
-    /**
-     * The homework this submission is for
-     * Many submissions belong to one homework
-     */
+  
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "homework_id", nullable = false,
                 foreignKey = @ForeignKey(name = "fk_submission_homework"))
     @NotNull(message = "Homework is required")
     private Homework homework;
     
-    /**
-     * The student who submitted
-     * Many submissions belong to one student
-     */
+ 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false,
                 foreignKey = @ForeignKey(name = "fk_submission_student"))
     @NotNull(message = "Student is required")
     private Student student;
     
-    // ========================================
-    // SUBMISSION INFO
-    // ========================================
-    
-    /**
-     * URL to submitted file
-     * Student can upload their homework file
-     */
+ 
    @Deprecated
 @Column(name = "submission_file_url", length = 500)
 @Size(max = 500, message = "Submission file URL must not exceed 500 characters")
@@ -85,95 +68,55 @@ private String submissionFileUrl;
     @Deprecated
 @Column(name = "submission_file_name", length = 255)
 private String submissionFileName;
-    /**
-     * When student submitted
-     * Automatically set when created
-     */
+   
     @CreationTimestamp
     @Column(name = "submission_date", nullable = false, updatable = false,
             columnDefinition = "DATETIME(6)")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime submissionDate;
     
-    /**
-     * Optional text submission
-     * Student can submit text instead of/in addition to file
-     */
+   
     @Column(name = "submission_text", columnDefinition = "TEXT")
     @Size(max = 10000, message = "Submission text must not exceed 10000 characters")
     private String submissionText;
     
-    // ========================================
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 private List<SubmissionFile> submissionFiles = new ArrayList<>();
-    // GRADING INFO (filled by teacher)
-    // ========================================
-    
-    /**
-     * Score given by teacher
-     * Range: 0.00 - homework.maxScore
-     */
+
     @Column(name = "score", precision = 4, scale = 2)
     @DecimalMin(value = "0.0", message = "Score must be at least 0")
     @DecimalMax(value = "10.0", message = "Score must not exceed 10")
     private BigDecimal score;
     
-    /**
-     * Teacher's feedback/comments
-     * Optional comments about the submission
-     */
+  
     @Column(name = "teacher_feedback", columnDefinition = "TEXT")
     @Size(max = 5000, message = "Teacher feedback must not exceed 5000 characters")
     private String teacherFeedback;
     
-    /**
-     * When teacher graded the submission
-     * Set when teacher assigns a score
-     */
+    
     @Column(name = "graded_date", columnDefinition = "DATETIME(6)")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime gradedDate;
     
-    // ========================================
-    // STATUS
-    // ========================================
-    
-    /**
-     * Submission status
-     * SUBMITTED (on time), GRADED, LATE (after deadline)
-     * Auto-set by trigger based on deadline
-     */
+  
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @NotNull(message = "Status is required")
     private SubmissionStatus status = SubmissionStatus.SUBMITTED;
-    
-    // ========================================
-    // TIMESTAMPS
-    // ========================================
-    
-    /**
-     * When record was created
-     * Automatically set on creation
-     */
+ 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false,
             columnDefinition = "DATETIME(6)")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     
-    /**
-     * When record was last updated
-     * Automatically updated on modification
-     */
+   
     @UpdateTimestamp
     @Column(name = "updated_at", columnDefinition = "DATETIME(6)")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     
-    // ========================================
-    // BUSINESS METHODS
-    // ========================================
+    
     
     /**
      * Check if submission was late
@@ -241,11 +184,7 @@ private List<SubmissionFile> submissionFiles = new ArrayList<>();
         this.status = SubmissionStatus.GRADED;
     }
     
-    /**
-     * Ungrade this submission
-     * Removes score, feedback, graded date
-     * Resets status to SUBMITTED or LATE
-     */
+   
     public void ungrade() {
         this.score = null;
         this.teacherFeedback = null;
@@ -339,14 +278,9 @@ private List<SubmissionFile> submissionFiles = new ArrayList<>();
         return hasFile() || hasText();
     }
     
-    // ========================================
-    // LIFECYCLE CALLBACKS
-    // ========================================
+   
     
-    /**
-     * Before persist - set status based on deadline
-     * This mimics the trigger behavior
-     */
+ 
     @PrePersist
     protected void onCreate() {
         // Set submission date if not already set
@@ -366,9 +300,7 @@ private List<SubmissionFile> submissionFiles = new ArrayList<>();
         }
     }
     
-    /**
-     * Before update - validate grading data consistency
-     */
+
     @PreUpdate
     protected void onUpdate() {
         // If score is set, ensure graded date is set

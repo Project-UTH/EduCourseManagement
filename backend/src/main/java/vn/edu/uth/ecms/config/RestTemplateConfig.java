@@ -7,8 +7,8 @@ import org.springframework.web.client.RestTemplate;
 /**
  * RestTemplate Configuration
  * 
- * @author ECMS
- * @since 2026-01-21
+ * @author 
+ * @since 
  */
 @Configuration
 public class RestTemplateConfig {

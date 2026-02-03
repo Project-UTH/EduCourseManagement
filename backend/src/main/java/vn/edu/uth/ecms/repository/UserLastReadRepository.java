@@ -14,11 +14,8 @@ import java.util.Optional;
 
 /**
  * UserLastReadRepository
- * 
- * Repository for managing user's last read timestamps
- * 
- * @author ECMS
- * @since 2026-01-21
+ * @author 
+ * @since 
  */
 @Repository
 public interface UserLastReadRepository extends JpaRepository<UserLastRead, Long> {
@@ -33,10 +30,7 @@ public interface UserLastReadRepository extends JpaRepository<UserLastRead, Long
      */
     List<UserLastRead> findByUsername(String username);
 
-    /**
-     * Update or insert last read timestamp
-     * Uses native query for UPSERT operation
-     */
+    
     @Modifying
     @Transactional
     @Query(value = """
@@ -52,13 +46,7 @@ public interface UserLastReadRepository extends JpaRepository<UserLastRead, Long
         @Param("lastReadAt") LocalDateTime lastReadAt
     );
 
-    /**
-     * Delete last read record for a class (cleanup)
-     */
     void deleteByClassId(Long classId);
 
-    /**
-     * Delete all last read records for a user
-     */
     void deleteByUsername(String username);
 }

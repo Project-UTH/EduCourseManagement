@@ -12,7 +12,6 @@ import java.util.List;
 
 /**
  * DTO for Teacher response
- * Includes department and major information
  */
 @Data
 @NoArgsConstructor

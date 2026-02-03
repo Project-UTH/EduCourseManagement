@@ -13,20 +13,14 @@ import java.util.List;
 
 /**
  * SubmissionService Interface
- * 
- * Service layer for homework submission management
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author
+ * @since
  */
 public interface SubmissionService {
     
-    // ==================== STUDENT OPERATIONS ====================
+  
     
-    /**
-     * Student submits homework
-     * Validates: deadline, duplicate, content
-     */
+   
     SubmissionResponse submitHomework(SubmissionRequest request, Long studentId);
     
     /**
@@ -50,8 +44,7 @@ public interface SubmissionService {
      */
     List<SubmissionResponse> getMySubmissions(Long studentId);
     
-    // ==================== TEACHER OPERATIONS ====================
-    
+   
     /**
      * Teacher grades a submission
      * Validates: teacher owns homework, score range
@@ -84,7 +77,7 @@ public interface SubmissionService {
      */
     List<SubmissionResponse> bulkGrade(List<GradeSubmissionRequest> requests, Long teacherId);
     
-    // ==================== STATISTICS ====================
+    
     
     /**
      * Get submission statistics

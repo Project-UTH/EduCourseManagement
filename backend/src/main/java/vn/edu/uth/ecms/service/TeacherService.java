@@ -82,7 +82,7 @@ public interface TeacherService {
      */
     List<TeacherResponse> getActiveTeachers();
 
-    // ==================== PROFILE METHODS (NEW) ====================
+    
 
     /**
      * Get teacher by citizen ID (for current user profile)

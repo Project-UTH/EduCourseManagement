@@ -10,11 +10,8 @@ import java.util.List;
 
 /**
  * Student Transcript Response DTO
- * 
- * Complete transcript with student info, grades grouped by semester, and statistics
- * 
- * @author Phase 4 - Student Features
- * @since 2026-01-22
+ * @author 
+ * @since 
  */
 @Data
 @NoArgsConstructor

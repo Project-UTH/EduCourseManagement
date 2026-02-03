@@ -20,11 +20,8 @@ import java.util.stream.Collectors;
 
 /**
  * GradeServiceImpl
- * 
- * Implementation of grade management business logic
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Service
 @RequiredArgsConstructor
@@ -39,7 +36,7 @@ public class GradeServiceImpl implements GradeService {
     private final ClassRepository classRepository;
     private final CourseRegistrationRepository courseRegistrationRepository;
     
-    // ==================== CREATE OR UPDATE ====================
+    
     
     @Override
     public GradeResponse createOrUpdateGrade(GradeRequest request, Long teacherId) {
@@ -92,7 +89,7 @@ public class GradeServiceImpl implements GradeService {
         return GradeResponse.fromEntity(saved);
     }
     
-    // ==================== GET GRADES ====================
+  
     
     @Override
     @Transactional(readOnly = true)
@@ -169,11 +166,10 @@ public class GradeServiceImpl implements GradeService {
             .studentCode(student.getStudentCode())
             .fullName(student.getFullName())
             .majorName(student.getMajor() != null ? student.getMajor().getMajorName() : null)
-            .currentYear(null) // TODO: Add currentYear field to Student entity if needed
+            .currentYear(null)
             .build();
         
-        // TODO: Group by semester
-        // For now, return all courses in one "semester"
+       
         List<TranscriptResponse.CourseGrade> courseGrades = grades.stream()
             .map(this::mapToCourseGrade)
             .collect(Collectors.toList());
@@ -190,7 +186,7 @@ public class GradeServiceImpl implements GradeService {
             .build();
     }
     
-    // ==================== AUTO-CALCULATION ====================
+    
     
     @Override
     public void calculateRegularScore(Long studentId, Long classId) {
@@ -270,7 +266,6 @@ public class GradeServiceImpl implements GradeService {
         return gpa != null ? gpa.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
     }
     
-    // ==================== STATISTICS ====================
     
     @Override
     @Transactional(readOnly = true)
@@ -331,7 +326,7 @@ public class GradeServiceImpl implements GradeService {
         return gradeRepository.findStudentRank(classId, studentId);
     }
     
-    // ==================== BULK OPERATIONS ====================
+   
     
     @Override
     public List<GradeResponse> bulkUpdateGrades(List<GradeRequest> requests, Long teacherId) {
@@ -368,7 +363,7 @@ public class GradeServiceImpl implements GradeService {
         log.info("Initialized grades for {} students", registrations.size());
     }
     
-    // ==================== HELPER METHODS ====================
+   
     
     private TranscriptResponse.CourseGrade mapToCourseGrade(Grade grade) {
         return TranscriptResponse.CourseGrade.builder()

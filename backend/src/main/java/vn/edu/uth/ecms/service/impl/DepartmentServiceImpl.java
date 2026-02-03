@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 
 /**
  * Implementation of DepartmentService
- * Phase 3 Sprint 3.1
  */
 @Service
 @RequiredArgsConstructor
@@ -87,13 +86,12 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void deleteDepartment(Long id) {
         log.info("Deleting department with ID: {}", id);
 
-        // Check if department exists
+        
         if (!departmentRepository.existsById(id)) {
             throw new ResourceNotFoundException("Department not found with ID: " + id);
         }
 
-        // TODO: Check if department has related data (majors, teachers) before deleting
-        // For now, just delete
+       
         departmentRepository.deleteById(id);
         log.info("Department deleted successfully: {}", id);
     }
@@ -163,7 +161,6 @@ public class DepartmentServiceImpl implements DepartmentService {
                 .description(department.getDescription())
                 .createdAt(department.getCreatedAt())
                 .updatedAt(department.getUpdatedAt())
-                // TODO: Add statistics (totalMajors, totalTeachers, totalStudents) later
                 .build();
     }
 }

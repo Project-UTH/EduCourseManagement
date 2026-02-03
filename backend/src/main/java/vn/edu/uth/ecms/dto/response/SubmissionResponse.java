@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
  * 
  * Response body for homework submission data
  * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Data
 @Builder
@@ -63,10 +63,7 @@ public class SubmissionResponse {
     @Deprecated
     private String submissionFileName;
     
-    /**
-     * ✅ NEW: Multiple file attachments
-     * List of all files for this submission
-     */
+   
     private List<SubmissionFileResponse> submissionFiles;
     
     /**
@@ -101,9 +98,7 @@ public class SubmissionResponse {
      */
     private String status;
     
-    /**
-     * Status display name (Vietnamese: "Đã nộp", "Đã chấm", "Nộp muộn")
-     */
+  
     private String statusDisplay;
     
     /**
@@ -138,10 +133,7 @@ public class SubmissionResponse {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     
-    // ========================================
-    // NESTED CLASSES
-    // ========================================
-    
+   
     /**
      * Student information
      */
@@ -156,10 +148,7 @@ public class SubmissionResponse {
         private String email;
     }
     
-    // ========================================
-    // MAPPING METHODS
-    // ========================================
-    
+  
     /**
      * Convert HomeworkSubmission entity to DTO
      * 
@@ -176,7 +165,7 @@ public class SubmissionResponse {
             .homeworkTitle(submission.getHomework() != null ?
                           submission.getHomework().getTitle() : null)
             .studentInfo(buildStudentInfo(submission))
-            // ✅ FIX: Map multiple files
+            //  FIX: Map multiple files
             .submissionFiles(submission.getSubmissionFiles() != null ?
                            submission.getSubmissionFiles().stream()
                                .map(SubmissionFileResponse::fromEntity)

@@ -8,10 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.edu.uth.ecms.entity.KnowledgeType;
 
-/**
- * DTO for creating a new Department
- * Phase 3 Sprint 3.1
- */
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

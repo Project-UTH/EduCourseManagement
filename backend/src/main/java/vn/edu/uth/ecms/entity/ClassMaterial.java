@@ -12,13 +12,8 @@ import java.time.LocalDateTime;
 
 /**
  * ClassMaterial Entity
- * 
- * Tài liệu học tập cho lớp học
- * - Teacher upload tài liệu
- * - Student download tài liệu
- * 
- * @author ECMS Team
- * @since 2026-01-16
+ * @author 
+ * @since 
  */
 @Entity
 @Table(name = "class_material")

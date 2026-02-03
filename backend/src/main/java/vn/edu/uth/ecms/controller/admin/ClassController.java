@@ -32,16 +32,6 @@ import java.util.List;
  * - GET    /api/admin/classes/semester/{semesterId} - Get classes by semester
  * - GET    /api/admin/classes/teacher/{teacherId}   - Get classes by teacher
  * - GET    /api/admin/classes/subject/{subjectId}   - Get classes by subject
- *
- * FEATURES:
- * - Auto room assignment for fixed schedule
- * - Auto session generation (10 fixed + extra + e-learning)
- * - Conflict detection (teacher, room)
- * - Semester validation (UPCOMING only)
- *
- * NOTES:
- * - Enrollment management moved to EnrollmentController
- * - Session management moved to SessionController
  */
 @RestController
 @RequestMapping("/api/admin/classes")
@@ -52,28 +42,8 @@ public class ClassController {
 
     private final ClassService classService;
 
-    // ==================== CLASS CRUD ====================
 
-    /**
-     * Create a new class
-     *
-     * PROCESS:
-     * 1. Validate semester is UPCOMING
-     * 2. Check teacher/room conflicts
-     * 3. Auto-assign room (finds available room)
-     * 4. Create class entity
-     * 5. Auto-generate sessions:
-     *    - 10 FIXED sessions (weekly, with dates)
-     *    - Extra sessions (PENDING, to be scheduled)
-     *    - E-learning sessions (no schedule)
-     *
-     * VALIDATIONS:
-     * - Class code unique
-     * - Semester UPCOMING (not ACTIVE/COMPLETED)
-     * - Teacher no conflict at fixed schedule
-     * - Room no conflict at fixed schedule
-     * - Subject belongs to teacher's department (optional)
-     *
+     /**
      * @param request Class creation request
      * @return Created class with session count
      */
@@ -81,7 +51,7 @@ public class ClassController {
     public ResponseEntity<ApiResponse<ClassResponse>> createClass(
             @Valid @RequestBody ClassCreateRequest request) {
 
-        log.info("➕ Creating class: {}", request.getClassCode());
+        log.info("Creating class: {}", request.getClassCode());
 
         ClassResponse response = classService.createClass(request);
 
@@ -92,19 +62,6 @@ public class ClassController {
 
     /**
      * Update class details
-     *
-     * ALLOWED UPDATES:
-     * - Teacher (checks conflicts)
-     * - Max students
-     * - Schedule (day, time, room - regenerates sessions!)
-     *
-     * NOT ALLOWED:
-     * - Class code (immutable)
-     * - Subject (would break registrations)
-     * - Semester (would break everything)
-     *
-     * ⚠️ WARNING: Changing schedule regenerates ALL sessions!
-     *
      * @param id Class ID
      * @param request Update request
      * @return Updated class
@@ -114,7 +71,7 @@ public class ClassController {
             @PathVariable Long id,
             @Valid @RequestBody ClassUpdateRequest request) {
 
-        log.info("✏️ Updating class {}", id);
+        log.info(" Updating class {}", id);
 
         ClassResponse response = classService.updateClass(id, request);
 
@@ -125,26 +82,13 @@ public class ClassController {
 
     /**
      * Delete class
-     *
-     * VALIDATIONS:
-     * - Cannot delete if has enrolled students
-     *
-     * CASCADES:
-     * - Deletes all sessions (class_session)
-     * - Deletes student schedules (student_schedule)
-     *
-     * USE CASES:
-     * - Admin created class by mistake
-     * - Duplicate class
-     * - Class cancelled before enrollment
-     *
      * @param id Class ID
      * @return Success message
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteClass(@PathVariable Long id) {
 
-        log.info("🗑️ Deleting class {}", id);
+        log.info(" Deleting class {}", id);
 
         classService.deleteClass(id);
 
@@ -152,8 +96,6 @@ public class ClassController {
                 ApiResponse.success("Class deleted")
         );
     }
-
-    // ==================== QUERY ENDPOINTS ====================
 
     /**
      * Get class by ID
@@ -221,16 +163,6 @@ public class ClassController {
 
     /**
      * Search classes by keyword
-     *
-     * SEARCHES IN:
-     * - Class code
-     * - Subject name
-     * - Teacher name
-     *
-     * EXAMPLE:
-     * - "IT101" → Finds classes with IT101 in code or subject
-     * - "Nguyen" → Finds classes taught by teachers with "Nguyen" in name
-     *
      * @param keyword Search keyword
      * @param page Page number
      * @param size Page size
@@ -242,7 +174,7 @@ public class ClassController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        log.info("🔍 Searching classes: '{}'", keyword);
+        log.info(" Searching classes: '{}'", keyword);
 
         Pageable pageable = PageRequest.of(page, size);
         Page<ClassResponse> classes = classService.searchClasses(keyword, pageable);

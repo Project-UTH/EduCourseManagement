@@ -12,28 +12,23 @@ import java.io.File;
 
 /**
  * Web Configuration
- * 
- * Configures static resource handling for uploaded files
- * 
- * ✅ FIXED: Use ABSOLUTE path to handle E drive location
- * ✅ ADDED: Materials folder for class materials
- * 
- * @author Phase 4.1 - File Upload
- * @since 2026-01-15
+
+ * @author 
+ * @since 
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // ✅ Homework files (EXISTING)
+        
         String uploadDir = new File("uploads/homework/").getAbsolutePath();
         String resourceLocation = "file:///" + uploadDir.replace("\\", "/") + "/";
         
         registry.addResourceHandler("/uploads/homework/**")
                 .addResourceLocations(resourceLocation);
         
-        // ✅ Materials files (NEW)
+       
         String materialsDir = new File("uploads/materials/").getAbsolutePath();
         String materialsLocation = "file:///" + materialsDir.replace("\\", "/") + "/";
         
@@ -41,7 +36,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations(materialsLocation);
         
         System.out.println("====================================");
-        System.out.println("✅ Static Resource Handlers Configured");
+        System.out.println(" Static Resource Handlers Configured");
         System.out.println("====================================");
         System.out.println("Homework:");
         System.out.println("  URL Pattern:   /uploads/homework/**");

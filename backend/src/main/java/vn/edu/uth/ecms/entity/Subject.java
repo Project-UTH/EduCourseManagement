@@ -3,10 +3,7 @@ package vn.edu.uth.ecms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-/**
- * Subject Entity - Version 2
- * Thêm Major và Sessions (buổi học)
- */
+
 @Entity
 @Table(name = "subject")
 @Getter

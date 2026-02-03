@@ -16,12 +16,8 @@ import java.util.Optional;
 
 /**
  * HomeworkWithSubmissionResponse
- * 
- * Response DTO for homework list with student's submission status
- * Used in class homework list to show if student has submitted
- * 
- * @author Phase 5 - Student Dashboard
- * @since 2026-01-14
+ * @author 
+ * @since 
  */
 @Data
 @Builder
@@ -30,9 +26,6 @@ import java.util.Optional;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class HomeworkWithSubmissionResponse {
     
-    // ========================================
-    // HOMEWORK INFORMATION
-    // ========================================
     
     private Long homeworkId;
     private String title;
@@ -45,9 +38,6 @@ public class HomeworkWithSubmissionResponse {
     private BigDecimal maxScore;
     private String attachmentUrl;
     
-    // ========================================
-    // SUBMISSION STATUS
-    // ========================================
     
     /**
      * Has student submitted this homework?

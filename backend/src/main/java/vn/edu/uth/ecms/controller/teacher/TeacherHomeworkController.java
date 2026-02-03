@@ -28,15 +28,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * TeacherHomeworkController
- * 
- * REST API endpoints for teacher homework management
- * 
- * ✅ UPDATED: Keep original filename + timestamp to avoid duplicates
- * ✅ FIXED: File URL uses full backend URL (localhost:8080)
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @RestController
 @RequestMapping("/api/teacher/homework")
@@ -47,20 +40,10 @@ public class TeacherHomeworkController {
     
     private final HomeworkService homeworkService;
     
-    // ==================== CREATE HOMEWORK WITH FILE UPLOAD ====================
     
     /**
      * Create new homework with optional file upload
      * POST /api/teacher/homework
-     * 
-     * Accepts multipart/form-data with:
-     * - classId (required)
-     * - title (required)
-     * - description (optional)
-     * - homeworkType (required)
-     * - deadline (required)
-     * - maxScore (optional, default 10)
-     * - file (optional) - attachment file
      */
     @PostMapping
     public ResponseEntity<HomeworkResponse> createHomework(
@@ -76,7 +59,7 @@ public class TeacherHomeworkController {
         log.info("Teacher {} creating homework for class {}", principal.getId(), classId);
         log.info("File received: {}", file != null ? file.getOriginalFilename() : "null");
         
-        // Build HomeworkRequest from form data
+        
         HomeworkRequest request = HomeworkRequest.builder()
             .classId(classId)
             .title(title)
@@ -86,7 +69,7 @@ public class TeacherHomeworkController {
             .maxScore(new java.math.BigDecimal(maxScore))
             .build();
         
-        // ✅ HANDLE FILE UPLOAD - KEEP ORIGINAL FILENAME
+       
         if (file != null && !file.isEmpty()) {
             try {
                 // Define upload directory
@@ -96,10 +79,10 @@ public class TeacherHomeworkController {
                 // Create directory if not exists
                 if (!Files.exists(uploadPath)) {
                     Files.createDirectories(uploadPath);
-                    log.info("✅ Created directory: {}", uploadDir);
+                    log.info(" Created directory: {}", uploadDir);
                 }
                 
-                // ✅ NEW: Keep original filename + add timestamp to avoid duplicates
+               
                 String originalFilename = file.getOriginalFilename();
                 String fileNameWithoutExt = "";
                 String extension = "";
@@ -112,21 +95,21 @@ public class TeacherHomeworkController {
                     fileNameWithoutExt = originalFilename;
                 }
                 
-                // Add timestamp to prevent duplicates
+                
                 long timestamp = System.currentTimeMillis();
                 String uniqueFilename = fileNameWithoutExt + "_" + timestamp + extension;
                 
-                // Save file to disk
+                
                 Path filePath = uploadPath.resolve(uniqueFilename);
                 Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
                 
-                // ✅ FIX: Set FULL URL for file download (backend port 8080)
+                
                 String fileUrl = "http://localhost:8080/uploads/homework/" + uniqueFilename;
                 request.setAttachmentUrl(fileUrl);
                 
-                log.info("✅ File saved with original name: {}", uniqueFilename);
-                log.info("✅ File URL: {}", fileUrl);
-                log.info("✅ File size: {} bytes", file.getSize());
+                log.info(" File saved with original name: {}", uniqueFilename);
+                log.info(" File URL: {}", fileUrl);
+                log.info(" File size: {} bytes", file.getSize());
                 
             } catch (IOException e) {
                 log.error("❌ Failed to save file: {}", e.getMessage());
@@ -138,12 +121,12 @@ public class TeacherHomeworkController {
         // Call service to create homework
         HomeworkResponse response = homeworkService.createHomework(request, principal.getId());
         
-        log.info("✅ Homework created with ID: {}", response.getHomeworkId());
+        log.info(" Homework created with ID: {}", response.getHomeworkId());
         
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
-    // ==================== UPDATE HOMEWORK ====================
+   
     
     /**
      * Update homework
@@ -163,7 +146,7 @@ public class TeacherHomeworkController {
         return ResponseEntity.ok(response);
     }
     
-    // ==================== DELETE HOMEWORK ====================
+   
     
     /**
      * Delete homework
@@ -181,7 +164,7 @@ public class TeacherHomeworkController {
         return ResponseEntity.noContent().build();
     }
     
-    // ==================== GET HOMEWORK ====================
+    
     
     /**
      * Get homework by ID
@@ -275,7 +258,7 @@ public class TeacherHomeworkController {
         return ResponseEntity.ok(responses);
     }
     
-    // ==================== FILTER HOMEWORK ====================
+  
     
     /**
      * Filter homework by criteria
@@ -299,7 +282,7 @@ public class TeacherHomeworkController {
         return ResponseEntity.ok(responses);
     }
     
-    // ==================== STATISTICS ====================
+   
     
     /**
      * Get homework statistics

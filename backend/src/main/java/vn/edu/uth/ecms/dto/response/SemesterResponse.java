@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 
 /**
  * DTO for Semester response
- * Includes computed fields for frontend display
  */
 @Data
 @NoArgsConstructor
@@ -34,14 +33,14 @@ public class SemesterResponse {
     private Boolean registrationEnabled;
 
     // Computed fields
-    private Boolean isRegistrationOpen;      // Current registration status
+    private Boolean isRegistrationOpen;     
     private Long durationInDays;
     private Long durationInWeeks;
     private Boolean isRegistrationPeriodValid;
 
     // Statistics (optional, computed later)
-    private Integer totalClasses;            // Total classes in this semester
-    private Integer totalStudentsEnrolled;   // Total students enrolled
+    private Integer totalClasses;            
+    private Integer totalStudentsEnrolled;  
 
     // Other
     private String description;

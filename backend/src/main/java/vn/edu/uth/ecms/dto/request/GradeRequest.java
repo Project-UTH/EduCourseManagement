@@ -9,12 +9,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 /**
- * GradeRequest DTO
- * 
- * Request body for creating or updating student grades
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Data
 @Builder
@@ -74,20 +70,11 @@ public class GradeRequest {
     @Size(max = 5000, message = "Teacher comment must not exceed 5000 characters")
     private String teacherComment;
     
-    // ========================================
-    // VALIDATION GROUPS
-    // ========================================
     
     public interface CreateValidation {}
     public interface UpdateValidation {}
     
-    // ========================================
-    // VALIDATION METHODS
-    // ========================================
-    
-    /**
-     * Check if all component scores are provided
-     */
+  
     public boolean isComplete() {
         return regularScore != null && midtermScore != null && finalScore != null;
     }

@@ -10,12 +10,9 @@ import java.math.BigDecimal;
 
 /**
  * GradeStatsResponse DTO
- * 
- * Class grade statistics and analytics
- * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
- * @updated 2026-01-28 - Added helper methods for Excel export
+ * @author 
+ * @since 
+ * @updated 
  */
 @Data
 @Builder
@@ -53,7 +50,7 @@ public class GradeStatsResponse {
         private BigDecimal lowest;
         private BigDecimal standardDeviation;
         
-        // Helper methods for Excel export (return Double)
+        
         public Double getAverageDouble() {
             return average != null ? average.doubleValue() : null;
         }

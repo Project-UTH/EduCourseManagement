@@ -75,7 +75,6 @@ public interface StudentService {
      */
     Page<StudentResponse> searchStudents(String keyword, Pageable pageable);
 
-    // ==================== PROFILE METHODS (NEW) ====================
 
     /**
      * Get student by student code (for current user profile)

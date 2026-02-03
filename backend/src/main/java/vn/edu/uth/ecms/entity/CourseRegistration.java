@@ -50,11 +50,11 @@ public class CourseRegistration extends BaseEntity {
     @Column(name = "dropped_at")
     private LocalDateTime droppedAt;
 
-    // ✅ NEW: Điểm tổng kết (được tính khi hoàn thành học kỳ)
+    
     @Column(name = "final_grade", columnDefinition = "DECIMAL(3,2)")
     private BigDecimal finalGrade;
 
-    // Manual enrollment fields
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "enrollment_type", length = 20)
     private EnrollmentType enrollmentType = EnrollmentType.NORMAL;
@@ -69,7 +69,6 @@ public class CourseRegistration extends BaseEntity {
     @JoinColumn(name = "enrolled_by_admin_id")
     private Admin enrolledByAdmin;
 
-    // ==================== HELPER METHODS ====================
 
     public boolean isActive() {
         return status == RegistrationStatus.REGISTERED;

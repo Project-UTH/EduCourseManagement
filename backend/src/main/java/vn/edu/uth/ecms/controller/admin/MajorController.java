@@ -53,10 +53,7 @@ public class MajorController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    /**
-     * Update an existing major
-     * PUT /api/admin/majors/{id}
-     */
+    
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateMajor(
             @PathVariable Long id,
@@ -74,10 +71,6 @@ public class MajorController {
         return ResponseEntity.ok(result);
     }
 
-    /**
-     * Delete a major
-     * DELETE /api/admin/majors/{id}
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteMajor(@PathVariable Long id) {
         log.info("REST request to delete major ID: {}", id);

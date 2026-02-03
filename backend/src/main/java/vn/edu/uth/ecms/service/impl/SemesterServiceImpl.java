@@ -26,13 +26,7 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.Optional;
 
-/**
- * ✅ FIXED VERSION - SemesterServiceImpl
- *
- * FIXES:
- * 1. Filter E_LEARNING sessions when creating extra schedules (Line 391)
- * 2. Only create schedules for IN_PERSON EXTRA sessions
- */
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -47,7 +41,7 @@ public class SemesterServiceImpl implements SemesterService {
     private final CourseRegistrationRepository registrationRepository;
     private final StudentScheduleRepository studentScheduleRepository;
 
-    // ==================== HELPER METHODS ====================
+   
 
     private SemesterResponse mapToResponse(Semester semester) {
         return SemesterResponse.builder()
@@ -70,8 +64,7 @@ public class SemesterServiceImpl implements SemesterService {
                 .build();
     }
 
-    // ==================== CRUD OPERATIONS ====================
-
+    
     @Override
     public SemesterResponse createSemester(SemesterCreateRequest request) {
         log.info("Creating semester: {}", request.getSemesterCode());
@@ -214,26 +207,22 @@ public class SemesterServiceImpl implements SemesterService {
                 .map(this::mapToResponse);
     }
 
-    // ==================== STATUS MANAGEMENT ====================
-    /**
-     * FIX #3: IDEMPOTENT ACTIVATION
-     * Prevents multiple scheduling if called multiple times
-     */
+ 
     @Override
     public SemesterResponse activateSemester(Long id) {
-        log.info("🔄 Activating semester ID: {}", id);
+        log.info(" Activating semester ID: {}", id);
 
         Semester semesterToActivate = semesterRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Semester not found with ID: " + id));
 
-        // ✅ FIX #3: If already ACTIVE, return early (don't re-schedule)
+    
         if (semesterToActivate.getStatus() == SemesterStatus.ACTIVE) {
-            log.warn("⚠️ Semester {} is already ACTIVE. Skipping re-activation and scheduling.",
+            log.warn(" Semester {} is already ACTIVE. Skipping re-activation and scheduling.",
                     semesterToActivate.getSemesterCode());
             return mapToResponse(semesterToActivate);
         }
 
-        // Cannot activate COMPLETED
+        
         if (semesterToActivate.getStatus() == SemesterStatus.COMPLETED) {
             throw new BadRequestException("Cannot activate COMPLETED semester");
         }
@@ -256,21 +245,21 @@ public class SemesterServiceImpl implements SemesterService {
         semesterToActivate.setStatus(SemesterStatus.ACTIVE);
         Semester saved = semesterRepository.save(semesterToActivate);
 
-        log.info("✅ Activated semester: {}", saved.getSemesterCode());
+        log.info(" Activated semester: {}", saved.getSemesterCode());
 
-        // ⭐ AUTO SCHEDULE EXTRA SESSIONS (only once!)
+       
         try {
             schedulePendingExtraSessions(id);
             createStudentSchedulesForExtraSessions(id);
         } catch (Exception e) {
-            log.error("❌ Failed to auto-schedule extra sessions: {}", e.getMessage(), e);
+            log.error(" Failed to auto-schedule extra sessions: {}", e.getMessage(), e);
         }
 
         return mapToResponse(saved);
     }
 
     private void schedulePendingExtraSessions(Long semesterId) {
-        log.info("📅 Scheduling all pending extra sessions for semester {}", semesterId);
+        log.info(" Scheduling all pending extra sessions for semester {}", semesterId);
 
         Semester semester = semesterRepository.findById(semesterId)
                 .orElseThrow(() -> new NotFoundException("Semester not found"));
@@ -278,7 +267,7 @@ public class SemesterServiceImpl implements SemesterService {
         List<ClassSession> pendingSessions = sessionRepository.findPendingSessionsBySemester(semesterId);
 
         if (pendingSessions.isEmpty()) {
-            log.info("ℹ️ No pending extra sessions to schedule");
+            log.info(" No pending extra sessions to schedule");
             return;
         }
 
@@ -295,20 +284,20 @@ public class SemesterServiceImpl implements SemesterService {
                     sessionRepository.save(session);
                     successCount++;
 
-                    log.debug("✅ Scheduled session {}: {} {} {} {}",
+                    log.debug(" Scheduled session {}: {} {} {} {}",
                             session.getSessionNumber(),
                             session.getOriginalDate(),
                             session.getOriginalDayOfWeek(),
                             session.getOriginalTimeSlot(),
                             session.getOriginalRoom().getRoomCode());
                 } else {
-                    log.error("❌ Failed to schedule session {} for class {}",
+                    log.error(" Failed to schedule session {} for class {}",
                             session.getSessionNumber(),
                             session.getClassEntity().getClassCode());
                     failCount++;
                 }
             } catch (Exception e) {
-                log.error("❌ Error scheduling session {} for class {}: {}",
+                log.error(" Error scheduling session {} for class {}: {}",
                         session.getSessionNumber(),
                         session.getClassEntity().getClassCode(),
                         e.getMessage(), e);
@@ -316,24 +305,22 @@ public class SemesterServiceImpl implements SemesterService {
             }
         }
 
-        log.info("✅ Extra session scheduling complete: {} success, {} failed",
+        log.info(" Extra session scheduling complete: {} success, {} failed",
                 successCount, failCount);
 
         if (failCount > 0) {
-            log.warn("⚠️ {} sessions could not be scheduled automatically", failCount);
+            log.warn(" {} sessions could not be scheduled automatically", failCount);
         }
     }
 
-    /**
-     * ✅ FIX #1 + FIX #2: Filter E_LEARNING + Check existing schedules
-     */
+    
     private void createStudentSchedulesForExtraSessions(Long semesterId) {
-        log.info("📅 Creating student schedules for extra sessions in semester {}", semesterId);
+        log.info(" Creating student schedules for extra sessions in semester {}", semesterId);
 
         List<ClassEntity> classes = classRepository.findBySemester(semesterId);
 
         if (classes.isEmpty()) {
-            log.info("ℹ️ No classes found in semester {}", semesterId);
+            log.info(" No classes found in semester {}", semesterId);
             return;
         }
 
@@ -341,8 +328,6 @@ public class SemesterServiceImpl implements SemesterService {
         int totalSkipped = 0;
 
         for (ClassEntity classEntity : classes) {
-            // ✅ FIX #1: Filter ONLY IN_PERSON EXTRA sessions
-            // Excludes E_LEARNING (already created during enrollment)
             List<ClassSession> extraSessions = sessionRepository
                     .findByClass(classEntity.getClassId())
                     .stream()
@@ -375,7 +360,7 @@ public class SemesterServiceImpl implements SemesterService {
             for (CourseRegistration reg : registrations) {
                 for (ClassSession session : extraSessions) {
 
-                    // ✅ FIX #2: Check if schedule already exists
+                    
                     long existingCount = studentScheduleRepository.countByStudentAndSession(
                             reg.getStudent().getStudentId(),
                             session.getSessionId()
@@ -408,16 +393,16 @@ public class SemesterServiceImpl implements SemesterService {
                 studentScheduleRepository.saveAll(schedules);
                 totalSchedulesCreated += schedules.size();
 
-                log.info("  ✅ Created {} new schedules for {} students",
+                log.info("   Created {} new schedules for {} students",
                         schedules.size(), registrations.size());
             }
         }
 
         if (totalSkipped > 0) {
-            log.info("ℹ️ Skipped {} schedules (already exist)", totalSkipped);
+            log.info(" Skipped {} schedules (already exist)", totalSkipped);
         }
 
-        log.info("✅ Total {} student schedules created for extra IN_PERSON sessions",
+        log.info(" Total {} student schedules created for extra IN_PERSON sessions",
                 totalSchedulesCreated);
     }
 
@@ -470,14 +455,14 @@ public class SemesterServiceImpl implements SemesterService {
         }
 
         SemesterResponse response = mapToResponse(semester.get());
-        log.info("✅ Registration OPEN for semester: {} (until {})",
+        log.info(" Registration OPEN for semester: {} (until {})",
                 response.getSemesterCode(),
                 response.getRegistrationEndDate());
 
         return response;
     }
 
-    // ==================== REGISTRATION CONTROL ====================
+   
 
     @Override
     public SemesterResponse enableRegistration(Long id) {
@@ -503,7 +488,7 @@ public class SemesterServiceImpl implements SemesterService {
         semester.setRegistrationEnabled(true);
         Semester saved = semesterRepository.save(semester);
 
-        log.info("✅ Registration ENABLED for semester: {} (until {})",
+        log.info(" Registration ENABLED for semester: {} (until {})",
                 saved.getSemesterCode(),
                 saved.getRegistrationEndDate());
 
@@ -561,7 +546,7 @@ public class SemesterServiceImpl implements SemesterService {
         return semester.isRegistrationOpen();
     }
 
-    // ==================== VALIDATION ====================
+    
 
     @Override
     public void validateSemesterDates(LocalDate startDate, LocalDate endDate) {

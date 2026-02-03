@@ -1,9 +1,7 @@
 package vn.edu.uth.ecms.entity;
 
 /**
- * Room Type Enum - COMPLETE
- *
- * ✅ ALL CONSTANTS DEFINED
+ * Room Type Enum 
  */
 public enum RoomType {
     /**

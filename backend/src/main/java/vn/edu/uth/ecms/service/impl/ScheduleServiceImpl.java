@@ -16,14 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ✅ FIXED ScheduleServiceImpl - VERSION 2.0
- *
- * CRITICAL FIX:
- * - Properly handle E-learning sessions with dates
- * - Don't skip sessions with null dates if they're E-learning
- * - Better logging for debugging
- */
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -38,25 +31,25 @@ public class ScheduleServiceImpl implements ScheduleService {
     public List<ScheduleItemResponse> getStudentWeeklySchedule(
             Long studentId, LocalDate weekStartDate) {
 
-        log.info("📅 Building weekly schedule for student {} from {}", studentId, weekStartDate);
+        log.info(" Building weekly schedule for student {} from {}", studentId, weekStartDate);
 
-        // ✅ Ensure weekStartDate is Monday
+        
         LocalDate actualMonday = weekStartDate;
         if (weekStartDate.getDayOfWeek() != DayOfWeek.MONDAY) {
             actualMonday = weekStartDate.with(DayOfWeek.MONDAY);
-            log.warn("⚠️ Received non-Monday date {}. Adjusted to Monday: {}",
+            log.warn(" Received non-Monday date {}. Adjusted to Monday: {}",
                     weekStartDate, actualMonday);
         }
 
         LocalDate weekEndDate = actualMonday.plusDays(6);
 
-        log.info("📆 Week range: {} (MONDAY) to {} (SUNDAY)", actualMonday, weekEndDate);
+        log.info(" Week range: {} (MONDAY) to {} (SUNDAY)", actualMonday, weekEndDate);
 
         // Get all REGISTERED classes for student
         List<CourseRegistration> allRegistrations = registrationRepository
                 .findByStudent_StudentIdAndStatus(studentId, RegistrationStatus.REGISTERED);
 
-        log.info("📚 Student has {} registered classes", allRegistrations.size());
+        log.info(" Student has {} registered classes", allRegistrations.size());
 
         // Filter: Only UPCOMING and ACTIVE semesters
         List<CourseRegistration> registrations = allRegistrations.stream()
@@ -79,7 +72,7 @@ public class ScheduleServiceImpl implements ScheduleService {
                 })
                 .toList();
 
-        log.info("✅ After filtering (UPCOMING/ACTIVE): {} classes", registrations.size());
+        log.info(" After filtering (UPCOMING/ACTIVE): {} classes", registrations.size());
 
         List<ScheduleItemResponse> scheduleItems = new ArrayList<>();
 
@@ -87,11 +80,11 @@ public class ScheduleServiceImpl implements ScheduleService {
         for (CourseRegistration registration : registrations) {
             ClassEntity classEntity = registration.getClassEntity();
 
-            log.info("🔍 Processing class: {} ({})",
+            log.info(" Processing class: {} ({})",
                     classEntity.getClassCode(),
                     classEntity.getClassId());
 
-            // ✅ Get sessions for this class in the week
+            //  Get sessions for this class in the week
             List<ClassSession> sessions = sessionRepository.findByClassAndDateRange(
                     classEntity.getClassId(),
                     actualMonday,
@@ -102,37 +95,37 @@ public class ScheduleServiceImpl implements ScheduleService {
 
             // Convert each session to ScheduleItemResponse
             for (ClassSession session : sessions) {
-                // ✅ FIX: Special handling for E-learning
+                
                 LocalDate sessionDate = session.getEffectiveDate();
                 SessionType sessionType = session.getSessionType();
 
-                // ✅ CRITICAL: For E-learning, try originalDate if effectiveDate is null
+                
                 if (sessionType == SessionType.E_LEARNING && sessionDate == null) {
                     sessionDate = session.getOriginalDate();
-                    log.warn("  ⚠️ E-learning session {} has null effectiveDate, using originalDate: {}",
+                    log.warn("   E-learning session {} has null effectiveDate, using originalDate: {}",
                             session.getSessionNumber(), sessionDate);
                 }
 
                 // Skip if date is still null or outside the week range
                 if (sessionDate == null) {
-                    log.error("  ❌ Session {} (type: {}) has NULL date! Skipping...",
+                    log.error("   Session {} (type: {}) has NULL date! Skipping...",
                             session.getSessionNumber(), sessionType);
                     continue;
                 }
 
                 if (sessionDate.isBefore(actualMonday) || sessionDate.isAfter(weekEndDate)) {
-                    log.debug("  ⏭️ Session {} date {} outside week range",
+                    log.debug("  ⏭ Session {} date {} outside week range",
                             session.getSessionNumber(), sessionDate);
                     continue;
                 }
 
-                // ✅ Map to response
+                
                 ScheduleItemResponse item = mapToScheduleItem(session, classEntity);
                 scheduleItems.add(item);
 
-                // ✅ HIGHLIGHT E-learning in logs
+                
                 String typeIcon = sessionType == SessionType.E_LEARNING ? "💻" : "🏫";
-                log.info("  ✅ {} Session {}: {} {} {} (Room: {})",
+                log.info("   {} Session {}: {} {} {} (Room: {})",
                         typeIcon,
                         session.getSessionNumber(),
                         item.getSessionDate(),
@@ -142,7 +135,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             }
         }
 
-        // ✅ LOG SUMMARY by type
+        
         long inPersonCount = scheduleItems.stream()
                 .filter(item -> "IN_PERSON".equals(item.getSessionType()))
                 .count();
@@ -150,7 +143,7 @@ public class ScheduleServiceImpl implements ScheduleService {
                 .filter(item -> "E_LEARNING".equals(item.getSessionType()))
                 .count();
 
-        log.info("✅ Total schedule items: {} (IN_PERSON: {}, E_LEARNING: {})",
+        log.info(" Total schedule items: {} (IN_PERSON: {}, E_LEARNING: {})",
                 scheduleItems.size(), inPersonCount, eLearningCount);
 
         return scheduleItems;
@@ -160,26 +153,26 @@ public class ScheduleServiceImpl implements ScheduleService {
     public List<ScheduleItemResponse> getTeacherWeeklySchedule(
             Long teacherId, LocalDate weekStartDate) {
 
-        log.info("📅 Building weekly schedule for teacher {} from {}", teacherId, weekStartDate);
+        log.info(" Building weekly schedule for teacher {} from {}", teacherId, weekStartDate);
 
-        // ✅ Ensure weekStartDate is Monday
+        
         LocalDate actualMonday = weekStartDate;
         if (weekStartDate.getDayOfWeek() != DayOfWeek.MONDAY) {
             actualMonday = weekStartDate.with(DayOfWeek.MONDAY);
-            log.warn("⚠️ Received non-Monday date {}. Adjusted to Monday: {}",
+            log.warn(" Received non-Monday date {}. Adjusted to Monday: {}",
                     weekStartDate, actualMonday);
         }
 
         LocalDate weekEndDate = actualMonday.plusDays(6);
 
-        log.info("📆 Week range: {} (MONDAY) to {} (SUNDAY)", actualMonday, weekEndDate);
+        log.info(" Week range: {} (MONDAY) to {} (SUNDAY)", actualMonday, weekEndDate);
 
-        // ✅ Get all classes taught by this teacher
+        
         List<ClassEntity> allClasses = classRepository.findByTeacher_TeacherId(teacherId);
 
-        log.info("📚 Teacher has {} classes total", allClasses.size());
+        log.info(" Teacher has {} classes total", allClasses.size());
 
-        // Filter: Only ACTIVE/UPCOMING semesters
+    
         List<ClassEntity> classes = allClasses.stream()
                 .filter(cls -> cls.getSemester() != null)
                 .filter(cls -> {
@@ -196,7 +189,7 @@ public class ScheduleServiceImpl implements ScheduleService {
                 })
                 .toList();
 
-        log.info("✅ After filtering (UPCOMING/ACTIVE): {} classes", classes.size());
+        log.info(" After filtering (UPCOMING/ACTIVE): {} classes", classes.size());
 
         List<ScheduleItemResponse> scheduleItems = new ArrayList<>();
 
@@ -206,7 +199,7 @@ public class ScheduleServiceImpl implements ScheduleService {
                     classEntity.getClassCode(),
                     classEntity.getClassId());
 
-            // ✅ Get sessions for this class in the week
+           
             List<ClassSession> sessions = sessionRepository.findByClassAndDateRange(
                     classEntity.getClassId(),
                     actualMonday,
@@ -217,37 +210,37 @@ public class ScheduleServiceImpl implements ScheduleService {
 
             // Convert each session to ScheduleItemResponse
             for (ClassSession session : sessions) {
-                // ✅ FIX: Special handling for E-learning
+                
                 LocalDate sessionDate = session.getEffectiveDate();
                 SessionType sessionType = session.getSessionType();
 
-                // ✅ CRITICAL: For E-learning, try originalDate if effectiveDate is null
+               
                 if (sessionType == SessionType.E_LEARNING && sessionDate == null) {
                     sessionDate = session.getOriginalDate();
-                    log.warn("  ⚠️ E-learning session {} has null effectiveDate, using originalDate: {}",
+                    log.warn("   E-learning session {} has null effectiveDate, using originalDate: {}",
                             session.getSessionNumber(), sessionDate);
                 }
 
                 // Skip if date is still null or outside the week range
                 if (sessionDate == null) {
-                    log.error("  ❌ Session {} (type: {}) has NULL date! Skipping...",
+                    log.error("   Session {} (type: {}) has NULL date! Skipping...",
                             session.getSessionNumber(), sessionType);
                     continue;
                 }
 
                 if (sessionDate.isBefore(actualMonday) || sessionDate.isAfter(weekEndDate)) {
-                    log.debug("  ⏭️ Session {} date {} outside week range",
+                    log.debug("  ⏭ Session {} date {} outside week range",
                             session.getSessionNumber(), sessionDate);
                     continue;
                 }
 
-                // ✅ Map to response
+              
                 ScheduleItemResponse item = mapToScheduleItem(session, classEntity);
                 scheduleItems.add(item);
 
-                // ✅ HIGHLIGHT E-learning in logs
+                
                 String typeIcon = sessionType == SessionType.E_LEARNING ? "💻" : "🏫";
-                log.info("  ✅ {} Session {}: {} {} {} (Room: {})",
+                log.info("   {} Session {}: {} {} {} (Room: {})",
                         typeIcon,
                         session.getSessionNumber(),
                         item.getSessionDate(),
@@ -257,7 +250,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             }
         }
 
-        // ✅ LOG SUMMARY by type
+        // LOG SUMMARY by type
         long inPersonCount = scheduleItems.stream()
                 .filter(item -> "IN_PERSON".equals(item.getSessionType()))
                 .count();
@@ -265,27 +258,25 @@ public class ScheduleServiceImpl implements ScheduleService {
                 .filter(item -> "E_LEARNING".equals(item.getSessionType()))
                 .count();
 
-        log.info("✅ Total schedule items: {} (IN_PERSON: {}, E_LEARNING: {})",
+        log.info(" Total schedule items: {} (IN_PERSON: {}, E_LEARNING: {})",
                 scheduleItems.size(), inPersonCount, eLearningCount);
 
         return scheduleItems;
     }
 
-    /**
-     * ✅ FIXED: Map session to response with better E-learning handling
-     */
+   
     private ScheduleItemResponse mapToScheduleItem(ClassSession session, ClassEntity classEntity) {
         Subject subject = classEntity.getSubject();
         Teacher teacher = classEntity.getTeacher();
         SessionType sessionType = session.getSessionType();
 
-        // ✅ Get effective values with fallback to original
+       
         LocalDate effectiveDate = session.getEffectiveDate();
         DayOfWeek effectiveDay = session.getEffectiveDayOfWeek();
         TimeSlot effectiveSlot = session.getEffectiveTimeSlot();
         Room effectiveRoom = session.getEffectiveRoom();
 
-        // ✅ FALLBACK: If effective values are null, use original (for E-learning)
+       
         if (effectiveDate == null) {
             effectiveDate = session.getOriginalDate();
         }
@@ -299,13 +290,13 @@ public class ScheduleServiceImpl implements ScheduleService {
             effectiveRoom = session.getOriginalRoom();
         }
 
-        // ✅ If date exists but day is null, derive it
+        
         if (effectiveDate != null && effectiveDay == null) {
             effectiveDay = effectiveDate.getDayOfWeek();
             log.debug("  🔧 Derived dayOfWeek {} from date {}", effectiveDay, effectiveDate);
         }
 
-        // ✅ LOG for E-learning debugging
+       
         if (sessionType == SessionType.E_LEARNING) {
             log.debug("  💻 E-learning session {}: date={}, day={}, slot={}, room={}",
                     session.getSessionNumber(),

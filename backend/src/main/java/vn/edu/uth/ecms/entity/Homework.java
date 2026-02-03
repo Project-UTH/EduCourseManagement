@@ -19,8 +19,8 @@ import java.util.List;
  * 
  * Represents homework/assignments created by teachers for a class
  * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Entity
 @Table(name = "homework", indexes = {
@@ -39,104 +39,54 @@ public class Homework {
     @Column(name = "homework_id")
     private Long homeworkId;
     
-    // ========================================
-    // RELATIONSHIPS
-    // ========================================
     
-    /**
-     * The class this homework belongs to
-     * Many homeworks can belong to one class
-     */
+   
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id", nullable = false, 
                 foreignKey = @ForeignKey(name = "fk_homework_class"))
     private ClassEntity classEntity;
     
-    /**
-     * Submissions for this homework
-     * One homework can have many submissions
-     */
+  
     @OneToMany(mappedBy = "homework", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HomeworkSubmission> submissions = new ArrayList<>();
     
-    // ========================================
-    // BASIC INFO
-    // ========================================
-    
-    /**
-     * Homework title
-     * Example: "Bài tập tuần 1", "Bài kiểm tra giữa kỳ"
-     */
+ 
     @Column(name = "title", nullable = false, length = 200)
     @NotBlank(message = "Title is required")
     @Size(max = 200, message = "Title must not exceed 200 characters")
     private String title;
     
-    /**
-     * Homework description/instructions
-     * Detailed instructions for students
-     */
+
     @Column(name = "description", columnDefinition = "TEXT")
     @Size(max = 5000, message = "Description must not exceed 5000 characters")
     private String description;
     
-    // ========================================
-    // TYPE & SCORING
-    // ========================================
     
-    /**
-     * Type of homework
-     * REGULAR (20%), MIDTERM (30%), FINAL (50%)
-     */
     @Enumerated(EnumType.STRING)
     @Column(name = "homework_type", nullable = false, length = 20)
     @NotNull(message = "Homework type is required")
     private HomeworkType homeworkType = HomeworkType.REGULAR;
     
-    /**
-     * Maximum score for this homework
-     * Default: 10.00
-     */
+
     @Column(name = "max_score", nullable = false, precision = 4, scale = 2)
     @NotNull(message = "Max score is required")
     @DecimalMin(value = "0.0", message = "Max score must be at least 0")
     @DecimalMax(value = "10.0", message = "Max score must not exceed 10")
     private BigDecimal maxScore = new BigDecimal("10.00");
     
-    // ========================================
-    // DEADLINE
-    // ========================================
-    
-    /**
-     * Submission deadline
-     * Students must submit before this time
-     */
+ 
     @Column(name = "deadline", nullable = false)
     @NotNull(message = "Deadline is required")
     @Future(message = "Deadline must be in the future")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime deadline;
     
-    // ========================================
-    // ATTACHMENT
-    // ========================================
     
-    /**
-     * URL to homework attachment file
-     * Optional - teacher can upload assignment file
-     */
     @Column(name = "attachment_url", length = 500)
     @Size(max = 500, message = "Attachment URL must not exceed 500 characters")
     private String attachmentUrl;
     
-    // ========================================
-    // TIMESTAMPS
-    // ========================================
-    
-    /**
-     * When homework was created
-     * Automatically set on creation
-     */
+   
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false, 
             columnDefinition = "DATETIME(6)")
@@ -152,10 +102,7 @@ public class Homework {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     
-    // ========================================
-    // BUSINESS METHODS
-    // ========================================
-    
+ 
     /**
      * Check if homework is overdue
      * 
@@ -304,13 +251,7 @@ public class Homework {
         }
     }
     
-    // ========================================
-    // LIFECYCLE CALLBACKS
-    // ========================================
-    
-    /**
-     * Before persist - set default values
-     */
+
     @PrePersist
     protected void onCreate() {
         if (homeworkType == null) {

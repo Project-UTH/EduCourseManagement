@@ -8,8 +8,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * Request DTO for updating student profile
- * Only allows updating: email, phone
- * Other fields (name, DOB, major, etc.) can only be updated by admin
  */
 @Data
 @NoArgsConstructor

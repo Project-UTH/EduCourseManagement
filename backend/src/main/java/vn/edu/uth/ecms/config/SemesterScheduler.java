@@ -16,14 +16,6 @@ import java.util.Optional;
 
 /**
  * Scheduled job to auto-update semester statuses
- *
- * Runs daily at midnight (00:00)
- *
- * CRITICAL RULES:
- * 1. Only ONE semester can be ACTIVE at any time
- * 2. UPCOMING → ACTIVE (if start date reached)
- * 3. ACTIVE → COMPLETED (if end date passed)
- * 4. Auto-disable registration when completing semester
  */
 //@Component
 @EnableScheduling
@@ -33,23 +25,19 @@ public class SemesterScheduler {
 
     private final SemesterRepository semesterRepository;
 
-    /**
-     * Auto-update semester statuses
-     * Runs every day at 00:00 (midnight)
-     */
+   
     @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void updateSemesterStatuses() {
         log.info("═══════════════════════════════════════════════════════");
-        log.info("🕐 [SemesterScheduler] Starting auto semester status update...");
+        log.info(" [SemesterScheduler] Starting auto semester status update...");
         log.info("═══════════════════════════════════════════════════════");
 
         LocalDate today = LocalDate.now();
         int upcomingToActive = 0;
         int activeToCompleted = 0;
 
-        // ==================== STEP 1: ACTIVE → COMPLETED ====================
-        // Do this FIRST to avoid conflicts
+       
 
         List<Semester> activeSemesters = semesterRepository.findByStatusIn(
                 List.of(SemesterStatus.ACTIVE)
@@ -59,27 +47,24 @@ public class SemesterScheduler {
         for (Semester semester : activeSemesters) {
             if (today.isAfter(semester.getEndDate())) {
                 semester.setStatus(SemesterStatus.COMPLETED);
-                semester.setRegistrationEnabled(false);  // ✅ FIXED: setRegistrationEnabled
+                semester.setRegistrationEnabled(false);  
                 semesterRepository.save(semester);
                 activeToCompleted++;
 
-                log.info("✅ Completed semester: {} ({}) - End date: {}",
+                log.info(" Completed semester: {} ({}) - End date: {}",
                         semester.getSemesterName(),
                         semester.getSemesterCode(),
                         semester.getEndDate());
             }
         }
 
-        // ==================== STEP 2: UPCOMING → ACTIVE ====================
-        // CRITICAL: Only activate ONE semester, even if multiple are ready
-
-        // Check if there's already an ACTIVE semester
+        
         Optional<Semester> currentActive = semesterRepository.findByStatus(SemesterStatus.ACTIVE);
 
         if (currentActive.isEmpty()) {
             // No ACTIVE semester, find the first UPCOMING that should start
             List<Semester> upcomingSemesters = semesterRepository.findByStatusIn(
-                    List.of(SemesterStatus.UPCOMING)  // ✅ FIXED: findByStatusIn returns List
+                    List.of(SemesterStatus.UPCOMING)  
             );
             log.info("Found {} UPCOMING semester(s) to check", upcomingSemesters.size());
 
@@ -100,20 +85,20 @@ public class SemesterScheduler {
                 semesterRepository.save(toActivate);
                 upcomingToActive++;
 
-                log.info("✅ Activated semester: {} ({}) - Start date: {}",
+                log.info(" Activated semester: {} ({}) - Start date: {}",
                         toActivate.getSemesterName(),
                         toActivate.getSemesterCode(),
                         toActivate.getStartDate());
             } else {
-                log.info("ℹ️  No UPCOMING semester ready to activate");
+                log.info("  No UPCOMING semester ready to activate");
             }
         } else {
-            log.info("ℹ️  Already have ACTIVE semester: {} ({})",
+            log.info("  Already have ACTIVE semester: {} ({})",
                     currentActive.get().getSemesterName(),
                     currentActive.get().getSemesterCode());
         }
 
-        // ==================== STEP 3: AUTO-DISABLE EXPIRED REGISTRATIONS ====================
+       
 
         List<Semester> semestersWithRegistration = semesterRepository.findByRegistrationEnabled(true);
         int registrationsDisabled = 0;
@@ -123,21 +108,19 @@ public class SemesterScheduler {
             if (semester.getRegistrationEndDate() != null
                     && today.isAfter(semester.getRegistrationEndDate())) {
 
-                semester.setRegistrationEnabled(false);  // ✅ FIXED: setRegistrationEnabled
+                semester.setRegistrationEnabled(false);  
                 semesterRepository.save(semester);
                 registrationsDisabled++;
 
-                log.info("🔒 Auto-disabled registration for semester: {} ({}) - Registration ended: {}",
+                log.info(" Auto-disabled registration for semester: {} ({}) - Registration ended: {}",
                         semester.getSemesterName(),
                         semester.getSemesterCode(),
                         semester.getRegistrationEndDate());
             }
         }
 
-        // ==================== SUMMARY ====================
-
         log.info("═══════════════════════════════════════════════════════");
-        log.info("📊 [SemesterScheduler] Status update complete:");
+        log.info(" [SemesterScheduler] Status update complete:");
         log.info("   • Activated: {} semester(s)", upcomingToActive);
         log.info("   • Completed: {} semester(s)", activeToCompleted);
         log.info("   • Registrations auto-disabled: {} semester(s)", registrationsDisabled);
@@ -149,7 +132,7 @@ public class SemesterScheduler {
      * Can be called via endpoint: POST /api/admin/scheduler/trigger-semester-update
      */
     public void manualTrigger() {
-        log.info("🔧 [SemesterScheduler] Manual trigger activated");
+        log.info(" [SemesterScheduler] Manual trigger activated");
         updateSemesterStatuses();
     }
 }

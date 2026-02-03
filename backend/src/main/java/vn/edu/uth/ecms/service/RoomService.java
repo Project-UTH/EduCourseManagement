@@ -12,12 +12,9 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * ✨ ENHANCED RoomService with Real-time Status
- */
+
 public interface RoomService {
 
-    // ==================== EXISTING METHODS (Keep as is) ====================
 
     Room findRoomForFixedSchedule(
             Long semesterId,
@@ -54,8 +51,7 @@ public interface RoomService {
 
     Double getRoomUtilization(Long roomId, Long semesterId);
 
-    // ==================== ✨ NEW: ROOM MANAGEMENT ====================
-
+    
     /**
      * Get all rooms with real-time status (paginated)
      *
@@ -78,8 +74,6 @@ public interface RoomService {
     RoomResponse getRoomWithStatus(Long roomId, Long semesterId);
 
     /**
-     * ✨ Get rooms by current real-time status
-     *
      * @param status "IN_USE" or "AVAILABLE" or "INACTIVE"
      * @param semesterId Current semester
      * @param pageable Pagination
@@ -91,7 +85,7 @@ public interface RoomService {
             Pageable pageable
     );
 
-    // ==================== ✨ NEW: SEARCH & FILTER ====================
+    
 
     /**
      * Search rooms by keyword
@@ -110,7 +104,7 @@ public interface RoomService {
             Integer floor,
             RoomType roomType,
             Boolean isActive,
-            String currentStatus,  // ← NEW: Filter by real-time status
+            String currentStatus,  
             Long semesterId,
             Pageable pageable
     );
@@ -151,7 +145,7 @@ public interface RoomService {
             Pageable pageable
     );
 
-    // ==================== ✨ NEW: SCHEDULE & SESSIONS ====================
+ 
 
     /**
      * Get room schedule for a semester
@@ -175,8 +169,6 @@ public interface RoomService {
             LocalDate date
     );
 
-    // ==================== ✨ NEW: STATISTICS ====================
-
     /**
      * Get room statistics for semester
      * - Total sessions
@@ -195,7 +187,7 @@ public interface RoomService {
     List<String> getAllBuildings();
     List<Integer> getFloorsByBuilding(String building);
 
-    // ==================== ✨ NEW: REAL-TIME STATUS ====================
+   
 
     /**
      * Check if room is currently in use (RIGHT NOW)
@@ -219,7 +211,7 @@ public interface RoomService {
      */
     String calculateCurrentStatus(Room room);
 
-    // ==================== CRUD OPERATIONS ====================
+    
 
     /**
      * Create a new room

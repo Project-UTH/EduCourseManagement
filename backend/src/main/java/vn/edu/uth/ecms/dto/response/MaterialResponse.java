@@ -8,8 +8,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * MaterialResponse
- * 
  * Response DTO for class material
  */
 @Data
@@ -27,7 +25,7 @@ public class MaterialResponse {
     private String fileUrl;
     private String fileType;
     private Long fileSize;
-    private String fileSizeDisplay; // "2.5 MB"
+    private String fileSizeDisplay; 
     
     // Uploader info
     private Long uploadedById;

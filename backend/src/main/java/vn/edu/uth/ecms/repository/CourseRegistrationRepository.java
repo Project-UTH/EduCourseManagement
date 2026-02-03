@@ -16,7 +16,7 @@ import java.util.Optional;
 @Repository
 public interface CourseRegistrationRepository extends JpaRepository<CourseRegistration, Long> {
     
-    // ==================== EXISTING METHODS ====================
+    
     
     List<CourseRegistration> findByStudent_StudentIdAndStatus(Long studentId, RegistrationStatus status);
 
@@ -107,29 +107,18 @@ public interface CourseRegistrationRepository extends JpaRepository<CourseRegist
            "AND r.status = 'REGISTERED'")
     Long countActiveStudents(@Param("classId") Long classId);
 
-    // ==================== PHASE 4 METHODS ====================
-    
-    /**
-     * Find registrations by class ID
-     */
+   
     List<CourseRegistration> findByClassEntity_ClassId(Long classId);
     
-    /**
-     * Find registrations by class ID and status
-     */
+  
     List<CourseRegistration> findByClassEntity_ClassIdAndStatus(Long classId, RegistrationStatus status);
     
-    /**
-     * Find all manual enrollments (for audit trail)
-     */
+    
     List<CourseRegistration> findByEnrollmentTypeOrderByRegisteredAtDesc(EnrollmentType enrollmentType);
 
-    // ==================== ✅ NEW: SEMESTER COMPLETION ====================
+    
     
     /**
-     * Find registrations by semester and status
-     * Used by SemesterCompletionService to calculate final grades
-     * 
      * @param semesterId Semester ID
      * @param status Registration status (e.g., REGISTERED)
      * @return List of course registrations

@@ -33,9 +33,9 @@ import java.util.List;
  * REST API endpoints for teacher to access their classes
  * Security handled by SecurityConfig - no need for @PreAuthorize here!
  * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-07
- * @updated 2026-01-28 - Added getEnrolledStudents and exportGradeStatisticsExcel endpoints
+ * @author 
+ * @since 
+ * @updated 
  */
 @RestController
 @RequestMapping("/api/teacher/classes")
@@ -67,11 +67,11 @@ public class TeacherClassController {
         try {
             List<ClassResponse> classes = classService.getClassesByTeacher(principal.getId());
             
-            log.info("✅ Teacher {} has {} classes", principal.getId(), classes.size());
+            log.info(" Teacher {} has {} classes", principal.getId(), classes.size());
             return ResponseEntity.ok(classes);
             
         } catch (Exception e) {
-            log.error("❌ Failed to fetch classes for teacher {}: {}", 
+            log.error(" Failed to fetch classes for teacher {}: {}", 
                      principal.getId(), e.getMessage());
             throw e;
         }
@@ -97,35 +97,31 @@ public class TeacherClassController {
             
             // Verify teacher owns this class
             if (!classResponse.getTeacherId().equals(principal.getId())) {
-                log.warn("❌ Teacher {} attempted to access class {} owned by teacher {}", 
+                log.warn(" Teacher {} attempted to access class {} owned by teacher {}", 
                         principal.getId(), id, classResponse.getTeacherId());
                 return ResponseEntity.status(403).build();
             }
             
-            log.info("✅ Class {} fetched successfully", id);
+            log.info(" Class {} fetched successfully", id);
             return ResponseEntity.ok(classResponse);
             
         } catch (Exception e) {
-            log.error("❌ Failed to fetch class {}: {}", id, e.getMessage());
+            log.error(" Failed to fetch class {}: {}", id, e.getMessage());
             throw e;
         }
     }
     
-    // ==================== ✅ GET ENROLLED STUDENTS ====================
+    
     
     /**
      * Get list of students enrolled in a class
      * GET /api/teacher/classes/{classId}/students
-     * 
-     * Returns list of students with their information and current grades
-     * Only accessible if teacher owns this class
-     * 
      * @param classId Class ID
      * @param principal Authenticated teacher
      * @return List of enrolled students
      * 
-     * @author ECMS Team
-     * @since 2026-01-28
+     * @author 
+     * @since 
      */
     @GetMapping("/{classId}/students")
     public ResponseEntity<List<StudentEnrollmentDto>> getEnrolledStudents(
@@ -142,34 +138,27 @@ public class TeacherClassController {
                     principal.getId()
             );
             
-            log.info("✅ Found {} students in class {}", students.size(), classId);
+            log.info(" Found {} students in class {}", students.size(), classId);
             return ResponseEntity.ok(students);
             
         } catch (ForbiddenException e) {
-            log.warn("❌ Teacher {} not authorized for class {}: {}", 
+            log.warn(" Teacher {} not authorized for class {}: {}", 
                     principal.getId(), classId, e.getMessage());
             return ResponseEntity.status(403).build();
             
         } catch (ResourceNotFoundException e) {
-            log.error("❌ Class {} not found: {}", classId, e.getMessage());
+            log.error(" Class {} not found: {}", classId, e.getMessage());
             return ResponseEntity.status(404).build();
             
         } catch (Exception e) {
-            log.error("❌ Failed to fetch students for class {}: {}", classId, e.getMessage());
+            log.error(" Failed to fetch students for class {}: {}", classId, e.getMessage());
             throw e;
         }
     }
     
-    // ==================== ✅ EXPORT GRADE STATISTICS TO EXCEL ====================
-    
     /**
      * Export grade statistics to Excel
      * GET /api/teacher/classes/{classId}/grades/export-excel
-     * 
-     * Generates a professional Excel report with:
-     * - Sheet 1: Overview statistics (average, pass rate, distribution)
-     * - Sheet 2: Detailed student list with all scores
-     * 
      * @param classId Class ID
      * @param principal Authenticated teacher
      * @return Excel file download
@@ -192,21 +181,21 @@ public class TeacherClassController {
                     .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + classId));
             
             if (!classEntity.getTeacher().getTeacherId().equals(principal.getId())) {
-                log.warn("❌ Teacher {} tried to export statistics for class {} owned by teacher {}", 
+                log.warn(" Teacher {} tried to export statistics for class {} owned by teacher {}", 
                         principal.getId(), classId, classEntity.getTeacher().getTeacherId());
                 throw new ForbiddenException("You don't have permission to access this class");
             }
             
             // 2. Get statistics
-            log.info("📊 Fetching statistics for class {}", classId);
+            log.info(" Fetching statistics for class {}", classId);
             GradeStatsResponse stats = gradeService.getClassStats(classId);
             
             // 3. Get all grades
-            log.info("📋 Fetching grade details for class {}", classId);
+            log.info(" Fetching grade details for class {}", classId);
             List<Grade> grades = gradeRepository.findByClassEntity_ClassId(classId);
             
             // 4. Generate Excel file
-            log.info("📝 Generating Excel file...");
+            log.info(" Generating Excel file...");
             byte[] excelFile = gradeExcelExportService.exportGradeStatistics(
                     stats,
                     grades,
@@ -228,7 +217,7 @@ public class TeacherClassController {
             headers.setContentDispositionFormData("attachment", encodedFilename);
             headers.set(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Content-Disposition");
             
-            log.info("✅ Excel export successful: {} ({} bytes, {} students)", 
+            log.info(" Excel export successful: {} ({} bytes, {} students)", 
                     filename, excelFile.length, grades.size());
             
             return ResponseEntity.ok()
@@ -236,15 +225,15 @@ public class TeacherClassController {
                     .body(excelFile);
                     
         } catch (ForbiddenException e) {
-            log.warn("❌ Teacher {} not authorized for class {}", principal.getId(), classId);
+            log.warn(" Teacher {} not authorized for class {}", principal.getId(), classId);
             return ResponseEntity.status(403).build();
             
         } catch (ResourceNotFoundException e) {
-            log.error("❌ Class {} not found", classId);
+            log.error(" Class {} not found", classId);
             return ResponseEntity.status(404).build();
             
         } catch (Exception e) {
-            log.error("❌ Failed to export Excel for class {}: {}", classId, e.getMessage());
+            log.error(" Failed to export Excel for class {}: {}", classId, e.getMessage());
             throw e;
         }
     }

@@ -27,9 +27,6 @@ import java.util.stream.Collectors;
 
 /**
  * MaterialServiceImpl
- * 
- * Implementation of MaterialService
- * Handles file upload/download for class materials
  */
 @Service
 @RequiredArgsConstructor
@@ -108,10 +105,10 @@ public class MaterialServiceImpl implements MaterialService {
             Path filePath = uploadPath.resolve(uniqueFilename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
             
-            log.info("✅ File saved: {}", uniqueFilename);
+            log.info(" File saved: {}", uniqueFilename);
             
         } catch (IOException e) {
-            log.error("❌ Failed to save file: {}", e.getMessage());
+            log.error(" Failed to save file: {}", e.getMessage());
             throw new RuntimeException("Failed to save file: " + e.getMessage());
         }
         
@@ -132,14 +129,14 @@ public class MaterialServiceImpl implements MaterialService {
         
         material = materialRepository.save(material);
         
-        log.info("✅ Material created: ID={}, title={}", material.getMaterialId(), title);
+        log.info(" Material created: ID={}, title={}", material.getMaterialId(), title);
         
         return mapToResponse(material);
     }
     
     @Override
     public List<MaterialResponse> getMaterialsByClass(Long classId) {
-        log.info("📚 Getting materials for class {}", classId);
+        log.info(" Getting materials for class {}", classId);
         
         // Validate class exists
         if (!classRepository.existsById(classId)) {
@@ -149,7 +146,7 @@ public class MaterialServiceImpl implements MaterialService {
         List<ClassMaterial> materials = materialRepository
                 .findByClassEntity_ClassIdOrderByUploadedAtDesc(classId);
         
-        log.info("✅ Found {} materials", materials.size());
+        log.info(" Found {} materials", materials.size());
         
         return materials.stream()
                 .map(this::mapToResponse)
@@ -181,15 +178,15 @@ public class MaterialServiceImpl implements MaterialService {
         try {
             Path filePath = Paths.get(UPLOAD_DIR + material.getFileName());
             Files.deleteIfExists(filePath);
-            log.info("✅ File deleted: {}", material.getFileName());
+            log.info(" File deleted: {}", material.getFileName());
         } catch (IOException e) {
-            log.warn("⚠️ Failed to delete file: {}", e.getMessage());
+            log.warn(" Failed to delete file: {}", e.getMessage());
         }
         
         // Delete from database
         materialRepository.delete(material);
         
-        log.info("✅ Material deleted: {}", materialId);
+        log.info(" Material deleted: {}", materialId);
     }
     
     /**

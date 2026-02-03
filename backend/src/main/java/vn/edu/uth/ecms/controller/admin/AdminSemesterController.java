@@ -22,7 +22,7 @@ public class AdminSemesterController {
      */
     @PostMapping("/{semesterId}/start")
     public ResponseEntity<ApiResponse<String>> startSemester(@PathVariable Long semesterId) {
-        log.info("🚀 Admin starting semester ID: {}", semesterId);
+        log.info(" Admin starting semester ID: {}", semesterId);
         
         activationService.startSemester(semesterId);
         

@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
  * 
  * Response body for submission file data
  * 
- * @author Phase 5 - Student Features
- * @since 2026-01-13
+ * @author
+ * @since 
  */
 @Data
 @Builder
@@ -35,42 +35,25 @@ public class SubmissionFileResponse {
      */
     private Long submissionId;
     
-    /**
-     * Original filename (user uploaded)
-     * Example: "Tieu_Luan_ECMS_UTH_Full22.docx"
-     */
+ 
     private String originalFilename;
     
-    /**
-     * Stored filename (UUID)
-     * Example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890.docx"
-     */
+  
     private String storedFilename;
     
-    /**
-     * File download URL
-     * Example: "/api/files/submissions/2/054205009974/a1b2c3d4...docx"
-     */
+   
     private String fileUrl;
     
-    /**
-     * File size in bytes
-     */
+   
     private Long fileSize;
     
-    /**
-     * Formatted file size (KB, MB)
-     */
+    
     private String formattedFileSize;
     
-    /**
-     * File MIME type
-     */
+   
     private String mimeType;
     
-    /**
-     * File extension
-     */
+    
     private String fileExtension;
     
     /**
@@ -89,13 +72,9 @@ public class SubmissionFileResponse {
      */
     private Boolean isDocument;
     
-    // ========================================
-    // MAPPING METHODS
-    // ========================================
+ 
     
     /**
-     * Convert SubmissionFile entity to DTO
-     * 
      * @param file SubmissionFile entity
      * @return SubmissionFileResponse DTO
      */

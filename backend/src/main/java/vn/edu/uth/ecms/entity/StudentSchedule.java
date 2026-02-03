@@ -7,10 +7,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 /**
- * StudentSchedule entity - CORRECTED
- *
- * ✅ CRITICAL FIX: Room is FK entity, NOT String!
- * This fixes EnrollmentServiceImpl errors at lines 243, 247
+ * StudentSchedule entity
  */
 @Entity
 @Table(name = "student_schedule")
@@ -38,7 +35,6 @@ public class StudentSchedule extends BaseEntity {
     @JoinColumn(name = "class_id", nullable = false)
     private ClassEntity classEntity;
 
-    // ==================== SCHEDULE INFO ====================
 
     @Column(name = "session_date")
     private LocalDate sessionDate;
@@ -52,19 +48,14 @@ public class StudentSchedule extends BaseEntity {
     private TimeSlot timeSlot;
 
     /**
-     * ✅ CRITICAL FIX: Room must be entity FK, NOT String!
-     *
-     * BEFORE (WRONG):
      * @Column(name = "room")
-     * private String room;  // ❌ Causes type mismatch error!
-     *
-     * AFTER (CORRECT):
+     * private String room;  
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
-    private Room room;  // ✅ Room entity FK
+    private Room room;  
 
-    // ==================== ATTENDANCE ====================
+    
 
     @Enumerated(EnumType.STRING)
     @Column(name = "attendance_status", nullable = false, length = 20)
@@ -73,7 +64,7 @@ public class StudentSchedule extends BaseEntity {
     @Column(name = "attendance_note", columnDefinition = "TEXT")
     private String attendanceNote;
 
-    // ==================== HELPER METHODS ====================
+    
 
     /**
      * Check if student attended this session
@@ -137,7 +128,6 @@ public class StudentSchedule extends BaseEntity {
 
     /**
      * Get schedule display string
-     * Example: "Thứ 2, 06:45-09:15, A201"
      */
     public String getScheduleDisplay() {
         String dayStr = (dayOfWeek != null) ? getDayOfWeekDisplay() : "N/A";
@@ -176,7 +166,6 @@ public class StudentSchedule extends BaseEntity {
         };
     }
 
-    // ==================== OVERRIDE METHODS ====================
 
     @Override
     public String toString() {

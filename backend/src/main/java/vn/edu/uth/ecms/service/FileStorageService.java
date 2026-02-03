@@ -7,11 +7,8 @@ import java.nio.file.Path;
 
 /**
  * FileStorageService
- * 
- * Service for storing and retrieving uploaded files
- * 
- * @author Phase 5 - Student Features
- * @since 2026-01-11
+ * @author
+ * @since 
  */
 public interface FileStorageService {
     

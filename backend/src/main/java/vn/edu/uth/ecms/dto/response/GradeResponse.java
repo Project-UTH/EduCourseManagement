@@ -17,8 +17,8 @@ import java.time.LocalDateTime;
  * 
  * Response body for grade data
  * 
- * @author Phase 4 - Teacher Features
- * @since 2026-01-06
+ * @author 
+ * @since 
  */
 @Data
 @Builder
@@ -99,18 +99,14 @@ public class GradeResponse {
      */
     private String scoreBreakdown;
     
-    /**
-     * Timestamps
-     */
+    
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     
-    // ========================================
-    // NESTED CLASSES
-    // ========================================
+ 
     
     @Data
     @Builder
@@ -134,13 +130,7 @@ public class GradeResponse {
         private Integer credits;
     }
     
-    // ========================================
-    // MAPPING METHODS
-    // ========================================
     
-    /**
-     * Convert Grade entity to DTO
-     */
     public static GradeResponse fromEntity(Grade grade) {
         if (grade == null) return null;
         

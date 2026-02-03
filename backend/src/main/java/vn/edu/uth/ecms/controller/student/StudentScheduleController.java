@@ -28,22 +28,22 @@ public class StudentScheduleController {
 
     /**
      * Get student's weekly schedule
-     * @param weekStartDate Start date of week (Monday), format: yyyy-MM-dd
+     * @param weekStartDate 
      */
     @GetMapping("/weekly")
     public ResponseEntity<ApiResponse<List<ScheduleItemResponse>>> getWeeklySchedule(
             @RequestParam(required = false) String weekStartDate) {
         
-        log.info("📅 Student requesting weekly schedule");
+        log.info(" Student requesting weekly schedule");
         
-        // Get current student
+        
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Student student = studentRepository.findByStudentCode(username)
                 .orElseThrow(() -> new NotFoundException("Student not found"));
         
-        log.info("👤 Student: {} ({})", student.getFullName(), student.getStudentCode());
+        log.info(" Student: {} ({})", student.getFullName(), student.getStudentCode());
         
-        // Parse week start date (default = this week's Monday)
+        
         LocalDate startDate;
         if (weekStartDate != null && !weekStartDate.isEmpty()) {
             startDate = LocalDate.parse(weekStartDate);
@@ -51,25 +51,23 @@ public class StudentScheduleController {
             startDate = getThisWeekMonday();
         }
         
-        log.info("📆 Week start: {}", startDate);
+        log.info(" Week start: {}", startDate);
         
         // Get schedule for the week
         List<ScheduleItemResponse> schedule = scheduleService.getStudentWeeklySchedule(
                 student.getStudentId(), startDate);
         
-        log.info("✅ Found {} schedule items", schedule.size());
+        log.info(" Found {} schedule items", schedule.size());
         
         return ResponseEntity.ok(
                 ApiResponse.success("Schedule retrieved", schedule)
         );
     }
     
-    /**
-     * Get this week's Monday
-     */
+    
     private LocalDate getThisWeekMonday() {
         LocalDate today = LocalDate.now();
-        int dayOfWeek = today.getDayOfWeek().getValue(); // 1=Monday, 7=Sunday
+        int dayOfWeek = today.getDayOfWeek().getValue(); 
         return today.minusDays(dayOfWeek - 1);
     }
 }

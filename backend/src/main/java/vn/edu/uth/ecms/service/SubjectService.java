@@ -9,10 +9,7 @@ import vn.edu.uth.ecms.dto.response.TeacherResponse;
 
 import java.util.List;
 
-/**
- * Service interface for Subject management
- * Phase 3 Sprint 3.2
- */
+
 public interface SubjectService {
 
     /**
