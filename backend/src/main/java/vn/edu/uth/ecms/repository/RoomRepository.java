@@ -7,11 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.Room;
-import vn.edu.uth.ecms.entity.RoomType;
-import vn.edu.uth.ecms.entity.TimeSlot;
+import vn.edu.uth.ecms.entity.enums.RoomType;
+import vn.edu.uth.ecms.entity.enums.TimeSlot;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

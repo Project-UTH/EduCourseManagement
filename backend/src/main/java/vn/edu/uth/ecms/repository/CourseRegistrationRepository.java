@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.CourseRegistration;
-import vn.edu.uth.ecms.entity.EnrollmentType;
-import vn.edu.uth.ecms.entity.RegistrationStatus;
+import vn.edu.uth.ecms.entity.enums.EnrollmentType;
+import vn.edu.uth.ecms.entity.enums.RegistrationStatus;
 import vn.edu.uth.ecms.entity.Student;
 
 import java.util.List;

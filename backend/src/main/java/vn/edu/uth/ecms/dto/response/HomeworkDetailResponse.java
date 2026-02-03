@@ -7,7 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.edu.uth.ecms.entity.Homework;
-import vn.edu.uth.ecms.entity.HomeworkType;
+import vn.edu.uth.ecms.entity.enums.HomeworkType;
+import vn.edu.uth.ecms.entity.enums.SubmissionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -181,7 +182,7 @@ public class HomeworkDetailResponse {
         
         long lateCount = homework.getSubmissions() != null ?
                         homework.getSubmissions().stream()
-                            .filter(s -> s.getStatus() == vn.edu.uth.ecms.entity.SubmissionStatus.LATE)
+                            .filter(s -> s.getStatus() == SubmissionStatus.LATE)
                             .count() : 0;
         
         return HomeworkStats.builder()

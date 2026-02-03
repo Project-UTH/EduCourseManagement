@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.uth.ecms.entity.SemesterStatus;
+import vn.edu.uth.ecms.entity.enums.SemesterStatus;
 
 /**
  * DTO for creating a new semester

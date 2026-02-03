@@ -3,8 +3,10 @@ package vn.edu.uth.ecms.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import vn.edu.uth.ecms.entity.enums.EducationLevel;
+import vn.edu.uth.ecms.entity.enums.Gender;
+import vn.edu.uth.ecms.entity.enums.TrainingType;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -79,21 +81,10 @@ public class Student extends BaseEntity {
     @JoinColumn(name = "major_id", nullable = false)
     private Major major;
 
-    // Academic performance
-    @DecimalMin(value = "0.00", message = "GPA must be at least 0.00")
-    @DecimalMax(value = "4.00", message = "GPA must not exceed 4.00")
-    @Column(precision = 3, scale = 2)
-    private BigDecimal gpa = BigDecimal.ZERO;
-
-    // Additional info
-    @Column(name = "avatar_url")
-    private String avatarUrl;
-
     @Column(name = "is_first_login", nullable = false)
     private Boolean isFirstLogin = true;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    
 }

@@ -3,7 +3,7 @@ package vn.edu.uth.ecms.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.uth.ecms.entity.GradeStatus;
+import vn.edu.uth.ecms.entity.enums.GradeStatus;
 
 import java.math.BigDecimal;
 

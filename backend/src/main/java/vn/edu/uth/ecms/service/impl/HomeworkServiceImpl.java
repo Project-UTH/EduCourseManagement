@@ -13,8 +13,8 @@
     import vn.edu.uth.ecms.dto.response.HomeworkDetailResponse;
     import vn.edu.uth.ecms.dto.response.HomeworkResponse;
     import vn.edu.uth.ecms.dto.response.HomeworkStatsResponse;
-    import vn.edu.uth.ecms.dto.response.SubmissionFileResponse;
     import vn.edu.uth.ecms.entity.*;
+    import vn.edu.uth.ecms.entity.enums.HomeworkType;
     import vn.edu.uth.ecms.exception.*;
     import vn.edu.uth.ecms.repository.*;
     import vn.edu.uth.ecms.service.HomeworkService;
@@ -235,7 +235,7 @@
         
         @Override
         @Transactional(readOnly = true)
-        public Page<HomeworkResponse> filterHomework(Long classId, HomeworkType type, 
+        public Page<HomeworkResponse> filterHomework(Long classId, HomeworkType type,
                                                     LocalDateTime startDate, LocalDateTime endDate,
                                                     Pageable pageable) {
             // Validate class exists

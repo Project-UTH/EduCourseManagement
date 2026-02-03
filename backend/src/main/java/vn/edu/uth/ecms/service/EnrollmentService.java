@@ -27,9 +27,9 @@ public interface EnrollmentService {
     /**
      * Drop a student from a class (Admin only)
      *
-     * @param classId Class ID
+     * @param classId   Class ID
      * @param studentId Student ID
-     * @param reason Drop reason (optional)
+     * @param reason    Drop reason (optional)
      */
     void dropStudent(Long classId, Long studentId, String reason);
 
@@ -55,12 +55,4 @@ public interface EnrollmentService {
      * @return Student count
      */
     long countStudentsInClass(Long classId);
-
-    /**
-     * @param student Student entity
-     * @param classEntity Class entity
-     * @param semester Semester entity
-     */
-    @Transactional
-    void createStudentSchedule(Student student, ClassEntity classEntity, Semester semester);
 }

@@ -29,6 +29,5 @@ public class TeacherSubjectResponse {
 
     // Relationship metadata
     private Boolean isPrimary;
-    private Integer yearsOfExperience;
     private String notes;
 }

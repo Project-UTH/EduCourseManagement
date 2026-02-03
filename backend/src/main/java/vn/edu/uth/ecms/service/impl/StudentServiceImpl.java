@@ -20,6 +20,7 @@ import vn.edu.uth.ecms.dto.response.ImportError;
 import vn.edu.uth.ecms.dto.response.ImportResult;
 import vn.edu.uth.ecms.dto.response.StudentResponse;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.*;
 import vn.edu.uth.ecms.exception.DuplicateException;
 import vn.edu.uth.ecms.exception.NotFoundException;
 import vn.edu.uth.ecms.repository.CourseRegistrationRepository;
@@ -36,8 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Optional;
-
-import static javax.management.openmbean.SimpleType.STRING;
 
 /**
  * Implementation of StudentService
@@ -83,7 +82,7 @@ public class StudentServiceImpl implements StudentService {
                 .email(student.getEmail())
                 .phone(student.getPhone())
                 .placeOfBirth(student.getPlaceOfBirth())
-                .avatarUrl(student.getAvatarUrl())
+
                 .isFirstLogin(student.getIsFirstLogin())
                 .isActive(student.getIsActive())
                 .createdAt(student.getCreatedAt())
@@ -291,16 +290,14 @@ public class StudentServiceImpl implements StudentService {
                 .map(this::mapToResponse);
     }
 
-    
-
     @Override
     @Transactional(readOnly = true)
     public StudentResponse getByStudentCode(String studentCode) {
         log.info(" [StudentService] Getting student by code: {}", studentCode);
-        
+
         Student student = studentRepository.findByStudentCode(studentCode)
                 .orElseThrow(() -> new NotFoundException("Student not found with code: " + studentCode));
-        
+
         return mapToResponse(student);
     }
 
@@ -308,10 +305,10 @@ public class StudentServiceImpl implements StudentService {
     @Transactional
     public StudentResponse updateProfile(String studentCode, UpdateStudentProfileRequest request) {
         log.info(" [StudentService] Updating profile for student code: {}", studentCode);
-        
+
         Student student = studentRepository.findByStudentCode(studentCode)
                 .orElseThrow(() -> new NotFoundException("Student not found with code: " + studentCode));
-        
+
         // Update only allowed fields (email, phone)
         if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
             student.setEmail(request.getEmail().trim());
@@ -319,75 +316,74 @@ public class StudentServiceImpl implements StudentService {
         if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
             student.setPhone(request.getPhone().trim());
         }
-        
+
         Student updated = studentRepository.save(student);
         log.info(" [StudentService] Profile updated for: {}", updated.getFullName());
-        
+
         return mapToResponse(updated);
     }
+
     @Override
-@Transactional(readOnly = true)
-public List<ClassResponse> getEnrolledClasses(String studentCode) {
-    log.info("[StudentService] Getting enrolled classes for student: {}", studentCode);
-    
-    try {
-        Student student = studentRepository.findByStudentCode(studentCode)
-                .orElseThrow(() -> new RuntimeException("Student not found: " + studentCode));
-        
-        log.info("[StudentService] Found student ID: {}", student.getStudentId());
-      
-        List<CourseRegistration> registrations = registrationRepository
-                .findByStudentAndStatus(
-                        student.getStudentId(), 
-                        RegistrationStatus.REGISTERED
-                );
-        
-        log.info("[StudentService] Found {} registrations", registrations.size());
-        
-        List<ClassResponse> classes = registrations.stream()
-                .map(registration -> {
-                    ClassEntity classEntity = registration.getClassEntity();
-                    return mapClassToResponse(classEntity);
-                })
-                .toList();
-        
-        log.info("[StudentService]  Returning {} classes", classes.size());
-        
-        return classes;
-        
-    } catch (Exception e) {
-        log.error("[StudentService]  Error getting enrolled classes", e);
-        throw new RuntimeException("Failed to get enrolled classes: " + e.getMessage(), e);
+    @Transactional(readOnly = true)
+    public List<ClassResponse> getEnrolledClasses(String studentCode) {
+        log.info("[StudentService] Getting enrolled classes for student: {}", studentCode);
+
+        try {
+            Student student = studentRepository.findByStudentCode(studentCode)
+                    .orElseThrow(() -> new RuntimeException("Student not found: " + studentCode));
+
+            log.info("[StudentService] Found student ID: {}", student.getStudentId());
+
+            List<CourseRegistration> registrations = registrationRepository
+                    .findByStudentAndStatus(
+                            student.getStudentId(),
+                            RegistrationStatus.REGISTERED);
+
+            log.info("[StudentService] Found {} registrations", registrations.size());
+
+            List<ClassResponse> classes = registrations.stream()
+                    .map(registration -> {
+                        ClassEntity classEntity = registration.getClassEntity();
+                        return mapClassToResponse(classEntity);
+                    })
+                    .toList();
+
+            log.info("[StudentService]  Returning {} classes", classes.size());
+
+            return classes;
+
+        } catch (Exception e) {
+            log.error("[StudentService]  Error getting enrolled classes", e);
+            throw new RuntimeException("Failed to get enrolled classes: " + e.getMessage(), e);
+        }
     }
-}
 
     @Override
     @Transactional(readOnly = true)
     public ClassResponse getEnrolledClassDetail(String studentCode, Long classId) {
         log.info("[StudentService] Getting class detail: {} for student: {}", classId, studentCode);
-        
+
         try {
             Student student = studentRepository.findByStudentCode(studentCode)
                     .orElseThrow(() -> new RuntimeException("Student not found"));
-            
+
             Optional<CourseRegistration> registration = registrationRepository
                     .findByStudentStudentIdAndClassEntityClassId(
-                            student.getStudentId(), 
-                            classId
-                    );
-            
+                            student.getStudentId(),
+                            classId);
+
             if (registration.isEmpty() || registration.get().getStatus() != RegistrationStatus.REGISTERED) {
                 log.warn("[StudentService] Student not enrolled in class: {}", classId);
                 return null;
             }
-            
+
             ClassEntity classEntity = registration.get().getClassEntity();
             ClassResponse response = mapClassToResponse(classEntity);
-            
+
             log.info("[StudentService]  Class detail found: {}", response.getClassCode());
-            
+
             return response;
-            
+
         } catch (Exception e) {
             log.error("[StudentService]  Error getting class detail", e);
             throw new RuntimeException("Failed to get class detail: " + e.getMessage(), e);
@@ -405,27 +401,26 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
     @Transactional(readOnly = true)
     public List<ClassResponse> getScheduleBySemester(String studentCode, Long semesterId) {
         log.info("[StudentService] Getting schedule for semester: {} student: {}", semesterId, studentCode);
-        
+
         try {
             Student student = studentRepository.findByStudentCode(studentCode)
                     .orElseThrow(() -> new RuntimeException("Student not found"));
-            
+
             List<CourseRegistration> registrations = registrationRepository
                     .findByStudentAndSemester(student.getStudentId(), semesterId)
                     .stream()
                     .filter(reg -> reg.getStatus() == RegistrationStatus.REGISTERED)
                     .toList();
-            
+
             return registrations.stream()
                     .map(reg -> mapClassToResponse(reg.getClassEntity()))
                     .toList();
-                    
+
         } catch (Exception e) {
             log.error("[StudentService] Error getting schedule", e);
             throw new RuntimeException("Failed to get schedule: " + e.getMessage(), e);
         }
     }
-    
 
     @Override
     @Transactional
@@ -441,7 +436,8 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
 
             for (int i = 1; i <= totalRows; i++) {
                 Row row = sheet.getRow(i);
-                if (row == null) continue;
+                if (row == null)
+                    continue;
 
                 try {
                     // Parse row data
@@ -607,9 +603,9 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
     }
 
     private void addExampleRow(Sheet sheet, int rowNum, int stt, String studentCode,
-                               String fullName, String gender, String dob, int year,
-                               String eduLevel, String trainType, String majorCode,
-                               String email, String phone, String placeOfBirth) {
+            String fullName, String gender, String dob, int year,
+            String eduLevel, String trainType, String majorCode,
+            String email, String phone, String placeOfBirth) {
         Row row = sheet.createRow(rowNum);
         row.createCell(0).setCellValue(stt);
         row.createCell(1).setCellValue(studentCode);
@@ -661,7 +657,8 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
     }
 
     private String getCellValueAsString(Cell cell) {
-        if (cell == null) return "";
+        if (cell == null)
+            return "";
 
         switch (cell.getCellType()) {
             case STRING:
@@ -679,7 +676,8 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
     }
 
     private double getCellValueAsNumeric(Cell cell) {
-        if (cell == null) return 0;
+        if (cell == null)
+            return 0;
 
         switch (cell.getCellType()) {
             case NUMERIC:
@@ -694,40 +692,39 @@ public List<ClassResponse> getEnrolledClasses(String studentCode) {
                 return 0;
         }
     }
-    
 
     private ClassResponse mapClassToResponse(ClassEntity classEntity) {
         ClassResponse response = modelMapper.map(classEntity, ClassResponse.class);
-        
+
         response.setSubjectId(classEntity.getSubject().getSubjectId());
         response.setSubjectCode(classEntity.getSubject().getSubjectCode());
         response.setSubjectName(classEntity.getSubject().getSubjectName());
         response.setCredits(classEntity.getSubject().getCredits());
         response.setSubjectDescription(classEntity.getSubject().getDescription());
-        
+
         response.setTeacherId(classEntity.getTeacher().getTeacherId());
         response.setTeacherName(classEntity.getTeacher().getFullName());
         response.setTeacherEmail(classEntity.getTeacher().getEmail());
-        
+
         response.setSemesterId(classEntity.getSemester().getSemesterId());
         response.setSemesterCode(classEntity.getSemester().getSemesterCode());
-       response.setSemesterName(classEntity.getSemester().getSemesterName());
-        
+        response.setSemesterName(classEntity.getSemester().getSemesterName());
+
         if (classEntity.getFixedRoom() != null) {
             response.setFixedRoom(classEntity.getFixedRoom().getRoomCode());
             response.setFixedRoomName(classEntity.getFixedRoom().getRoomName());
             response.setFixedRoomCapacity(classEntity.getFixedRoom().getCapacity());
         }
-        
+
         response.setDayOfWeek(classEntity.getDayOfWeek().name());
         response.setDayOfWeekDisplay(getDayOfWeekDisplay(classEntity.getDayOfWeek()));
         response.setTimeSlot(classEntity.getTimeSlot().name());
         response.setTimeSlotDisplay(getTimeSlotDisplay(classEntity.getTimeSlot()));
-        
+
         response.setAvailableSeats(classEntity.getAvailableSeats());
         response.setIsFull(classEntity.isFull());
         response.setCanRegister(classEntity.canRegister());
-        
+
         return response;
     }
 

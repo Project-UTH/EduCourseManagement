@@ -1,7 +1,5 @@
 package vn.edu.uth.ecms.service.impl;
 
-import ch.qos.logback.core.status.Status;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -13,6 +11,7 @@ import vn.edu.uth.ecms.dto.request.ClassUpdateRequest;
 import vn.edu.uth.ecms.dto.response.ClassResponse;
 import vn.edu.uth.ecms.dto.response.StudentEnrollmentDto;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.*;
 import vn.edu.uth.ecms.exception.*;
 import vn.edu.uth.ecms.repository.*;
 import vn.edu.uth.ecms.service.ClassService;

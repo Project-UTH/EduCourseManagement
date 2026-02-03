@@ -11,6 +11,8 @@ import vn.edu.uth.ecms.dto.request.SubmissionRequest;
 import vn.edu.uth.ecms.dto.response.SubmissionResponse;
 import vn.edu.uth.ecms.dto.response.SubmissionStatsResponse;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.HomeworkType;
+import vn.edu.uth.ecms.entity.enums.SubmissionStatus;
 import vn.edu.uth.ecms.exception.*;
 import vn.edu.uth.ecms.repository.*;
 import vn.edu.uth.ecms.service.FileStorageService;

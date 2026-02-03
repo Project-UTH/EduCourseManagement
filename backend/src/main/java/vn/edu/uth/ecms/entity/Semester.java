@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import vn.edu.uth.ecms.entity.enums.SemesterStatus;
 
 import java.time.LocalDate;
 

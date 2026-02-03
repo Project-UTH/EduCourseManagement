@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.Semester;
-import vn.edu.uth.ecms.entity.SemesterStatus;
+import vn.edu.uth.ecms.entity.enums.SemesterStatus;
 
 import java.time.LocalDate;
 import java.util.List;

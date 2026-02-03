@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import vn.edu.uth.ecms.entity.enums.Gender;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -63,7 +64,8 @@ public class Teacher extends BaseEntity {
     private Department department;
 
     /**
-     * Major field - represents teacher's primary specialization (administrative info)
+     * Major field - represents teacher's primary specialization (administrative
+     * info)
      * This is different from the subjects they can actually teach
      */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -77,37 +79,29 @@ public class Teacher extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String address;
 
-    @Column(name = "avatar_url")
-    private String avatarUrl;
-
     @Column(name = "is_first_login", nullable = false)
     private Boolean isFirstLogin = true;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<TeacherSubject> teacherSubjects = new ArrayList<>();
 
-  
-    public void addSubject(Subject subject, Boolean isPrimary, Integer yearsOfExperience) {
+    public void addSubject(Subject subject, Boolean isPrimary) {
         TeacherSubject teacherSubject = TeacherSubject.builder()
                 .teacher(this)
                 .subject(subject)
                 .isPrimary(isPrimary != null ? isPrimary : false)
-                .yearsOfExperience(yearsOfExperience)
                 .build();
         teacherSubjects.add(teacherSubject);
     }
-
 
     public void removeSubject(Subject subject) {
         teacherSubjects.removeIf(ts -> ts.getSubject().equals(subject));
     }
 
- 
     public List<Subject> getSubjects() {
         return teacherSubjects.stream()
                 .map(TeacherSubject::getSubject)

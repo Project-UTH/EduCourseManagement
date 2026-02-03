@@ -5,13 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.HomeworkType;
+import vn.edu.uth.ecms.entity.enums.RegistrationStatus;
 import vn.edu.uth.ecms.repository.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-
 
 @Service
 @RequiredArgsConstructor
@@ -21,11 +22,9 @@ public class SemesterCompletionService {
     private final CourseRegistrationRepository registrationRepository;
     private final HomeworkSubmissionRepository submissionRepository;
     private final HomeworkRepository homeworkRepository;
-    
-  
+
     private final GradeRepository gradeRepository;
 
-   
     @Transactional
     public void processSemesterCompletion(Long semesterId) {
         log.info(" Processing semester completion for semester ID: {}", semesterId);
@@ -44,7 +43,7 @@ public class SemesterCompletionService {
             try {
                 // 1. Tính điểm tổng kết từ homework
                 GradeComponents components = calculateGradeComponents(reg);
-                
+
                 if (components == null || !components.isComplete()) {
                     log.warn("⚠️ Incomplete grades for registration {} - Student: {}, Class: {}",
                             reg.getRegistrationId(),
@@ -58,7 +57,7 @@ public class SemesterCompletionService {
                 BigDecimal totalScore = components.calculateTotal();
 
                 // 3. Lưu vào course_registration
-                reg.setFinalGrade(totalScore);
+                // reg.setFinalGrade(totalScore); // Field removed
                 reg.setStatus(RegistrationStatus.COMPLETED);
                 registrationRepository.save(reg);
                 processedCount++;
@@ -68,7 +67,7 @@ public class SemesterCompletionService {
                         reg.getClassEntity().getClassCode(),
                         totalScore);
 
-                //  4. SYNC VÀO BẢNG GRADE
+                // 4. SYNC VÀO BẢNG GRADE
                 syncToGradeTable(reg, components, totalScore);
                 gradedCount++;
 
@@ -126,7 +125,7 @@ public class SemesterCompletionService {
 
             // Phân loại theo type
             HomeworkType type = hw.getHomeworkType();
-            
+
             if (type == HomeworkType.REGULAR) {
                 regularScores.add(normalizedScore);
                 log.debug("  TX: {} (from {}/{})", normalizedScore, score, maxScore);
@@ -145,27 +144,25 @@ public class SemesterCompletionService {
             BigDecimal sum = regularScores.stream()
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             txAverage = sum.divide(
-                    BigDecimal.valueOf(regularScores.size()), 
-                    2, 
-                    RoundingMode.HALF_UP
-            );
+                    BigDecimal.valueOf(regularScores.size()),
+                    2,
+                    RoundingMode.HALF_UP);
         }
 
         return new GradeComponents(txAverage, midtermScore, finalScore);
     }
 
- 
-    private void syncToGradeTable(CourseRegistration registration, 
-                                  GradeComponents components, 
-                                  BigDecimal totalScore) {
-        
+    private void syncToGradeTable(CourseRegistration registration,
+            GradeComponents components,
+            BigDecimal totalScore) {
+
         Student student = registration.getStudent();
         ClassEntity classEntity = registration.getClassEntity();
 
         // Kiểm tra đã có grade chưa
         Grade grade = gradeRepository
                 .findByStudent_StudentIdAndClassEntity_ClassId(
-                        student.getStudentId(), 
+                        student.getStudentId(),
                         classEntity.getClassId())
                 .orElse(null);
 
@@ -176,12 +173,10 @@ public class SemesterCompletionService {
             grade.setClassEntity(classEntity);
         }
 
-        
         grade.setRegularScore(components.regularScore);
         grade.setMidtermScore(components.midtermScore);
         grade.setFinalScore(components.finalScore);
-        
-        
+
         grade.recalculate();
 
         gradeRepository.save(grade);
@@ -193,7 +188,6 @@ public class SemesterCompletionService {
                 grade.getStatus());
     }
 
-    
     private static class GradeComponents {
         final BigDecimal regularScore;
         final BigDecimal midtermScore;
@@ -210,8 +204,9 @@ public class SemesterCompletionService {
         }
 
         BigDecimal calculateTotal() {
-            if (!isComplete()) return null;
-            
+            if (!isComplete())
+                return null;
+
             // TX×20% + GK×30% + CK×50%
             return regularScore.multiply(BigDecimal.valueOf(0.2))
                     .add(midtermScore.multiply(BigDecimal.valueOf(0.3)))

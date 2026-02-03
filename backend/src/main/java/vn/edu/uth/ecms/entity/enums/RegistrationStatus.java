@@ -1,4 +1,4 @@
-package vn.edu.uth.ecms.entity;
+package vn.edu.uth.ecms.entity.enums;
 
 /**
  * Registration status of a student in a class

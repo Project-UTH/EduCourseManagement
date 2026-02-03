@@ -7,7 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.ClassEntity;
-import vn.edu.uth.ecms.entity.ClassStatus;
+import vn.edu.uth.ecms.entity.enums.ClassStatus;
+import vn.edu.uth.ecms.entity.enums.TimeSlot;
 
 import java.util.List;
 import java.util.Optional;
@@ -91,7 +92,7 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
             @Param("semesterId") Long semesterId,
             @Param("teacherId") Long teacherId,
             @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek,
-            @Param("timeSlot") vn.edu.uth.ecms.entity.TimeSlot timeSlot,
+            @Param("timeSlot") TimeSlot timeSlot,
             @Param("excludeClassId") Long excludeClassId
     );
 
@@ -107,7 +108,7 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
             @Param("semesterId") Long semesterId,
             @Param("roomId") Long roomId,  
             @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek,
-            @Param("timeSlot") vn.edu.uth.ecms.entity.TimeSlot timeSlot,
+            @Param("timeSlot") TimeSlot timeSlot,
             @Param("excludeClassId") Long excludeClassId
     );
 

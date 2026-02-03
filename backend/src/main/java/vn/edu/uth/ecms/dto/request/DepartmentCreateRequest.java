@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.uth.ecms.entity.KnowledgeType;
+import vn.edu.uth.ecms.entity.enums.KnowledgeType;
 
 
 @Data

@@ -9,6 +9,7 @@ import vn.edu.uth.ecms.dto.response.GradeResponse;
 import vn.edu.uth.ecms.dto.response.GradeStatsResponse;
 import vn.edu.uth.ecms.dto.response.TranscriptResponse;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.RegistrationStatus;
 import vn.edu.uth.ecms.exception.*;
 import vn.edu.uth.ecms.repository.*;
 import vn.edu.uth.ecms.service.GradeService;

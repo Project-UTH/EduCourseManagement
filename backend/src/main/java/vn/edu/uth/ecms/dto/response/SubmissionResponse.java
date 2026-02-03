@@ -7,12 +7,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.edu.uth.ecms.entity.HomeworkSubmission;
-import vn.edu.uth.ecms.entity.SubmissionStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * SubmissionResponse DTO

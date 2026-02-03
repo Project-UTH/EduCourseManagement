@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.uth.ecms.entity.RoomType;
+import vn.edu.uth.ecms.entity.enums.RoomType;
 
 /**
  * DTO for creating a new room

@@ -6,7 +6,7 @@ import vn.edu.uth.ecms.dto.request.HomeworkRequest;
 import vn.edu.uth.ecms.dto.response.HomeworkDetailResponse;
 import vn.edu.uth.ecms.dto.response.HomeworkResponse;
 import vn.edu.uth.ecms.dto.response.HomeworkStatsResponse;
-import vn.edu.uth.ecms.entity.HomeworkType;
+import vn.edu.uth.ecms.entity.enums.HomeworkType;
 import vn.edu.uth.ecms.dto.response.HomeworkWithSubmissionResponse;
 
 import java.time.LocalDateTime;

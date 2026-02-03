@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.edu.uth.ecms.entity.Grade;
-import vn.edu.uth.ecms.entity.GradeStatus;
+import vn.edu.uth.ecms.entity.enums.GradeStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

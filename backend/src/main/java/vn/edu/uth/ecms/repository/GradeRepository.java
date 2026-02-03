@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.uth.ecms.entity.ClassEntity;
 import vn.edu.uth.ecms.entity.Grade;
-import vn.edu.uth.ecms.entity.GradeStatus;
+import vn.edu.uth.ecms.entity.enums.GradeStatus;
 import vn.edu.uth.ecms.entity.Student;
 
 import java.math.BigDecimal;

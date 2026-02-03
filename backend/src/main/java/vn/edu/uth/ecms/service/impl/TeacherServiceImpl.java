@@ -19,6 +19,7 @@ import vn.edu.uth.ecms.dto.response.ImportResult;
 import vn.edu.uth.ecms.dto.response.TeacherResponse;
 import vn.edu.uth.ecms.dto.response.TeacherSubjectResponse;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.Gender;
 import vn.edu.uth.ecms.exception.BadRequestException;
 import vn.edu.uth.ecms.exception.DuplicateException;
 import vn.edu.uth.ecms.exception.NotFoundException;
@@ -80,7 +81,6 @@ public class TeacherServiceImpl implements TeacherService {
                 .departmentName(teacher.getDepartment().getDepartmentName())
                 .degree(teacher.getDegree())
                 .address(teacher.getAddress())
-                .avatarUrl(teacher.getAvatarUrl())
                 .isFirstLogin(teacher.getIsFirstLogin())
                 .isActive(teacher.getIsActive())
                 .createdAt(teacher.getCreatedAt())
@@ -118,7 +118,6 @@ public class TeacherServiceImpl implements TeacherService {
                 .subjectName(teacherSubject.getSubject().getSubjectName())
                 .credits(teacherSubject.getSubject().getCredits())
                 .isPrimary(teacherSubject.getIsPrimary())
-                .yearsOfExperience(teacherSubject.getYearsOfExperience())
                 .notes(teacherSubject.getNotes())
                 .build();
     }
@@ -130,8 +129,7 @@ public class TeacherServiceImpl implements TeacherService {
         if (!major.getDepartment().getDepartmentId().equals(department.getDepartmentId())) {
             throw new BadRequestException(
                     String.format("Major '%s' does not belong to department '%s'",
-                            major.getMajorName(), department.getDepartmentName())
-            );
+                            major.getMajorName(), department.getDepartmentName()));
         }
     }
 
@@ -323,15 +321,14 @@ public class TeacherServiceImpl implements TeacherService {
                 .collect(Collectors.toList());
     }
 
-    
     @Override
     @Transactional(readOnly = true)
     public TeacherResponse getByCitizenId(String citizenId) {
         log.info(" [TeacherService] Getting teacher by citizenId: {}", citizenId);
-        
+
         Teacher teacher = teacherRepository.findByCitizenId(citizenId)
                 .orElseThrow(() -> new NotFoundException("Teacher not found with citizenId: " + citizenId));
-        
+
         return mapToResponse(teacher);
     }
 
@@ -339,10 +336,10 @@ public class TeacherServiceImpl implements TeacherService {
     @Transactional
     public TeacherResponse updateProfile(String citizenId, UpdateTeacherProfileRequest request) {
         log.info(" [TeacherService] Updating profile for citizenId: {}", citizenId);
-        
+
         Teacher teacher = teacherRepository.findByCitizenId(citizenId)
                 .orElseThrow(() -> new NotFoundException("Teacher not found with citizenId: " + citizenId));
-        
+
         // Update only allowed fields (email, phone, address)
         if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
             teacher.setEmail(request.getEmail().trim());
@@ -353,10 +350,10 @@ public class TeacherServiceImpl implements TeacherService {
         if (request.getAddress() != null) {
             teacher.setAddress(request.getAddress().trim());
         }
-        
+
         Teacher updated = teacherRepository.save(teacher);
         log.info(" [TeacherService] Profile updated for: {}", updated.getFullName());
-        
+
         return mapToResponse(updated);
     }
 
@@ -364,27 +361,28 @@ public class TeacherServiceImpl implements TeacherService {
     @Transactional
     public void changePassword(String citizenId, ChangePasswordRequest request) {
         log.info(" [TeacherService] Changing password for citizenId: {}", citizenId);
-        
+
         Teacher teacher = teacherRepository.findByCitizenId(citizenId)
                 .orElseThrow(() -> new NotFoundException("Teacher not found with citizenId: " + citizenId));
-        
+
         // Verify old password matches
         if (!passwordEncoder.matches(request.getOldPassword(), teacher.getPassword())) {
             throw new BadRequestException("Mật khẩu hiện tại không đúng");
         }
-        
+
         // Verify new password matches confirm password
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new BadRequestException("Mật khẩu mới và xác nhận mật khẩu không khớp");
         }
-        
+
         // Update password
         teacher.setPassword(passwordEncoder.encode(request.getNewPassword()));
         teacher.setIsFirstLogin(false); // Mark as not first login anymore
-        
+
         teacherRepository.save(teacher);
         log.info(" [TeacherService] Password changed successfully for: {}", teacher.getFullName());
     }
+
     @Override
     @Transactional
     public ImportResult importFromExcel(MultipartFile file) {
@@ -399,7 +397,8 @@ public class TeacherServiceImpl implements TeacherService {
 
             for (int i = 1; i <= totalRows; i++) {
                 Row row = sheet.getRow(i);
-                if (row == null) continue;
+                if (row == null)
+                    continue;
 
                 try {
                     // Parse row data
@@ -577,9 +576,9 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     private void addExampleRow(Sheet sheet, int rowNum, int stt, String citizenId,
-                               String fullName, String gender, String dob, String deptCode,
-                               String majorCode, String degree, String email,
-                               String phone, String address) {
+            String fullName, String gender, String dob, String deptCode,
+            String majorCode, String degree, String email,
+            String phone, String address) {
         Row row = sheet.createRow(rowNum);
         row.createCell(0).setCellValue(stt);
         row.createCell(1).setCellValue(citizenId);
@@ -642,7 +641,8 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     private String getCellValueAsString(Cell cell) {
-        if (cell == null) return "";
+        if (cell == null)
+            return "";
 
         switch (cell.getCellType()) {
             case STRING:

@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import vn.edu.uth.ecms.dto.internal.ScheduleSlot;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.SessionStatus;
+import vn.edu.uth.ecms.entity.enums.TimeSlot;
 import vn.edu.uth.ecms.repository.ClassSessionRepository;
 import vn.edu.uth.ecms.repository.CourseRegistrationRepository;
 import vn.edu.uth.ecms.repository.RoomRepository;

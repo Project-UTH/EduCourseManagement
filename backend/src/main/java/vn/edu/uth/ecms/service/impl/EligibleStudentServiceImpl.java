@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.response.StudentResponse;
 import vn.edu.uth.ecms.entity.*;
+import vn.edu.uth.ecms.entity.enums.KnowledgeType;
+import vn.edu.uth.ecms.entity.enums.RegistrationStatus;
 import vn.edu.uth.ecms.exception.NotFoundException;
 import vn.edu.uth.ecms.repository.*;
 import vn.edu.uth.ecms.service.EligibleStudentService;

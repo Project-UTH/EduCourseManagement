@@ -5,8 +5,8 @@ import org.springframework.data.domain.Pageable;
 import vn.edu.uth.ecms.dto.response.RoomResponse;
 import vn.edu.uth.ecms.dto.response.RoomScheduleResponse;
 import vn.edu.uth.ecms.entity.Room;
-import vn.edu.uth.ecms.entity.RoomType;
-import vn.edu.uth.ecms.entity.TimeSlot;
+import vn.edu.uth.ecms.entity.enums.RoomType;
+import vn.edu.uth.ecms.entity.enums.TimeSlot;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

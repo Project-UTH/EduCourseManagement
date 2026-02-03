@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.edu.uth.ecms.entity.Gender;
+import vn.edu.uth.ecms.entity.enums.Gender;
 
 import java.time.LocalDate;
 

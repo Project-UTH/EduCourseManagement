@@ -3,10 +3,8 @@ package vn.edu.uth.ecms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-
 @Entity
-@Table(name = "teacher_subject",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"teacher_id", "subject_id"}))
+@Table(name = "teacher_subject", uniqueConstraints = @UniqueConstraint(columnNames = { "teacher_id", "subject_id" }))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,12 +24,6 @@ public class TeacherSubject extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
-
-    /**
-     * Years of experience teaching this subject (optional)
-     */
-    @Column(name = "years_of_experience")
-    private Integer yearsOfExperience;
 
     /**
      * Is this the teacher's primary/specialized subject?

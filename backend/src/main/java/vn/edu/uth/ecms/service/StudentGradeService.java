@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uth.ecms.dto.response.StudentGradeResponse;
 import vn.edu.uth.ecms.dto.response.StudentTranscriptResponse;
 import vn.edu.uth.ecms.entity.Grade;
-import vn.edu.uth.ecms.entity.GradeStatus;
+import vn.edu.uth.ecms.entity.enums.GradeStatus;
 import vn.edu.uth.ecms.entity.Student;
 import vn.edu.uth.ecms.exception.ResourceNotFoundException;
 import vn.edu.uth.ecms.repository.GradeRepository;
