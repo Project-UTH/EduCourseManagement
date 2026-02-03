@@ -11,13 +11,19 @@ import { useAuthStore } from '@/store/authStore';
 /**
  * HomeworkList Component - Namespaced (thl-)
  */
+interface TeacherClass {
+  classId: number;
+  classCode: string;
+  subjectName: string;
+}
+
 
 const HomeworkList = () => {
   const navigate = useNavigate();
   
   // State
   const [homework, setHomework] = useState<HomeworkResponse[]>([]);
-  const [classes, setClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<TeacherClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [classLoadError, setClassLoadError] = useState<string | null>(null);
@@ -48,22 +54,18 @@ const HomeworkList = () => {
       if (response.length > 0 && !selectedClass) {
         setSelectedClass(response[0].classId);
       }
-    } catch (err: any) {
-      console.error('[HomeworkList] Failed to load classes:', err);
-      const status = err.response?.status;
-      const message = err.response?.data?.message || err.message;
-      
-      let errorMessage = '';
-      if (status === 401) errorMessage = '🔒 Phiên đăng nhập đã hết hạn.';
-      else if (status === 403) errorMessage = '🚫 Bạn không có quyền truy cập.';
-      else if (status === 404) errorMessage = '❓ Không tìm thấy dữ liệu lớp học.';
-      else if (status === 500) errorMessage = '💥 Lỗi server. Vui lòng thử lại sau.';
-      else if (err.code === 'ERR_NETWORK') errorMessage = '🌐 Không thể kết nối tới server.';
-      else errorMessage = `⚠️ ${message}`;
-      
-      setClassLoadError(errorMessage);
-      setClasses([]);
-    } finally {
+    }catch (err: unknown) {
+  console.error(err);
+
+  let message = 'Đã xảy ra lỗi';
+
+  if (err instanceof Error) {
+    message = err.message;
+  }
+
+  setError(message);
+}
+ finally {
       setLoading(false);
     }
   };
@@ -97,10 +99,31 @@ const HomeworkList = () => {
       }
       
       setHomework(filtered);
-    } catch (err: any) {
-      console.error('[HomeworkList] Failed to load homework:', err);
-      const message = err.response?.data?.message || err.message;
-      setError(`⚠️ Không thể tải danh sách bài tập: ${message}`);
+    } catch (err: unknown) {
+  console.error('[HomeworkList] Failed to load homework:', err);
+
+  let message = 'Không thể tải danh sách bài tập';
+
+  if (
+    typeof err === 'object' &&
+    err !== null &&
+    'response' in err
+  ) {
+    const axiosErr = err as {
+      response?: {
+        data?: { message?: string };
+      };
+      message?: string;
+    };
+
+    message =
+      axiosErr.response?.data?.message ||
+      axiosErr.message ||
+      message;
+  } else if (err instanceof Error) {
+    message = err.message;
+  }
+      setError(`Không thể tải danh sách bài tập: ${message}`);
       setHomework([]);
     }
   };
@@ -112,12 +135,17 @@ const HomeworkList = () => {
     
     try {
       await homeworkApi.deleteHomework(id);
-      alert('✅ Xóa bài tập thành công!');
+      alert('Xóa bài tập thành công!');
       loadHomework();
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Không thể xóa bài tập này!';
-      alert('❌ ' + message);
-    }
+    } catch (error: unknown) {
+  let message = 'Không thể xóa bài tập này!';
+
+  if (error instanceof Error) {
+    message = error.message;
+  }
+
+  alert(message);
+}
   };
   
   const handleRetry = () => {
@@ -148,13 +176,13 @@ const HomeworkList = () => {
   const getDeadlineStatus = (deadline: string, isOverdue: boolean) => {
     if (isOverdue) {
       const diffDays = Math.floor((new Date().getTime() - new Date(deadline).getTime()) / (86400000));
-      return { text: `⚠️ Quá hạn ${diffDays} ngày`, className: 'thl-status-overdue' };
+      return { text: `Quá hạn ${diffDays} ngày`, className: 'thl-status-overdue' };
     }
     
     const diffDays = Math.floor((new Date(deadline).getTime() - new Date().getTime()) / (86400000));
     if (diffDays <= 3) return { text: `⚡ Còn ${diffDays} ngày`, className: 'thl-status-urgent' };
     
-    return { text: `📅 Còn ${diffDays} ngày`, className: 'thl-status-normal' };
+    return { text: `Còn ${diffDays} ngày`, className: 'thl-status-normal' };
   };
   
   const getTypeColor = (type: string) => {
@@ -165,7 +193,7 @@ const HomeworkList = () => {
       default: return '#64748b';
     }
   };
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   
   // Calculate statistics
@@ -189,7 +217,7 @@ const HomeworkList = () => {
       {/* Header */}
       <div className="thl-header">
         <div className="thl-header-content">
-          <h1>📝 Quản lý Bài tập</h1>
+          <h1>Quản lý Bài tập</h1>
           <p>Tạo, chỉnh sửa và theo dõi bài tập của sinh viên</p>
         </div>
         <button 
@@ -207,24 +235,24 @@ const HomeworkList = () => {
       {classLoadError && (
         <div className={`thl-error-banner ${classLoadError.includes('401') ? 'auth-error' : 'network-error'}`}>
           <div className="thl-error-icon">
-            {classLoadError.includes('401') ? '🔒' : '⚠️'}
+            {classLoadError.includes('401') ? '' : ''}
           </div>
           <div className="thl-error-content">
             <h3 className="thl-error-title">Lỗi tải danh sách lớp học</h3>
             <p className="thl-error-text">{classLoadError}</p>
             
             <details className="thl-debug-info">
-              <summary className="thl-debug-summary">🔍 Thông tin Debug</summary>
+              <summary className="thl-debug-summary">Thông tin Debug</summary>
               <div style={{ marginTop: '8px', fontFamily: 'monospace' }}>
-                <p>• Token: {localStorage.getItem('access_token') ? '✅ Có' : '❌ Không có'}</p>
+                <p>• Token: {localStorage.getItem('access_token') ? ' Có' : 'Không có'}</p>
                 <p>• Time: {new Date().toLocaleTimeString()}</p>
               </div>
             </details>
             
             <div className="thl-error-actions">
-              <button onClick={handleRetry} className="thl-btn-retry">🔄 Thử lại</button>
+              <button onClick={handleRetry} className="thl-btn-retry">Thử lại</button>
               {classLoadError.includes('401') && (
-                <button onClick={handleLogout} className="thl-btn-logout">🚪 Đăng nhập lại</button>
+                <button onClick={handleLogout} className="thl-btn-logout">Đăng nhập lại</button>
               )}
             </div>
           </div>
@@ -234,7 +262,7 @@ const HomeworkList = () => {
       {/* Homework Load Error */}
       {error && !classLoadError && (
         <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '12px', padding: '16px', marginBottom: '24px', color: '#b91c1c' }}>
-          <strong>❌ Lỗi:</strong> {error}
+          <strong>Lỗi:</strong> {error}
           <button 
             onClick={handleRetry}
             style={{ marginLeft: '12px', padding: '4px 12px', background: '#fff', border: '1px solid #b91c1c', borderRadius: '4px', cursor: 'pointer', color: '#b91c1c' }}
@@ -253,7 +281,7 @@ const HomeworkList = () => {
           disabled={classes.length === 0}
         >
           <option value="">
-            {classes.length === 0 ? '⚠️ Không có lớp học' : `Tất cả lớp (${classes.length})`}
+            {classes.length === 0 ? 'Không có lớp học' : `Tất cả lớp (${classes.length})`}
           </option>
           {classes.map(cls => (
             <option key={cls.classId} value={cls.classId}>
@@ -264,7 +292,7 @@ const HomeworkList = () => {
         
         <input
           type="text"
-          placeholder="🔍 Tìm kiếm bài tập (Tên, môn học)..."
+          placeholder="Tìm kiếm bài tập (Tên, môn học)..."
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
           className="thl-search"
@@ -279,9 +307,9 @@ const HomeworkList = () => {
             className={`thl-tab-btn ${selectedType === type ? 'active' : ''}`}
             onClick={() => setSelectedType(type)}
           >
-            {type === 'ALL' ? '📚 Tất cả' : 
-             type === 'REGULAR' ? '📝 Thường xuyên' :
-             type === 'MIDTERM' ? '📊 Giữa kỳ' : '🎯 Cuối kỳ'}
+            {type === 'ALL' ? 'Tất cả' : 
+             type === 'REGULAR' ? 'Thường xuyên' :
+             type === 'MIDTERM' ? 'Giữa kỳ' : 'Cuối kỳ'}
           </button>
         ))}
       </div>
@@ -289,7 +317,6 @@ const HomeworkList = () => {
       {/* Stats Grid - Using raw HTML to match CSS */}
       <div className="thl-stats-grid">
         <div className="thl-stat-card" style={{ borderLeft: '4px solid #10b981' }}>
-          <div className="thl-stat-icon-wrapper" style={{ background: '#ecfdf5', color: '#10b981' }}>📝</div>
           <div className="thl-stat-content">
             <div className="thl-stat-value">{stats.total}</div>
             <div className="thl-stat-label">Tổng bài tập</div>
@@ -297,7 +324,6 @@ const HomeworkList = () => {
         </div>
         
         <div className="thl-stat-card" style={{ borderLeft: '4px solid #3b82f6' }}>
-          <div className="thl-stat-icon-wrapper" style={{ background: '#eff6ff', color: '#3b82f6' }}>✅</div>
           <div className="thl-stat-content">
             <div className="thl-stat-value">{stats.completed}</div>
             <div className="thl-stat-label">Đã chấm xong</div>
@@ -305,7 +331,6 @@ const HomeworkList = () => {
         </div>
         
         <div className="thl-stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
-          <div className="thl-stat-icon-wrapper" style={{ background: '#fffbeb', color: '#f59e0b' }}>⏳</div>
           <div className="thl-stat-content">
             <div className="thl-stat-value">{stats.needsGrading}</div>
             <div className="thl-stat-label">Cần chấm</div>
@@ -313,7 +338,6 @@ const HomeworkList = () => {
         </div>
         
         <div className="thl-stat-card" style={{ borderLeft: '4px solid #ef4444' }}>
-          <div className="thl-stat-icon-wrapper" style={{ background: '#fef2f2', color: '#ef4444' }}>⚠️</div>
           <div className="thl-stat-content">
             <div className="thl-stat-value">{stats.overdue}</div>
             <div className="thl-stat-label">Quá hạn</div>
@@ -324,7 +348,6 @@ const HomeworkList = () => {
       {/* Homework List */}
       {homework.length === 0 ? (
         <div className="thl-empty-state">
-          <div className="thl-empty-icon">📭</div>
           <h3>{getEmptyStateMessage().title}</h3>
           <p>{getEmptyStateMessage().description}</p>
           {!searchKeyword && (
@@ -372,9 +395,9 @@ const HomeworkList = () => {
                 
                 <div className="thl-card-body">
                   <div className="thl-info-row">
-                    <span className="thl-info-item">🏫 {hw.classCode}</span>
-                    <span className="thl-info-item">📚 {hw.subjectName}</span>
-                    <span className="thl-info-item">💯 Max: {hw.maxScore} điểm</span>
+                    <span className="thl-info-item">{hw.classCode}</span>
+                    <span className="thl-info-item">{hw.subjectName}</span>
+                    <span className="thl-info-item">Tối đa: {hw.maxScore} điểm</span>
                   </div>
                   
                   {hw.description && (
@@ -443,19 +466,19 @@ const HomeworkList = () => {
                     className="thl-btn-action thl-btn-view"
                     onClick={() => navigate(`/teacher/assignments/${hw.homeworkId}`)}
                   >
-                    👁️ Chi tiết
+                    Chi tiết
                   </button>
                   <button 
                     className="thl-btn-action thl-btn-edit"
                     onClick={() => navigate(`/teacher/assignments/edit/${hw.homeworkId}`)}
                   >
-                    ✏️ Sửa
+                    Sửa
                   </button>
                   <button 
                     className="thl-btn-action thl-btn-delete"
                     onClick={() => handleDelete(hw.homeworkId, hw.title)}
                   >
-                    🗑️ Xóa
+                    Xóa
                   </button>
                 </div>
               </div>

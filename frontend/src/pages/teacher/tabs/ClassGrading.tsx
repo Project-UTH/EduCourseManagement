@@ -12,7 +12,7 @@ interface Props {
   classId: number;
 }
 
-const ClassGrading: React.FC<Props> = ({ classId }) => {
+const ClassGrading: React.FC<Props> = () => {
   const navigate = useNavigate();
 
   const handleGoToGrading = () => {
@@ -26,12 +26,11 @@ const ClassGrading: React.FC<Props> = ({ classId }) => {
   return (
     <div className="tab-grading">
       <div className="tab-header">
-        <h2>📊 Quản lý điểm</h2>
+        <h2> Quản lý điểm</h2>
       </div>
 
       <div className="quick-actions-grid">
         <div className="action-card" onClick={handleGoToGrading}>
-          <div className="action-icon">✏️</div>
           <div className="action-content">
             <h3>Nhập điểm</h3>
             <p>Nhập điểm TX, GK, CK cho sinh viên</p>
@@ -40,7 +39,6 @@ const ClassGrading: React.FC<Props> = ({ classId }) => {
         </div>
 
         <div className="action-card" onClick={handleGoToStatistics}>
-          <div className="action-icon">📈</div>
           <div className="action-content">
             <h3>Thống kê điểm</h3>
             <p>Xem phân tích và thống kê kết quả</p>

@@ -34,13 +34,13 @@ const ClassInfo: React.FC<Props> = ({ classDetail }) => {
   return (
     <div className="tab-info">
       <div className="tab-header">
-        <h2>ℹ️ Thông tin lớp học</h2>
+        <h2>ℹ Thông tin lớp học</h2>
       </div>
 
       <div className="info-sections">
         {/* Subject Information */}
         <div className="info-section">
-          <h3>📚 Thông tin môn học</h3>
+          <h3> Thông tin môn học</h3>
           <div className="info-grid">
             <div className="info-row">
               <span className="info-label">Tên môn học:</span>
@@ -63,7 +63,7 @@ const ClassInfo: React.FC<Props> = ({ classDetail }) => {
 
         {/* Class Information */}
         <div className="info-section">
-          <h3>🏫 Thông tin lớp</h3>
+          <h3> Thông tin lớp</h3>
           <div className="info-grid">
             <div className="info-row">
               <span className="info-label">Mã lớp:</span>
@@ -90,7 +90,7 @@ const ClassInfo: React.FC<Props> = ({ classDetail }) => {
 
         {/* Schedule Information */}
         <div className="info-section">
-          <h3>📅 Lịch học</h3>
+          <h3> Lịch học</h3>
           <div className="info-grid">
             <div className="info-row">
               <span className="info-label">Thời gian:</span>
@@ -106,7 +106,7 @@ const ClassInfo: React.FC<Props> = ({ classDetail }) => {
         </div>
       </div>
 
-      {/* ==================== ✅ NEW: ENROLLED STUDENTS LIST ==================== */}
+      {/* ====================  NEW: ENROLLED STUDENTS LIST ==================== */}
       <div className="class-students-section">
         <EnrolledStudentsList 
           classId={classDetail.classId} 

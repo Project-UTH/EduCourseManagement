@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import teacherApi from '../../../services/api/teacherApi';
+import teacherApi, { TeacherResponse } from '../../../services/api/teacherApi';
 import './TeacherProfile.css';
 import ChatList from '../../../components/chat/ChatList';
 import { useAuthStore } from '@/store/authStore';
@@ -10,8 +10,20 @@ import { useAuthStore } from '@/store/authStore';
  * * Teacher profile management page
  */
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
+const isApiError = (err: unknown): err is ApiError => {
+  return typeof err === 'object' && err !== null && 'response' in err;
+};
+
 const TeacherProfile = () => {
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<TeacherResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -34,6 +46,7 @@ const TeacherProfile = () => {
 
   useEffect(() => {
     loadProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadProfile = async () => {
@@ -62,11 +75,16 @@ const TeacherProfile = () => {
       await loadProfile();
       setIsEditing(false);
       showMessage('success', 'Cập nhật thông tin thành công!');
-    } catch (error: any) {
-      console.error('Failed to update profile:', error);
-      const errorMessage = error.response?.data?.message || 'Cập nhật thất bại. Vui lòng thử lại!';
-      showMessage('error', errorMessage);
-    } finally {
+    } catch (error: unknown) {
+  console.error('Failed to update profile:', error);
+
+  const errorMessage = isApiError(error)
+    ? error.response?.data?.message ?? 'Cập nhật thất bại. Vui lòng thử lại!'
+    : 'Cập nhật thất bại. Vui lòng thử lại!';
+
+  showMessage('error', errorMessage);
+}
+ finally {
       setLoading(false);
     }
   };
@@ -97,11 +115,16 @@ const TeacherProfile = () => {
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
       setIsChangingPassword(false);
       showMessage('success', 'Đổi mật khẩu thành công!');
-    } catch (error: any) {
-      console.error('Failed to change password:', error);
-      const errorMessage = error.response?.data?.message || 'Đổi mật khẩu thất bại. Kiểm tra lại mật khẩu cũ!';
-      showMessage('error', errorMessage);
-    } finally {
+    }  catch (error: unknown) {
+  console.error('Failed to change password:', error);
+
+  const errorMessage = isApiError(error)
+    ? error.response?.data?.message ?? 'Đổi mật khẩu thất bại. Kiểm tra lại mật khẩu cũ!'
+    : 'Đổi mật khẩu thất bại. Kiểm tra lại mật khẩu cũ!';
+
+  showMessage('error', errorMessage);
+}
+ finally {
       setLoading(false);
     }
   };
@@ -123,7 +146,7 @@ const TeacherProfile = () => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore((state) => state.user);
 
 
   if (loading && !profile) {
@@ -151,14 +174,14 @@ const TeacherProfile = () => {
     <div className="tp-container">
       {/* Page Header */}
       <div className="tp-header">
-        <h1>👤 Hồ sơ cá nhân</h1>
+        <h1>Hồ sơ cá nhân</h1>
         <p>Quản lý thông tin tài khoản của bạn</p>
       </div>
 
       {/* Message Alert */}
       {message && (
         <div className={`tp-alert tp-alert-${message.type}`}>
-          {message.type === 'success' ? '✅' : '❌'} {message.text}
+          {message.type === 'success' ? '' : ''} {message.text}
         </div>
       )}
 
@@ -185,7 +208,6 @@ const TeacherProfile = () => {
             {/* Quick Info */}
             <div className="tp-quick-info">
               <div className="tp-info-item">
-                <span className="tp-info-icon">🆔</span>
                 <div>
                   <div className="tp-info-label">CCCD</div>
                   <div className="tp-info-value">{profile.citizenId}</div>
@@ -193,7 +215,6 @@ const TeacherProfile = () => {
               </div>
 
               <div className="tp-info-item">
-                <span className="tp-info-icon">📧</span>
                 <div>
                   <div className="tp-info-label">Email</div>
                   <div className="tp-info-value">{profile.email}</div>
@@ -201,7 +222,6 @@ const TeacherProfile = () => {
               </div>
 
               <div className="tp-info-item">
-                <span className="tp-info-icon">📞</span>
                 <div>
                   <div className="tp-info-label">Điện thoại</div>
                   <div className="tp-info-value">{profile.phone}</div>
@@ -216,14 +236,14 @@ const TeacherProfile = () => {
                 onClick={() => setIsEditing(true)}
                 disabled={isEditing || isChangingPassword}
               >
-                ✏️ Chỉnh sửa
+                 Chỉnh sửa
               </button>
               <button 
                 className="tp-btn tp-btn-secondary"
                 onClick={() => setIsChangingPassword(true)}
                 disabled={isEditing || isChangingPassword}
               >
-                🔒 Đổi mật khẩu
+                 Đổi mật khẩu
               </button>
             </div>
           </div>
@@ -235,7 +255,7 @@ const TeacherProfile = () => {
           {!isEditing && !isChangingPassword && (
             <div className="tp-section">
               <div className="tp-section-header">
-                <h3>📋 Thông tin chi tiết</h3>
+                <h3>Thông tin chi tiết</h3>
               </div>
 
               <div className="tp-detail-grid">
@@ -296,7 +316,7 @@ const TeacherProfile = () => {
           {isEditing && (
             <div className="tp-section">
               <div className="tp-section-header">
-                <h3>✏️ Chỉnh sửa thông tin</h3>
+                <h3>Chỉnh sửa thông tin</h3>
               </div>
 
               <form onSubmit={handleEditSubmit} className="tp-form">
@@ -334,7 +354,7 @@ const TeacherProfile = () => {
 
                 <div className="tp-form-actions">
                   <button type="submit" className="tp-btn tp-btn-primary" disabled={loading}>
-                    {loading ? 'Đang lưu...' : '💾 Lưu thay đổi'}
+                    {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
                   </button>
                   <button 
                     type="button" 
@@ -342,14 +362,14 @@ const TeacherProfile = () => {
                     onClick={() => {
                       setIsEditing(false);
                       setEditForm({
-                        email: profile.email,
-                        phone: profile.phone,
-                        address: profile.address,
+                        email: profile.email || '',
+  phone: profile.phone || '',
+  address: profile.address || '',
                       });
                     }}
                     disabled={loading}
                   >
-                    ❌ Hủy
+                     Hủy
                   </button>
                 </div>
               </form>
@@ -360,7 +380,7 @@ const TeacherProfile = () => {
           {isChangingPassword && (
             <div className="tp-section">
               <div className="tp-section-header">
-                <h3>🔒 Đổi mật khẩu</h3>
+                <h3>Đổi mật khẩu</h3>
               </div>
 
               <form onSubmit={handlePasswordSubmit} className="tp-form">
@@ -409,12 +429,12 @@ const TeacherProfile = () => {
                 </div>
 
                 <div className="tp-password-hint">
-                  💡 Mật khẩu phải có ít nhất 6 ký tự
+                  Mật khẩu phải có ít nhất 6 ký tự
                 </div>
 
                 <div className="tp-form-actions">
                   <button type="submit" className="tp-btn tp-btn-primary" disabled={loading}>
-                    {loading ? 'Đang xử lý...' : '🔒 Đổi mật khẩu'}
+                    {loading ? 'Đang xử lý...' : 'Đổi mật khẩu'}
                   </button>
                   <button 
                     type="button" 
@@ -425,7 +445,7 @@ const TeacherProfile = () => {
                     }}
                     disabled={loading}
                   >
-                    ❌ Hủy
+                    Hủy
                   </button>
                 </div>
               </form>

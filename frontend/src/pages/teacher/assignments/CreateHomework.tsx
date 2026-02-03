@@ -7,6 +7,7 @@ import ChatList from '../../../components/chat/ChatList';
 import { useAuthStore } from '@/store/authStore';
 
 
+
 /**
  * CreateHomework Page - Namespaced (tch-)
  */
@@ -188,16 +189,18 @@ const CreateHomework = () => {
         formDataToSend.append('file', attachmentFile);
       }
       
-      const result = await homeworkApi.createHomework(formDataToSend as any);
+      const result = await homeworkApi.createHomework(formDataToSend);
       
-      alert('✅ Tạo bài tập thành công!');
+      alert('Tạo bài tập thành công!');
       navigate(`/teacher/assignments/${result.homeworkId}`);
       
-    } catch (err: any) {
-      console.error('Failed to create homework:', err);
-      
-      const message = err.response?.data?.message || err.message || 'Có lỗi xảy ra khi tạo bài tập!';
-      
+    } catch (err: unknown) {
+  if (err instanceof Error) {
+    setError(err.message);
+  } else {
+    setError('Có lỗi xảy ra!');
+  }
+      const message = err instanceof Error ? err.message : 'Có lỗi xảy ra!';     
       if (message.includes('MIDTERM') || message.includes('giữa kỳ')) {
         setErrors(prev => ({
           ...prev,
@@ -216,17 +219,21 @@ const CreateHomework = () => {
     }
   };
   
-  const handleInputChange = (field: keyof HomeworkRequest, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
+  const handleInputChange = <K extends keyof HomeworkRequest>(
+  field: K,
+  value: HomeworkRequest[K]
+) => {
+  setFormData(prev => ({ ...prev, [field]: value }));
+
+  if (errors[field]) {
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  }
+};
+
   
   const getTypeLabel = (type: HomeworkType): string => {
     switch (type) {
@@ -238,13 +245,13 @@ const CreateHomework = () => {
   
   const getTypeWarning = (): string | null => {
     if (formData.homeworkType === 'MIDTERM') {
-      return '⚠️ Lưu ý: Mỗi lớp chỉ có 1 bài Giữa kỳ';
+      return 'Lưu ý: Mỗi lớp chỉ có 1 bài Giữa kỳ';
     } else if (formData.homeworkType === 'FINAL') {
-      return '⚠️ Lưu ý: Mỗi lớp chỉ có 1 bài Cuối kỳ';
+      return 'Lưu ý: Mỗi lớp chỉ có 1 bài Cuối kỳ';
     }
     return null;
   };
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   
   if (loading) {
@@ -262,7 +269,6 @@ const CreateHomework = () => {
     return (
       <div className="tch-container">
         <div className="tch-empty">
-          <span className="tch-empty-icon">⚠️</span>
           <h3>Không có lớp học</h3>
           <p>Bạn chưa được phân công giảng dạy lớp học nào.</p>
           <button onClick={() => navigate('/teacher/assignments')} className="tch-btn-secondary">
@@ -281,7 +287,7 @@ const CreateHomework = () => {
           ← Quay lại
         </button>
         <div>
-          <h1>✨ Tạo bài tập mới</h1>
+          <h1>Tạo bài tập mới</h1>
           <p>Điền thông tin để tạo bài tập cho sinh viên</p>
         </div>
       </div>
@@ -289,7 +295,6 @@ const CreateHomework = () => {
       {/* Global Error */}
       {error && (
         <div className="tch-error-banner">
-          <span className="tch-error-icon">❌</span>
           <div>
             <strong>Lỗi:</strong> {error}
           </div>
@@ -299,7 +304,7 @@ const CreateHomework = () => {
       {/* Form */}
       <form onSubmit={handleSubmit} className="tch-form">
         <div className="tch-section">
-          <h2>📋 Thông tin cơ bản</h2>
+          <h2>Thông tin cơ bản</h2>
           
           {/* Class Selection */}
           <div className="tch-group">
@@ -433,7 +438,7 @@ const CreateHomework = () => {
                 htmlFor="homework-file-input" 
                 className="tch-file-btn"
               >
-                📎 Chọn file
+                Chọn file
               </label>
               <span className="tch-file-hint">
                 Tối đa 10MB
@@ -442,7 +447,7 @@ const CreateHomework = () => {
             
             {fileError && (
               <div className="tch-file-error">
-                ⚠️ {fileError}
+                {fileError}
               </div>
             )}
             
@@ -451,11 +456,11 @@ const CreateHomework = () => {
                 <div className="tch-file-content">
                   <div className="tch-file-info">
                     <span className="tch-file-icon">
-                      {attachmentFile.name.endsWith('.pdf') ? '📄' :
-                       attachmentFile.name.endsWith('.doc') || attachmentFile.name.endsWith('.docx') ? '📝' :
-                       attachmentFile.name.endsWith('.xls') || attachmentFile.name.endsWith('.xlsx') ? '📊' :
-                       attachmentFile.name.endsWith('.ppt') || attachmentFile.name.endsWith('.pptx') ? '📊' :
-                       attachmentFile.name.endsWith('.zip') || attachmentFile.name.endsWith('.rar') ? '🗜️' : '📎'}
+                      {attachmentFile.name.endsWith('.pdf') ? 'pdf' :
+                       attachmentFile.name.endsWith('.doc') || attachmentFile.name.endsWith('.docx') ? 'docx' :
+                       attachmentFile.name.endsWith('.xls') || attachmentFile.name.endsWith('.xlsx') ? 'xlsx' :
+                       attachmentFile.name.endsWith('.ppt') || attachmentFile.name.endsWith('.pptx') ? 'pptx' :
+                       attachmentFile.name.endsWith('.zip') || attachmentFile.name.endsWith('.rar') ? 'zip' : 'file'}
                     </span>
                     <div className="tch-file-details">
                       <div className="tch-file-name">{attachmentFile.name}</div>
@@ -468,7 +473,7 @@ const CreateHomework = () => {
                     onClick={handleRemoveFile}
                     className="tch-btn-remove-file"
                   >
-                    🗑️ Xóa
+                     Xóa
                   </button>
                 </div>
               </div>
@@ -488,7 +493,7 @@ const CreateHomework = () => {
             className="tch-btn-cancel"
             disabled={submitting}
           >
-            ❌ Hủy
+             Hủy
           </button>
           
           <button
@@ -502,7 +507,7 @@ const CreateHomework = () => {
                 Đang tạo...
               </>
             ) : (
-              <>✅ Tạo bài tập</>
+              <>Tạo bài tập</>
             )}
           </button>
         </div>

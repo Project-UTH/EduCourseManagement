@@ -12,6 +12,19 @@ import { useAuthStore } from '@/store/authStore';
  * * Form to edit existing homework assignment
  * Uses 'tch-' namespaced classes from CreateHomework.css
  */
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
+const isApiError = (err: unknown): err is ApiError => {
+  return typeof err === 'object' && err !== null;
+};
+
 
 type HomeworkType = 'REGULAR' | 'MIDTERM' | 'FINAL';
 
@@ -43,6 +56,7 @@ const EditHomework = () => {
   // Load classes and homework data
   useEffect(() => {
     loadInitialData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
   
   const loadInitialData = async () => {
@@ -70,12 +84,18 @@ const EditHomework = () => {
           attachmentUrl: homework.attachmentUrl || '',
         });
         
-        console.log('[EditHomework] ✅ Loaded homework:', homework);
+        console.log('[EditHomework]  Loaded homework:', homework);
       }
-    } catch (err: any) {
-      console.error('[EditHomework] ❌ Failed to load:', err);
-      setError(err.response?.data?.message || 'Không thể tải thông tin bài tập!');
-    } finally {
+    } catch (err: unknown) {
+  console.error('[EditHomework] Failed to load:', err);
+
+  const message = isApiError(err)
+    ? err.response?.data?.message ?? 'Không thể tải thông tin bài tập!'
+    : 'Không thể tải thông tin bài tập!';
+
+  setError(message);
+}
+ finally {
       setLoading(false);
     }
   };
@@ -159,46 +179,52 @@ const EditHomework = () => {
       
       const result = await homeworkApi.updateHomework(Number(id), updateRequest);
       
-      console.log('[EditHomework] ✅ Updated:', result.homeworkId);
+      console.log('[EditHomework]  Updated:', result.homeworkId);
       
-      alert('✅ Cập nhật bài tập thành công!');
+      alert(' Cập nhật bài tập thành công!');
       navigate(`/teacher/assignments/${result.homeworkId}`);
       
-    } catch (err: any) {
-      console.error('[EditHomework] ❌ Failed:', err);
-      
-      const message = err.response?.data?.message || err.message || 'Có lỗi xảy ra khi cập nhật bài tập!';
-      
-      if (message.includes('MIDTERM') || message.includes('giữa kỳ')) {
-        setErrors(prev => ({
-          ...prev,
-          homeworkType: 'Lớp này đã có bài tập giữa kỳ!'
-        }));
-      } else if (message.includes('FINAL') || message.includes('cuối kỳ')) {
-        setErrors(prev => ({
-          ...prev,
-          homeworkType: 'Lớp này đã có bài tập cuối kỳ!'
-        }));
-      } else {
-        setError(message);
-      }
-    } finally {
+    }  catch (err: unknown) {
+  console.error('[EditHomework] Failed:', err);
+
+  const message = isApiError(err)
+    ? err.response?.data?.message ?? err.message ?? 'Có lỗi xảy ra khi cập nhật bài tập!'
+    : 'Có lỗi xảy ra khi cập nhật bài tập!';
+
+  if (message.includes('MIDTERM') || message.includes('giữa kỳ')) {
+    setErrors(prev => ({
+      ...prev,
+      homeworkType: 'Lớp này đã có bài tập giữa kỳ!'
+    }));
+  } else if (message.includes('FINAL') || message.includes('cuối kỳ')) {
+    setErrors(prev => ({
+      ...prev,
+      homeworkType: 'Lớp này đã có bài tập cuối kỳ!'
+    }));
+  } else {
+    setError(message);
+  }
+}
+ finally {
       setSubmitting(false);
     }
   };
   
-  const handleInputChange = (field: keyof HomeworkRequest, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear error for this field
-    if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
+  const handleInputChange = <K extends keyof HomeworkRequest>(
+  field: K,
+  value: HomeworkRequest[K]
+) => {
+  setFormData(prev => ({ ...prev, [field]: value }));
+
+  if (errors[field]) {
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  }
+};
+
   
   const getTypeLabel = (type: HomeworkType): string => {
     switch (type) {
@@ -212,14 +238,14 @@ const EditHomework = () => {
     // Only show warning if type changed
     if (originalHomework && formData.homeworkType !== originalHomework.homeworkType) {
       if (formData.homeworkType === 'MIDTERM') {
-        return '⚠️ Lưu ý: Mỗi lớp chỉ có 1 bài Giữa kỳ';
+        return ' Lưu ý: Mỗi lớp chỉ có 1 bài Giữa kỳ';
       } else if (formData.homeworkType === 'FINAL') {
-        return '⚠️ Lưu ý: Mỗi lớp chỉ có 1 bài Cuối kỳ';
+        return ' Lưu ý: Mỗi lớp chỉ có 1 bài Cuối kỳ';
       }
     }
     return null;
   };
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   
   if (loading) {
@@ -237,7 +263,6 @@ const EditHomework = () => {
     return (
       <div className="tch-container">
         <div className="tch-empty">
-          <span className="tch-empty-icon">❌</span>
           <h3>Lỗi</h3>
           <p>{error}</p>
           <button onClick={() => navigate('/teacher/assignments')} className="tch-btn-secondary">
@@ -256,7 +281,7 @@ const EditHomework = () => {
           ← Quay lại
         </button>
         <div>
-          <h1>✏️ Chỉnh sửa bài tập</h1>
+          <h1>Chỉnh sửa bài tập</h1>
           <p>Cập nhật thông tin bài tập</p>
         </div>
       </div>
@@ -264,7 +289,6 @@ const EditHomework = () => {
       {/* Global Error */}
       {error && (
         <div className="tch-error-banner">
-          <span className="tch-error-icon">❌</span>
           <div>
             <strong>Lỗi:</strong> {error}
           </div>
@@ -274,7 +298,7 @@ const EditHomework = () => {
       {/* Form */}
       <form onSubmit={handleSubmit} className="tch-form">
         <div className="tch-section">
-          <h2>📋 Thông tin cơ bản</h2>
+          <h2>Thông tin cơ bản</h2>
           
           {/* Class Selection - Disabled (cannot change class) */}
           <div className="tch-group">
@@ -297,7 +321,7 @@ const EditHomework = () => {
               ))}
             </select>
             {errors.classId && <span className="tch-error-msg">{errors.classId}</span>}
-            <span className="tch-helper-text">⚠️ Không thể thay đổi lớp học</span>
+            <span className="tch-helper-text">Không thể thay đổi lớp học</span>
           </div>
           
           {/* Title */}
@@ -422,7 +446,7 @@ const EditHomework = () => {
             className="tch-btn-cancel"
             disabled={submitting}
           >
-            ❌ Hủy
+            Hủy
           </button>
           
           <button
@@ -436,7 +460,7 @@ const EditHomework = () => {
                 Đang lưu...
               </>
             ) : (
-              <>✅ Lưu thay đổi</>
+              <>Lưu thay đổi</>
             )}
           </button>
         </div>

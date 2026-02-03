@@ -20,6 +20,7 @@ const EnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
 
   useEffect(() => {
     loadStudents();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
   const loadStudents = async () => {
@@ -28,10 +29,17 @@ const EnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
       setError(null);
       const data = await teacherApi.getEnrolledStudents(classId);
       setStudents(data);
-    } catch (err: any) {
-      console.error('Failed to load students:', err);
-      setError(err.message || 'Không thể tải danh sách sinh viên');
-    } finally {
+    }  catch (err: unknown) {
+  console.error(err);
+
+  if (err instanceof Error) {
+    setError(err.message || 'Không thể tải danh sách tài liệu');
+  } else {
+    setError('Không thể tải danh sách tài liệu');
+  }
+}
+
+     finally {
       setLoading(false);
     }
   };
@@ -70,9 +78,9 @@ const EnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
   if (error) {
     return (
       <div className="enrolled-students-error">
-        <p>❌ {error}</p>
+        <p> {error}</p>
         <button onClick={loadStudents} className="btn-retry">
-          🔄 Thử lại
+           Thử lại
         </button>
       </div>
     );
@@ -81,12 +89,12 @@ const EnrolledStudentsList: React.FC<EnrolledStudentsListProps> = ({
   return (
     <div className="enrolled-students-container">
       <div className="students-header">
-        <h3>👥 Danh sách sinh viên ({students.length}/{enrolledCount})</h3>
+        <h3> Danh sách sinh viên ({students.length}/{enrolledCount})</h3>
         
         <div className="search-box">
           <input
             type="text"
-            placeholder="🔍 Tìm theo tên, MSSV, email..."
+            placeholder=" Tìm theo tên, MSSV, email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"

@@ -96,9 +96,14 @@ const GradeModal: React.FC<GradeModalProps> = ({
       // Success
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra khi chấm điểm');
-    } finally {
+    }  catch (err: unknown) {
+  if (err instanceof Error) {
+    setError(err.message || 'Có lỗi xảy ra khi chấm điểm');
+  } else {
+    setError('Có lỗi xảy ra khi chấm điểm');
+  }
+}
+     finally {
       setLoading(false);
     }
   };
@@ -120,7 +125,6 @@ const GradeModal: React.FC<GradeModalProps> = ({
         {/* Header */}
         <div className="tgm-header">
           <div className="tgm-title-wrapper">
-            <span className="tgm-icon">✏️</span>
             <h2>Chấm điểm bài nộp</h2>
           </div>
           <button 
@@ -134,7 +138,6 @@ const GradeModal: React.FC<GradeModalProps> = ({
 
         {/* Student Info */}
         <div className="tgm-student-info">
-          <div className="tgm-avatar">👤</div>
           <div className="tgm-student-details">
             <h3>{submission.studentInfo.fullName}</h3>
             <p className="tgm-student-code">{submission.studentInfo.studentCode}</p>
@@ -157,7 +160,7 @@ const GradeModal: React.FC<GradeModalProps> = ({
                 rel="noopener noreferrer"
                 className="tgm-file-link"
               >
-                📎 Tải xuống file đính kèm
+                 Tải xuống file đính kèm
               </a>
             )}
           </div>
@@ -212,7 +215,6 @@ const GradeModal: React.FC<GradeModalProps> = ({
           {/* Error Message */}
           {error && (
             <div className="tgm-error">
-              <span className="tgm-error-icon">⚠️</span>
               {error}
             </div>
           )}

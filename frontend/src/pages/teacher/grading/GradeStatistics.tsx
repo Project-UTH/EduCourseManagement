@@ -14,11 +14,17 @@ import { useAuthStore } from '@/store/authStore';
  * 
  * @updated 2026-01-28 - Added Excel export functionality
  */
+interface TeacherClass {
+  classId: number;
+  classCode: string;
+  subjectName: string;
+}
+
 
 const GradeStatistics = () => {
-  const [classes, setClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<TeacherClass[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
-  const [selectedClass, setSelectedClass] = useState<any>(null);
+  const [selectedClass, setSelectedClass] = useState<TeacherClass | null>(null);
   const [stats, setStats] = useState<GradeStatsResponse | null>(null);
   const [grades, setGrades] = useState<GradeResponse[]>([]);
   const [loading, setLoading] = useState(false);
@@ -35,7 +41,7 @@ const GradeStatistics = () => {
       loadGrades();
       
       // Update selected class object
-      const cls = classes.find(c => c.classId === selectedClassId);
+      const cls = classes.find(c => c.classId === selectedClassId) ?? null;
       setSelectedClass(cls);
     } else {
       setStats(null);
@@ -51,7 +57,7 @@ const GradeStatistics = () => {
       if (response.length > 0) {
         setSelectedClassId(response[0].classId);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load classes:', err);
       showError('Không thể tải danh sách lớp');
     }
@@ -66,7 +72,7 @@ const GradeStatistics = () => {
     try {
       const data = await gradeApi.getClassStats(selectedClassId);
       setStats(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load statistics:', err);
       showError('Không thể tải thống kê');
     } finally {
@@ -80,7 +86,7 @@ const GradeStatistics = () => {
     try {
       const data = await gradeApi.getGradesByClass(selectedClassId);
       setGrades(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load grades:', err);
     }
   };
@@ -128,12 +134,29 @@ const GradeStatistics = () => {
       
       // Show success message
       message.success('Xuất Excel thành công!');
-    } catch (error: any) {
-      console.error('Error exporting Excel:', error);
-      message.error(
-        error.response?.data?.message || 'Không thể xuất Excel. Vui lòng thử lại!'
-      );
-    } finally {
+    }  catch (error: unknown) {
+  let msg = 'Không thể xuất Excel. Vui lòng thử lại!';
+
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error
+  ) {
+    const axiosErr = error as {
+      response?: {
+        data?: { message?: string };
+      };
+      message?: string;
+    };
+
+    msg = axiosErr.response?.data?.message || axiosErr.message || msg;
+  } else if (error instanceof Error) {
+    msg = error.message;
+  }
+
+  message.error(msg);
+}
+ finally {
       setExportingExcel(false);
     }
   };
@@ -166,14 +189,14 @@ const GradeStatistics = () => {
     const pct = (count / total) * 100;
     return `${Math.max(pct, 2)}%`; // Min 2% height for visibility
   };
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore((state) => state.user);
   
   return (
     <div className="tgs-container">
       {/* Header */}
       <div className="tgs-header">
         <div className="tgs-header-content">
-          <h1>📊 Thống kê điểm</h1>
+          <h1>Thống kê điểm</h1>
           <p>Phân tích và thống kê kết quả học tập</p>
         </div>
         <button 
@@ -181,14 +204,14 @@ const GradeStatistics = () => {
           onClick={handleExportExcel}
           disabled={exportingExcel || !selectedClassId}
         >
-          {exportingExcel ? '⏳ Đang xuất...' : '📥 Xuất Excel'}
+          {exportingExcel ? 'Đang xuất...' : 'Xuất Excel'}
         </button>
       </div>
       
       {/* Error */}
       {error && (
         <div className="tgs-alert tgs-alert-error">
-          <span>❌ {error}</span>
+          <span>{error}</span>
         </div>
       )}
       
@@ -222,7 +245,6 @@ const GradeStatistics = () => {
           {/* Stats Cards */}
           <div className="tgs-stats-grid">
             <div className="tgs-stat-card">
-              <div className="tgs-stat-icon">📚</div>
               <div className="tgs-stat-content">
                 <div className="tgs-stat-label">Tổng sinh viên</div>
                 <div className="tgs-stat-value">{stats.overall.totalStudents}</div>
@@ -230,7 +252,6 @@ const GradeStatistics = () => {
             </div>
             
             <div className="tgs-stat-card">
-              <div className="tgs-stat-icon">✅</div>
               <div className="tgs-stat-content">
                 <div className="tgs-stat-label">Đã chấm điểm</div>
                 <div className="tgs-stat-value">{stats.overall.gradedStudents}</div>
@@ -238,7 +259,6 @@ const GradeStatistics = () => {
             </div>
             
             <div className="tgs-stat-card">
-              <div className="tgs-stat-icon">⏳</div>
               <div className="tgs-stat-content">
                 <div className="tgs-stat-label">Đang chờ</div>
                 <div className="tgs-stat-value">{stats.overall.inProgress}</div>
@@ -246,7 +266,6 @@ const GradeStatistics = () => {
             </div>
             
             <div className="tgs-stat-card">
-              <div className="tgs-stat-icon">📈</div>
               <div className="tgs-stat-content">
                 <div className="tgs-stat-label">Tỷ lệ hoàn thành</div>
                 <div className="tgs-stat-value">{stats.overall.completionRate?.toFixed(1) ?? '0.0'}%</div>
@@ -258,7 +277,7 @@ const GradeStatistics = () => {
           <div className="tgs-charts-row">
             {/* Score Distribution */}
             <div className="tgs-chart-card">
-              <h3>📊 Phân bố điểm số</h3>
+              <h3>Phân bố điểm số</h3>
               <div className="tgs-bar-chart">
                 {scoreDistribution.map((item, index) => (
                   <div key={index} className="tgs-bar-item">
@@ -278,7 +297,7 @@ const GradeStatistics = () => {
             
             {/* Letter Grade Distribution */}
             <div className="tgs-chart-card">
-              <h3>🎯 Phân bố điểm chữ</h3>
+              <h3> Phân bố điểm chữ</h3>
               <div className="tgs-letter-grid">
                 {[
                   { grade: 'A', count: stats.distribution.countA, class: 'tgs-grade-A' },
@@ -307,7 +326,7 @@ const GradeStatistics = () => {
           {/* Top Students */}
           {topStudents.length > 0 && (
             <div className="tgs-top-card">
-              <h3>🏆 Top {topStudents.length} sinh viên xuất sắc</h3>
+              <h3>Top {topStudents.length} sinh viên xuất sắc</h3>
               <div className="tgs-table-wrapper">
                 <table className="tgs-table">
                   <thead>
@@ -348,16 +367,14 @@ const GradeStatistics = () => {
           <div className="tgs-bottom-row">
             {/* Pass/Fail Stats */}
             <div className="tgs-info-card">
-              <h3>📊 Thống kê đạt/rớt</h3>
+              <h3>Thống kê đạt/rớt</h3>
               <div className="tgs-pf-list">
                 <div className="tgs-pf-item tgs-pass">
-                  <span className="tgs-pf-icon">✅</span>
                   <span className="tgs-pf-label">Đạt:</span>
                   <span className="tgs-pf-val">{stats.passFail.passedCount}</span>
                   <span className="tgs-pf-pct">({stats.passFail.passRate?.toFixed(1) ?? '0.0'}%)</span>
                 </div>
                 <div className="tgs-pf-item tgs-fail">
-                  <span className="tgs-pf-icon">❌</span>
                   <span className="tgs-pf-label">Rớt:</span>
                   <span className="tgs-pf-val">{stats.passFail.failedCount}</span>
                   <span className="tgs-pf-pct">
@@ -369,7 +386,7 @@ const GradeStatistics = () => {
             
             {/* Score Statistics */}
             <div className="tgs-info-card">
-              <h3>📈 Điểm thống kê</h3>
+              <h3>Điểm thống kê</h3>
               <div className="tgs-score-list">
                 <div className="tgs-score-item">
                   <span className="tgs-score-label">Trung bình:</span>
@@ -413,7 +430,7 @@ const GradeStatistics = () => {
       
       {!selectedClassId && (
         <div className="tgs-empty">
-          <p>🎯 Vui lòng chọn lớp học để xem thống kê</p>
+          <p>Vui lòng chọn lớp học để xem thống kê</p>
         </div>
       )}
       <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import classApi, { ClassResponse } from '../../../services/api/classApi';
-import homeworkApi, { HomeworkResponse } from '../../../services/api/homeworkApi';
+import homeworkApi, {} from '../../../services/api/homeworkApi';
 import submissionApi, { SubmissionResponse } from '../../../services/api/submissionApi';
 import GradeModal from './GradeModal';
 import SubmissionDetailModal from './SubmissionDetailModal';
@@ -14,12 +14,16 @@ import { useAuthStore } from '@/store/authStore';
  */
 
 type StatusFilter = 'ALL' | 'SUBMITTED' | 'GRADED' | 'LATE';
+type SubmissionWithHomework = SubmissionResponse & {
+  homeworkTitle?: string;
+  homeworkDeadline?: string;
+};
+
 
 const SubmissionList = () => {
   // State
   const [classes, setClasses] = useState<ClassResponse[]>([]);
-  const [homework, setHomework] = useState<HomeworkResponse[]>([]);
-  const [submissions, setSubmissions] = useState<SubmissionResponse[]>([]);
+  const [submissions, setSubmissions] = useState<SubmissionWithHomework[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -31,7 +35,6 @@ const SubmissionList = () => {
   
   // Filters
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
-  const [selectedHomework, setSelectedHomework] = useState<number | null>(null); // Kept for future use
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [searchKeyword, setSearchKeyword] = useState('');
   
@@ -41,14 +44,7 @@ const SubmissionList = () => {
   }, []);
   
   // Load homework when class changes
-  useEffect(() => {
-    if (selectedClass) {
-      loadHomeworkForClass();
-    } else {
-      setHomework([]);
-      setSelectedHomework(null);
-    }
-  }, [selectedClass]);
+
   
   // Load submissions when class changes
   useEffect(() => {
@@ -57,6 +53,7 @@ const SubmissionList = () => {
     } else {
       setSubmissions([]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClass]);
   
   const loadClasses = async () => {
@@ -68,25 +65,19 @@ const SubmissionList = () => {
       if (data.length > 0) {
         setSelectedClass(data[0].classId);
       }
-    } catch (err: any) {
-      console.error('[SubmissionList] Failed to load classes:', err);
-      setError('Không thể tải danh sách lớp học!');
-    } finally {
+    } catch (err: unknown) {
+  if (err instanceof Error) {
+    setError(err.message);
+  } else {
+    setError('Đã xảy ra lỗi');
+  }
+}
+    finally {
       setLoading(false);
     }
   };
   
-  const loadHomeworkForClass = async () => {
-    if (!selectedClass) return;
-    try {
-      const data = await homeworkApi.getHomeworkByClass(selectedClass);
-      setHomework(data);
-    } catch (err: any) {
-      console.error('[SubmissionList] Failed to load homework:', err);
-      setHomework([]);
-    }
-  };
-  
+ 
   const loadAllSubmissionsForClass = async () => {
     if (!selectedClass) return;
     
@@ -95,7 +86,6 @@ const SubmissionList = () => {
       setError(null);
       
       const homeworkList = await homeworkApi.getHomeworkByClass(selectedClass);
-      setHomework(homeworkList);
       
       if (homeworkList.length === 0) {
         setSubmissions([]);
@@ -114,14 +104,14 @@ const SubmissionList = () => {
             homeworkDeadline: hw.deadline
           }));
           allSubmissions.push(...submissionsWithHomework);
-        } catch (err: any) {
-          console.warn(`[SubmissionList] No submissions for homework ${hw.homeworkId}`);
+        } catch (err: unknown) {
+          console.warn(`[SubmissionList] No submissions for homework ${hw.homeworkId}:`, err);
         }
       }
       
       setSubmissions(allSubmissions);
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[SubmissionList] Failed to load submissions:', err);
       setError('Không thể tải danh sách bài nộp!');
       setSubmissions([]);
@@ -188,9 +178,9 @@ const SubmissionList = () => {
   const gradedCount = submissions.filter(s => s.status === 'GRADED').length;
   const ungradedCount = totalSubmissions - gradedCount;
   const lateCount = submissions.filter(s => s.status === 'LATE').length;
-  const user = useAuthStore((state: any) => state.user);
+const user = useAuthStore(state => state.user);
 
-  
+ 
   if (loading && submissions.length === 0) {
     return (
       <div className="tsl-container">
@@ -207,7 +197,7 @@ const SubmissionList = () => {
       {/* Header */}
       <div className="tsl-header">
         <div>
-          <h1>📥 Quản lý Bài nộp</h1>
+          <h1> Quản lý Bài nộp</h1>
           <p>Xem và chấm điểm bài tập của sinh viên</p>
         </div>
       </div>
@@ -215,7 +205,7 @@ const SubmissionList = () => {
       {/* Error */}
       {error && (
         <div className="tsl-error">
-          <span>❌ {error}</span>
+          <span> {error}</span>
         </div>
       )}
       
@@ -237,7 +227,7 @@ const SubmissionList = () => {
           
           <input
             type="text"
-            placeholder="🔍 Tìm theo tên hoặc mã SV..."
+            placeholder=" Tìm theo tên hoặc mã SV..."
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             className="tsl-search"
@@ -247,7 +237,6 @@ const SubmissionList = () => {
       
       {!selectedClass ? (
         <div className="tsl-empty">
-          <span className="tsl-empty-icon">📚</span>
           <h3>Vui lòng chọn lớp học</h3>
           <p>Chọn một lớp từ danh sách để xem các bài nộp</p>
         </div>
@@ -256,7 +245,6 @@ const SubmissionList = () => {
           {/* Stats Cards */}
           <div className="tsl-stats-grid">
             <div className="tsl-stat-card" style={{ borderLeftColor: '#3b82f6' }}>
-              <div className="tsl-stat-icon">📊</div>
               <div className="tsl-stat-content">
                 <div className="tsl-stat-label">Tổng bài nộp</div>
                 <div className="tsl-stat-value">{totalSubmissions}</div>
@@ -264,7 +252,6 @@ const SubmissionList = () => {
             </div>
             
             <div className="tsl-stat-card" style={{ borderLeftColor: '#f59e0b' }}>
-              <div className="tsl-stat-icon">⏳</div>
               <div className="tsl-stat-content">
                 <div className="tsl-stat-label">Cần chấm</div>
                 <div className="tsl-stat-value">{ungradedCount}</div>
@@ -272,7 +259,6 @@ const SubmissionList = () => {
             </div>
             
             <div className="tsl-stat-card" style={{ borderLeftColor: '#10b981' }}>
-              <div className="tsl-stat-icon">✅</div>
               <div className="tsl-stat-content">
                 <div className="tsl-stat-label">Đã chấm</div>
                 <div className="tsl-stat-value">{gradedCount}</div>
@@ -280,7 +266,6 @@ const SubmissionList = () => {
             </div>
             
             <div className="tsl-stat-card" style={{ borderLeftColor: '#ef4444' }}>
-              <div className="tsl-stat-icon">⚠️</div>
               <div className="tsl-stat-content">
                 <div className="tsl-stat-label">Nộp muộn</div>
                 <div className="tsl-stat-value">{lateCount}</div>
@@ -307,7 +292,6 @@ const SubmissionList = () => {
           {/* Submissions List */}
           {filteredSubmissions.length === 0 ? (
             <div className="tsl-empty">
-              <span className="tsl-empty-icon">📭</span>
               <h3>Không tìm thấy bài nộp</h3>
               <p>
                 {searchKeyword.trim()
@@ -327,7 +311,6 @@ const SubmissionList = () => {
                   <div key={submission.submissionId} className="tsl-card">
                     {/* Column 1: Student Info */}
                     <div className="tsl-student-col">
-                      <div className="tsl-avatar">👤</div>
                       <div className="tsl-student-details">
                         <h3>{submission.studentInfo.fullName}</h3>
                         <span className="tsl-student-code">{submission.studentInfo.studentCode}</span>
@@ -339,8 +322,9 @@ const SubmissionList = () => {
                       <div className="tsl-info-item">
                         <span className="tsl-label">Bài tập</span>
                         <span className="tsl-value highlight">
-                          {(submission as any).homeworkTitle || 'Unknown'}
-                        </span>
+  {submission.homeworkTitle || 'Unknown'}
+</span>
+
                       </div>
                       
                       <div className="tsl-info-item">
@@ -375,7 +359,7 @@ const SubmissionList = () => {
                       {totalFiles > 0 && (
                         <div className="tsl-info-item">
                           <span className="tsl-label">File đính kèm</span>
-                          <span className="tsl-value">📎 {totalFiles} tệp tin</span>
+                          <span className="tsl-value"> {totalFiles} tệp tin</span>
                         </div>
                       )}
                     </div>
@@ -386,7 +370,7 @@ const SubmissionList = () => {
                         className="tsl-btn tsl-btn-view"
                         onClick={() => handleViewDetail(submission)}
                       >
-                        👁️ Xem chi tiết
+                        Xem chi tiết
                       </button>
                       
                       {submission.status !== 'GRADED' ? (
@@ -394,14 +378,14 @@ const SubmissionList = () => {
                           className="tsl-btn tsl-btn-grade"
                           onClick={() => handleGradeClick(submission)}
                         >
-                          ✏️ Chấm điểm
+                          Chấm điểm
                         </button>
                       ) : (
                         <button 
                           className="tsl-btn tsl-btn-regrade"
                           onClick={() => handleGradeClick(submission)}
                         >
-                          🔄 Chấm lại
+                          Chấm lại
                         </button>
                       )}
                     </div>

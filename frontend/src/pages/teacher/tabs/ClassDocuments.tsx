@@ -30,10 +30,17 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
     try {
       const data = await materialApi.getTeacherMaterials(classId);
       setMaterials(data);
-    } catch (err: any) {
-      console.error(err);
-      setError('Không thể tải danh sách tài liệu');
-    } finally {
+    }  catch (err: unknown) {
+  console.error(err);
+
+  if (err instanceof Error) {
+    setError(err.message || 'Không thể tải danh sách tài liệu');
+  } else {
+    setError('Không thể tải danh sách tài liệu');
+  }
+}
+
+     finally {
       setLoading(false);
     }
   };
@@ -56,7 +63,7 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
     setUploading(true);
     try {
       await materialApi.uploadMaterial(classId, title, description, selectedFile);
-      alert('✅ Upload tài liệu thành công!');
+      alert(' Upload tài liệu thành công!');
       
       // Reset form
       setTitle('');
@@ -66,7 +73,7 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
       loadMaterials();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      alert('❌ Upload thất bại: ' + (err.response?.data?.message || err.message));
+      alert(' Upload thất bại: ' + (err.response?.data?.message || err.message));
     } finally {
       setUploading(false);
     }
@@ -79,26 +86,26 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
       loadMaterials();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      alert('❌ Xóa thất bại: ' + (err.response?.data?.message || err.message));
+      alert(' Xóa thất bại: ' + (err.response?.data?.message || err.message));
     }
   };
 
   const getFileIcon = (type: string) => {
     const lowerType = type.toLowerCase();
     switch (lowerType) {
-      case 'pdf': return '📄';
-      case 'pptx': case 'ppt': return '📊';
-      case 'zip': case 'rar': return '📦';
-      case 'docx': case 'doc': return '📝';
-      case 'xlsx': case 'xls': return '📈';
-      default: return '📁';
+      case 'pdf': return 'pdf';
+      case 'pptx': case 'ppt': return 'ppt';
+      case 'zip': case 'rar': return 'zip';
+      case 'docx': case 'doc': return 'docx';
+      case 'xlsx': case 'xls': return 'xlsx';
+      default: return '';
     }
   };
 
   if (loading) {
     return (
       <div className="class-documents-tab">
-        <div className="cd-loading">⏳ Đang tải tài liệu...</div>
+        <div className="cd-loading"> Đang tải tài liệu...</div>
       </div>
     );
   }
@@ -109,7 +116,7 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
       
       {/* HEADER */}
       <div className="cd-header">
-        <h2 className="cd-title">📁 Tài liệu lớp học</h2>
+        <h2 className="cd-title"> Tài liệu lớp học</h2>
         <button 
           className="cd-btn cd-btn-primary"
           onClick={() => setShowUploadForm(!showUploadForm)}
@@ -121,7 +128,7 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
       {/* ERROR MESSAGE */}
       {error && (
         <div className="cd-error">
-          <span>⚠️ {error}</span>
+          <span> {error}</span>
           <button onClick={loadMaterials} className="cd-btn cd-btn-secondary" style={{padding:'4px 8px', fontSize:'12px'}}>Thử lại</button>
         </div>
       )}
@@ -187,7 +194,6 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
       {/* MATERIALS LIST */}
       {materials.length === 0 ? (
         <div className="cd-empty">
-          <div className="cd-empty-icon">📂</div>
           <h3>Chưa có tài liệu nào</h3>
           <p>Giảng viên chưa tải lên tài liệu cho lớp học này.</p>
         </div>
@@ -219,14 +225,14 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
                   onClick={() => window.open(material.fileUrl, '_blank')}
                   title="Tải xuống"
                 >
-                  📥 Tải
+                   Tải
                 </button>
                 <button 
                   className="cd-btn cd-btn-delete"
                   onClick={() => handleDelete(material.materialId, material.title)}
                   title="Xóa tài liệu"
                 >
-                  🗑️ Xóa
+                   Xóa
                 </button>
               </div>
             </div>
@@ -236,7 +242,6 @@ const ClassDocuments: React.FC<Props> = ({ classId }) => {
 
       {/* FOOTER HINT */}
       <div className="cd-info-box">
-        <span>💡</span>
         <strong>Hỗ trợ:</strong> PDF, Word, Excel, PowerPoint, ZIP (Tối đa 10MB/file)
       </div>
     </div>

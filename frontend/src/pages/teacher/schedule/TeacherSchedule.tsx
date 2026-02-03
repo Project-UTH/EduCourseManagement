@@ -4,7 +4,7 @@ import '../schedule/TeacherSchedule.css'
 /**
  * TeacherSchedule Component - SIMPLE FIX
  * 
- * ✅ CHỈ SỬA 1 DÒNG: Thêm check cho 'ELEARNING'
+ *  CHỈ SỬA 1 DÒNG: Thêm check cho 'ELEARNING'
  */
 
 interface ScheduleItem {
@@ -90,7 +90,7 @@ const TeacherSchedule: React.FC = () => {
       const monday = getWeekMonday(selectedDate);
       const weekStartDate = formatDateForAPI(monday);
       
-      console.log('📅 Fetching teacher schedule for week starting:', weekStartDate);
+      console.log(' Fetching teacher schedule for week starting:', weekStartDate);
 
       const token = localStorage.getItem('token');
       const response = await fetch(
@@ -111,7 +111,7 @@ const TeacherSchedule: React.FC = () => {
 
       if (data && data.success) {
         const items = data.data || [];
-        console.log('✅ Received', items.length, 'schedule items');
+        console.log(' Received', items.length, 'schedule items');
         
         items.forEach((item: ScheduleItem) => {
           const mapping = DAY_MAPPING[item.dayOfWeek as keyof typeof DAY_MAPPING];
@@ -122,12 +122,18 @@ const TeacherSchedule: React.FC = () => {
         
         setScheduleItems(items);
       } else {
-        console.error('❌ API response not successful:', data);
+        console.error(' API response not successful:', data);
       }
-    } catch (error: any) {
-      console.error('❌ Error fetching teacher schedule:', error);
-      console.error('Error details:', error.message);
-    } finally {
+    }  catch (err: unknown) {
+  console.error('Error fetching teacher schedule:');
+
+  if (err instanceof Error) {
+    console.error('Error details:', err.message);
+  } else {
+    console.error('Error details:', err);
+  }
+}
+     finally {
       setLoading(false);
     }
   };
@@ -189,7 +195,7 @@ const TeacherSchedule: React.FC = () => {
   return (
     <div className="teacher-schedule-container">
       <div className="schedule-header">
-        <h2>📅 Lịch Giảng Dạy</h2>
+        <h2> Lịch Giảng Dạy</h2>
       </div>
 
       <div className="schedule-controls">
@@ -205,7 +211,7 @@ const TeacherSchedule: React.FC = () => {
             ← 
           </button>
           <button onClick={goToToday} className="today-btn">
-            📅 Tuần này
+             Tuần này
           </button>
           <button onClick={goToNextWeek} className="nav-btn" title="Tuần sau">
              →
@@ -259,18 +265,18 @@ const TeacherSchedule: React.FC = () => {
                             <div className="session-title">{session.subjectName}</div>
                             <div className="session-code">{session.classCode}</div>
                             <div className="session-info">
-                              📚 Buổi {session.sessionNumber}
+                              Buổi {session.sessionNumber}
                             </div>
                             <div className="session-info">
-                              📍 Phòng: {session.room}
+                              Phòng: {session.room}
                             </div>
                             <div className="session-info campus">
-                              🏢 {session.campus}
+                              {session.campus}
                             </div>
-                            {/* ✅ SIMPLE FIX: Check cả hai format */}
+                            {/*  SIMPLE FIX: Check cả hai format */}
                             {(session.sessionType === 'E_LEARNING' || 
                               session.sessionType === 'ELEARNING') && (
-                              <div className="online-badge">💻 E-Learning</div>
+                              <div className="online-badge"> E-Learning</div>
                             )}
                           </div>
                         ))}

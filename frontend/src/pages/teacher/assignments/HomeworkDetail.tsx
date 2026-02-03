@@ -35,14 +35,13 @@ const HomeworkDetail = () => {
   const [submissions, setSubmissions] = useState<SubmissionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'ALL' | 'SUBMITTED' | 'GRADED' | 'LATE'>('ALL');
   
   // Load homework detail
   useEffect(() => {
     if (id) {
       loadHomeworkDetail();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
   
   const loadHomeworkDetail = async () => {
@@ -53,30 +52,42 @@ const HomeworkDetail = () => {
       const data = await homeworkApi.getHomeworkById(Number(id));
       setHomework(data);
       
-      // TODO: Load submissions from API
+      //  Load submissions from API
       // For demo, keeping empty or you can mock data here
       setSubmissions([]);
       
-      console.log('[HomeworkDetail] ✅ Loaded:', data);
-    } catch (err: any) {
-      console.error('[HomeworkDetail] ❌ Failed:', err);
-      setError(err.response?.data?.message || 'Không thể tải thông tin bài tập!');
-    } finally {
+      console.log('[HomeworkDetail]  Loaded:', data);
+    } catch (err: unknown) {
+  console.error('[HomeworkDetail]  Failed:', err);
+
+  let message = 'Không thể tải thông tin bài tập!';
+
+  if (err instanceof Error) {
+    message = err.message;
+  }
+
+  setError(message);
+}
+ finally {
       setLoading(false);
     }
   };
   
   const handleDelete = async () => {
-    if (!window.confirm('⚠️ Bạn có chắc muốn xóa bài tập này? Hành động này không thể hoàn tác!')) {
+    if (!window.confirm('Bạn có chắc muốn xóa bài tập này? Hành động này không thể hoàn tác!')) {
       return;
     }
     
     try {
       await homeworkApi.deleteHomework(Number(id));
-      alert('✅ Xóa bài tập thành công!');
+      alert(' Xóa bài tập thành công!');
       navigate('/teacher/assignments');
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Không thể xóa bài tập này!');
+    } catch (err: unknown) {
+      let message = 'Không thể xóa bài tập này!';
+      if (err instanceof Error) {
+        message = err.message;
+      }
+      alert(message);
     }
   };
   
@@ -89,13 +100,13 @@ const HomeworkDetail = () => {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     
     if (diff < 0) {
-      return { icon: '🔴', text: `Quá hạn ${Math.abs(days)} ngày`, color: '#ef4444' };
+      return { text: `Quá hạn ${Math.abs(days)} ngày`, color: '#ef4444' };
     } else if (days === 0) {
-      return { icon: '⚡', text: 'Hạn hôm nay', color: '#f59e0b' };
+      return { text: 'Hạn hôm nay', color: '#f59e0b' };
     } else if (days <= 3) {
-      return { icon: '⚠️', text: `Còn ${days} ngày`, color: '#f59e0b' };
+      return { text: `Còn ${days} ngày`, color: '#f59e0b' };
     } else {
-      return { icon: '🟢', text: `Còn ${days} ngày`, color: '#10b981' };
+      return { text: `Còn ${days} ngày`, color: '#10b981' };
     }
   };
   
@@ -123,18 +134,8 @@ const HomeworkDetail = () => {
     });
   };
   
-  const filteredSubmissions = submissions.filter(sub => {
-    if (filterStatus !== 'ALL' && sub.status !== filterStatus) return false;
-    if (searchKeyword.trim()) {
-      const keyword = searchKeyword.toLowerCase();
-      return (
-        sub.studentName?.toLowerCase().includes(keyword) ||
-        sub.studentCode?.toLowerCase().includes(keyword)
-      );
-    }
-    return true;
-  });
-  const user = useAuthStore((state: any) => state.user);
+  
+  const user = useAuthStore((state) => state.user);
 
   
   if (loading) {
@@ -153,7 +154,6 @@ const HomeworkDetail = () => {
     return (
       <div className="thd-container">
         <div className="thd-error">
-          <span className="thd-error-icon">❌</span>
           <h3>Lỗi</h3>
           <p>{error || 'Không tìm thấy bài tập'}</p>
           <button onClick={() => navigate('/teacher/assignments')} className="thd-btn-back">
@@ -165,21 +165,7 @@ const HomeworkDetail = () => {
   }
   
   const deadlineStatus = getDeadlineStatus();
-  const submittedCount = submissions.length;
-  const totalStudents = 40; // Mock total
-  const submissionRate = totalStudents > 0 ? (submittedCount / totalStudents * 100).toFixed(1) : 0;
-  
-  const gradedSubmissions = submissions.filter(s => s.status === 'GRADED');
-  const gradedCount = gradedSubmissions.length;
-  const gradedRate = submittedCount > 0 ? (gradedCount / submittedCount * 100).toFixed(1) : 0;
-  
-  const averageScore = gradedSubmissions.length > 0
-    ? (gradedSubmissions.reduce((sum, s) => sum + (s.score || 0), 0) / gradedSubmissions.length).toFixed(2)
-    : '--';
-  
-  const maxScore = gradedSubmissions.length > 0 ? Math.max(...gradedSubmissions.map(s => s.score || 0)).toFixed(2) : '--';
-  const minScore = gradedSubmissions.length > 0 ? Math.min(...gradedSubmissions.map(s => s.score || 0)).toFixed(2) : '--';
-  
+
   return (
     <div className="thd-container">
       {/* Header */}
@@ -192,10 +178,10 @@ const HomeworkDetail = () => {
             onClick={() => navigate(`/teacher/assignments/edit/${homework.homeworkId}`)}
             className="thd-btn-edit"
           >
-            ✏️ Sửa
+             Sửa
           </button>
           <button onClick={handleDelete} className="thd-btn-delete">
-            🗑️ Xóa
+             Xóa
           </button>
         </div>
       </div>
@@ -204,15 +190,15 @@ const HomeworkDetail = () => {
       <div className="thd-title-section">
         <h1>{homework.title}</h1>
         <p className="thd-subtitle">
-          <span>📚 {homework.subjectName}</span>
+          <span> {homework.subjectName}</span>
           <span>•</span>
-          <span>🏫 Lớp {homework.classCode}</span>
+          <span>Lớp {homework.classCode}</span>
         </p>
       </div>
       
       {/* Info Section */}
       <div className="thd-section">
-        <h2>📋 Thông tin chi tiết</h2>
+        <h2>Thông tin chi tiết</h2>
         
         <div className="thd-info-grid">
           <div className="thd-info-item">
@@ -230,7 +216,6 @@ const HomeworkDetail = () => {
           <div className="thd-info-item">
             <span className="thd-label">Trạng thái</span>
             <span className="thd-value" style={{ color: deadlineStatus?.color }}>
-              {deadlineStatus?.icon} {deadlineStatus?.text}
             </span>
           </div>
           
@@ -248,18 +233,23 @@ const HomeworkDetail = () => {
                 rel="noopener noreferrer"
                 className="thd-attachment-link"
               >
-                📎 Tải xuống tài liệu
+                Tải xuống tài liệu
               </a>
             </div>
           )}
         </div>
-        
         {homework.description && (
           <div className="thd-description-box">
-            <div className="thd-desc-title">📄 Nội dung yêu cầu</div>
+            <div className="thd-desc-title">Nội dung yêu cầu</div>
             <p className="thd-desc-text">{homework.description}</p>
           </div>
         )}
+        {submissions.map((s) => (
+  <div key={s.submissionId}>
+    {s.studentName} – {s.status}
+  </div>
+))}
+
       </div>
       <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />
     </div>

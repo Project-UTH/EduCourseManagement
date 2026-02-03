@@ -10,11 +10,28 @@ import { useAuthStore } from '@/store/authStore';
  * TeacherClasses Component
  * Scope: Independent styled component (prefix: tc-)
  */
+interface TeacherClass {
+  classId: number;
+  classCode: string;
+  subjectName: string;
+  subjectCredits?: number;
+  credits?: number;
+
+  semesterId: number;
+  semesterName: string;
+
+  status: 'OPEN' | 'ACTIVE' | 'COMPLETED' | 'CLOSED' | 'CANCELLED' | 'CANCELED';
+
+  enrolledCount?: number;
+  currentStudents?: number;
+  maxStudents?: number;
+}
+
 
 const TeacherClasses = () => {
   const navigate = useNavigate();
-  const [classes, setClasses] = useState<any[]>([]);
-  const [filteredClasses, setFilteredClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<TeacherClass[]>([]);
+  const [filteredClasses, setFilteredClasses] = useState<TeacherClass[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSemester, setSelectedSemester] = useState<string>('all');
@@ -31,7 +48,7 @@ const TeacherClasses = () => {
   const loadClasses = async () => {
     setLoading(true);
     try {
-      const data: any = await classApi.getMyClasses();
+      const data = await classApi.getMyClasses() as TeacherClass[];
       setClasses(data);
       setFilteredClasses(data);
     } catch (error) {
@@ -101,19 +118,6 @@ const TeacherClasses = () => {
     return badges[normalizedStatus] || { text: status || 'N/A', class: 'tc-status-default' };
   };
 
-  const formatSchedule = (dayOfWeek: string, timeSlot: string) => {
-    const days: Record<string, string> = {
-      'MONDAY': 'Thứ 2',
-      'TUESDAY': 'Thứ 3',
-      'WEDNESDAY': 'Thứ 4',
-      'THURSDAY': 'Thứ 5',
-      'FRIDAY': 'Thứ 6',
-      'SATURDAY': 'Thứ 7',
-      'SUNDAY': 'Chủ nhật',
-    };
-    return `${days[dayOfWeek] || dayOfWeek} - ${timeSlot}`;
-  };
-
   // Navigation Handlers
   const handleViewDetail = (classId: number) => {
     navigate(`/teacher/classes/${classId}`);
@@ -134,14 +138,22 @@ const TeacherClasses = () => {
     navigate(`/teacher/grade-statistics?classId=${classId}`);
   }
 
-  const user = useAuthStore((state: any) => state.user);
+  interface AuthState {
+  user: {
+    username: string;
+    role: string;
+  } | null;
+}
+
+const user = useAuthStore((state: AuthState) => state.user);
+
 
   return (
     <div className="tc-container">
       {/* Page Header */}
       <div className="tc-page-header">
         <div className="tc-header-content">
-          <h1>📚 Lớp học của tôi</h1>
+          <h1> Lớp học của tôi</h1>
           <p>Quản lý các lớp học đang giảng dạy</p>
         </div>
       </div>
@@ -149,7 +161,6 @@ const TeacherClasses = () => {
       {/* Summary Statistics */}
       <div className="tc-stats-grid">
         <div className="tc-stat-card">
-          <div className="tc-stat-icon">📊</div>
           <div className="tc-stat-content">
             <div className="tc-stat-label">Tổng số lớp</div>
             <div className="tc-stat-value">{stats.totalClasses}</div>
@@ -157,7 +168,6 @@ const TeacherClasses = () => {
         </div>
         
         <div className="tc-stat-card">
-          <div className="tc-stat-icon">✅</div>
           <div className="tc-stat-content">
             <div className="tc-stat-label">Đang dạy</div>
             <div className="tc-stat-value">{stats.activeClasses}</div>
@@ -165,7 +175,6 @@ const TeacherClasses = () => {
         </div>
         
         <div className="tc-stat-card">
-          <div className="tc-stat-icon">👥</div>
           <div className="tc-stat-content">
             <div className="tc-stat-label">Tổng sinh viên</div>
             <div className="tc-stat-value">{stats.totalStudents}</div>
@@ -173,7 +182,6 @@ const TeacherClasses = () => {
         </div>
         
         <div className="tc-stat-card">
-          <div className="tc-stat-icon">📈</div>
           <div className="tc-stat-content">
             <div className="tc-stat-label">TB mỗi lớp</div>
             <div className="tc-stat-value">{stats.avgClassSize}</div>
@@ -186,7 +194,7 @@ const TeacherClasses = () => {
         <div className="tc-search-box">
           <input
             type="text"
-            placeholder="🔍 Tìm kiếm lớp học (Tên hoặc mã lớp)..."
+            placeholder=" Tìm kiếm lớp học (Tên hoặc mã lớp)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="tc-search-input"
@@ -232,7 +240,7 @@ const TeacherClasses = () => {
       {!loading && (
         <div className="tc-classes-grid">
           {filteredClasses.map(cls => {
-            // ⭐ Calculate current students (use enrolledCount if available)
+            //  Calculate current students (use enrolledCount if available)
             const currentStudents = cls.enrolledCount ?? cls.currentStudents ?? 0;
             const maxStudents = cls.maxStudents || 40;
             const capacityPercent = maxStudents > 0 ? (currentStudents / maxStudents) * 100 : 0;
@@ -258,17 +266,17 @@ const TeacherClasses = () => {
                 {/* Card Body */}
                 <div className="tc-card-body">
                   <div className="tc-info-row">
-                    <span className="tc-info-label">📖 Số tín chỉ:</span>
+                    <span className="tc-info-label"> Số tín chỉ:</span>
                     <span className="tc-info-value">{cls.subjectCredits || cls.credits} TC</span>
                   </div>
 
                   <div className="tc-info-row">
-                    <span className="tc-info-label">📅 Học kỳ:</span>
+                    <span className="tc-info-label">Học kỳ:</span>
                     <span className="tc-info-value">{cls.semesterName}</span>
                   </div>
 
                   <div className="tc-info-row">
-                    <span className="tc-info-label">👥 Sĩ số:</span>
+                    <span className="tc-info-label">Sĩ số:</span>
                     <span className="tc-info-value">
                       {currentStudents} / {maxStudents}
                       <span className="tc-capacity-bar">
@@ -288,7 +296,7 @@ const TeacherClasses = () => {
                     onClick={(e) => handleCreateHomework(cls.classId, e)}
                     title="Tạo bài tập mới"
                   >
-                    ➕ Bài tập
+                  Bài tập
                   </button>
 
                   <button 
@@ -296,7 +304,7 @@ const TeacherClasses = () => {
                     onClick={(e) => handleViewGrades(cls.classId, e)}
                     title="Quản lý điểm"
                   >
-                    📝 Chấm điểm
+                    Chấm điểm
                   </button>
                   
                   <button 
@@ -304,7 +312,7 @@ const TeacherClasses = () => {
                     onClick={(e) => handleViewStats(cls.classId, e)}
                     title="Thống kê"
                   >
-                    📊 Thống kê
+                    Thống kê
                   </button>
                 </div>
               </div>
@@ -316,7 +324,6 @@ const TeacherClasses = () => {
       {/* Empty State */}
       {!loading && filteredClasses.length === 0 && (
         <div className="tc-empty-state">
-          <div className="tc-empty-icon">📂</div>
           <h3>Không tìm thấy lớp học</h3>
           <p>
             {searchTerm || selectedSemester !== 'all' || selectedStatus !== 'all'

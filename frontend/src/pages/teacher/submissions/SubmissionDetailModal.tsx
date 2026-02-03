@@ -81,12 +81,12 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
 
   const getFileIcon = (extension: string) => {
     const ext = extension.toLowerCase();
-    if (['jpg', 'jpeg', 'png'].includes(ext)) return '🖼️';
-    if (['pdf'].includes(ext)) return '📕';
-    if (['doc', 'docx'].includes(ext)) return '📘';
-    if (['xls', 'xlsx'].includes(ext)) return '📗';
-    if (['zip', 'rar'].includes(ext)) return '📦';
-    return '📎';
+    if (['jpg', 'jpeg', 'png'].includes(ext)) return 'png';
+    if (['pdf'].includes(ext)) return 'pdf';
+    if (['doc', 'docx'].includes(ext)) return 'doc';
+    if (['xls', 'xlsx'].includes(ext)) return 'xls';
+    if (['zip', 'rar'].includes(ext)) return 'zip';
+    return 'Tải về';
   };
 
   if (!isOpen || !submission) return null;
@@ -101,7 +101,6 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
         {/* Header */}
         <div className="tsdm-header">
           <div className="tsdm-header-content">
-            <div className="tsdm-header-icon">👁️</div>
             <div className="tsdm-header-text">
               <h2>Chi tiết bài nộp</h2>
               <p className="tsdm-homework-title">{submission.homeworkTitle}</p>
@@ -115,7 +114,7 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
           
           {/* Student Info */}
           <section className="tsdm-section">
-            <h3 className="tsdm-section-title">👤 Thông tin sinh viên</h3>
+            <h3 className="tsdm-section-title"> Thông tin sinh viên</h3>
             <div className="tsdm-student-card">
               <div className="tsdm-avatar">
                 {submission.studentInfo.fullName.charAt(0).toUpperCase()}
@@ -140,7 +139,7 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
 
           {/* Submission Status */}
           <section className="tsdm-section">
-            <h3 className="tsdm-section-title">📊 Trạng thái</h3>
+            <h3 className="tsdm-section-title"> Trạng thái</h3>
             <div className="tsdm-status-card">
               <div className="tsdm-status-header">
                 <div 
@@ -171,7 +170,7 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
 
           {/* Submission Content */}
           <section className="tsdm-section">
-            <h3 className="tsdm-section-title">📄 Nội dung bài nộp</h3>
+            <h3 className="tsdm-section-title"> Nội dung bài nộp</h3>
             
             {/* Multi-file display */}
             {hasNewFiles && (
@@ -208,7 +207,6 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
                   rel="noopener noreferrer"
                   className="tsdm-file-legacy"
                 >
-                  <span className="tsdm-file-icon">📎</span>
                   <span style={{ fontWeight: 600 }}>{submission.submissionFileName || 'Tải xuống file đính kèm'}</span>
                 </a>
               </div>
@@ -229,7 +227,7 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
           {/* Grade Result */}
           {submission.isGraded && (
             <section className="tsdm-section">
-              <h3 className="tsdm-section-title">✏️ Kết quả chấm điểm</h3>
+              <h3 className="tsdm-section-title"> Kết quả chấm điểm</h3>
               <div className="tsdm-grade-card">
                 <div className="tsdm-score-box">
                   <div className="tsdm-score-val">{submission.score}</div>
@@ -257,7 +255,7 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
               className="tsdm-btn-grade" 
               onClick={() => { onClose(); onGradeClick(); }}
             >
-              {submission.isGraded ? '🔄 Chấm lại' : '✏️ Chấm điểm'}
+              {submission.isGraded ? ' Chấm lại' : 'Chấm điểm'}
             </button>
           )}
         </div>

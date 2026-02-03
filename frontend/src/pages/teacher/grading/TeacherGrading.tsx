@@ -17,9 +17,15 @@ import { useAuthStore } from '@/store/authStore';
 
 interface EditingCell {
   gradeId: number;
-  field: 'attendanceRate' | 'teacherComment'; // ✅ REMOVED: midtermScore, finalScore
+  field: 'attendanceRate' | 'teacherComment'; //  REMOVED: midtermScore, finalScore
   value: string;
 }
+interface TeacherClass {
+  classId: number;
+  classCode: string;
+  subjectName: string;
+}
+
 
 interface GradeRow extends GradeResponse {
   isModified?: boolean;
@@ -27,7 +33,7 @@ interface GradeRow extends GradeResponse {
 
 const TeacherGrading = () => {
   // State
-  const [classes, setClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<TeacherClass[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [grades, setGrades] = useState<GradeRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,10 +62,15 @@ const TeacherGrading = () => {
       if (response.length > 0) {
         setSelectedClassId(response[0].classId);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      console.error(err);
       showError('Không thể tải danh sách lớp');
     }
   };
+  const isHttpError = (err: unknown): err is { response?: { status?: number } } => {
+  return typeof err === 'object' && err !== null && 'response' in err;
+};
+
   
   const loadGrades = async () => {
     if (!selectedClassId) return;
@@ -69,14 +80,16 @@ const TeacherGrading = () => {
     try {
       const data = await gradeApi.getGradesByClass(selectedClassId);
       setGrades(data.map(g => ({ ...g, isModified: false })));
-    } catch (err: any) {
-      if (err.response?.status === 404) {
-        setGrades([]);
-        showError('Chưa có dữ liệu điểm. Hãy khởi tạo bảng điểm trước.');
-      } else {
-        showError('Không thể tải dữ liệu điểm');
-      }
-    } finally {
+    } catch (err: unknown) {
+  if (isHttpError(err) && err.response?.status === 404) {
+    setGrades([]);
+    showError('Chưa có dữ liệu điểm. Hãy khởi tạo bảng điểm trước.');
+  } else {
+    console.error(err);
+    showError('Không thể tải dữ liệu điểm');
+  }
+}
+ finally {
       setLoading(false);
     }
   };
@@ -88,16 +101,17 @@ const TeacherGrading = () => {
     setLoading(true);
     try {
       await gradeApi.initializeGrades(selectedClassId);
-      showSuccess('✅ Đã khởi tạo bảng điểm!');
+      showSuccess('Đã khởi tạo bảng điểm!');
       await loadGrades();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      console.error(err);
       showError('Không thể khởi tạo bảng điểm');
     } finally {
       setLoading(false);
     }
   };
   
-  // ✅ UPDATED: Only allow editing attendanceRate and teacherComment
+  // UPDATED: Only allow editing attendanceRate and teacherComment
   const handleCellClick = (grade: GradeRow, field: 'attendanceRate' | 'teacherComment') => {
     setEditingCell({
       gradeId: grade.gradeId,
@@ -184,9 +198,10 @@ const TeacherGrading = () => {
       }));
       
       await gradeApi.bulkUpdateGrades(requests);
-      showSuccess(`✅ Đã lưu thành công ${modifiedGrades.length} điểm!`);
+      showSuccess(`Đã lưu thành công ${modifiedGrades.length} điểm!`);
       await loadGrades(); // Reload to get fresh data
-    } catch (err: any) {
+    } catch (err: unknown) {
+      console.error(err);
       showError('Không thể lưu điểm. Vui lòng thử lại.');
     } finally {
       setSaving(false);
@@ -219,7 +234,7 @@ const TeacherGrading = () => {
   });
   
   const modifiedCount = grades.filter(g => g.isModified).length;
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   
   return (
@@ -227,7 +242,7 @@ const TeacherGrading = () => {
       {/* Header */}
       <div className="tgr-header">
         <div className="tgr-header-content">
-          <h1>📝 Quản lý Điểm</h1>
+          <h1>Quản lý Điểm</h1>
           <p>Nhập và chỉnh sửa điểm số sinh viên</p>
         </div>
         {selectedClassId && (
@@ -237,14 +252,14 @@ const TeacherGrading = () => {
               onClick={handleInitializeGrades} 
               disabled={loading}
             >
-              🔥 Khởi tạo bảng điểm
+              Khởi tạo bảng điểm
             </button>
             <button 
               className="tgr-btn tgr-btn-primary" 
               onClick={handleSaveAll} 
               disabled={saving || modifiedCount === 0}
             >
-              {saving ? '💾 Đang lưu...' : `💾 Lưu tất cả (${modifiedCount})`}
+              {saving ? 'Đang lưu...' : `Lưu tất cả (${modifiedCount})`}
             </button>
           </div>
         )}
@@ -253,12 +268,12 @@ const TeacherGrading = () => {
       {/* Alerts */}
       {error && (
         <div className="tgr-alert tgr-alert-error">
-          <span>❌</span> {error}
+          <span></span> {error}
         </div>
       )}
       {successMessage && (
         <div className="tgr-alert tgr-alert-success">
-          <span>✅</span> {successMessage}
+          <span></span> {successMessage}
         </div>
       )}
       
@@ -280,7 +295,7 @@ const TeacherGrading = () => {
         {selectedClassId && (
           <input 
             type="text" 
-            placeholder="🔍 Tìm theo tên hoặc MSSV..." 
+            placeholder="Tìm theo tên hoặc MSSV..." 
             value={searchKeyword} 
             onChange={(e) => setSearchKeyword(e.target.value)} 
             className="tgr-search" 
@@ -337,19 +352,16 @@ const TeacherGrading = () => {
                     {/* TX - READ ONLY (AUTO) */}
                     <td className="tgr-cell-score tgr-cell-readonly">
                       {grade.regularScore?.toFixed(2) ?? '--'}
-                      <span className="tgr-lock-icon">🔒</span>
                     </td>
                     
-                    {/* GK - READ ONLY (AUTO) - ✅ CHANGED FROM EDITABLE */}
+                    {/* GK - READ ONLY (AUTO) -  CHANGED FROM EDITABLE */}
                     <td className="tgr-cell-score tgr-cell-readonly">
                       {grade.midtermScore?.toFixed(2) ?? '--'}
-                      <span className="tgr-lock-icon">🔒</span>
                     </td>
                     
-                    {/* CK - READ ONLY (AUTO) - ✅ CHANGED FROM EDITABLE */}
+                    {/* CK - READ ONLY (AUTO) - CHANGED FROM EDITABLE */}
                     <td className="tgr-cell-score tgr-cell-readonly">
                       {grade.finalScore?.toFixed(2) ?? '--'}
-                      <span className="tgr-lock-icon">🔒</span>
                     </td>
                     
                     {/* TOTAL - AUTO */}
@@ -415,19 +427,15 @@ const TeacherGrading = () => {
           {/* Legend */}
           <div className="tgr-legend">
             <div className="tgr-legend-item">
-              <span className="tgr-legend-icon tgr-icon-readonly">🔒</span>
               <span>TX, GK, CK - Tự động từ bài tập/kiểm tra (Read-only)</span>
             </div>
             <div className="tgr-legend-item">
-              <span className="tgr-legend-icon tgr-icon-edit">✏️</span>
               <span>Điểm danh, Nhận xét - Click vào ô để sửa</span>
             </div>
             <div className="tgr-legend-item">
-              <span className="tgr-legend-icon tgr-icon-total">⚡</span>
               <span>Tổng = TX×20% + GK×30% + CK×50%</span>
             </div>
             <div className="tgr-legend-item">
-              <span className="tgr-legend-icon tgr-icon-modified">🔥</span>
               <span>Dòng màu vàng - Dữ liệu chưa lưu</span>
             </div>
           </div>
@@ -437,7 +445,7 @@ const TeacherGrading = () => {
       {/* Empty State */}
       {!loading && selectedClassId && filteredGrades.length === 0 && (
         <div className="tgr-empty">
-          <p>📭 Chưa có dữ liệu điểm cho lớp này</p>
+          <p>Chưa có dữ liệu điểm cho lớp này</p>
           <button onClick={handleInitializeGrades} className="tgr-btn tgr-btn-primary">
             Khởi tạo bảng điểm
           </button>
@@ -446,7 +454,7 @@ const TeacherGrading = () => {
       
       {!selectedClassId && (
         <div className="tgr-empty">
-          <p>🎯 Vui lòng chọn một lớp học để bắt đầu nhập điểm</p>
+          <p>Vui lòng chọn một lớp học để bắt đầu nhập điểm</p>
         </div>
       )}
       <ChatList currentUsername={user?.username || 'teacher'} currentRole="TEACHER" />

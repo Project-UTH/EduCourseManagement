@@ -30,6 +30,22 @@ interface ClassDetail {
   maxStudents: number;
   semesterCode: string;
 }
+interface TeacherClassItem {
+  classId: number;
+  classCode: string;
+  subjectName: string;
+  subjectCode?: string;
+  credits?: number;
+  dayOfWeekDisplay?: string;
+  timeSlotDisplay?: string;
+  fixedRoom?: string;
+  teacherName?: string;
+  enrolledCount?: number;
+  studentCount?: number;
+  maxStudents?: number;
+  semesterCode?: string;
+}
+
 
 const TeacherClassDetail = () => {
   const { classId } = useParams<{ classId: string }>();
@@ -44,6 +60,7 @@ const TeacherClassDetail = () => {
     if (classId) {
       loadClassDetail();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
   const loadClassDetail = async () => {
@@ -56,7 +73,9 @@ const TeacherClassDetail = () => {
       const classes = await classApi.getMyClasses();
       if (!Array.isArray(classes)) throw new Error('Invalid format');
       
-      const classData = classes.find((c: any) => c.classId === Number(classId));
+      const classData = (classes as TeacherClassItem[])
+  .find(c => c.classId === Number(classId));
+
       
       console.log('🔍 [TeacherClassDetail] classData:', classData); // ⭐ DEBUG
       console.log('🔍 [TeacherClassDetail] enrolledCount:', classData?.enrolledCount); // ⭐ DEBUG
@@ -77,14 +96,14 @@ const TeacherClassDetail = () => {
         room: classData.fixedRoom || 'Chưa có phòng',
         teacherName: classData.teacherName || 'N/A',
         // ⭐ FIX: Use enrolledCount from backend (ClassResponse DTO)
-        studentCount: classData.enrolledCount || (classData as any).studentCount || 0,
+        studentCount: classData.enrolledCount ?? classData.studentCount ?? 0,
         maxStudents: classData.maxStudents || 40,
         semesterCode: classData.semesterCode || 'N/A'
       });
 
       console.log('📊 [TeacherClassDetail] Final studentCount:', classData.enrolledCount || 0); // ⭐ DEBUG
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[ClassDetail] Failed:', err);
       setError('Không thể tải thông tin lớp học');
     } finally {
@@ -93,12 +112,13 @@ const TeacherClassDetail = () => {
   };
 
   const tabs = [
-    { id: 'assignments' as TabType, label: 'Bài tập', icon: '📝' },
-    { id: 'documents' as TabType, label: 'Tài liệu', icon: '📁' },
-    { id: 'grading' as TabType, label: 'Điểm', icon: '📊' },
-    { id: 'info' as TabType, label: 'Thông tin', icon: 'ℹ️' }
+    { id: 'assignments' as TabType, label: 'Bài tập' },
+    { id: 'documents' as TabType, label: 'Tài liệu'},
+    { id: 'grading' as TabType, label: 'Điểm'},
+    { id: 'info' as TabType, label: 'Thông tin' }
   ];
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore(state => state.user);
+
 
 
   if (loading) {
@@ -175,7 +195,6 @@ const TeacherClassDetail = () => {
             className={`tcd-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
           >
-            <span className="tcd-tab-icon">{tab.icon}</span>
             <span>{tab.label}</span>
           </button>
         ))}
