@@ -8,6 +8,7 @@ import apiClient from './apiClient';
  * 
  * ✅ FIXED: Backend returns data directly, NOT wrapped in {data: {...}}
  * ✅ NEW: Support FormData for file upload
+ * ✅ FIXED: Datetime formatting for backend compatibility (yyyy-MM-ddTHH:mm:ss)
  */
 
 // ==================== INTERFACES (from backend DTOs) ====================
@@ -128,6 +129,66 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+// ==================== HELPER FUNCTIONS ====================
+
+/**
+ * Format datetime to backend format: yyyy-MM-ddTHH:mm:ss
+ * Handles various input formats and ensures consistent output
+ * 
+ * @param datetime - Date string or Date object
+ * @returns Formatted string "2026-02-05T17:00:00" or empty string if invalid
+ */
+const formatDatetimeForBackend = (datetime: string | Date): string => {
+  if (!datetime) {
+    console.warn('[homeworkApi] Empty datetime provided');
+    return '';
+  }
+  
+  try {
+    const date = typeof datetime === 'string' ? new Date(datetime) : datetime;
+    
+    // Check if valid date
+    if (isNaN(date.getTime())) {
+      console.error('[homeworkApi] Invalid date:', datetime);
+      return '';
+    }
+    
+    // Format to: 2026-02-05T17:00:00
+    // Using toISOString() gives: 2026-02-05T10:00:00.000Z
+    // We take first 19 chars to get: 2026-02-05T10:00:00
+    const formatted = date.toISOString().slice(0, 19);
+    console.log('[homeworkApi] Formatted datetime:', datetime, '→', formatted);
+    
+    return formatted;
+  } catch (error) {
+    console.error('[homeworkApi] Date format error:', error);
+    return '';
+  }
+};
+
+/**
+ * Prepare homework data for backend submission
+ * Ensures all datetime fields are properly formatted
+ * 
+ * @param data - Raw homework request data
+ * @returns Prepared data with formatted datetime
+ */
+const prepareHomeworkData = (data: HomeworkRequest): HomeworkRequest => {
+  const prepared = {
+    ...data,
+    deadline: formatDatetimeForBackend(data.deadline),
+  };
+  
+  console.log('[homeworkApi] Prepared data:', {
+    title: prepared.title,
+    type: prepared.homeworkType,
+    originalDeadline: data.deadline,
+    formattedDeadline: prepared.deadline,
+  });
+  
+  return prepared;
+};
+
 // ==================== API METHODS ====================
 
 const homeworkApi = {
@@ -150,6 +211,14 @@ const homeworkApi = {
       if (data instanceof FormData) {
         console.log('[homeworkApi] Uploading with file');
         
+        // ✅ FIX: Format deadline in FormData if present
+        const deadline = data.get('deadline');
+        if (deadline && typeof deadline === 'string') {
+          const formattedDeadline = formatDatetimeForBackend(deadline);
+          data.set('deadline', formattedDeadline);
+          console.log('[homeworkApi] FormData deadline formatted:', deadline, '→', formattedDeadline);
+        }
+        
         // Send as multipart/form-data
         response = await apiClient.post('/api/teacher/homework', data, {
           headers: {
@@ -157,11 +226,12 @@ const homeworkApi = {
           },
         });
       } else {
-        // Send as JSON (backward compatibility)
+        // ✅ FIX: Prepare data before sending (JSON)
+        const preparedData = prepareHomeworkData(data);
         console.log('[homeworkApi] Creating without file');
-        console.log('[homeworkApi] Type:', data.homeworkType, 'Deadline:', data.deadline);
+        console.log('[homeworkApi] Type:', preparedData.homeworkType, 'Deadline:', preparedData.deadline);
         
-        response = await apiClient.post('/api/teacher/homework', data);
+        response = await apiClient.post('/api/teacher/homework', preparedData);
       }
       
       // ✅ FIX: Backend returns {success, message, data: {...}}
@@ -177,19 +247,24 @@ const homeworkApi = {
   },
   
   /**
-   * ✅ FIXED: Update homework
+   * ✅ FIXED: Update homework with proper datetime format
    * PUT /api/teacher/homework/{id}
    */
   updateHomework: async (id: number, data: HomeworkRequest): Promise<HomeworkResponse> => {
     console.log('[homeworkApi] Updating homework ID:', id);
+    console.log('[homeworkApi] Original deadline:', data.deadline);
     
     try {
-      const response = await apiClient.put(`/api/teacher/homework/${id}`, data);
+      // ✅ FIX: Prepare data with formatted deadline
+      const preparedData = prepareHomeworkData(data);
+      console.log('[homeworkApi] Formatted deadline:', preparedData.deadline);
+      
+      const response = await apiClient.put(`/api/teacher/homework/${id}`, preparedData);
       
       // ✅ FIX: Extract data
       const homework = response.data.data || response.data;
       
-      console.log('[homeworkApi] ✅ Homework updated');
+      console.log('[homeworkApi] ✅ Homework updated successfully');
       return homework;
     } catch (error: any) {
       console.error('[homeworkApi] ❌ Failed to update homework:', error.response?.data?.message || error.message);
