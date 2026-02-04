@@ -27,6 +27,7 @@ const HomeworkDetail = () => {
 
   useEffect(() => {
     loadHomeworkDetail();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeworkId]);
 
   const loadHomeworkDetail = async () => {
@@ -38,8 +39,8 @@ const HomeworkDetail = () => {
       if (data.submission) {
         setTextContent(data.submission.submissionText || '');
       }
-    } catch (err: any) {
-      console.error('[HomeworkDetail] ❌ Failed to load:', err);
+    } catch (err: unknown) {
+      console.error('[HomeworkDetail]  Failed to load:', err);
       setError('Không thể tải thông tin bài tập');
     } finally {
       setLoading(false);
@@ -98,8 +99,8 @@ const HomeworkDetail = () => {
       setTextContent('');
       setNewFiles([]);
       setIsEditing(false);
-    } catch (err: any) {
-      setSubmitError(err.response?.data?.message || 'Không thể nộp bài. Vui lòng thử lại!');
+    } catch (err: unknown) {
+      console.error('[HomeworkDetail]  Failed to submit:', err);
     } finally {
       setSubmitting(false);
     }
@@ -160,8 +161,8 @@ const HomeworkDetail = () => {
       closeFileDetail();
       await loadHomeworkDetail();
       alert('Đã xóa file thành công!');
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Không thể xóa file!');
+    } catch (err: unknown) {
+      console.error('[HomeworkDetail]  Failed to delete file:', err);
     }
   };
 
@@ -180,7 +181,6 @@ const HomeworkDetail = () => {
     return (
       <div className="homework-detail">
         <div className="error-container">
-          <div className="error-icon">⚠️</div>
           <h3>{error || 'Không tìm thấy bài tập'}</h3>
           <button className="btn-back" onClick={() => navigate(-1)}>← Quay lại</button>
         </div>
@@ -199,7 +199,6 @@ const HomeworkDetail = () => {
               <button className="btn-close-modal" onClick={closeFileDetail}>✕</button>
             </div>
             <div className="file-modal-body">
-              <div className="file-modal-icon">📄</div>
               <h4>{selectedFileDetail.originalFilename}</h4>
               <p className="file-modal-date">
                 Tải lên: {new Date(selectedFileDetail.uploadedAt).toLocaleString('vi-VN')}
@@ -248,13 +247,13 @@ const HomeworkDetail = () => {
         </div>
         <div className="homework-status">
           {homework.submission?.status === 'LATE' ? (
-            <span className="badge late">⚠️ Nộp trễ</span>
+            <span className="badge late">Nộp trễ</span>
           ) : hasSubmitted ? (
             <span className="badge submitted">✓ Đã nộp</span>
           ) : homework.isOverdue ? (
-            <span className="badge overdue">⚠️ Quá hạn</span>
+            <span className="badge overdue">Quá hạn</span>
           ) : (
-            <span className="badge pending">⏳ Chưa nộp</span>
+            <span className="badge pending">Chưa nộp</span>
           )}
         </div>
       </div>
@@ -264,7 +263,7 @@ const HomeworkDetail = () => {
         <div className="content-left">
           {/* Deadline Card */}
           <div className="info-card">
-            <h3>⏰ Thời hạn nộp bài</h3>
+            <h3>Thời hạn nộp bài</h3>
             <div className="deadline-info">
               <div className="deadline-date">
                 {new Date(homework.deadline).toLocaleString('vi-VN', {
@@ -278,14 +277,14 @@ const HomeworkDetail = () => {
 
           {/* Description Card */}
           <div className="info-card">
-            <h3>📋 Yêu cầu</h3>
+            <h3>Yêu cầu</h3>
             <div className="description-content">{homework.description || 'Không có mô tả'}</div>
           </div>
 
           {/* Attachment Card */}
           {homework.attachmentUrl && (
             <div className="info-card">
-              <h3>📎 Tài liệu đính kèm</h3>
+              <h3>Tài liệu đính kèm</h3>
               <a href={homework.attachmentUrl} target="_blank" rel="noopener noreferrer" className="attachment-link">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -297,7 +296,7 @@ const HomeworkDetail = () => {
 
           {/* Submission Status Card */}
           <div className="info-card submission-status-card">
-            <h3>📤 Trạng thái nộp bài</h3>
+            <h3>Trạng thái nộp bài</h3>
             
             <div className="status-grid">
               <div className="status-item">
@@ -321,7 +320,7 @@ const HomeworkDetail = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span>Nộp lúc: {new Date(homework.submission.submissionDate).toLocaleString('vi-VN')}</span>
-                  {homework.submission.isLate && <span className="late-badge">⚠️ Nộp trễ</span>}
+                  {homework.submission.isLate && <span className="late-badge">Nộp trễ</span>}
                 </div>
 
                 {homework.submission.submissionText && (
@@ -334,7 +333,7 @@ const HomeworkDetail = () => {
                 {/* File Submissions */}
                 {homework.submission.submissionFiles && homework.submission.submissionFiles.length > 0 && (
                   <div className="file-submissions-section">
-                    <h4>📁 File submissions ({homework.submission.submissionFiles.length})</h4>
+                    <h4>File submissions ({homework.submission.submissionFiles.length})</h4>
                     <div className="file-list-moodle">
                       {homework.submission.submissionFiles.map((file) => (
                         <div 
@@ -489,7 +488,6 @@ const HomeworkDetail = () => {
             </div>
           ) : (
             <div className="submitted-message">
-              <div className="submitted-icon">✅</div>
               <h3>Đã nộp bài thành công</h3>
               <p>Bài tập đã được gửi tới giảng viên.</p>
               {!isGraded && <p className="waiting-grade">Đang chờ giảng viên chấm điểm...</p>}

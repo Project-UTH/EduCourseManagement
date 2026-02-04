@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import registrationApi, { RegistrationResponse } from '../../services/api/registrationApi';
+import registrationApi, { RegistrationResponse } from '../../../services/api/registrationApi';
 import './MyRegistrations.css';
 
 const MyRegistrations: React.FC = () => {
@@ -69,13 +69,31 @@ const MyRegistrations: React.FC = () => {
       const response = await registrationApi.dropClass(reg.registrationId);
       
       if (response.data.success) {
-        alert('✅ Hủy đăng ký thành công!');
+        alert('Hủy đăng ký thành công!');
         fetchRegistrations(); // Reload list
       }
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Hủy đăng ký thất bại!';
-      alert('❌ ' + errorMsg);
-    }
+    } catch (error: unknown) {
+  let errorMsg = 'Hủy đăng ký thất bại!';
+
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error
+  ) {
+    const err = error as {
+      response?: {
+        data?: {
+          message?: string;
+        };
+      };
+    };
+
+    errorMsg = err.response?.data?.message ?? errorMsg;
+  }
+
+  alert(errorMsg);
+}
+
   };
 
   // Format date
@@ -95,16 +113,16 @@ const MyRegistrations: React.FC = () => {
   const getSemesterStatusBadge = (status?: string) => {
     if (!status) return null;
     
-    const badges: Record<string, { text: string; className: string; icon: string }> = {
-      'UPCOMING': { text: 'Sắp diễn ra', className: 'upcoming', icon: '⏰' },
-      'ACTIVE': { text: 'Đang học', className: 'active', icon: '📚' }
+    const badges: Record<string, { text: string; className: string}> = {
+      'UPCOMING': { text: 'Sắp diễn ra', className: 'upcoming' },
+      'ACTIVE': { text: 'Đang học', className: 'active' }
     };
     
-    const badge = badges[status] || { text: status, className: 'default', icon: '📋' };
+    const badge = badges[status] || { text: status, className: 'default' };
     
     return (
       <span className={`semester-badge ${badge.className}`}>
-        {badge.icon} {badge.text}
+        {badge.text}
       </span>
     );
   };
@@ -118,16 +136,16 @@ const MyRegistrations: React.FC = () => {
             ← Quay lại đăng ký học phần
           </button>
           <div>
-            <h1>📚 Lớp Học Đã Đăng Ký</h1>
+            <h1>Lớp Học Đã Đăng Ký</h1>
             <p>Quản lý các lớp học đã đăng ký</p>
           </div>
         </div>
         <div className="header-actions">
           <button onClick={fetchRegistrations} className="btn-refresh">
-            🔄 Làm mới
+            Làm mới
           </button>
           <button onClick={() => navigate('/student/subjects')} className="btn-primary">
-            ➕ Đăng ký thêm
+          Đăng ký thêm
           </button>
         </div>
       </div>
@@ -143,11 +161,10 @@ const MyRegistrations: React.FC = () => {
       {/* Empty State */}
       {!loading && registrations.length === 0 && (
         <div className="empty-state">
-          <div className="empty-icon">📭</div>
           <h3>Chưa có lớp học nào</h3>
           <p>Không có lớp học nào trong kỳ sắp tới hoặc đang diễn ra</p>
           <button onClick={() => navigate('/student/subjects')} className="btn-primary">
-            🔍 Tìm kiếm lớp học
+            Tìm kiếm lớp học
           </button>
         </div>
       )}
@@ -217,11 +234,10 @@ const MyRegistrations: React.FC = () => {
                         onClick={() => handleDrop(reg)}
                         className="btn-drop"
                       >
-                        ❌ Hủy đăng ký
+                        Hủy đăng ký
                       </button>
                     ) : (
                       <div className="drop-disabled">
-                        <span className="lock-icon">🔒</span>
                         <span>Không thể hủy lớp đang học</span>
                       </div>
                     )}
@@ -233,10 +249,9 @@ const MyRegistrations: React.FC = () => {
 
           {/* Summary */}
           <div className="summary-section">
-            <h3>📊 Thống kê</h3>
+            <h3>Thống kê</h3>
             <div className="summary-grid">
               <div className="summary-card">
-                <div className="summary-icon">📚</div>
                 <div className="summary-content">
                   <div className="summary-label">Tổng số lớp</div>
                   <div className="summary-value">{registrations.length}</div>
@@ -244,7 +259,6 @@ const MyRegistrations: React.FC = () => {
               </div>
               
               <div className="summary-card upcoming">
-                <div className="summary-icon">⏰</div>
                 <div className="summary-content">
                   <div className="summary-label">Sắp diễn ra</div>
                   <div className="summary-value">
@@ -254,7 +268,6 @@ const MyRegistrations: React.FC = () => {
               </div>
               
               <div className="summary-card active">
-                <div className="summary-icon">🎓</div>
                 <div className="summary-content">
                   <div className="summary-label">Đang học</div>
                   <div className="summary-value">
@@ -264,7 +277,6 @@ const MyRegistrations: React.FC = () => {
               </div>
               
               <div className="summary-card credits">
-                <div className="summary-icon">📖</div>
                 <div className="summary-content">
                   <div className="summary-label">Tổng tín chỉ</div>
                   <div className="summary-value">

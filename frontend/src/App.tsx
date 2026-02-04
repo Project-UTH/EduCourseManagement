@@ -6,7 +6,7 @@ import { DashboardLayout } from './components/layout';
 
 // Dashboards
 import AdminDashboard from './pages/admin/AdminDashboard';
-import StudentDashboard from './pages/student/StudentDashboard';
+import StudentDashboard from './pages/student/dashboard/StudentDashboard';
 
 // Admin Pages
 import DepartmentList from './pages/admin/departments/DepartmentList';
@@ -20,16 +20,16 @@ import RoomList from './pages/admin/rooms/RoomList';
 import RoomDetail from './pages/admin/rooms/RoomDetail';
 
 // Student Pages - PHASE 5
-import ClassSearch from './pages/student/ClassSearch';
-import MyRegistrations from './pages/student/MyRegistrations';
-import SubjectSelection from './pages/student/SubjectSelection';
-import ClassSelection from './pages/student/ClassSelection';
-import StudentSchedule from './pages/student/StudentSchedule';
+import ClassSearch from './pages/student/registration/ClassSearch';
+import MyRegistrations from './pages/student/registration/MyRegistrations';
+import SubjectSelection from './pages/student/registration/SubjectSelection';
+import ClassSelection from './pages/student/registration/ClassSelection';
+import StudentSchedule from './pages/student/schedule/StudentSchedule';
 import StudentProfile from './pages/student/profile/StudentProfile';
 import MyClasses from './pages/student/classes/MyClasses';
 import ClassDetail from './pages/student/courses/ClassDetail';
 import StudentHomeworkDetail from './pages/student/homeworks/HomeworkDetail'; // ✅ RENAMED
-import StudentTranscript from './pages/student/StudentTranscript'; // ✅ NEW - Bảng điểm tích lũy
+import StudentTranscript from './pages/student/transcript/StudentTranscript'; // ✅ NEW - Bảng điểm tích lũy
 
 // ✅ Teacher Pages - PHASE 4
 import HomeworkList from './pages/teacher/assignments/HomeworkList';

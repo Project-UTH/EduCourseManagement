@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import studentApi from '../../../services/api/studentApi';
+import studentApi, {StudentResponse} from '../../../services/api/studentApi';
 import authApi from '../../../services/api/authApi';
 // CHỈNH SỬA: Import file CSS độc lập mới
 import './StudentProfile.css';
@@ -12,7 +12,7 @@ import ChatList from '../../../components/chat/ChatList';
  */
 
 const StudentProfile = () => {
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<StudentResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -34,6 +34,7 @@ const StudentProfile = () => {
 
   useEffect(() => {
     loadProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadProfile = async () => {
@@ -61,10 +62,9 @@ const StudentProfile = () => {
       await loadProfile();
       setIsEditing(false);
       showMessage('success', 'Cập nhật thông tin thành công!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update profile:', error);
-      const errorMessage = error.response?.data?.message || 'Cập nhật thất bại. Vui lòng thử lại!';
-      showMessage('error', errorMessage);
+      showMessage('error', 'Cập nhật thông tin thất bại. Vui lòng thử lại!');
     } finally {
       setLoading(false);
     }
@@ -93,10 +93,9 @@ const StudentProfile = () => {
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
       setIsChangingPassword(false);
       showMessage('success', 'Đổi mật khẩu thành công!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to change password:', error);
-      const errorMessage = error.response?.data?.message || 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại!';
-      showMessage('error', errorMessage);
+      showMessage('error', 'Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu hiện tại!');
     } finally {
       setLoading(false);
     }
@@ -129,7 +128,7 @@ const StudentProfile = () => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   if (loading && !profile) {
     return (

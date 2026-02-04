@@ -1,9 +1,8 @@
-import React from 'react';
 import './ClassDetail.css';
 
 /**
  * InfoTab - Hiển thị thông tin chi tiết lớp học và tiêu chí đánh giá
- * ⭐ NEW: Added description section
+ *  NEW: Added description section
  */
 
 interface InfoTabProps {
@@ -18,19 +17,19 @@ interface InfoTabProps {
     credits: number;
     maxStudents: number;
     enrolledCount: number;
-    description?: string; // ⭐ NEW: Mô tả môn học
+    description?: string; //  NEW: Mô tả môn học
   };
 }
 
 const InfoTab = ({ classInfo }: InfoTabProps) => {
-  console.log('📊 [InfoTab] Received classInfo:', classInfo);
-  console.log('📊 [InfoTab] Sĩ số:', classInfo.enrolledCount, '/', classInfo.maxStudents);
+  console.log('[InfoTab] Received classInfo:', classInfo);
+  console.log('[InfoTab] Sĩ số:', classInfo.enrolledCount, '/', classInfo.maxStudents);
 
   return (
     <div className="info-tab">
       {/* 1. Phần thông tin chung */}
       <div className="info-section">
-        <h3>ℹ️ Thông tin lớp học</h3>
+        <h3>ℹThông tin lớp học</h3>
         
         <div className="info-grid">
           <div className="info-item">
@@ -77,10 +76,10 @@ const InfoTab = ({ classInfo }: InfoTabProps) => {
         </div>
       </div>
 
-      {/* ⭐ NEW: 2. Phần mô tả môn học */}
+      {/* NEW: 2. Phần mô tả môn học */}
       {classInfo.description && (
         <div className="info-section">
-          <h3>📝 Mô tả môn học</h3>
+          <h3>Mô tả môn học</h3>
           <div style={{
             background: '#f8fafc',
             border: '1px solid #e2e8f0',
@@ -99,7 +98,7 @@ const InfoTab = ({ classInfo }: InfoTabProps) => {
 
       {/* 3. Phần tiêu chí đánh giá (Điểm thành phần) */}
       <div className="info-section">
-        <h3>📊 Tiêu chí đánh giá</h3>
+        <h3>Tiêu chí đánh giá</h3>
         <div className="grading-table">
           <table>
             <thead>
@@ -138,7 +137,7 @@ const InfoTab = ({ classInfo }: InfoTabProps) => {
       
       {/* 4. Phần thông tin liên hệ */}
       <div className="info-section">
-        <h3>📞 Liên hệ giảng viên</h3>
+        <h3>Liên hệ giảng viên</h3>
         <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6' }}>
           Sinh viên có thắc mắc về bài giảng hoặc điểm số vui lòng liên hệ trực tiếp giảng viên <strong>{classInfo.teacherName}</strong> qua email hoặc gặp mặt vào giờ hành chính tại văn phòng khoa.
         </p>
@@ -147,10 +146,9 @@ const InfoTab = ({ classInfo }: InfoTabProps) => {
       {/* 5. Thống kê lớp học */}
       {classInfo.enrolledCount > 0 && (
         <div className="info-section">
-          <h3>📈 Thống kê</h3>
+          <h3>Thống kê</h3>
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-icon">👥</div>
               <div className="stat-info">
                 <div className="stat-value">{classInfo.enrolledCount}</div>
                 <div className="stat-label">Sinh viên đã đăng ký</div>
@@ -158,7 +156,6 @@ const InfoTab = ({ classInfo }: InfoTabProps) => {
             </div>
             
             <div className="stat-card">
-              <div className="stat-icon">🪑</div>
               <div className="stat-info">
                 <div className="stat-value">{classInfo.maxStudents - classInfo.enrolledCount}</div>
                 <div className="stat-label">Chỗ còn lại</div>
@@ -166,7 +163,6 @@ const InfoTab = ({ classInfo }: InfoTabProps) => {
             </div>
             
             <div className="stat-card">
-              <div className="stat-icon">📊</div>
               <div className="stat-info">
                 <div className="stat-value">
                   {Math.round((classInfo.enrolledCount / classInfo.maxStudents) * 100)}%

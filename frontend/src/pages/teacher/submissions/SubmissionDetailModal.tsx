@@ -72,10 +72,10 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'GRADED': return { text: 'Đã chấm', color: '#166534', bg: '#dcfce7', icon: '✓' };
-      case 'SUBMITTED': return { text: 'Đã nộp', color: '#1e40af', bg: '#dbeafe', icon: '📝' };
-      case 'LATE': return { text: 'Nộp muộn', color: '#991b1b', bg: '#fee2e2', icon: '⚠️' };
-      default: return { text: status, color: '#475569', bg: '#f1f5f9', icon: '📋' };
+      case 'GRADED': return { text: 'Đã chấm', color: '#166534', bg: '#dcfce7' };
+      case 'SUBMITTED': return { text: 'Đã nộp', color: '#1e40af', bg: '#dbeafe' };
+      case 'LATE': return { text: 'Nộp muộn', color: '#991b1b', bg: '#fee2e2' };
+      default: return { text: status, color: '#475569', bg: '#f1f5f9' };
     }
   };
 
@@ -146,7 +146,6 @@ const SubmissionDetailModal: React.FC<SubmissionDetailModalProps> = ({
                   className="tsdm-status-badge"
                   style={{ background: statusBadge.bg, color: statusBadge.color }}
                 >
-                  {statusBadge.icon} {statusBadge.text}
                 </div>
               </div>
               <div className="tsdm-meta-grid">

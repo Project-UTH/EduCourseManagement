@@ -4,8 +4,8 @@ import materialApi, { MaterialResponse } from '../../../services/api/materialApi
 /**
  * MaterialsTab - Tab tài liệu trong ClassDetail (Student)
  * 
- * ✅ FIXED: Load real materials from API
- * ✅ FIXED: Download works
+ * FIXED: Load real materials from API
+ * FIXED: Download works
  */
 
 interface MaterialsTabProps {
@@ -19,6 +19,7 @@ const MaterialsTab = ({ classId }: MaterialsTabProps) => {
 
   useEffect(() => {
     loadMaterials();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
   const loadMaterials = async () => {
@@ -29,34 +30,12 @@ const MaterialsTab = ({ classId }: MaterialsTabProps) => {
       console.log('[MaterialsTab] Loading materials for class:', classId);
       const data = await materialApi.getStudentMaterials(classId);
       setMaterials(data);
-      console.log('[MaterialsTab] ✅ Loaded', data.length, 'materials');
-    } catch (err: any) {
-      console.error('[MaterialsTab] ❌ Failed to load materials:', err);
+      console.log('[MaterialsTab]  Loaded', data.length, 'materials');
+    } catch (err: unknown) {
+      console.error('[MaterialsTab] Failed to load materials:', err);
       setError('Không thể tải danh sách tài liệu');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getFileIcon = (type: string) => {
-    const lowerType = type.toLowerCase();
-    switch (lowerType) {
-      case 'pdf':
-        return '📄';
-      case 'pptx':
-      case 'ppt':
-        return '📊';
-      case 'zip':
-      case 'rar':
-        return '📦';
-      case 'docx':
-      case 'doc':
-        return '📝';
-      case 'xlsx':
-      case 'xls':
-        return '📊';
-      default:
-        return '📁';
     }
   };
 
@@ -80,9 +59,9 @@ const MaterialsTab = ({ classId }: MaterialsTabProps) => {
     return (
       <div className="materials-tab">
         <div className="error-message">
-          ⚠️ {error}
+          {error}
           <button onClick={loadMaterials} className="btn-retry">
-            🔄 Thử lại
+           Thử lại
           </button>
         </div>
       </div>
@@ -92,13 +71,12 @@ const MaterialsTab = ({ classId }: MaterialsTabProps) => {
   return (
     <div className="materials-tab">
       <div className="tab-header">
-        <h3>📚 Tài liệu học tập</h3>
+        <h3> Tài liệu học tập</h3>
         <p>{materials.length} tài liệu</p>
       </div>
 
       {materials.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon">📚</div>
           <h3>Chưa có tài liệu</h3>
           <p>Giảng viên chưa tải lên tài liệu nào</p>
         </div>
@@ -106,9 +84,6 @@ const MaterialsTab = ({ classId }: MaterialsTabProps) => {
         <div className="materials-list">
           {materials.map(material => (
             <div key={material.materialId} className="material-card">
-              <div className="material-icon">
-                {getFileIcon(material.fileType)}
-              </div>
               
               <div className="material-info">
                 <h4>{material.title}</h4>
