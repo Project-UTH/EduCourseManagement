@@ -10,7 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 
 /**
  * EditHomework Page
- * ✅ FIXED: Added file upload support like CreateHomework
+ * FIXED: Added file upload support like CreateHomework
  * * Form to edit existing homework assignment
  * Uses 'tch-' namespaced classes from CreateHomework.css
  */
@@ -41,7 +41,7 @@ const EditHomework = () => {
   const [error, setError] = useState<string | null>(null);
   const [originalHomework, setOriginalHomework] = useState<HomeworkResponse | null>(null);
   
-  // ✅ NEW: File upload state
+  //  NEW: File upload state
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string>('');
   const [keepExistingFile, setKeepExistingFile] = useState(true);

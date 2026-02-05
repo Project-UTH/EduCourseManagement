@@ -1,5 +1,5 @@
 // constants.ts - Days of week, time slots, etc.
-// ✅ FIXED: Removed extra/elearning validation (backend handles automatically)
+// FIXED: Removed extra/elearning validation (backend handles automatically)
 
 // ==================== DAYS OF WEEK ====================
 
@@ -84,15 +84,14 @@ export const getSessionStatusInfo = (value: string) => {
 // ==================== SESSION TYPE ====================
 
 export const SESSION_TYPE = {
-  IN_PERSON: { value: 'IN_PERSON', label: 'Trực tiếp', icon: '🏫' },
-  E_LEARNING: { value: 'E_LEARNING', label: 'E-learning', icon: '💻' },
+  IN_PERSON: { value: 'IN_PERSON', label: 'Trực tiếp' },
+  E_LEARNING: { value: 'E_LEARNING', label: 'E-learning'},
 };
 
 export const getSessionTypeInfo = (value: string) => {
   return SESSION_TYPE[value as keyof typeof SESSION_TYPE] || { 
     value, 
     label: value, 
-    icon: '📚' 
   };
 };
 
@@ -115,7 +114,7 @@ export const validateMaxStudents = (max: number): string | null => {
 // ==================== SCHEDULE INFO (Display Only) ====================
 
 /**
- * ⭐ CRITICAL UNDERSTANDING:
+ * CRITICAL UNDERSTANDING:
  * 
  * Backend AUTO-SCHEDULE logic:
  * 1. Admin creates class → Only needs dayOfWeek + timeSlot (fixed schedule)
@@ -151,15 +150,15 @@ export const getScheduleInfo = (
   let info = '';
   
   if (inpersonSessions > 0) {
-    info += `📌 ${fixedCount} buổi cố định (Thứ + Ca bạn chọn)\n`;
+    info += `${fixedCount} buổi cố định (Thứ + Ca bạn chọn)\n`;
     
     if (hasExtra) {
-      info += `📅 ${extraCount} buổi bổ sung (tự động lên lịch khi kích hoạt học kỳ)\n`;
+      info += `${extraCount} buổi bổ sung (tự động lên lịch khi kích hoạt học kỳ)\n`;
     }
   }
   
   if (hasElearning) {
-    info += `💻 ${elearningSessions} buổi E-learning (tự động tạo)`;
+    info += `${elearningSessions} buổi E-learning (tự động tạo)`;
   }
   
   return { 

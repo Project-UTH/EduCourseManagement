@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 
 /**
  * Semester API Service
- * ✅ FIXED: Correct endpoint path (POST not GET)
+ * FIXED: Correct endpoint path (POST not GET)
  */
 
 export interface SemesterCreateRequest {
@@ -184,7 +184,7 @@ const semesterApi = {
   },
 
   /**
-   * ✅ FIXED: Activate uses PUT (not POST)
+   * FIXED: Activate uses PUT (not POST)
    * Endpoint: PUT /api/admin/semesters/{id}/activate
    */
   activate: async (id: number): Promise<ApiResponse<SemesterResponse>> => {
@@ -195,17 +195,17 @@ const semesterApi = {
         `/api/admin/semesters/${id}/activate`
       );
       
-      console.log('[semesterApi] ✅ Semester activated - extra sessions auto-scheduled');
+      console.log('[semesterApi] Semester activated - extra sessions auto-scheduled');
       return response.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[semesterApi] ❌ Failed to activate semester:', apiError.response?.data || apiError.message);
+      console.error('[semesterApi] Failed to activate semester:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
 
   /**
-   * ✅ FIXED: Complete uses PUT (not POST)
+   * FIXED: Complete uses PUT (not POST)
    */
   complete: async (id: number): Promise<ApiResponse<SemesterResponse>> => {
     console.log(`[semesterApi] Completing semester ID: ${id}`);
@@ -259,7 +259,7 @@ const semesterApi = {
   },
 
   /**
-   * ✅ FIXED: enableRegistration uses PUT (not POST)
+   * FIXED: enableRegistration uses PUT (not POST)
    */
   enableRegistration: async (id: number): Promise<ApiResponse<SemesterResponse>> => {
     console.log(`[semesterApi] Enabling registration for semester ID: ${id}`);
@@ -279,7 +279,7 @@ const semesterApi = {
   },
 
   /**
-   * ✅ FIXED: disableRegistration uses PUT (not POST)
+   * FIXED: disableRegistration uses PUT (not POST)
    */
   disableRegistration: async (id: number): Promise<ApiResponse<SemesterResponse>> => {
     console.log(`[semesterApi] Disabling registration for semester ID: ${id}`);

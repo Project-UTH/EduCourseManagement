@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import classApi from '../../services/api/classApi';
-import ClassAssignments from './tabs/ClassAssignments';
-import ClassDocuments from './tabs/ClassDocuments';
-import ClassGrading from './tabs/ClassGrading';
-import ClassInfo from './tabs/ClassInfo';
+import classApi from '../../../services/api/classApi';
+import ClassAssignments from '../tabs/ClassAssignments';
+import ClassDocuments from '../tabs/ClassDocuments';
+import ClassGrading from '../tabs/ClassGrading';
+import ClassInfo from '../tabs/ClassInfo';
 import './TeacherClassDetail.css';
-import ChatList from '../../components/chat/ChatList';
+import ChatList from '../../../components/chat/ChatList';
 import { useAuthStore } from '@/store/authStore';
 
 

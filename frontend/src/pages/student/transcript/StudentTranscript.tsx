@@ -316,17 +316,29 @@ const StudentTranscript: React.FC = () => {
   return (
     <div className="transcript-container">
       {/* Header */}
-      <div className="transcript-header">
-        <div className="header-title">
-          <h1>Bảng điểm học tập</h1>
-          <p className="student-info">
-            <strong>{transcript.student.fullName}</strong> - {transcript.student.studentCode}
-          </p>
-          <p className="major-info">
-            {transcript.student.major}
-          </p>
-        </div>
+{/* Header */}
+<div className="transcript-header">
+  <div className="header-overlay"></div> {/* Lớp phủ để bảo vệ chữ */}
+  <div className="header-content">
+    <h1 className="header-main-title">Bảng điểm học tập</h1>
+    
+    <div className="student-details-container">
+      <div className="student-detail-item">
+        <span className="detail-label">Họ và tên:</span>
+        <span className="detail-value">{transcript.student.fullName}</span>
       </div>
+      <div className="student-detail-item">
+        <span className="detail-label">Mã sinh viên:</span>
+        <span className="detail-value">{transcript.student.studentCode}</span>
+      </div>
+      <div className="student-detail-divider"></div>
+      <div className="student-detail-item">
+        <span className="detail-label">Chuyên ngành:</span>
+        <span className="detail-value">{transcript.student.major}</span>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Overall Statistics */}
       <div className="stats-grid">

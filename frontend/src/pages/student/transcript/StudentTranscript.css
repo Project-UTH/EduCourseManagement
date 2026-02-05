@@ -19,54 +19,115 @@
 }
 
 /* ==================== HEADER ==================== */
-/* ==================== HEADER ==================== */
+/* ==================== NEW HEADER DESIGN ==================== */
 .transcript-container .transcript-header {
-  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
-  color: white;
-  padding: 40px;
-  border-radius: 20px;
-  margin-bottom: 30px;
-  box-shadow: 0 10px 30px rgba(22, 163, 74, 0.35);
-
   position: relative;
-  z-index: 1; /* giữ header nổi ổn định */
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  border-radius: 24px;
+  padding: 40px;
+  margin-bottom: 35px;
+  box-shadow: 0 15px 35px rgba(16, 185, 129, 0.2);
+  overflow: hidden;
+  isolation: isolate; /* Tạo context riêng để z-index không bị loạn */
 }
 
-
-/* Thêm định nghĩa rõ ràng cho lớp con chứa chữ */
-.transcript-container .header-title {
-  position: relative;     /* Nổi lên trên nền của cha */
-  z-index: 2;             /* Đặt thứ tự cao hơn nền */
+/* Lớp phủ họa tiết chìm */
+.transcript-container .header-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0);
+  background-size: 24px 24px;
+  z-index: -1;
 }
 
-/* Cưỡng chế màu chữ cho H1 */
-.transcript-container .header-title h1 {
+/* Các vòng tròn trang trí cố định góc */
+.transcript-container .transcript-header::before,
+.transcript-container .transcript-header::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0));
+  z-index: -1;
+}
+
+.transcript-container .transcript-header::before {
+  width: 250px;
+  height: 250px;
+  top: -100px;
+  right: -50px;
+}
+
+.transcript-container .transcript-header::after {
+  width: 150px;
+  height: 150px;
+  bottom: -50px;
+  left: 10%;
+}
+
+.transcript-container .header-content {
+  position: relative;
+  z-index: 2; /* Luôn nổi trên các hình tròn */
+}
+
+.transcript-container .header-main-title {
   font-size: 32px;
-  font-weight: 700;
-  margin: 0 0 12px 0;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 20px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-
-.transcript-container .student-info {
-  font-size: 18px;
-  margin: 8px 0;
-  opacity: 0.95;
-  color: white;
+.transcript-container .student-details-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
 }
 
-.transcript-container .student-info strong {
+.transcript-container .student-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.transcript-container .detail-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
   font-weight: 600;
 }
 
-.transcript-container .major-info {
-  font-size: 16px;
-  opacity: 0.85;
-  margin: 4px 0 0 0;
-  color: white;
+.transcript-container .detail-value {
+  font-size: 18px;
+  color: #ffffff;
+  font-weight: 700;
 }
 
+.transcript-container .student-detail-divider {
+  width: 2px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile Responsive cho Header */
+@media (max-width: 768px) {
+  .transcript-container .transcript-header {
+    padding: 25px;
+  }
+  .transcript-container .student-details-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .transcript-container .student-detail-divider {
+    display: none;
+  }
+  .transcript-container .header-main-title {
+    font-size: 24px;
+  }
+}
 /* ==================== STATS GRID ==================== */
 .transcript-container .stats-grid {
   display: grid;

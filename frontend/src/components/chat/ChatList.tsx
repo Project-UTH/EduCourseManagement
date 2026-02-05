@@ -3,7 +3,17 @@ import { MessageCircle, X } from 'lucide-react';
 import './ChatList.css';
 import ChatBox from './ChatBox';
 import studentClassApi from '../../services/api/studentClassApi';
-import classApi from '../../services/api/classApi'; //  CORRECT: Use classApi for teacher
+import classApi from '../../services/api/classApi';
+
+// --- Type Definitions ---
+
+// Interface for the raw class data from API
+interface ClassApiResponse {
+  classId: number;
+  classCode: string;
+  className?: string;
+  subjectName?: string;
+}
 
 interface ClassChatItem {
   classId: number;
@@ -23,6 +33,13 @@ interface ChatListProps {
   currentRole: 'TEACHER' | 'STUDENT';
 }
 
+// Extend Window interface for Webkit Audio (Safari support)
+declare global {
+  interface Window {
+    webkitAudioContext: typeof AudioContext;
+  }
+}
+
 const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
   const [classList, setClassList] = useState<ClassChatItem[]>([]);
   const [openChats, setOpenChats] = useState<Set<number>>(new Set());
@@ -33,7 +50,11 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
   //  Play notification sound
   const playNotificationSound = () => {
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // FIX: Use the extended Window interface instead of (window as any)
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      const audioContext = new AudioContextClass();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
@@ -74,6 +95,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
   //  Load classes and unread counts
   useEffect(() => {
     loadClassesWithUnreadCounts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentRole]);
 
   //  Load classes AND their unread counts from database
@@ -83,18 +105,18 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
       console.log('[ChatList] Loading classes for role:', currentRole);
 
       // 1. Load classes
-      let classes: any[] = [];
+      // FIX: Replaced 'any[]' with 'ClassApiResponse[]'
+      let classes: ClassApiResponse[] = [];
+      
       if (currentRole === 'TEACHER') {
-        //  CORRECT: Use classApi.getMyClasses() for teachers
         classes = await classApi.getMyClasses();
         console.log('[ChatList] Teacher classes loaded:', classes);
       } else {
-        //  Use studentClassApi for students
         classes = await studentClassApi.getMyClasses();
         console.log('[ChatList] Student classes loaded:', classes);
       }
 
-      console.log('[ChatList] ✅ Loaded classes:', classes.length);
+      console.log('[ChatList] Loaded classes:', classes.length);
 
       // 2. Load unread counts from database
       const token = localStorage.getItem('token');
@@ -110,24 +132,26 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
         unreadByClass = unreadData.unreadByClass || {};
         console.log('[ChatList]  Loaded unread counts:', unreadByClass);
       } else {
-        console.error('[ChatList] ❌ Failed to load unread counts:', unreadResponse.status);
+        console.error('[ChatList]  Failed to load unread counts:', unreadResponse.status);
       }
 
       // 3. Merge classes with unread counts
-      const chatItems: ClassChatItem[] = classes.map((cls: any) => {
-  console.log('[ChatList] Processing class:', cls.classId, cls);
-  
-  return {
-    classId: cls.classId,
-    classCode: cls.classCode,
-    //  FIX: Handle both student and teacher responses
-    className: cls.subjectName || cls.className || cls.classCode || 'Lớp học',
-    subjectName: cls.subjectName || cls.className || cls.classCode || 'Lớp học',
-    unreadCount: unreadByClass[cls.classId] || 0,
-    isOnline: true,
-    hasNewMessages: (unreadByClass[cls.classId] || 0) > 0,
-  };
-});
+      // FIX: Removed ': any' as Typescript now infers 'cls' is 'ClassApiResponse'
+      const chatItems: ClassChatItem[] = classes.map((cls) => {
+        console.log('[ChatList] Processing class:', cls.classId, cls);
+        
+        return {
+          classId: cls.classId,
+          classCode: cls.classCode,
+          //  Handle both student and teacher responses via optional chaining/fallback
+          className: cls.subjectName || cls.className || cls.classCode || 'Lớp học',
+          subjectName: cls.subjectName || cls.className || cls.classCode || 'Lớp học',
+          unreadCount: unreadByClass[cls.classId] || 0,
+          isOnline: true,
+          hasNewMessages: (unreadByClass[cls.classId] || 0) > 0,
+        };
+      });
+      
       console.log('[ChatList]  Merged chat items:', chatItems);
 
       // 4. Sort by unread count
@@ -139,7 +163,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
 
       setClassList(chatItems);
     } catch (error) {
-      console.error('[ChatList] ❌ Failed to load classes:', error);
+      console.error('[ChatList]  Failed to load classes:', error);
     } finally {
       setLoading(false);
     }
@@ -227,7 +251,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
           )
         );
       } catch (error) {
-        console.error('[ChatList] ❌ Failed to mark as read on maximize:', error);
+        console.error('[ChatList] Failed to mark as read on maximize:', error);
       }
     }
   };
@@ -360,7 +384,7 @@ const ChatList = ({ currentUsername, currentRole }: ChatListProps) => {
                         )}
                       </div>
                       
-                      {/*  "Tin nhắn mới chưa đọc" indicator */}
+                      {/* "Tin nhắn mới chưa đọc" indicator */}
                       {item.hasNewMessages && item.unreadCount > 0 && (
                         <div className="new-messages-indicator">
                           <span className="new-messages-text">

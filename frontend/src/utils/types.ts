@@ -1,5 +1,5 @@
 // types.ts - Shared types for Class Management
-// ✅ SIMPLIFIED: Removed extra/elearning fields (backend auto-handles)
+// SIMPLIFIED: Removed extra/elearning fields (backend auto-handles)
 
 export interface ClassItem {
   classId: number;
@@ -24,7 +24,7 @@ export interface ClassItem {
   // Fixed schedule (backend auto-assigned)
   dayOfWeekDisplay: string;
   timeSlotDisplay: string;
-  fixedRoom: string;         // ⭐ Auto-assigned by backend
+  fixedRoom: string;         // Auto-assigned by backend
   dayOfWeek: string;         // Raw value for editing
   timeSlot: string;          // Raw value for editing
   
@@ -99,7 +99,7 @@ export interface Semester {
 // ==================== FORM DATA ====================
 
 /**
- * ✅ SIMPLIFIED: Form data for creating/updating class
+ * SIMPLIFIED: Form data for creating/updating class
  * Only fixed schedule needed - backend handles rest
  */
 export interface ClassFormData {
@@ -113,9 +113,9 @@ export interface ClassFormData {
   dayOfWeek: string;
   timeSlot: string;
   
-  // ⭐ No room input - backend auto-assigns
-  // ⭐ No extra schedule - backend auto-schedules when semester activated
-  // ⭐ No elearning schedule - backend auto-creates
+  // No room input - backend auto-assigns
+  // No extra schedule - backend auto-schedules when semester activated
+  // No elearning schedule - backend auto-creates
 }
 
 /**

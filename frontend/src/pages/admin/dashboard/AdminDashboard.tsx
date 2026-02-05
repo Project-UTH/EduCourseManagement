@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import statisticsApi, { DashboardStatistics } from '../../services/api/statisticsApi';
+import statisticsApi, { DashboardStatistics } from '../../../services/api/statisticsApi';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {

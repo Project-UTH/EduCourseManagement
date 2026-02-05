@@ -13,6 +13,7 @@ const SemesterList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSemester, setEditingSemester] = useState<SemesterResponse | null>(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchSemesters(); }, [currentPage, searchKeyword]);
 
   const fetchSemesters = async () => {

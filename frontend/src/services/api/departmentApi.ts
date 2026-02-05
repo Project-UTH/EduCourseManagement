@@ -49,7 +49,7 @@ const departmentApi = {
     sortBy: string = 'departmentName',
     sortDir: string = 'asc'
   ): Promise<ApiResponse<Department[]>> => {
-    console.log(`🏢 [departmentApi] Fetching departments - page: ${page}, size: ${size}`);
+    console.log(`[departmentApi] Fetching departments - page: ${page}, size: ${size}`);
     
     try {
       const response = await apiClient.get<ApiResponse<Department[]>>(
@@ -59,36 +59,36 @@ const departmentApi = {
         }
       );
       
-      console.log('✅ [departmentApi] Departments fetched:', response.data.totalItems || response.data.data.length, 'total');
+      console.log('[departmentApi] Departments fetched:', response.data.totalItems || response.data.data.length, 'total');
       return response.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('❌ [departmentApi] Failed to fetch departments:', apiError.response?.data || apiError.message);
+      console.error(' [departmentApi] Failed to fetch departments:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
 
   // Get department by ID
   getById: async (id: number): Promise<ApiResponse<Department>> => {
-    console.log(`🏢 [departmentApi] Fetching department ID: ${id}`);
+    console.log(`[departmentApi] Fetching department ID: ${id}`);
     
     try {
       const response = await apiClient.get<ApiResponse<Department>>(
         `/api/admin/departments/${id}`
       );
       
-      console.log('✅ [departmentApi] Department fetched:', response.data.data.departmentName);
+      console.log('[departmentApi] Department fetched:', response.data.data.departmentName);
       return response.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('❌ [departmentApi] Failed to fetch department:', apiError.response?.data || apiError.message);
+      console.error(' [departmentApi] Failed to fetch department:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
 
   // Create department
   create: async (data: DepartmentCreateRequest): Promise<ApiResponse<Department>> => {
-    console.log('🏢 [departmentApi] Creating department:', data.departmentName);
+    console.log('[departmentApi] Creating department:', data.departmentName);
     
     try {
       const response = await apiClient.post<ApiResponse<Department>>(
@@ -96,18 +96,18 @@ const departmentApi = {
         data
       );
       
-      console.log('✅ [departmentApi] Department created:', response.data.data.departmentName);
+      console.log('[departmentApi] Department created:', response.data.data.departmentName);
       return response.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('❌ [departmentApi] Failed to create department:', apiError.response?.data || apiError.message);
+      console.error('[departmentApi] Failed to create department:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
 
   // Update department
   update: async (id: number, data: DepartmentUpdateRequest): Promise<ApiResponse<Department>> => {
-    console.log(`🏢 [departmentApi] Updating department ID: ${id}`);
+    console.log(`[departmentApi] Updating department ID: ${id}`);
     
     try {
       const response = await apiClient.put<ApiResponse<Department>>(
@@ -115,29 +115,29 @@ const departmentApi = {
         data
       );
       
-      console.log('✅ [departmentApi] Department updated:', response.data.data.departmentName);
+      console.log('[departmentApi] Department updated:', response.data.data.departmentName);
       return response.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('❌ [departmentApi] Failed to update department:', apiError.response?.data || apiError.message);
+      console.error('[departmentApi] Failed to update department:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
 
   // Delete department
   delete: async (id: number): Promise<ApiResponse<null>> => {
-    console.log(`🏢 [departmentApi] Deleting department ID: ${id}`);
+    console.log(`[departmentApi] Deleting department ID: ${id}`);
     
     try {
       const response = await apiClient.delete<ApiResponse<null>>(
         `/api/admin/departments/${id}`
       );
       
-      console.log('✅ [departmentApi] Department deleted');
+      console.log('[departmentApi] Department deleted');
       return response.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('❌ [departmentApi] Failed to delete department:', apiError.response?.data || apiError.message);
+      console.error('[departmentApi] Failed to delete department:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
@@ -148,7 +148,7 @@ const departmentApi = {
     page: number = 0,
     size: number = 10
   ): Promise<ApiResponse<Department[]>> => {
-    console.log(`🏢 [departmentApi] Searching departments: "${keyword}"`);
+    console.log(`[departmentApi] Searching departments: "${keyword}"`);
     
     try {
       const response = await apiClient.get<ApiResponse<Department[]>>(
@@ -158,11 +158,11 @@ const departmentApi = {
         }
       );
       
-      console.log('✅ [departmentApi] Search results:', response.data.totalItems || response.data.data.length, 'found');
+      console.log('[departmentApi] Search results:', response.data.totalItems || response.data.data.length, 'found');
       return response.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('❌ [departmentApi] Search failed:', apiError.response?.data || apiError.message);
+      console.error('[departmentApi] Search failed:', apiError.response?.data || apiError.message);
       throw error;
     }
   },

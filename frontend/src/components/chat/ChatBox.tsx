@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Send, X, Minimize2, MessageCircle } from 'lucide-react';
 import './ChatBox.css';
 
+// --- Types ---
+
 interface Message {
   id: number;
   senderUsername: string;
@@ -18,7 +20,36 @@ interface ChatBoxProps {
   onClose: () => void;
   onMinimize: () => void;
   isMinimized: boolean;
-  onNewMessage?: (content: string, sender: string) => void; //  Enhanced with message details
+  onNewMessage?: (content: string, sender: string) => void;
+}
+
+interface StompMessage {
+  body: string;
+}
+
+interface StompClient {
+  connected: boolean;
+  debug: ((msg: string) => void) | null;
+  connect: (
+    headers: Record<string, string>,
+    onConnect: () => void,
+    onError: (error: unknown) => void
+  ) => void;
+  subscribe: (
+    destination: string,
+    callback: (message: StompMessage) => void
+  ) => void;
+  send: (destination: string, headers: Record<string, string>, body: string) => void;
+  disconnect: () => void;
+}
+
+declare global {
+  interface Window {
+    SockJS: new (url: string) => unknown;
+    Stomp: {
+      over: (socket: unknown) => StompClient;
+    };
+  }
 }
 
 const ChatBox = ({
@@ -33,10 +64,20 @@ const ChatBox = ({
 }: ChatBoxProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [stompClient, setStompClient] = useState<any>(null);
+  
+  // Use refs for values accessed inside closures (socket callbacks)
+  // to prevent unnecessary reconnection or stale state.
+  const stompClientRef = useRef<StompClient | null>(null);
+  const isMinimizedRef = useRef(isMinimized); 
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0); //  Track unread in minimized state
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Keep isMinimizedRef in sync with prop
+  useEffect(() => {
+    isMinimizedRef.current = isMinimized;
+  }, [isMinimized]);
 
   // Scroll to bottom
   const scrollToBottom = () => {
@@ -47,12 +88,15 @@ const ChatBox = ({
     scrollToBottom();
   }, [messages]);
 
-  //  Reset unread count when chat is not minimized
+  // FIX: Reset unread count when opening chat.
+  // Removed 'unreadCount' from dependencies to avoid loop/lint error.
   useEffect(() => {
-    if (!isMinimized) {
-      setUnreadCount(0);
-    }
-  }, [isMinimized]);
+  if (!isMinimized) {
+    const id = setTimeout(() => setUnreadCount(0), 0);
+    return () => clearTimeout(id);
+  }
+}, [isMinimized]);
+
 
   // Load chat history
   useEffect(() => {
@@ -81,8 +125,8 @@ const ChatBox = ({
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const SockJS = (window as any).SockJS;
-    const Stomp = (window as any).Stomp;
+    const SockJS = window.SockJS;
+    const Stomp = window.Stomp;
 
     if (!SockJS || !Stomp) {
       console.error('[ChatBox] SockJS or Stomp not loaded');
@@ -96,14 +140,13 @@ const ChatBox = ({
     client.connect(
       { Authorization: `Bearer ${token}` },
       () => {
-        console.log('[ChatBox]  WebSocket connected for class:', classId);
+        console.log('[ChatBox] WebSocket connected for class:', classId);
         setIsConnected(true);
 
-        client.subscribe(`/topic/class/${classId}`, (message: any) => {
-          const receivedMessage = JSON.parse(message.body);
-          console.log('[ChatBox]  New message received:', receivedMessage);
+        client.subscribe(`/topic/class/${classId}`, (message: StompMessage) => {
+          const receivedMessage: Message = JSON.parse(message.body);
+          console.log('[ChatBox] New message received:', receivedMessage);
           
-          // Prevent duplicate messages
           setMessages((prev) => {
             const exists = prev.some(msg => 
               msg.id === receivedMessage.id && 
@@ -111,17 +154,15 @@ const ChatBox = ({
             );
             
             if (exists) {
-              console.log('[ChatBox]  Duplicate message detected, skipping');
               return prev;
             }
-            
             return [...prev, receivedMessage];
           });
           
-          //  Notify parent with message details
           if (receivedMessage.senderUsername !== currentUsername) {
-            // Increase unread count if minimized
-            if (isMinimized) {
+            // FIX: Use ref to check minimized state inside callback without 
+            // causing the useEffect to re-run (and socket to reconnect).
+            if (isMinimizedRef.current) {
               setUnreadCount(prev => prev + 1);
             }
             
@@ -131,13 +172,13 @@ const ChatBox = ({
           }
         });
       },
-      (error: any) => {
-        console.error('[ChatBox] ❌ WebSocket connection error:', error);
+      (error: unknown) => {
+        console.error('[ChatBox] WebSocket connection error:', error);
         setIsConnected(false);
       }
     );
 
-    setStompClient(client);
+    stompClientRef.current = client;
 
     return () => {
       if (client && client.connected) {
@@ -145,15 +186,14 @@ const ChatBox = ({
         console.log('[ChatBox] WebSocket disconnected');
       }
     };
-  }, [classId, currentUsername, onNewMessage, isMinimized]);
+    // FIX: Removed isMinimized from dependencies to prevent reconnection loops
+  }, [classId, currentUsername, onNewMessage]); 
 
   // Send message
   const handleSendMessage = () => {
-    if (!inputMessage.trim() || !stompClient || !isConnected) return;
+    if (!inputMessage.trim() || !stompClientRef.current || !isConnected) return;
 
-    console.log('[ChatBox]  Sending message:', inputMessage);
-
-    stompClient.send(
+    stompClientRef.current.send(
       `/app/chat.sendMessage/${classId}`,
       {},
       JSON.stringify({ content: inputMessage })

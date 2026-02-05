@@ -76,7 +76,7 @@ export interface HomeworkDetailResponse {
   // Submission info (if exists)
   submission?: {
     submissionId: number;
-    // ✅ NEW: Multiple files support
+    // NEW: Multiple files support
     submissionFiles?: SubmissionFileResponse[];
     // Legacy single-file fields (deprecated)
     submissionFileUrl?: string;
@@ -105,7 +105,7 @@ export interface StudentSubmissionResponse {
   homeworkType: 'REGULAR' | 'MIDTERM' | 'FINAL';
   className: string;
   subjectName: string;
-  // ✅ NEW: Multiple files
+  // NEW: Multiple files
   submissionFiles?: SubmissionFileResponse[];
   // Legacy fields
   submissionFileUrl?: string;
@@ -146,11 +146,11 @@ const studentHomeworkApi = {
         `/api/student/classes/${classId}/homeworks`
       );
       
-      console.log('[studentHomeworkApi] ✅ Homeworks fetched:', response.data.data.length);
+      console.log('[studentHomeworkApi] Homeworks fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[studentHomeworkApi] ❌ Failed to fetch homeworks:', apiError.response?.data || apiError.message);
+      console.error('[studentHomeworkApi] Failed to fetch homeworks:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
@@ -167,11 +167,11 @@ const studentHomeworkApi = {
         `/api/student/homeworks/${homeworkId}`
       );
       
-      console.log('[studentHomeworkApi] ✅ Homework detail fetched:', response.data.data.title);
+      console.log('[studentHomeworkApi] Homework detail fetched:', response.data.data.title);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[studentHomeworkApi] ❌ Failed to fetch homework detail:', apiError.response?.data || apiError.message);
+      console.error('[studentHomeworkApi] Failed to fetch homework detail:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
@@ -209,17 +209,17 @@ const studentHomeworkApi = {
         }
       );
       
-      console.log('[studentHomeworkApi] ✅ Homework submitted successfully');
+      console.log('[studentHomeworkApi] Homework submitted successfully');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[studentHomeworkApi] ❌ Failed to submit homework:', apiError.response?.data || apiError.message);
+      console.error('[studentHomeworkApi] Failed to submit homework:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
 
   /**
-   * ✅ Update homework (add more files or edit text)
+   * Update homework (add more files or edit text)
    * PUT /api/student/homeworks/{id}/update
    */
   updateHomework: async (
@@ -248,13 +248,13 @@ const studentHomeworkApi = {
       }
     );
 
-    console.log('[studentHomeworkApi] ✅ Homework updated successfully');
+    console.log('[studentHomeworkApi] Homework updated successfully');
 
     return response.data.data;
   },
 
   /**
-   * ✅ Delete all submission files (legacy - deletes all files)
+   * Delete all submission files (legacy - deletes all files)
    * DELETE /api/student/homeworks/{id}/file
    */
   deleteSubmissionFile: async (homeworkId: number): Promise<void> => {
@@ -262,11 +262,11 @@ const studentHomeworkApi = {
 
     await apiClient.delete(`/api/student/homeworks/${homeworkId}/file`);
 
-    console.log('[studentHomeworkApi] ✅ All files deleted successfully');
+    console.log('[studentHomeworkApi] All files deleted successfully');
   },
 
   /**
-   * ✅ NEW: Delete a specific file by fileId
+   * NEW: Delete a specific file by fileId
    * DELETE /api/student/homeworks/{homeworkId}/files/{fileId}
    */
   deleteSubmissionFileById: async (homeworkId: number, fileId: number): Promise<void> => {
@@ -274,7 +274,7 @@ const studentHomeworkApi = {
 
     await apiClient.delete(`/api/student/homeworks/${homeworkId}/files/${fileId}`);
 
-    console.log('[studentHomeworkApi] ✅ File deleted successfully');
+    console.log('[studentHomeworkApi] File deleted successfully');
   },
 
   /**
@@ -289,11 +289,11 @@ const studentHomeworkApi = {
         '/api/student/submissions/my'
       );
       
-      console.log('[studentHomeworkApi] ✅ Submissions fetched:', response.data.data.length);
+      console.log('[studentHomeworkApi] Submissions fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[studentHomeworkApi] ❌ Failed to fetch submissions:', apiError.response?.data || apiError.message);
+      console.error('[studentHomeworkApi] Failed to fetch submissions:', apiError.response?.data || apiError.message);
       throw error;
     }
   },

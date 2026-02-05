@@ -2,8 +2,7 @@ import apiClient from './apiClient';
 
 /**
  * Teacher API Service
- * 
- * @updated 2026-01-28 - Added exportGradeStatisticsExcel method
+ * * @updated 2026-01-28 - Added exportGradeStatisticsExcel method
  */
 
 export interface TeacherCreateRequest {
@@ -69,15 +68,13 @@ export interface TeacherSubjectResponse {
   notes?: string;
 }
 
-// ==================== ✅ STUDENT ENROLLMENT DTO ====================
+// ==================== STUDENT ENROLLMENT DTO ====================
 
 /**
  * StudentEnrollmentDto
- * 
- * Response DTO for displaying students enrolled in a class
+ * * Response DTO for displaying students enrolled in a class
  * Used by Teacher to view their class roster with grades
- * 
- * @since 2026-01-28
+ * * @since 2026-01-28
  */
 export interface StudentEnrollmentDto {
   // Student info
@@ -465,20 +462,17 @@ const teacherApi = {
     }
   },
 
-  // ==================== ✅ CLASS ROSTER MANAGEMENT ====================
+  // ==================== CLASS ROSTER MANAGEMENT ====================
 
   /**
    * Get list of students enrolled in a class
    * GET /api/teacher/classes/{classId}/students
-   * 
-   * Returns list of students with their information and current grades
+   * * Returns list of students with their information and current grades
    * Only accessible if teacher owns this class
-   * 
-   * @param classId Class ID
+   * * @param classId Class ID
    * @returns List of enrolled students with their info and grades
    * @throws Error if teacher doesn't own the class or class not found
-   * 
-   * @author ECMS Team
+   * * @author ECMS Team
    * @since 2026-01-28
    */
   getEnrolledStudents: async (classId: number): Promise<StudentEnrollmentDto[]> => {
@@ -489,15 +483,16 @@ const teacherApi = {
         `/api/teacher/classes/${classId}/students`
       );
       
-      console.log('[teacherApi] ✅ Enrolled students fetched:', response.data.length);
+      console.log('[teacherApi] Enrolled students fetched:', response.data.length);
       return response.data;
       
-    } catch (error: any) {
-      console.error('[teacherApi] ❌ Failed to fetch enrolled students:', error);
+    } catch (error) {
+      const err = error as ApiError;
+      console.error('[teacherApi] Failed to fetch enrolled students:', error);
       
-      if (error.response?.status === 403) {
+      if (err.response?.status === 403) {
         throw new Error('Bạn không có quyền xem danh sách sinh viên của lớp này');
-      } else if (error.response?.status === 404) {
+      } else if (err.response?.status === 404) {
         throw new Error('Không tìm thấy lớp học');
       }
       
@@ -505,25 +500,22 @@ const teacherApi = {
     }
   },
 
-  // ==================== ✅ EXCEL EXPORT ====================
+  // ==================== EXCEL EXPORT ====================
 
   /**
    * Export grade statistics to Excel
    * GET /api/teacher/classes/{classId}/grades/export-excel
-   * 
-   * Downloads an Excel file containing:
+   * * Downloads an Excel file containing:
    * - Sheet 1: Overview statistics (average, pass rate, distribution)
    * - Sheet 2: Detailed student list with all scores
-   * 
-   * @param classId Class ID
+   * * @param classId Class ID
    * @returns Excel file as blob (auto-download in browser)
    * @throws Error if teacher doesn't own the class or class not found
-   * 
-   * @author ECMS Team
+   * * @author ECMS Team
    * @since 2026-01-28
    */
   exportGradeStatisticsExcel: async (classId: number) => {
-    console.log('[teacherApi] 📊 Exporting grade statistics to Excel for class:', classId);
+    console.log('[teacherApi] Exporting grade statistics to Excel for class:', classId);
     
     try {
       const response = await apiClient.get(
@@ -533,15 +525,16 @@ const teacherApi = {
         }
       );
       
-      console.log('[teacherApi] ✅ Excel file downloaded successfully');
+      console.log('[teacherApi] Excel file downloaded successfully');
       return response;
       
-    } catch (error: any) {
-      console.error('[teacherApi] ❌ Failed to export Excel:', error);
+    } catch (error) {
+      const err = error as ApiError;
+      console.error('[teacherApi] Failed to export Excel:', error);
       
-      if (error.response?.status === 403) {
+      if (err.response?.status === 403) {
         throw new Error('Bạn không có quyền xuất báo cáo của lớp này');
-      } else if (error.response?.status === 404) {
+      } else if (err.response?.status === 404) {
         throw new Error('Không tìm thấy lớp học');
       }
       

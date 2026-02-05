@@ -155,14 +155,14 @@ const StudentProfile = () => {
     <div className="sp-container">
       {/* Page Header */}
       <div className="sp-header">
-        <h1>👤 Hồ sơ cá nhân</h1>
+        <h1>Hồ sơ cá nhân</h1>
         <p>Quản lý thông tin tài khoản của bạn</p>
       </div>
 
       {/* Alert Message */}
       {message && (
         <div className={`sp-alert ${message.type === 'success' ? 'sp-alert-success' : 'sp-alert-error'}`}>
-          {message.type === 'success' ? '✅' : '❌'} {message.text}
+          {message.type === 'success' ? '' : ''} {message.text}
         </div>
       )}
 
@@ -189,7 +189,6 @@ const StudentProfile = () => {
             {/* Quick Info */}
             <div className="sp-quick-info">
               <div className="sp-info-item">
-                <span className="sp-info-icon">🎓</span>
                 <div>
                   <div className="sp-info-label">MSSV</div>
                   <div className="sp-info-value">{profile.studentCode}</div>
@@ -197,7 +196,6 @@ const StudentProfile = () => {
               </div>
 
               <div className="sp-info-item">
-                <span className="sp-info-icon">📧</span>
                 <div>
                   <div className="sp-info-label">Email</div>
                   <div className="sp-info-value">{profile.email || 'Chưa có'}</div>
@@ -205,7 +203,6 @@ const StudentProfile = () => {
               </div>
 
               <div className="sp-info-item">
-                <span className="sp-info-icon">📞</span>
                 <div>
                   <div className="sp-info-label">Điện thoại</div>
                   <div className="sp-info-value">{profile.phone || 'Chưa có'}</div>
@@ -220,14 +217,14 @@ const StudentProfile = () => {
                 onClick={() => setIsEditing(true)}
                 disabled={isEditing || isChangingPassword}
               >
-                ✏️ Chỉnh sửa
+                Chỉnh sửa
               </button>
               <button 
                 className="sp-btn sp-btn-secondary"
                 onClick={() => setIsChangingPassword(true)}
                 disabled={isEditing || isChangingPassword}
               >
-                🔒 Đổi mật khẩu
+                Đổi mật khẩu
               </button>
             </div>
           </div>
@@ -239,7 +236,7 @@ const StudentProfile = () => {
           {!isEditing && !isChangingPassword && (
             <div className="sp-section">
               <div className="sp-section-header">
-                <h3>📋 Thông tin chi tiết</h3>
+                <h3>Thông tin chi tiết</h3>
               </div>
 
               <div className="sp-detail-grid">
@@ -299,7 +296,7 @@ const StudentProfile = () => {
           {isEditing && (
             <div className="sp-section">
               <div className="sp-section-header">
-                <h3>✏️ Chỉnh sửa thông tin</h3>
+                <h3>Chỉnh sửa thông tin</h3>
               </div>
 
               <form onSubmit={handleEditSubmit} className="sp-form">
@@ -328,12 +325,12 @@ const StudentProfile = () => {
                 </div>
 
                 <div className="sp-form-note">
-                  ℹ️ Chỉ có thể cập nhật Email và Số điện thoại. Các thông tin khác liên hệ phòng Đào tạo để thay đổi.
+                  Chỉ có thể cập nhật Email và Số điện thoại. Các thông tin khác liên hệ phòng Đào tạo để thay đổi.
                 </div>
 
                 <div className="sp-form-actions">
                   <button type="submit" className="sp-btn sp-btn-primary" disabled={loading}>
-                    {loading ? 'Đang lưu...' : '💾 Lưu thay đổi'}
+                    {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
                   </button>
                   <button 
                     type="button" 
@@ -344,7 +341,7 @@ const StudentProfile = () => {
                     }}
                     disabled={loading}
                   >
-                    ❌ Hủy
+                    Hủy
                   </button>
                 </div>
               </form>
@@ -355,7 +352,7 @@ const StudentProfile = () => {
           {isChangingPassword && (
             <div className="sp-section">
               <div className="sp-section-header">
-                <h3>🔒 Đổi mật khẩu</h3>
+                <h3>Đổi mật khẩu</h3>
               </div>
 
               <form onSubmit={handlePasswordSubmit} className="sp-form">
@@ -398,12 +395,12 @@ const StudentProfile = () => {
                 </div>
 
                 <div className="sp-password-hint">
-                  💡 Mật khẩu phải có ít nhất 6 ký tự
+                  Mật khẩu phải có ít nhất 6 ký tự
                 </div>
 
                 <div className="sp-form-actions">
                   <button type="submit" className="sp-btn sp-btn-primary" disabled={loading}>
-                    {loading ? 'Đang xử lý...' : '🔒 Đổi mật khẩu'}
+                    {loading ? 'Đang xử lý...' : 'Đổi mật khẩu'}
                   </button>
                   <button 
                     type="button" 
@@ -414,7 +411,7 @@ const StudentProfile = () => {
                     }}
                     disabled={loading}
                   >
-                    ❌ Hủy
+                    Hủy
                   </button>
                 </div>
               </form>

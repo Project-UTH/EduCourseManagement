@@ -69,11 +69,11 @@ const statisticsApi = {
         '/api/admin/statistics/dashboard'
       );
       
-      console.log('[statisticsApi] ✅ Dashboard stats fetched');
+      console.log('[statisticsApi] Dashboard stats fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[statisticsApi] ❌ Failed to fetch dashboard stats:', 
+      console.error('[statisticsApi] Failed to fetch dashboard stats:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -92,11 +92,11 @@ const statisticsApi = {
     
     try {
       const response = await apiClient.get('/api/admin/statistics/students');
-      console.log('[statisticsApi] ✅ Student stats fetched');
+      console.log('[statisticsApi] Student stats fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[statisticsApi] ❌ Failed to fetch student stats:', 
+      console.error('[statisticsApi] Failed to fetch student stats:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -115,11 +115,11 @@ const statisticsApi = {
     
     try {
       const response = await apiClient.get('/api/admin/statistics/teachers');
-      console.log('[statisticsApi] ✅ Teacher stats fetched');
+      console.log('[statisticsApi] Teacher stats fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[statisticsApi] ❌ Failed to fetch teacher stats:', 
+      console.error('[statisticsApi] Failed to fetch teacher stats:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -140,11 +140,11 @@ const statisticsApi = {
       const response = await apiClient.get('/api/admin/statistics/classes', {
         params: semesterId ? { semesterId } : {}
       });
-      console.log('[statisticsApi] ✅ Class stats fetched');
+      console.log('[statisticsApi] Class stats fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[statisticsApi] ❌ Failed to fetch class stats:', 
+      console.error('[statisticsApi] Failed to fetch class stats:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -163,11 +163,11 @@ const statisticsApi = {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await apiClient.get<ApiResponse<any>>('/api/admin/statistics/departments');
-      console.log('[statisticsApi] ✅ Department stats fetched');
+      console.log('[statisticsApi] Department stats fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[statisticsApi] ❌ Failed to fetch department stats:', 
+      console.error('[statisticsApi] Failed to fetch department stats:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -186,11 +186,11 @@ const statisticsApi = {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await apiClient.get<ApiResponse<any>>('/api/admin/statistics/subjects');
-      console.log('[statisticsApi] ✅ Subject stats fetched');
+      console.log('[statisticsApi] Subject stats fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[statisticsApi] ❌ Failed to fetch subject stats:', 
+      console.error('[statisticsApi] Failed to fetch subject stats:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -209,11 +209,11 @@ const statisticsApi = {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await apiClient.get<ApiResponse<any>>('/api/admin/statistics/majors');
-      console.log('[statisticsApi] ✅ Major stats fetched');
+      console.log('[statisticsApi] Major stats fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[statisticsApi] ❌ Failed to fetch major stats:', 
+      console.error('[statisticsApi] Failed to fetch major stats:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }

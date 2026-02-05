@@ -5,7 +5,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import { DashboardLayout } from './components/layout';
 
 // Dashboards
-import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminDashboard from './pages/admin/dashboard/AdminDashboard';
 import StudentDashboard from './pages/student/dashboard/StudentDashboard';
 
 // Admin Pages
@@ -28,20 +28,20 @@ import StudentSchedule from './pages/student/schedule/StudentSchedule';
 import StudentProfile from './pages/student/profile/StudentProfile';
 import MyClasses from './pages/student/classes/MyClasses';
 import ClassDetail from './pages/student/courses/ClassDetail';
-import StudentHomeworkDetail from './pages/student/homeworks/HomeworkDetail'; // ✅ RENAMED
-import StudentTranscript from './pages/student/transcript/StudentTranscript'; // ✅ NEW - Bảng điểm tích lũy
+import StudentHomeworkDetail from './pages/student/homeworks/HomeworkDetail'; //  RENAMED
+import StudentTranscript from './pages/student/transcript/StudentTranscript'; //  NEW - Bảng điểm tích lũy
 
-// ✅ Teacher Pages - PHASE 4
+//  Teacher Pages - PHASE 4
 import HomeworkList from './pages/teacher/assignments/HomeworkList';
 import CreateHomework from './pages/teacher/assignments/CreateHomework';
-import TeacherHomeworkDetail from './pages/teacher/assignments/HomeworkDetail'; // ✅ RENAMED
+import TeacherHomeworkDetail from './pages/teacher/assignments/HomeworkDetail'; //  RENAMED
 import EditHomework from './pages/teacher/assignments/EditHomework';
 import SubmissionList from './pages/teacher/submissions/SubmissionList';
 import TeacherGrading from './pages/teacher/grading/TeacherGrading';
 import GradeStatistics from './pages/teacher/grading/GradeStatistics';
 import TeacherSchedule from './pages/teacher/schedule/TeacherSchedule';
 import TeacherClasses from './pages/teacher/classes/TeacherClasses';
-import TeacherClassDetail from './pages/teacher/TeacherClassDetail'; // ✅ NEW - Class detail with tabs
+import TeacherClassDetail from './pages/teacher/dashboard/TeacherClassDetail'; //  NEW - Class detail with tabs
 import TeacherProfile from './pages/teacher/profile/TeacherProfile';
 
 // Placeholder
@@ -67,7 +67,7 @@ const Placeholder = ({ title }: { title: string }) => (
         color: '#166534'
       }}>
         <p style={{ margin: 0 }}>
-          ℹ️ Trang này sẽ được phát triển đầy đủ theo roadmap
+          Trang này sẽ được phát triển đầy đủ theo roadmap
         </p>
       </div>
     </div>
@@ -171,15 +171,15 @@ function App() {
         >
           <Route path="dashboard" element={<TeacherClasses />} />
           
-          {/* ✅ NEW - Class detail with tabs (MUST be before "schedule" to avoid conflict) */}
+          {/*  NEW - Class detail with tabs (MUST be before "schedule" to avoid conflict) */}
           <Route path="classes/:classId" element={<TeacherClassDetail />} />
           
           <Route path="schedule" element={<TeacherSchedule />} />
           
-          {/* ✅ PHASE 4 - Homework Management */}
+          {/*  PHASE 4 - Homework Management */}
           <Route path="assignments" element={<HomeworkList />} />
           <Route path="assignments/create" element={<CreateHomework />} />
-          <Route path="assignments/:id" element={<TeacherHomeworkDetail />} /> {/* ✅ FIXED */}
+          <Route path="assignments/:id" element={<TeacherHomeworkDetail />} /> {/* FIXED */}
           <Route path="assignments/edit/:id" element={<EditHomework />} />
           
           <Route path="submissions" element={<SubmissionList />} />
@@ -201,14 +201,14 @@ function App() {
           <Route path="classes" element={<MyClasses />} />
           <Route path="courses/:classId" element={<ClassDetail />} />
           <Route path="courses/:classId/assignments" element={<ClassDetail />} />
-          <Route path="homeworks/:homeworkId" element={<StudentHomeworkDetail />} /> {/* ✅ FIXED */}
+          <Route path="homeworks/:homeworkId" element={<StudentHomeworkDetail />} /> {/* FIXED */}
           
-          {/* ✅ PHASE 5 - Course Registration (2-STEP) */}
+          {/* PHASE 5 - Course Registration (2-STEP) */}
           <Route path="subjects" element={<SubjectSelection />} />
           <Route path="classes/:subjectId" element={<ClassSelection />} />
           <Route path="schedule" element={<StudentSchedule />} /> 
           
-          {/* ✅ PHASE 5 - Course Registration (OLD) */}
+          {/* PHASE 5 - Course Registration (OLD) */}
           <Route path="search" element={<ClassSearch />} />
           <Route path="registrations" element={<MyRegistrations />} />  
           
@@ -219,7 +219,7 @@ function App() {
           <Route path="submissions" element={<Placeholder title="Bài đã nộp" />} />
           <Route path="grades" element={<Placeholder title="Xem điểm" />} />
           
-          {/* ✅ NEW - Bảng điểm tích lũy */}
+          {/*  NEW - Bảng điểm tích lũy */}
           <Route path="transcript" element={<StudentTranscript />} />
           
           <Route path="feedback" element={<Placeholder title="Gửi Phản hồi" />} />

@@ -136,11 +136,11 @@ const studentGradeApi = {
         '/api/student/grades'
       );
       
-      console.log('[studentGradeApi] ✅ Grades fetched:', response.data.data.length);
+      console.log('[studentGradeApi] Grades fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[studentGradeApi] ❌ Failed to fetch grades:', apiError.response?.data || apiError.message);
+      console.error('[studentGradeApi] Failed to fetch grades:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
@@ -157,11 +157,11 @@ const studentGradeApi = {
         `/api/student/classes/${classId}/grades`
       );
       
-      console.log('[studentGradeApi] ✅ Class grades fetched');
+      console.log('[studentGradeApi] Class grades fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[studentGradeApi] ❌ Failed to fetch class grades:', apiError.response?.data || apiError.message);
+      console.error('[studentGradeApi] Failed to fetch class grades:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
@@ -178,11 +178,11 @@ const studentGradeApi = {
         '/api/student/transcript'
       );
       
-      console.log('[studentGradeApi] ✅ Transcript fetched - GPA:', response.data.data.gpa);
+      console.log('[studentGradeApi] Transcript fetched - GPA:', response.data.data.gpa);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[studentGradeApi] ❌ Failed to fetch transcript:', apiError.response?.data || apiError.message);
+      console.error('[studentGradeApi] Failed to fetch transcript:', apiError.response?.data || apiError.message);
       throw error;
     }
   },

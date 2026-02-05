@@ -2,8 +2,7 @@ import apiClient from './apiClient';
 
 /**
  * Grade API Service
- * 
- * Handles grade CRUD, auto-calculations, class statistics, and transcripts
+ * * Handles grade CRUD, auto-calculations, class statistics, and transcripts
  * Maps to TeacherGradeController endpoints
  */
 
@@ -146,6 +145,16 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+// Interface helper để định nghĩa cấu trúc lỗi từ API (thường là từ Axios)
+interface ApiError {
+  message?: string;
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 // ==================== API METHODS ====================
 
 const gradeApi = {
@@ -153,8 +162,7 @@ const gradeApi = {
   /**
    * Create or update grade
    * POST /api/teacher/grades
-   * 
-   * Note: regularScore is auto-calculated from REGULAR homework average
+   * * Note: regularScore is auto-calculated from REGULAR homework average
    */
   createOrUpdateGrade: async (data: GradeRequest): Promise<GradeResponse> => {
     console.log('[gradeApi] Creating/updating grade for student:', data.studentId);
@@ -165,10 +173,11 @@ const gradeApi = {
         data
       );
       
-      console.log('[gradeApi] ✅ Grade saved');
+      console.log('[gradeApi] Grade saved');
       return response.data;
-    } catch (error: any) {
-      console.error('[gradeApi] ❌ Failed to save grade:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error('[gradeApi] Failed to save grade:', err.response?.data?.message || err.message);
       throw error;
     }
   },
@@ -186,10 +195,11 @@ const gradeApi = {
         requests
       );
       
-      console.log('[gradeApi] ✅ Bulk update complete');
+      console.log('[gradeApi] Bulk update complete');
       return response.data;
-    } catch (error: any) {
-      console.error('[gradeApi] ❌ Bulk update failed:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error('[gradeApi] Bulk update failed:', err.response?.data?.message || err.message);
       throw error;
     }
   },
@@ -207,8 +217,9 @@ const gradeApi = {
       );
       
       return response.data;
-    } catch (error: any) {
-      console.error('[gradeApi] ❌ Failed to fetch grade:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error('[gradeApi] Failed to fetch grade:', err.response?.data?.message || err.message);
       throw error;
     }
   },
@@ -225,10 +236,11 @@ const gradeApi = {
         `/api/teacher/grades/class/${classId}`
       );
       
-      console.log('[gradeApi] ✅ Found', response.data.length, 'grades');
+      console.log('[gradeApi] Found', response.data.length, 'grades');
       return response.data;
-    } catch (error: any) {
-      console.error('[gradeApi] ❌ Failed to fetch grades:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error('[gradeApi] Failed to fetch grades:', err.response?.data?.message || err.message);
       throw error;
     }
   },
@@ -245,10 +257,11 @@ const gradeApi = {
         `/api/teacher/grades/student/${studentId}/transcript`
       );
       
-      console.log('[gradeApi] ✅ Transcript loaded:', response.data.summary.totalCourses, 'courses');
+      console.log('[gradeApi] Transcript loaded:', response.data.summary.totalCourses, 'courses');
       return response.data;
-    } catch (error: any) {
-      console.error('[gradeApi] ❌ Failed to fetch transcript:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error('[gradeApi] Failed to fetch transcript:', err.response?.data?.message || err.message);
       throw error;
     }
   },
@@ -265,9 +278,10 @@ const gradeApi = {
         params: { studentId, classId }
       });
       
-      console.log('[gradeApi] ✅ Regular score updated');
-    } catch (error: any) {
-      console.error('[gradeApi] ❌ Failed to calculate:', error.response?.data?.message || error.message);
+      console.log('[gradeApi] Regular score updated');
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error('[gradeApi] Failed to calculate:', err.response?.data?.message || err.message);
       throw error;
     }
   },
@@ -275,8 +289,7 @@ const gradeApi = {
   /**
    * Calculate student's GPA (weighted by credits)
    * GET /api/teacher/grades/student/{studentId}/gpa
-   * 
-   * Formula: Σ(totalScore * credits) / Σ(credits)
+   * * Formula: Σ(totalScore * credits) / Σ(credits)
    */
   calculateGPA: async (studentId: number): Promise<number> => {
     console.log('[gradeApi] Calculating GPA for student:', studentId);
@@ -286,10 +299,11 @@ const gradeApi = {
         `/api/teacher/grades/student/${studentId}/gpa`
       );
       
-      console.log('[gradeApi] ✅ GPA:', response.data);
+      console.log('[gradeApi] GPA:', response.data);
       return response.data;
-    } catch (error: any) {
-      console.error('[gradeApi] ❌ Failed to calculate GPA:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error('[gradeApi] Failed to calculate GPA:', err.response?.data?.message || err.message);
       throw error;
     }
   },
@@ -306,10 +320,11 @@ const gradeApi = {
         `/api/teacher/grades/class/${classId}/stats`
       );
       
-      console.log('[gradeApi] ✅ Stats loaded');
+      console.log('[gradeApi] Stats loaded');
       return response.data;
-    } catch (error: any) {
-      console.error('[gradeApi] ❌ Failed to fetch stats:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error('[gradeApi] Failed to fetch stats:', err.response?.data?.message || err.message);
       throw error;
     }
   },
@@ -326,10 +341,11 @@ const gradeApi = {
         `/api/teacher/grades/student/${studentId}/class/${classId}/rank`
       );
       
-      console.log('[gradeApi] ✅ Rank:', response.data);
+      console.log('[gradeApi] Rank:', response.data);
       return response.data;
-    } catch (error: any) {
-      console.error('[gradeApi] ❌ Failed to fetch rank:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error('[gradeApi] Failed to fetch rank:', err.response?.data?.message || err.message);
       throw error;
     }
   },
@@ -337,17 +353,17 @@ const gradeApi = {
   /**
    * Initialize grade table for a class
    * POST /api/teacher/grades/class/{classId}/initialize
-   * 
-   * Creates grade records for all enrolled students
+   * * Creates grade records for all enrolled students
    */
   initializeGrades: async (classId: number): Promise<void> => {
     console.log('[gradeApi] Initializing grades for class:', classId);
     
     try {
       await apiClient.post(`/api/teacher/grades/class/${classId}/initialize`);
-      console.log('[gradeApi] ✅ Grades initialized');
-    } catch (error: any) {
-      console.error('[gradeApi] ❌ Failed to initialize:', error.response?.data?.message || error.message);
+      console.log('[gradeApi] Grades initialized');
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error('[gradeApi] Failed to initialize:', err.response?.data?.message || err.message);
       throw error;
     }
   },

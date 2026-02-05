@@ -26,7 +26,7 @@ export interface RegistrationResponse {
   semesterId: number;
   semesterCode: string;
   semesterName: string;
-  semesterStatus?: 'UPCOMING' | 'ACTIVE' | 'COMPLETED'; // ✅ ADDED
+  semesterStatus?: 'UPCOMING' | 'ACTIVE' | 'COMPLETED'; // ADDED
   
   dayOfWeek: string;
   dayOfWeekDisplay: string;

@@ -17,11 +17,31 @@ interface Deadline {
   type: 'assignment' | 'exam' | 'project';
 }
 
+// Interface to replace 'any' for the API response + merged data
+interface RawHomework {
+  homeworkId: number;
+  title: string;
+  deadline: string; // API usually returns string
+  homeworkType: string;
+  hasSubmitted: boolean;
+  // Fields added during processing
+  classId?: number;
+  className?: string;
+  subjectName?: string;
+}
+
 const RightSidebar = ({ userRole }: RightSidebarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [ setSelectedDate] = useState<Date | null>(null);
+  
+  // FIX: Correctly destructure [value, setter]
+  const [, setSelectedDate] = useState<Date | null>(null); 
+  // If you need to read the date, use: const [selectedDate, setSelectedDate]...
+  
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
-  const [setLoading] = useState(true);
+  
+  // FIX: Correctly destructure [value, setter]
+  // Previously: const [setLoading] = useState(true) made setLoading a boolean
+  const [, setLoading] = useState(true); 
 
   //  Load REAL homework deadlines from API
   useEffect(() => {
@@ -31,7 +51,7 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
   }, [userRole]);
 
   async function loadDeadlines() {
-    setLoading(true);
+    setLoading(true); // Now this is a function call
     try {
       console.log('[RightSidebar] Loading homework deadlines...');
 
@@ -39,12 +59,14 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
       const classes = await studentClassApi.getMyClasses();
 
       // 2. Get all homeworks from all classes
-      const allHomeworks: any[] = [];
+      // FIX: Replaced 'any[]' with typed array
+      const allHomeworks: RawHomework[] = [];
+      
       for (const cls of classes) {
         try {
           const classHomeworks = await studentHomeworkApi.getClassHomeworks(cls.classId);
           // Attach class info
-          const homeworksWithClass = classHomeworks.map(hw => ({
+          const homeworksWithClass = classHomeworks.map((hw: RawHomework) => ({
             ...hw,
             classId: cls.classId,
             className: cls.className,
@@ -62,12 +84,12 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
         .map(hw => ({
           id: hw.homeworkId,
           title: hw.title,
-          courseName: hw.className,
-          subjectName: hw.subjectName,
+          courseName: hw.className || 'Unknown Class',
+          subjectName: hw.subjectName || 'Unknown Subject',
           dueDate: new Date(hw.deadline),
-          type: hw.homeworkType === 'MIDTERM' ? 'exam' as const :
-            hw.homeworkType === 'FINAL' ? 'exam' as const :
-              'assignment' as const
+          type: hw.homeworkType === 'MIDTERM' ? 'exam' :
+                hw.homeworkType === 'FINAL' ? 'exam' :
+                'assignment'
         }));
 
       setDeadlines(transformedDeadlines);
@@ -76,7 +98,7 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
     } catch (err) {
       console.error('[RightSidebar]  Failed to load deadlines:', err);
     } finally {
-      setLoading(false);
+      setLoading(false); // Now this is a function call
     }
   }
 
@@ -104,8 +126,6 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
            date.getFullYear() === today.getFullYear();
   };
 
-
-
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentMonth);
     const firstDay = getFirstDayOfMonth(currentMonth);
@@ -126,6 +146,7 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
         <button
           key={day}
           className={`calendar-day ${today ? 'today' : ''} ${deadline ? 'has-deadline' : ''}`}
+          // FIX: setSelectedDate is now the setter function
           onClick={() => setSelectedDate(date)}
         >
           <span className="day-number">{day}</span>
@@ -182,15 +203,6 @@ const RightSidebar = ({ userRole }: RightSidebarProps) => {
           </span>
         </div>
       </div>
-
-      {/* Upcoming Deadlines */}
-
-      {/* 
-         THAY THẾ phần "Nhóm Chat" cũ bằng ChatList component
-        ChatList sẽ hiển thị floating button ở góc dưới phải
-        Không cần render trong RightSidebar nữa
-      */}
-      {/* ChatList được render ở Layout hoặc Dashboard level */}
     </aside>
   );
 };

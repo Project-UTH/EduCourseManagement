@@ -7,24 +7,24 @@ const apiClient = axios.create({
   },
 });
 
-// ✅ REQUEST INTERCEPTOR - Add JWT token to all requests
+//  REQUEST INTERCEPTOR - Add JWT token to all requests
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     
-    console.log('🔍 [apiClient] Request:', config.method?.toUpperCase(), config.url);
+    console.log(' [apiClient] Request:', config.method?.toUpperCase(), config.url);
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('✅ [apiClient] Token added to request');
+      console.log('[apiClient] Token added to request');
     } else {
-      console.warn('⚠️ [apiClient] No token found in localStorage');
+      console.warn(' [apiClient] No token found in localStorage');
     }
     
     return config;
   },
   (error) => {
-    console.error('❌ [apiClient] Request error:', error);
+    console.error(' [apiClient] Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -32,14 +32,14 @@ apiClient.interceptors.request.use(
 // ✅ RESPONSE INTERCEPTOR - Handle 401 Unauthorized
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('✅ [apiClient] Response:', response.status, response.config.url);
+    console.log(' [apiClient] Response:', response.status, response.config.url);
     return response;
   },
   (error) => {
-    console.error('❌ [apiClient] Response error:', error.response?.status, error.config?.url);
+    console.error(' [apiClient] Response error:', error.response?.status, error.config?.url);
     
     if (error.response?.status === 401) {
-      console.warn('⚠️ [apiClient] Unauthorized - Clearing token and redirecting to login');
+      console.warn(' [apiClient] Unauthorized - Clearing token and redirecting to login');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';

@@ -95,11 +95,11 @@ const sessionApi = {
         data
       );
       
-      console.log('[sessionApi] ✅ Session rescheduled successfully');
+      console.log('[sessionApi] Session rescheduled successfully');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[sessionApi] ❌ Failed to reschedule session:', 
+      console.error('[sessionApi] Failed to reschedule session:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -120,11 +120,11 @@ const sessionApi = {
         data
       );
       
-      console.log('[sessionApi] ✅ Batch reschedule completed:', response.data.data.length, 'success');
+      console.log('[sessionApi] Batch reschedule completed:', response.data.data.length, 'success');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[sessionApi] ❌ Failed to batch reschedule:', 
+      console.error('[sessionApi] Failed to batch reschedule:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -141,11 +141,11 @@ const sessionApi = {
         `/api/admin/sessions/${sessionId}/reset`
       );
       
-      console.log('[sessionApi] ✅ Session reset successfully');
+      console.log('[sessionApi] Session reset successfully');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[sessionApi] ❌ Failed to reset session:', 
+      console.error('[sessionApi] Failed to reset session:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -162,11 +162,11 @@ const sessionApi = {
         `/api/admin/sessions/class/${classId}`
       );
       
-      console.log('[sessionApi] ✅ Sessions fetched:', response.data.data.length);
+      console.log('[sessionApi] Sessions fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[sessionApi] ❌ Failed to fetch sessions:', 
+      console.error('[sessionApi] Failed to fetch sessions:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -183,11 +183,11 @@ const sessionApi = {
         `/api/admin/sessions/class/${classId}/in-person`
       );
       
-      console.log('[sessionApi] ✅ In-person sessions fetched:', response.data.data.length);
+      console.log('[sessionApi] In-person sessions fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[sessionApi] ❌ Failed to fetch in-person sessions:', 
+      console.error('[sessionApi] Failed to fetch in-person sessions:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -204,11 +204,11 @@ const sessionApi = {
         `/api/admin/sessions/class/${classId}/e-learning`
       );
       
-      console.log('[sessionApi] ✅ E-learning sessions fetched:', response.data.data.length);
+      console.log('[sessionApi] E-learning sessions fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[sessionApi] ❌ Failed to fetch e-learning sessions:', 
+      console.error('[sessionApi] Failed to fetch e-learning sessions:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -225,11 +225,11 @@ const sessionApi = {
         `/api/admin/sessions/class/${classId}/rescheduled`
       );
       
-      console.log('[sessionApi] ✅ Rescheduled sessions fetched:', response.data.data.length);
+      console.log('[sessionApi] Rescheduled sessions fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[sessionApi] ❌ Failed to fetch rescheduled sessions:', 
+      console.error('[sessionApi] Failed to fetch rescheduled sessions:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -246,11 +246,11 @@ const sessionApi = {
         `/api/admin/sessions/${sessionId}`
       );
       
-      console.log('[sessionApi] ✅ Session fetched');
+      console.log('[sessionApi] Session fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[sessionApi] ❌ Failed to fetch session:', 
+      console.error('[sessionApi] Failed to fetch session:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -267,11 +267,11 @@ const sessionApi = {
         `/api/admin/sessions/${sessionId}/complete`
       );
       
-      console.log('[sessionApi] ✅ Session marked as completed');
+      console.log('[sessionApi] Session marked as completed');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[sessionApi] ❌ Failed to mark as completed:', 
+      console.error('[sessionApi] Failed to mark as completed:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -296,11 +296,11 @@ const sessionApi = {
         { params: { reason } }
       );
       
-      console.log('[sessionApi] ✅ Session marked as cancelled');
+      console.log('[sessionApi] Session marked as cancelled');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[sessionApi] ❌ Failed to mark as cancelled:', 
+      console.error('[sessionApi] Failed to mark as cancelled:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }

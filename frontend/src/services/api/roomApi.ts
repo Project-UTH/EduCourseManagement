@@ -18,7 +18,7 @@ export interface RoomResponse {
   adminStatus: string;           // "ACTIVE" / "INACTIVE"
   adminStatusDisplay: string;    // "Hoạt động" / "Ngừng hoạt động"
   
-  // ⭐ Real-time status
+  // Real-time status
   currentStatus: string;         // "IN_USE" / "AVAILABLE" / "INACTIVE"
   currentStatusDisplay: string;  // "Đang sử dụng" / "Trống" / "Ngừng hoạt động"
   currentSession: CurrentSessionInfo | null;
@@ -143,11 +143,11 @@ const roomApi = {
         }
       );
       
-      console.log('[roomApi] ✅ Rooms fetched:', response.data.data.totalElements);
+      console.log('[roomApi] Rooms fetched:', response.data.data.totalElements);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch rooms:', 
+      console.error('[roomApi] Failed to fetch rooms:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -168,11 +168,11 @@ const roomApi = {
         { params: { semesterId } }
       );
       
-      console.log('[roomApi] ✅ Room fetched');
+      console.log('[roomApi] Room fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch room:', 
+      console.error('[roomApi] Failed to fetch room:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -180,7 +180,7 @@ const roomApi = {
   
   /**
    * 3. Get rooms by current real-time status
-   * ⭐ NEW FEATURE
+   * NEW FEATURE
    */
   getRoomsByStatus: async (
     status: 'IN_USE' | 'AVAILABLE' | 'INACTIVE',
@@ -198,11 +198,11 @@ const roomApi = {
         }
       );
       
-      console.log('[roomApi] ✅ Rooms by status fetched:', response.data.data.totalElements);
+      console.log('[roomApi] Rooms by status fetched:', response.data.data.totalElements);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch rooms by status:', 
+      console.error('[roomApi] Failed to fetch rooms by status:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -227,11 +227,11 @@ const roomApi = {
         }
       );
       
-      console.log('[roomApi] ✅ Search results:', response.data.data.totalElements);
+      console.log('[roomApi] Search results:', response.data.data.totalElements);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Search failed:', 
+      console.error('[roomApi] Search failed:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -267,11 +267,11 @@ const roomApi = {
         }
       );
       
-      console.log('[roomApi] ✅ Filter results:', response.data.data.totalElements);
+      console.log('[roomApi] Filter results:', response.data.data.totalElements);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Filter failed:', 
+      console.error('[roomApi] Filter failed:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -296,11 +296,11 @@ const roomApi = {
         { params: { semesterId, page, size } }
       );
       
-      console.log('[roomApi] ✅ Rooms in building fetched:', response.data.data.totalElements);
+      console.log('[roomApi] Rooms in building fetched:', response.data.data.totalElements);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch rooms by building:', 
+      console.error('[roomApi] Failed to fetch rooms by building:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -323,11 +323,11 @@ const roomApi = {
         { params: { semesterId, page, size } }
       );
       
-      console.log('[roomApi] ✅ Rooms on floor fetched:', response.data.data.totalElements);
+      console.log('[roomApi] Rooms on floor fetched:', response.data.data.totalElements);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch rooms by floor:', 
+      console.error('[roomApi] Failed to fetch rooms by floor:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -350,11 +350,11 @@ const roomApi = {
         { params: { semesterId, page, size } }
       );
       
-      console.log('[roomApi] ✅ Rooms of type fetched:', response.data.data.totalElements);
+      console.log('[roomApi] Rooms of type fetched:', response.data.data.totalElements);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch rooms by type:', 
+      console.error('[roomApi] Failed to fetch rooms by type:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -377,11 +377,11 @@ const roomApi = {
         { params: { semesterId, page, size } }
       );
       
-      console.log('[roomApi] ✅ Rooms by admin status fetched:', response.data.data.totalElements);
+      console.log('[roomApi] Rooms by admin status fetched:', response.data.data.totalElements);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch rooms by admin status:', 
+      console.error('[roomApi] Failed to fetch rooms by admin status:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -404,11 +404,11 @@ const roomApi = {
         { params: { semesterId } }
       );
       
-      console.log('[roomApi] ✅ Schedule fetched:', response.data.data.length, 'sessions');
+      console.log('[roomApi] Schedule fetched:', response.data.data.length, 'sessions');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch schedule:', 
+      console.error('[roomApi] Failed to fetch schedule:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -416,7 +416,7 @@ const roomApi = {
   
   /**
    * 11. Get room schedule for TODAY
-   * ⭐ NEW FEATURE
+   * NEW FEATURE
    */
   getRoomScheduleToday: async (roomId: number): Promise<RoomScheduleResponse[]> => {
     console.log('[roomApi] Fetching today\'s schedule for room:', roomId);
@@ -426,11 +426,11 @@ const roomApi = {
         `/api/admin/rooms/${roomId}/schedule/today`
       );
       
-      console.log('[roomApi] ✅ Today\'s schedule fetched:', response.data.data.length, 'sessions');
+      console.log('[roomApi] Today\'s schedule fetched:', response.data.data.length, 'sessions');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch today\'s schedule:', 
+      console.error('[roomApi] Failed to fetch today\'s schedule:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -451,11 +451,11 @@ const roomApi = {
         { params: { date } }
       );
       
-      console.log('[roomApi] ✅ Schedule for date fetched:', response.data.data.length, 'sessions');
+      console.log('[roomApi] Schedule for date fetched:', response.data.data.length, 'sessions');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch schedule for date:', 
+      console.error('[roomApi] Failed to fetch schedule for date:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -478,11 +478,11 @@ const roomApi = {
         { params: { semesterId } }
       );
       
-      console.log('[roomApi] ✅ Statistics fetched');
+      console.log('[roomApi] Statistics fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch statistics:', 
+      console.error('[roomApi] Failed to fetch statistics:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -503,11 +503,11 @@ const roomApi = {
         { params: { semesterId } }
       );
       
-      console.log('[roomApi] ✅ Utilization:', response.data.data, '%');
+      console.log('[roomApi] Utilization:', response.data.data, '%');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch utilization:', 
+      console.error('[roomApi] Failed to fetch utilization:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -526,11 +526,11 @@ const roomApi = {
         '/api/admin/rooms/buildings'
       );
       
-      console.log('[roomApi] ✅ Buildings fetched:', response.data.data.length);
+      console.log('[roomApi] Buildings fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch buildings:', 
+      console.error('[roomApi] Failed to fetch buildings:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -547,11 +547,11 @@ const roomApi = {
         `/api/admin/rooms/buildings/${building}/floors`
       );
       
-      console.log('[roomApi] ✅ Floors fetched:', response.data.data.length);
+      console.log('[roomApi] Floors fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch floors:', 
+      console.error('[roomApi] Failed to fetch floors:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -561,7 +561,7 @@ const roomApi = {
   
   /**
    * 17. Check if room is currently in use
-   * ⭐ NEW FEATURE
+   * NEW FEATURE
    */
   isRoomInUse: async (roomId: number): Promise<boolean> => {
     console.log('[roomApi] Checking if room is in use:', roomId);
@@ -571,11 +571,11 @@ const roomApi = {
         `/api/admin/rooms/${roomId}/in-use`
       );
       
-      console.log('[roomApi] ✅ Room in use:', response.data.data);
+      console.log('[roomApi] Room in use:', response.data.data);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to check room usage:', 
+      console.error('[roomApi] Failed to check room usage:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -583,7 +583,7 @@ const roomApi = {
   
   /**
    * 18. Get current session using room
-   * ⭐ NEW FEATURE
+   * NEW FEATURE
    */
   getCurrentSession: async (roomId: number): Promise<CurrentSessionInfo | null> => {
     console.log('[roomApi] Fetching current session for room:', roomId);
@@ -594,15 +594,15 @@ const roomApi = {
       );
       
       if (response.data.data) {
-        console.log('[roomApi] ✅ Current session:', response.data.data.classCode);
+        console.log('[roomApi] Current session:', response.data.data.classCode);
       } else {
-        console.log('[roomApi] ✅ Room is available');
+        console.log('[roomApi] Room is available');
       }
       
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to fetch current session:', 
+      console.error('[roomApi] Failed to fetch current session:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }
@@ -610,7 +610,7 @@ const roomApi = {
   
   /**
    * 19. Calculate current status of room
-   * ⭐ NEW FEATURE
+   * NEW FEATURE
    */
   getCurrentStatus: async (roomId: number): Promise<string> => {
     console.log('[roomApi] Calculating current status for room:', roomId);
@@ -620,11 +620,11 @@ const roomApi = {
         `/api/admin/rooms/${roomId}/current-status`
       );
       
-      console.log('[roomApi] ✅ Current status:', response.data.data);
+      console.log('[roomApi] Current status:', response.data.data);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[roomApi] ❌ Failed to calculate status:', 
+      console.error('[roomApi] Failed to calculate status:', 
         apiError.response?.data?.message || apiError.message);
       throw error;
     }

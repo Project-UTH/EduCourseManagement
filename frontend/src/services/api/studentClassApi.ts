@@ -28,7 +28,7 @@ export interface StudentClassResponse {
   roomName?: string;
   schedule?: string; // "Thứ 2, Ca 1 (06:45 - 09:15)"
   maxStudents: number;
-  enrolledCount: number; // ⭐ FIXED: Changed from currentStudents to match backend
+  enrolledCount: number; // FIXED: Changed from currentStudents to match backend
   status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   registrationDate?: string;
 }
@@ -109,11 +109,11 @@ const studentClassApi = {
         '/api/student/classes'
       );
       
-      console.log('[studentClassApi] ✅ Classes fetched:', response.data.data.length);
+      console.log('[studentClassApi] Classes fetched:', response.data.data.length);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[studentClassApi] ❌ Failed to fetch classes:', apiError.response?.data || apiError.message);
+      console.error('[studentClassApi] Failed to fetch classes:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
@@ -130,11 +130,11 @@ const studentClassApi = {
         `/api/student/classes/${classId}`
       );
       
-      console.log('[studentClassApi] ✅ Class detail fetched:', response.data.data.className);
+      console.log('[studentClassApi] Class detail fetched:', response.data.data.className);
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[studentClassApi] ❌ Failed to fetch class detail:', apiError.response?.data || apiError.message);
+      console.error('[studentClassApi] Failed to fetch class detail:', apiError.response?.data || apiError.message);
       throw error;
     }
   },
@@ -152,11 +152,11 @@ const studentClassApi = {
         { params: { semesterId } }
       );
       
-      console.log('[studentClassApi] ✅ Schedule fetched');
+      console.log('[studentClassApi] Schedule fetched');
       return response.data.data;
     } catch (error) {
       const apiError = error as ApiError;
-      console.error('[studentClassApi] ❌ Failed to fetch schedule:', apiError.response?.data || apiError.message);
+      console.error('[studentClassApi] Failed to fetch schedule:', apiError.response?.data || apiError.message);
       throw error;
     }
   },

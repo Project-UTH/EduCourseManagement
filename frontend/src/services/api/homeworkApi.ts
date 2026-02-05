@@ -1,14 +1,13 @@
 import apiClient from './apiClient';
+import { AxiosError } from 'axios';
 
 /**
  * Homework API Service
- * 
- * Handles homework CRUD operations and statistics
+ * * Handles homework CRUD operations and statistics
  * Maps to TeacherHomeworkController endpoints
- * 
- * ✅ FIXED: Backend returns data directly, NOT wrapped in {data: {...}}
- * ✅ NEW: Support FormData for file upload
- * ✅ FIXED: Datetime formatting for backend compatibility (yyyy-MM-ddTHH:mm:ss)
+ * * FIXED: Backend returns data directly, NOT wrapped in {data: {...}}
+ * NEW: Support FormData for file upload
+ * FIXED: Datetime formatting for backend compatibility (yyyy-MM-ddTHH:mm:ss)
  */
 
 // ==================== INTERFACES (from backend DTOs) ====================
@@ -69,7 +68,7 @@ export interface HomeworkDetailResponse extends HomeworkResponse {
     submissionRate: number;
     completionRate: number;
   };
-  submissions: any[]; // Will use SubmissionResponse type
+  submissions: unknown[]; // Changed from any[] to unknown[]
 }
 
 export interface HomeworkStatsResponse {
@@ -129,13 +128,18 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+// Interface helper để extract data an toàn mà không dùng any
+interface ResponseWrapper<T> {
+  data?: T;
+  [key: string]: unknown;
+}
+
 // ==================== HELPER FUNCTIONS ====================
 
 /**
  * Format datetime to backend format: yyyy-MM-ddTHH:mm:ss
  * Handles various input formats and ensures consistent output
- * 
- * @param datetime - Date string or Date object
+ * * @param datetime - Date string or Date object
  * @returns Formatted string "2026-02-05T17:00:00" or empty string if invalid
  */
 const formatDatetimeForBackend = (datetime: string | Date): string => {
@@ -157,7 +161,7 @@ const formatDatetimeForBackend = (datetime: string | Date): string => {
     // Using toISOString() gives: 2026-02-05T10:00:00.000Z
     // We take first 19 chars to get: 2026-02-05T10:00:00
     const formatted = date.toISOString().slice(0, 19);
-    console.log('[homeworkApi] Formatted datetime:', datetime, '→', formatted);
+    console.log('[homeworkApi] Formatted datetime:', datetime, '->', formatted);
     
     return formatted;
   } catch (error) {
@@ -169,8 +173,7 @@ const formatDatetimeForBackend = (datetime: string | Date): string => {
 /**
  * Prepare homework data for backend submission
  * Ensures all datetime fields are properly formatted
- * 
- * @param data - Raw homework request data
+ * * @param data - Raw homework request data
  * @returns Prepared data with formatted datetime
  */
 const prepareHomeworkData = (data: HomeworkRequest): HomeworkRequest => {
@@ -194,10 +197,9 @@ const prepareHomeworkData = (data: HomeworkRequest): HomeworkRequest => {
 const homeworkApi = {
   
   /**
-   * ✅ FIXED: Create new homework with file upload
+   * FIXED: Create new homework with file upload
    * POST /api/teacher/homework
-   * 
-   * Accepts either:
+   * * Accepts either:
    * 1. HomeworkRequest (JSON) - for backward compatibility
    * 2. FormData - for file upload
    */
@@ -211,12 +213,12 @@ const homeworkApi = {
       if (data instanceof FormData) {
         console.log('[homeworkApi] Uploading with file');
         
-        // ✅ FIX: Format deadline in FormData if present
+        // FIX: Format deadline in FormData if present
         const deadline = data.get('deadline');
         if (deadline && typeof deadline === 'string') {
           const formattedDeadline = formatDatetimeForBackend(deadline);
           data.set('deadline', formattedDeadline);
-          console.log('[homeworkApi] FormData deadline formatted:', deadline, '→', formattedDeadline);
+          console.log('[homeworkApi] FormData deadline formatted:', deadline, '->', formattedDeadline);
         }
         
         // Send as multipart/form-data
@@ -226,7 +228,7 @@ const homeworkApi = {
           },
         });
       } else {
-        // ✅ FIX: Prepare data before sending (JSON)
+        // FIX: Prepare data before sending (JSON)
         const preparedData = prepareHomeworkData(data);
         console.log('[homeworkApi] Creating without file');
         console.log('[homeworkApi] Type:', preparedData.homeworkType, 'Deadline:', preparedData.deadline);
@@ -234,20 +236,23 @@ const homeworkApi = {
         response = await apiClient.post('/api/teacher/homework', preparedData);
       }
       
-      // ✅ FIX: Backend returns {success, message, data: {...}}
-      // Extract data from response
-      const homework = response.data.data || response.data;
+      // FIX: Backend returns {success, message, data: {...}}
+      // Logic cũ: const homework = response.data.data || response.data;
+      const body = response.data as ResponseWrapper<HomeworkResponse>;
+      const homework = body.data || (response.data as HomeworkResponse);
       
-      console.log('[homeworkApi] ✅ Homework created:', homework.homeworkId);
+      console.log('[homeworkApi] Homework created:', homework.homeworkId);
       return homework;
-    } catch (error: any) {
-      console.error('[homeworkApi] ❌ Failed to create homework:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      // Cast error để truy cập thuộc tính mà không dùng any
+      const err = error as AxiosError<{ message: string }>;
+      console.error('[homeworkApi] Failed to create homework:', err.response?.data?.message || err.message);
       throw error;
     }
   },
   
   /**
-   * ✅ FIXED: Update homework with proper datetime format
+   * FIXED: Update homework with proper datetime format
    * PUT /api/teacher/homework/{id}
    */
   updateHomework: async (id: number, data: HomeworkRequest): Promise<HomeworkResponse> => {
@@ -255,19 +260,22 @@ const homeworkApi = {
     console.log('[homeworkApi] Original deadline:', data.deadline);
     
     try {
-      // ✅ FIX: Prepare data with formatted deadline
+      // FIX: Prepare data with formatted deadline
       const preparedData = prepareHomeworkData(data);
       console.log('[homeworkApi] Formatted deadline:', preparedData.deadline);
       
       const response = await apiClient.put(`/api/teacher/homework/${id}`, preparedData);
       
-      // ✅ FIX: Extract data
-      const homework = response.data.data || response.data;
+      // FIX: Extract data
+      // Logic cũ: const homework = response.data.data || response.data;
+      const body = response.data as ResponseWrapper<HomeworkResponse>;
+      const homework = body.data || (response.data as HomeworkResponse);
       
-      console.log('[homeworkApi] ✅ Homework updated successfully');
+      console.log('[homeworkApi] Homework updated successfully');
       return homework;
-    } catch (error: any) {
-      console.error('[homeworkApi] ❌ Failed to update homework:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>;
+      console.error('[homeworkApi] Failed to update homework:', err.response?.data?.message || err.message);
       throw error;
     }
   },
@@ -281,15 +289,16 @@ const homeworkApi = {
     
     try {
       await apiClient.delete(`/api/teacher/homework/${id}`);
-      console.log('[homeworkApi] ✅ Homework deleted');
-    } catch (error: any) {
-      console.error('[homeworkApi] ❌ Failed to delete homework:', error.response?.data?.message || error.message);
+      console.log('[homeworkApi] Homework deleted');
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>;
+      console.error('[homeworkApi] Failed to delete homework:', err.response?.data?.message || err.message);
       throw error;
     }
   },
   
   /**
-   * ✅ FIXED: Get homework by ID
+   * FIXED: Get homework by ID
    * GET /api/teacher/homework/{id}
    */
   getHomeworkById: async (id: number): Promise<HomeworkResponse> => {
@@ -298,18 +307,21 @@ const homeworkApi = {
     try {
       const response = await apiClient.get(`/api/teacher/homework/${id}`);
       
-      // ✅ FIX: Extract data
-      const homework = response.data.data || response.data;
+      // FIX: Extract data
+      // Logic cũ: const homework = response.data.data || response.data;
+      const body = response.data as ResponseWrapper<HomeworkResponse>;
+      const homework = body.data || (response.data as HomeworkResponse);
       
       return homework;
-    } catch (error: any) {
-      console.error('[homeworkApi] ❌ Failed to fetch homework:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>;
+      console.error('[homeworkApi] Failed to fetch homework:', err.response?.data?.message || err.message);
       throw error;
     }
   },
   
   /**
-   * ✅ FIXED: Get homework detail with submissions
+   * FIXED: Get homework detail with submissions
    * GET /api/teacher/homework/{id}/detail
    */
   getHomeworkDetail: async (id: number): Promise<HomeworkDetailResponse> => {
@@ -318,22 +330,24 @@ const homeworkApi = {
     try {
       const response = await apiClient.get(`/api/teacher/homework/${id}/detail`);
       
-      // ✅ FIX: Extract data
-      const detail = response.data.data || response.data;
+      // FIX: Extract data
+      // Logic cũ: const detail = response.data.data || response.data;
+      const body = response.data as ResponseWrapper<HomeworkDetailResponse>;
+      const detail = body.data || (response.data as HomeworkDetailResponse);
       
-      console.log('[homeworkApi] ✅ Detail loaded:', detail.submissions?.length || 0, 'submissions');
+      console.log('[homeworkApi] Detail loaded:', detail.submissions?.length || 0, 'submissions');
       return detail;
-    } catch (error: any) {
-      console.error('[homeworkApi] ❌ Failed to fetch detail:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>;
+      console.error('[homeworkApi] Failed to fetch detail:', err.response?.data?.message || err.message);
       throw error;
     }
   },
   
   /**
-   * ✅ FIXED: Get all homework for a class
+   * FIXED: Get all homework for a class
    * GET /api/teacher/homework/class/{classId}
-   * 
-   * 🔧 CRITICAL FIX: Backend returns ARRAY directly, NOT wrapped!
+   * * CRITICAL FIX: Backend returns ARRAY directly, NOT wrapped!
    * Backend response: [{homeworkId: 1, ...}, {homeworkId: 2, ...}]
    * OR: [] (empty array if no homework)
    */
@@ -343,33 +357,34 @@ const homeworkApi = {
     try {
       const response = await apiClient.get(`/api/teacher/homework/class/${classId}`);
       
-      // ✅ FIX: Backend might return:
-      // 1. {success: true, data: [...]} (wrapped)
-      // 2. [...] (direct array)
-      // Handle both cases
+      // FIX: Handle both wrapped and direct array
+      // Logic cũ: if (response.data.data) { ... } else if ...
+      // Để giữ logic cũ mà không dùng any, ta cast kiểu
+      const body = response.data as ResponseWrapper<HomeworkResponse[]>;
       let homework: HomeworkResponse[];
       
-      if (response.data.data) {
+      if (body.data) {
         // Wrapped format
-        homework = response.data.data;
+        homework = body.data;
       } else if (Array.isArray(response.data)) {
         // Direct array format
-        homework = response.data;
+        homework = response.data as HomeworkResponse[];
       } else {
         // Unknown format, assume empty
-        console.warn('[homeworkApi] ⚠️ Unexpected response format:', response.data);
+        console.warn('[homeworkApi] Unexpected response format:', response.data);
         homework = [];
       }
       
-      console.log('[homeworkApi] ✅ Found', homework.length, 'homework');
+      console.log('[homeworkApi] Found', homework.length, 'homework');
       return homework;
       
-    } catch (error: any) {
-      console.error('[homeworkApi] ❌ Failed to fetch homework:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>;
+      console.error('[homeworkApi] Failed to fetch homework:', err.response?.data?.message || err.message);
       
       // If 404 or no data, return empty array instead of throwing
-      if (error.response?.status === 404) {
-        console.log('[homeworkApi] ℹ️ Class has no homework yet (404)');
+      if (err.response?.status === 404) {
+        console.log('[homeworkApi] Class has no homework yet (404)');
         return [];
       }
       
@@ -378,7 +393,7 @@ const homeworkApi = {
   },
   
   /**
-   * ✅ FIXED: Get all homework for current teacher
+   * FIXED: Get all homework for current teacher
    * GET /api/teacher/homework/my
    */
   getMyHomework: async (): Promise<HomeworkResponse[]> => {
@@ -387,24 +402,26 @@ const homeworkApi = {
     try {
       const response = await apiClient.get('/api/teacher/homework/my');
       
-      // ✅ FIX: Handle both wrapped and direct array
+      // FIX: Handle both wrapped and direct array
+      const body = response.data as ResponseWrapper<HomeworkResponse[]>;
       let homework: HomeworkResponse[];
       
-      if (response.data.data) {
-        homework = response.data.data;
+      if (body.data) {
+        homework = body.data;
       } else if (Array.isArray(response.data)) {
-        homework = response.data;
+        homework = response.data as HomeworkResponse[];
       } else {
         homework = [];
       }
       
-      console.log('[homeworkApi] ✅ Found', homework.length, 'homework');
+      console.log('[homeworkApi] Found', homework.length, 'homework');
       return homework;
       
-    } catch (error: any) {
-      console.error('[homeworkApi] ❌ Failed to fetch homework:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>;
+      console.error('[homeworkApi] Failed to fetch homework:', err.response?.data?.message || err.message);
       
-      if (error.response?.status === 404) {
+      if (err.response?.status === 404) {
         return [];
       }
       
@@ -413,7 +430,7 @@ const homeworkApi = {
   },
   
   /**
-   * ✅ FIXED: Get homework with pagination
+   * FIXED: Get homework with pagination
    * GET /api/teacher/homework/my/page
    */
   getMyHomeworkPaginated: async (
@@ -427,19 +444,22 @@ const homeworkApi = {
         params: { page, size }
       });
       
-      // ✅ FIX: Extract data
-      const pageData = response.data.data || response.data;
+      // FIX: Extract data
+      // Logic cũ: const pageData = response.data.data || response.data;
+      const body = response.data as ResponseWrapper<PageResponse<HomeworkResponse>>;
+      const pageData = body.data || (response.data as PageResponse<HomeworkResponse>);
       
-      console.log('[homeworkApi] ✅ Page loaded:', pageData.totalElements, 'total');
+      console.log('[homeworkApi] Page loaded:', pageData.totalElements, 'total');
       return pageData;
-    } catch (error: any) {
-      console.error('[homeworkApi] ❌ Failed to fetch page:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>;
+      console.error('[homeworkApi] Failed to fetch page:', err.response?.data?.message || err.message);
       throw error;
     }
   },
   
   /**
-   * ✅ FIXED: Filter homework
+   * FIXED: Filter homework
    * GET /api/teacher/homework/class/{classId}/filter
    */
   filterHomework: async (
@@ -457,18 +477,21 @@ const homeworkApi = {
         params: { type, startDate, endDate, page, size }
       });
       
-      // ✅ FIX: Extract data
-      const pageData = response.data.data || response.data;
+      // FIX: Extract data
+      // Logic cũ: const pageData = response.data.data || response.data;
+      const body = response.data as ResponseWrapper<PageResponse<HomeworkResponse>>;
+      const pageData = body.data || (response.data as PageResponse<HomeworkResponse>);
       
       return pageData;
-    } catch (error: any) {
-      console.error('[homeworkApi] ❌ Filter failed:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>;
+      console.error('[homeworkApi] Filter failed:', err.response?.data?.message || err.message);
       throw error;
     }
   },
   
   /**
-   * ✅ FIXED: Get homework statistics
+   * FIXED: Get homework statistics
    * GET /api/teacher/homework/{id}/stats
    */
   getHomeworkStats: async (id: number): Promise<HomeworkStatsResponse> => {
@@ -477,13 +500,16 @@ const homeworkApi = {
     try {
       const response = await apiClient.get(`/api/teacher/homework/${id}/stats`);
       
-      // ✅ FIX: Extract data
-      const stats = response.data.data || response.data;
+      // FIX: Extract data
+      // Logic cũ: const stats = response.data.data || response.data;
+      const body = response.data as ResponseWrapper<HomeworkStatsResponse>;
+      const stats = body.data || (response.data as HomeworkStatsResponse);
       
-      console.log('[homeworkApi] ✅ Stats loaded');
+      console.log('[homeworkApi] Stats loaded');
       return stats;
-    } catch (error: any) {
-      console.error('[homeworkApi] ❌ Failed to fetch stats:', error.response?.data?.message || error.message);
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>;
+      console.error('[homeworkApi] Failed to fetch stats:', err.response?.data?.message || err.message);
       throw error;
     }
   },
