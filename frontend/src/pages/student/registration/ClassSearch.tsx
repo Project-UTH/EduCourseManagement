@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import registrationApi from '../../services/api/registrationApi';
+import registrationApi from '../../../services/api/registrationApi';
 import './ClassSearch.css';
 
 interface ClassItem {
@@ -22,6 +22,11 @@ interface ClassItem {
   status: string;
   canRegister: boolean;
 }
+interface RegistrationItem {
+  classId: number;
+  status: 'REGISTERED' | 'CANCELLED' | 'DROPPED';
+}
+
 
 const ClassSearch: React.FC = () => {
   const [classes, setClasses] = useState<ClassItem[]>([]);
@@ -50,7 +55,7 @@ const ClassSearch: React.FC = () => {
 
       if (response.data.success) {
         const classData = response.data.data;
-        let classList = [];
+        let classList: ClassItem[] = [];
         
         if (classData.content) {
           classList = classData.content || [];
@@ -60,25 +65,27 @@ const ClassSearch: React.FC = () => {
           setTotalPages(1);
         }
 
-        // ✅ LẤY DANH SÁCH LỚP ĐÃ ĐĂNG KÝ
+        // LẤY DANH SÁCH LỚP ĐÃ ĐĂNG KÝ
         const myRegistrations = await registrationApi.getMyRegistrations();
-        const registeredClassIds = myRegistrations.data.success 
-          ? myRegistrations.data.data
-              .filter((reg: any) => reg.status === 'REGISTERED')
-              .map((reg: any) => reg.classId)
-          : [];
 
-        // ✅ LỌC BỎ LỚP ĐÃ ĐĂNG KÝ
+const registeredClassIds: number[] = myRegistrations.data.success
+  ? (myRegistrations.data.data as RegistrationItem[])
+      .filter(reg => reg.status === 'REGISTERED')
+      .map(reg => reg.classId)
+  : [];
+
+
+        // LỌC BỎ LỚP ĐÃ ĐĂNG KÝ
         const filteredClasses = classList.filter(
-          (cls: any) => !registeredClassIds.includes(cls.classId)
-        );
+  (cls) => !registeredClassIds.includes(cls.classId)
+);
+
 
         setClasses(filteredClasses);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching classes:', error);
-      const errorMsg = error.response?.data?.message || 'Không thể tải danh sách lớp học!';
-      alert('❌ ' + errorMsg);
+      alert('Không thể tải danh sách lớp học!');
       setClasses([]);
       setTotalPages(0);
     } finally {
@@ -99,13 +106,19 @@ const ClassSearch: React.FC = () => {
       const response = await registrationApi.registerForClass(classId);
       
       if (response.data.success) {
-        alert('✅ Đăng ký thành công!');
+        alert('Đăng ký thành công!');
         fetchClasses();
       }
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Đăng ký thất bại!';
-      alert('❌ ' + errorMsg);
-    }
+    } catch (error: unknown) {
+  let errorMsg = 'Đăng ký thất bại!';
+
+  if (axios.isAxiosError(error)) {
+    errorMsg = error.response?.data?.message || errorMsg;
+  }
+
+  alert('❌ ' + errorMsg);
+}
+
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -117,7 +130,7 @@ const ClassSearch: React.FC = () => {
   return (
     <div className="class-search-container">
       <div className="page-header">
-        <h1>🔍 Tìm Kiếm Lớp Học</h1>
+        <h1>Tìm Kiếm Lớp Học</h1>
       </div>
 
       <div className="search-section">
@@ -130,7 +143,7 @@ const ClassSearch: React.FC = () => {
             className="search-input"
           />
           <button type="submit" className="btn-search">
-            🔍 Tìm kiếm
+             Tìm kiếm
           </button>
         </form>
       </div>
@@ -195,11 +208,11 @@ const ClassSearch: React.FC = () => {
                       onClick={() => handleRegister(cls.classId, cls.subjectName)}
                       className="btn-register"
                     >
-                      ✅ Đăng ký
+                      Đăng ký
                     </button>
                   ) : (
                     <button className="btn-register" disabled>
-                      ❌ Không thể đăng ký
+                      Không thể đăng ký
                     </button>
                   )}
                 </div>

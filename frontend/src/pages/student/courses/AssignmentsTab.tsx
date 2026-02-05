@@ -61,9 +61,9 @@ const AssignmentsTab = ({ classId }: AssignmentsTabProps) => {
 
   // Helper: Badge trạng thái (Sử dụng class .badge của CSS mới)
   const getStatusBadge = (hw: Homework, isReallyOverdue: boolean) => {
-    if (hw.hasSubmitted) return <span className="badge submitted" style={{background: '#dcfce7', color: '#166534'}}>✓ Đã nộp</span>;
-    if (isReallyOverdue) return <span className="badge overdue" style={{background: '#fee2e2', color: '#991b1b'}}>⚠️ Quá hạn</span>;
-    return <span className="badge pending" style={{background: '#fef9c3', color: '#854d0e'}}>⏳ Chưa nộp</span>;
+    if (hw.hasSubmitted) return <span className="badge submitted" style={{background: '#dcfce7', color: '#166534'}}>Đã nộp</span>;
+    if (isReallyOverdue) return <span className="badge overdue" style={{background: '#fee2e2', color: '#991b1b'}}>Quá hạn</span>;
+    return <span className="badge pending" style={{background: '#fef9c3', color: '#854d0e'}}>Chưa nộp</span>;
   };
 
   // Helper: Tính thời gian còn lại
@@ -144,7 +144,6 @@ const AssignmentsTab = ({ classId }: AssignmentsTabProps) => {
       {/* 2. Danh sách bài tập */}
       {filteredHomeworks.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon">📝</div>
           <h3>Không có bài tập nào</h3>
           <p>
             {filter === 'all' ? 'Giảng viên chưa giao bài tập nào.' : 
@@ -170,9 +169,6 @@ const AssignmentsTab = ({ classId }: AssignmentsTabProps) => {
                 }}
               >
                 <div className="homework-header">
-                  <div className="homework-icon">
-                    {homework.hasSubmitted ? '✓' : '📄'}
-                  </div>
                   <div className="homework-title-section">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <h3>{homework.title}</h3>

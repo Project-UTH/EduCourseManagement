@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import studentClassApi from '../../../services/api/studentClassApi';
+import studentClassApi  from '../../../services/api/studentClassApi';
 import AssignmentsTab from './AssignmentsTab';
 import GradesTab from './GradesTab';
 import MaterialsTab from './MaterialsTab';
@@ -27,8 +27,46 @@ interface ClassInfo {
   credits: number;
   maxStudents: number;
   enrolledCount: number;
-  description?: string; // ⭐ NEW: Subject description
+  description?: string; //  NEW: Subject description
 }
+interface ClassDetailResponse {
+  classId: number;
+  classCode: string;
+  enrolledCount: number;
+  maxStudents: number;
+
+  subject?: {
+    subjectName: string;
+    credits: number;
+    description?: string;
+  };
+
+  teacher?: {
+    fullName: string;
+  };
+
+  semester?: {
+    semesterName: string;
+  };
+
+  room?: {
+    roomName: string;
+  };
+
+  schedule?: {
+    dayOfWeek: number;
+    timeSlotName: string;
+  }[];
+
+  // fallback fields (flat)
+  subjectName?: string;
+  teacherName?: string;
+  semesterName?: string;
+  roomName?: string;
+  credits?: number;
+  subjectDescription?: string;
+}
+
 
 const ClassDetail = () => {
   const { classId } = useParams<{ classId: string }>();
@@ -41,6 +79,7 @@ const ClassDetail = () => {
 
   useEffect(() => {
     loadClassInfo();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
   const loadClassInfo = async () => {
@@ -50,16 +89,16 @@ const ClassDetail = () => {
     try {
       console.log('[ClassDetail] Loading class info for ID:', classId);
       
-      // ⭐ FIX: Use getClassDetail for full data
-      const classDetail = await studentClassApi.getClassDetail(Number(classId!));
+      //  FIX: Use getClassDetail for full data
+      const classDetail: ClassDetailResponse = await studentClassApi.getClassDetail(Number(classId!));
       
-      console.log('🔍 [ClassDetail] FULL Response:', JSON.stringify(classDetail, null, 2));
-      console.log('🔍 [ClassDetail] subject:', classDetail.subject);
-      console.log('🔍 [ClassDetail] teacher:', classDetail.teacher);
-      console.log('🔍 [ClassDetail] semester:', classDetail.semester);
-      console.log('🔍 [ClassDetail] room:', classDetail.room);
-      console.log('🔍 [ClassDetail] enrolledCount:', classDetail.enrolledCount);
-      console.log('🔍 [ClassDetail] maxStudents:', classDetail.maxStudents);
+      console.log('[ClassDetail] FULL Response:', JSON.stringify(classDetail, null, 2));
+      console.log('[ClassDetail] subject:', classDetail.subject);
+      console.log('[ClassDetail] teacher:', classDetail.teacher);
+      console.log('[ClassDetail] semester:', classDetail.semester);
+      console.log('[ClassDetail] room:', classDetail.room);
+      console.log('[ClassDetail] enrolledCount:', classDetail.enrolledCount);
+      console.log('[ClassDetail] maxStudents:', classDetail.maxStudents);
 
       if (!classDetail) {
         setError('Không tìm thấy lớp học');
@@ -75,40 +114,66 @@ const ClassDetail = () => {
         return days[dayNum] || 'Không xác định';
       };
 
-      // ⭐ FIX: Handle both flat and nested structures
-      const info: ClassInfo = {
-        classId: classDetail.classId,
-        classCode: classDetail.classCode,
-        subjectName: classDetail.subject?.subjectName || (classDetail as any).subjectName || 'Không rõ',
-        teacherName: classDetail.teacher?.fullName || (classDetail as any).teacherName || 'Không rõ',
-        schedule: classDetail.schedule && classDetail.schedule.length > 0
-          ? `${getDayName(classDetail.schedule[0].dayOfWeek)}, ${classDetail.schedule[0].timeSlotName}`
-          : (classDetail as any).schedule || 'Chưa xếp lịch',
-        room: classDetail.room?.roomName || (classDetail as any).roomName || 'Chưa có phòng',
-        semesterName: classDetail.semester?.semesterName || (classDetail as any).semesterName || 'Chưa xác định',
-        credits: classDetail.subject?.credits || (classDetail as any).credits || 3,
-        maxStudents: classDetail.maxStudents || 50,
-        enrolledCount: classDetail.enrolledCount || 0,
-        // ⭐ FIX: Use subjectDescription from flat structure (not nested)
-        description: (classDetail as any).subjectDescription || classDetail.subject?.description || undefined
-      };
+      //  FIX: Handle both flat and nested structures
+     const info: ClassInfo = {
+  classId: classDetail.classId,
+  classCode: classDetail.classCode,
 
-      console.log('📝 [ClassDetail] Description:', info.description); // Debug log
+  subjectName:
+    classDetail.subject?.subjectName ??
+    classDetail.subjectName ??
+    'Không rõ',
+
+  teacherName:
+    classDetail.teacher?.fullName ??
+    classDetail.teacherName ??
+    'Không rõ',
+
+  schedule:
+    classDetail.schedule && classDetail.schedule.length > 0
+      ? `${getDayName(classDetail.schedule[0].dayOfWeek)}, ${classDetail.schedule[0].timeSlotName}`
+      : 'Chưa xếp lịch',
+
+  room:
+    classDetail.room?.roomName ??
+    classDetail.roomName ??
+    'Chưa có phòng',
+
+  semesterName:
+    classDetail.semester?.semesterName ??
+    classDetail.semesterName ??
+    'Chưa xác định',
+
+  credits:
+    classDetail.subject?.credits ??
+    classDetail.credits ??
+    3,
+
+  maxStudents: classDetail.maxStudents ?? 50,
+  enrolledCount: classDetail.enrolledCount ?? 0,
+
+  description:
+    classDetail.subject?.description ??
+    classDetail.subjectDescription
+};
+
+
+      console.log(' [ClassDetail] Description:', info.description); // Debug log
 
       setClassInfo(info);
-      console.log('[ClassDetail] ✅ Class info loaded:', info);
-      console.log('📊 [ClassDetail] FINAL Sĩ số:', info.enrolledCount, '/', info.maxStudents);
+      console.log('[ClassDetail]  Class info loaded:', info);
+      console.log(' [ClassDetail] FINAL Sĩ số:', info.enrolledCount, '/', info.maxStudents);
 
-    } catch (err: any) {
-      console.error('[ClassDetail] ❌ Failed to load class info:', err);
-      console.error('[ClassDetail] ❌ Error details:', err.message);
+    } catch (err: unknown) {
+      console.error('[ClassDetail]  Failed to load class info:', err);
+      console.error('[ClassDetail]  Error details:', err instanceof Error ? err.message : 'Unknown error');
       setError('Không thể tải thông tin lớp học');
     } finally {
       setLoading(false);
     }
   };
 
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   if (loading) {
     return (
@@ -125,13 +190,12 @@ const ClassDetail = () => {
     return (
       <div className="class-detail">
         <div className="error-container">
-          <div className="error-icon">⚠️</div>
           <h3>{error || 'Không tìm thấy lớp học'}</h3>
           <button 
             className="btn-back"
             onClick={() => navigate('/student/dashboard')}
           >
-            ← Quay lại trang chủ
+            ← Quay lại 
           </button>
         </div>
       </div>
@@ -163,7 +227,6 @@ const ClassDetail = () => {
 
           <div className="header-right">
             <div className="info-card">
-              <div className="info-icon">👨‍🏫</div>
               <div className="info-content">
                 <span className="info-label">Giảng viên</span>
                 <span className="info-value">{classInfo.teacherName}</span>

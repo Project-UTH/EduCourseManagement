@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 // IMPORT FILE CSS ĐỘC LẬP
 import './StudentGrades.css';
+import {ApiResponse} from '@/services/api/homeworkApi';
 
 interface Props {
   classId: number;
@@ -13,6 +14,13 @@ interface DisplayGrade {
   totalScore: number | null;
   letterGrade: string;
 }
+interface HomeworkGrade {
+  homeworkId: number;
+  homeworkType: 'REGULAR' | 'MIDTERM' | 'FINAL';
+  grade: number | null;
+  maxScore: number;
+}
+
 
 const GradesTab: React.FC<Props> = ({ classId }) => {
   const [grade, setGrade] = useState<DisplayGrade | null>(null);
@@ -20,6 +28,7 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
 
   useEffect(() => {
     calculateGradesFromHomeworks();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
   const calculateGradesFromHomeworks = async () => {
@@ -34,19 +43,18 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
 
       if (!response.ok) throw new Error('Failed to load homeworks');
 
-      const result = await response.json();
+      const result: ApiResponse<HomeworkGrade[]> = await response.json();
+const homeworks = result.data;
+
       
-      // API returns: { success, message, data: [...] }
-      const homeworks = result.data || [];
-      
-      console.log('✅ Loaded homeworks:', homeworks);
+      console.log(' Loaded homeworks:', homeworks);
       
       // 2. Tách điểm theo loại
       const regularScores: number[] = [];
       let midtermScore: number | null = null;
       let finalScore: number | null = null;
 
-      homeworks.forEach((hw: any) => {
+      homeworks.forEach((hw: HomeworkGrade) => {
         if (hw.grade !== null && hw.grade !== undefined) {
           // Quy đổi về thang 10
           const normalized = (hw.grade / hw.maxScore) * 10;
@@ -82,7 +90,7 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
       });
 
     } catch (err) {
-      console.error('❌ Failed to calculate grades:', err);
+      console.error(' Failed to calculate grades:', err);
     } finally {
       setLoading(false);
     }
@@ -123,7 +131,6 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
     return (
       <div className="student-grades-container">
         <div className="empty-state">
-          <div className="empty-icon">📊</div>
           <h3>Chưa có dữ liệu điểm</h3>
           <p className="state-message">Giảng viên chưa chấm bài tập nào.</p>
         </div>
@@ -134,7 +141,7 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
   return (
     <div className="student-grades-container">
       <div className="grades-header">
-        <h2>📊 Bảng điểm tổng kết</h2>
+        <h2> Bảng điểm tổng kết</h2>
         <p className="grades-subtitle">
           Điểm được tính tự động từ các bài tập đã chấm
         </p>
@@ -144,7 +151,6 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
       <div className="scores-grid">
         <div className="score-card">
           <div className="score-header">
-            <span className="score-icon">📝</span>
             <span className="score-label">TX - Thường xuyên</span>
           </div>
           <div className="score-weight">Trọng số: 20%</div>
@@ -155,7 +161,6 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
 
         <div className="score-card">
           <div className="score-header">
-            <span className="score-icon">📖</span>
             <span className="score-label">GK - Giữa kỳ</span>
           </div>
           <div className="score-weight">Trọng số: 30%</div>
@@ -166,7 +171,6 @@ const GradesTab: React.FC<Props> = ({ classId }) => {
 
         <div className="score-card">
           <div className="score-header">
-            <span className="score-icon">📕</span>
             <span className="score-label">CK - Cuối kỳ</span>
           </div>
           <div className="score-weight">Trọng số: 50%</div>

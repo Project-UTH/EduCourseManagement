@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '../../services/api/apiClient';
-import registrationApi, { RegistrationResponse } from '../../services/api/registrationApi';
+import apiClient from '../../../services/api/apiClient';
+import registrationApi, { RegistrationResponse } from '../../../services/api/registrationApi';
 import { useAuthStore } from '@/store/authStore';
 // CHỈNH SỬA: Import file CSS độc lập
 import './SubjectSelection.css';
-import ChatList from '../../components/chat/ChatList';
+import ChatList from '../../../components/chat/ChatList';
 
 
 interface Subject {
@@ -47,7 +47,6 @@ const PrerequisitesBadge: React.FC<{ prerequisites: PrerequisiteInfo[] }> = ({ p
     <div className="prerequisites-inline">
       {hasIncomplete && (
         <span className="warning-icon" title="Chưa hoàn thành môn tiên quyết">
-          ⚠️
         </span>
       )}
       <div className="prereq-list">
@@ -56,13 +55,10 @@ const PrerequisitesBadge: React.FC<{ prerequisites: PrerequisiteInfo[] }> = ({ p
             key={prereq.subjectId} 
             className={`prereq-badge ${prereq.isCompleted ? 'completed' : 'incomplete'}`}
             title={prereq.isCompleted 
-              ? `✅ Đã hoàn thành (Điểm: ${prereq.totalScore?.toFixed(1) || 'N/A'})`
-              : `❌ Chưa hoàn thành`
+              ? `Đã hoàn thành (Điểm: ${prereq.totalScore?.toFixed(1) || 'N/A'})`
+              : `Chưa hoàn thành`
             }
           >
-            <span className="prereq-icon">
-              {prereq.isCompleted ? '✅' : '❌'}
-            </span>
             <span className="prereq-text">
               {prereq.subjectName}
               <small> ({prereq.subjectCode})</small>
@@ -85,7 +81,6 @@ const SubjectSelection: React.FC = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   
   const [myRegistrations, setMyRegistrations] = useState<RegistrationResponse[]>([]);
-  const [loadingRegs, setLoadingRegs] = useState(false);
 
   useEffect(() => {
     fetchSemesters();
@@ -101,7 +96,7 @@ const SubjectSelection: React.FC = () => {
 
   const fetchSemesters = async () => {
     try {
-      console.log('🔍 Fetching semesters...');
+      console.log('Fetching semesters...');
       const response = await apiClient.get('/api/student/semesters');
       
       if (response.data && response.data.success) {
@@ -121,7 +116,7 @@ const SubjectSelection: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('❌ Error fetching semesters:', error);
+      console.error('Error fetching semesters:', error);
     }
   };
 
@@ -138,8 +133,8 @@ const SubjectSelection: React.FC = () => {
         const subjectList = response.data.data || [];
         setSubjects(subjectList);
       }
-    } catch (error: any) {
-      console.error('❌ Error fetching subjects:', error);
+    } catch (error: unknown) {
+      console.error('Error fetching subjects:', error);
       setSubjects([]);
     } finally {
       setLoading(false);
@@ -147,7 +142,6 @@ const SubjectSelection: React.FC = () => {
   };
 
   const fetchMyRegistrations = async () => {
-    setLoadingRegs(true);
     try {
       const response = await registrationApi.getMyRegistrations();
       
@@ -164,18 +158,16 @@ const SubjectSelection: React.FC = () => {
         
         setMyRegistrations(filteredRegs);
       }
-    } catch (error) {
-      console.error('❌ Error fetching my registrations:', error);
-    } finally {
-      setLoadingRegs(false);
-    }
+    } catch (error: unknown) {
+      console.error('Error fetching my registrations:', error);
+    } 
   };
 
   const handleDrop = async (reg: RegistrationResponse) => {
     const canDrop = !reg.semesterStatus || reg.semesterStatus === 'UPCOMING';
     
     if (!canDrop) {
-      alert('⚠️ Không thể hủy đăng ký lớp đang học!\n\nChỉ có thể hủy lớp của học kỳ chưa bắt đầu.');
+      alert('Không thể hủy đăng ký lớp đang học!\n\nChỉ có thể hủy lớp của học kỳ chưa bắt đầu.');
       return;
     }
     
@@ -192,18 +184,30 @@ const SubjectSelection: React.FC = () => {
       const response = await registrationApi.dropClass(reg.registrationId);
       
       if (response.data.success) {
-        alert('✅ Hủy đăng ký thành công!');
+        alert('Hủy đăng ký thành công!');
         fetchMyRegistrations();
       }
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.message || 'Hủy đăng ký thất bại!';
-      alert('❌ ' + errorMsg);
-    }
+    } catch (error: unknown) {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error
+  ) {
+    const err = error as {
+      response?: { data?: { message?: string } };
+    };
+
+    alert( (err.response?.data?.message ?? 'Hủy đăng ký thất bại!'));
+  } else {
+    alert(' Hủy đăng ký thất bại!');
+  }
+}
+
   };
 
   const handleViewClasses = () => {
     if (!selectedSubjectId) {
-      alert('⚠️ Vui lòng chọn môn học!');
+      alert('Vui lòng chọn môn học!');
       return;
     }
     
@@ -229,8 +233,8 @@ const SubjectSelection: React.FC = () => {
   const getSemesterBadge = (status?: string) => {
     if (!status) return null;
     const badges: Record<string, { text: string; className: string }> = {
-      'UPCOMING': { text: '⏰ Sắp diễn ra', className: 'upcoming' },
-      'ACTIVE': { text: '📚 Đang học', className: 'active' }
+      'UPCOMING': { text: ' Sắp diễn ra', className: 'upcoming' },
+      'ACTIVE': { text: ' Đang học', className: 'active' }
     };
     const badge = badges[status] || { text: status, className: 'default' };
     return <span className={`semester-badge ${badge.className}`}>{badge.text}</span>;
@@ -250,7 +254,7 @@ const SubjectSelection: React.FC = () => {
   const filteredSubjects = searchFilteredSubjects.filter(subject => 
     !registeredSubjectIds.has(subject.subjectId)
   );
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   if (loading && subjects.length === 0) {
     return (
@@ -267,7 +271,7 @@ const SubjectSelection: React.FC = () => {
     <div className="subject-selection-page">
       {/* ============ SECTION 1: SUBJECT SELECTION ============ */}
       <div className="page-header">
-        <h1>📚 Đăng ký học phần</h1>
+        <h1>Đăng ký học phần</h1>
       </div>
 
       {/* Filters Section */}
@@ -328,7 +332,6 @@ const SubjectSelection: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <span className="no-data-icon">📚</span>
                       <p>Không có môn học nào!</p>
                       <small>
                         {searchKeyword 
@@ -394,7 +397,7 @@ const SubjectSelection: React.FC = () => {
       {myRegistrations.length > 0 && (
         <div className="my-registrations-section">
           <div className="section-header">
-            <h2>📋 Lớp đã đăng ký ({myRegistrations.length})</h2>
+            <h2>Lớp đã đăng ký ({myRegistrations.length})</h2>
           </div>
 
           <div className="registrations-grid">
@@ -446,11 +449,11 @@ const SubjectSelection: React.FC = () => {
                   <div className="card-footer">
                     {canDrop ? (
                       <button onClick={() => handleDrop(reg)} className="btn-drop">
-                        ❌ Hủy đăng ký
+                      Hủy đăng ký
                       </button>
                     ) : (
                       <div className="drop-disabled">
-                        🔒 Không thể hủy lớp đang học
+                      Không thể hủy lớp đang học
                       </div>
                     )}
                   </div>

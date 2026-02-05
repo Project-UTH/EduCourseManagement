@@ -67,7 +67,7 @@ export interface ClassDetailResponse {
   };
   schedule: ClassSchedule[];
   maxStudents: number;
-  enrolledCount: number; // ⭐ FIXED: Changed from currentStudents to match backend
+  enrolledCount: number; //  FIXED: Changed from currentStudents to match backend
   registrationDate?: string;
 }
 

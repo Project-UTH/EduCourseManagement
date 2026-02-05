@@ -19,25 +19,35 @@
 }
 
 /* ==================== HEADER ==================== */
+/* ==================== HEADER ==================== */
 .transcript-container .transcript-header {
   background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
   color: white;
   padding: 40px;
-  border-radius: 20px; /* bo góc mềm hơn */
+  border-radius: 20px;
   margin-bottom: 30px;
   box-shadow: 0 10px 30px rgba(22, 163, 74, 0.35);
+
+  position: relative;
+  z-index: 1; /* giữ header nổi ổn định */
 }
 
 
+/* Thêm định nghĩa rõ ràng cho lớp con chứa chữ */
+.transcript-container .header-title {
+  position: relative;     /* Nổi lên trên nền của cha */
+  z-index: 2;             /* Đặt thứ tự cao hơn nền */
+}
+
+/* Cưỡng chế màu chữ cho H1 */
 .transcript-container .header-title h1 {
   font-size: 32px;
   font-weight: 700;
   margin: 0 0 12px 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: white;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
+
 
 .transcript-container .student-info {
   font-size: 18px;

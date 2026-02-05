@@ -36,7 +36,7 @@ const MyClasses = () => {
       setClasses(activeClasses);
       
       console.log('[MyClasses] Loaded classes:', activeClasses.length);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[MyClasses] Failed to load classes:', err);
       setError('Không thể tải danh sách lớp học. Vui lòng thử lại!');
     } finally {
@@ -77,18 +77,18 @@ const MyClasses = () => {
       {/* Header */}
       <div className="page-header">
         <div className="header-content">
-          <h1>📚 Lớp Học Đã Đăng Ký</h1>
+          <h1>Lớp Học Đã Đăng Ký</h1>
           <p>Danh sách lớp học bạn đang tham gia trong học kỳ hiện tại</p>
         </div>
         <button className="btn-refresh" onClick={loadClasses} disabled={loading}>
-          🔄 Làm mới
+          Làm mới
         </button>
       </div>
 
       {/* Error Message */}
       {error && (
         <div className="alert alert-error">
-          ❌ {error}
+          {error}
         </div>
       )}
 
@@ -96,7 +96,6 @@ const MyClasses = () => {
       {classes.length > 0 && (
         <div className="stats-cards">
           <div className="stat-card">
-            <div className="stat-icon">📖</div>
             <div className="stat-info">
               <div className="stat-label">Tổng số lớp</div>
               <div className="stat-value">{stats.totalClasses}</div>
@@ -104,7 +103,6 @@ const MyClasses = () => {
           </div>
           
           <div className="stat-card">
-            <div className="stat-icon">🎓</div>
             <div className="stat-info">
               <div className="stat-label">Đang học</div>
               <div className="stat-value">{stats.totalClasses}</div>
@@ -112,7 +110,6 @@ const MyClasses = () => {
           </div>
           
           <div className="stat-card">
-            <div className="stat-icon">📝</div>
             <div className="stat-info">
               <div className="stat-label">Tổng tín chỉ</div>
               <div className="stat-value">{stats.totalCredits} TC</div>
@@ -124,14 +121,13 @@ const MyClasses = () => {
       {/* Classes Grid */}
       {classes.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon">📚</div>
           <h3>Chưa có lớp học nào</h3>
           <p>Bạn chưa đăng ký lớp học nào trong học kỳ này.</p>
           <button 
             className="btn-primary"
             onClick={() => navigate('/student/subjects')}
           >
-            ➕ Đăng ký học phần
+            Đăng ký học phần
           </button>
         </div>
       ) : (
@@ -199,7 +195,7 @@ const MyClasses = () => {
                   className="btn-view"
                   onClick={() => handleViewClass(cls.classId)}
                 >
-                  📖 Xem chi tiết
+                  Xem chi tiết
                 </button>
               </div>
             </div>
